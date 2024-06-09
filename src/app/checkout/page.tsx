@@ -54,7 +54,7 @@ export default function Component() {
                 <div>
                   <RadioGroupItem
                     value="cash"
-                    id="p=cash"
+                    id="cash"
                     className="peer sr-only"
                   />
                   <Label
