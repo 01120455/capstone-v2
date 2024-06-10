@@ -38,9 +38,9 @@ export default function Home() {
 
   return (
     <div className="grid lg:grid-cols-2 min-h-screen w-full">
-      <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+      <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center hidden lg:flex">
         <Image
-          src="/placeholder.svg"
+          src="/next.svg"
           alt="Login Image"
           width={800}
           height={600}
@@ -57,13 +57,8 @@ export default function Home() {
           </div>
           <form className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@email.com"
-                required
-              />
+              <Label htmlFor="email">Username</Label>
+              <Input id="username" type="username" placeholder="" required />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>

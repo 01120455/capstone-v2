@@ -34,12 +34,6 @@ export default function Component() {
                 </label>
                 <Input id="name" placeholder="Enter your name" />
               </div>
-              <div className="grid gap-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
-                </label>
-                <Input id="email" type="email" placeholder="Enter your email" />
-              </div>
             </div>
           </div>
           <div>
@@ -123,10 +117,6 @@ export default function Component() {
             <div className="flex items-center justify-between">
               <div className="text-gray-500 dark:text-gray-400">Subtotal</div>
               <div>$189.97</div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-gray-500 dark:text-gray-400">Shipping</div>
-              <div>$9.99</div>
             </div>
             <div className="flex items-center justify-between">
               <div className="text-gray-500 dark:text-gray-400">Tax</div>
