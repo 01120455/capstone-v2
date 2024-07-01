@@ -11,9 +11,19 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { Metadata } from "next";
+import SideMenu from "@/components/sidemenu";
+
+export const metadata: Metadata = {
+  title: "Checkout",
+  description: "Checkout page",
+};
 
 export default function Component() {
   return (
+    <div className="flex h-screen">
+      <SideMenu />
+      <div className="flex-1 overflow-y-auto p-8">
     <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12">
       <div className="flex items-center justify-between mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">Checkout</h1>
@@ -134,6 +144,8 @@ export default function Component() {
         <Button variant="outline">Cancel</Button>
         <Button>Place Order</Button>
       </div>
+    </div>
+    </div>
     </div>
   );
 }

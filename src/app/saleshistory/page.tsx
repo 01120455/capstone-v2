@@ -25,8 +25,8 @@ export default function Component() {
   const [filters, setFilters] = useState({
     customer: "",
     dateRange: {
-      start: null,
-      end: null,
+      start: "",
+      end: "",
     },
     paymentMethod: "",
   });
@@ -103,30 +103,30 @@ export default function Component() {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   return (
     <div className="container mx-auto px-4 md:px-6 py-8">
-      <h1 className="text-2xl font-bold mb-6">Order History</h1>
-      <div className="grid gap-6 md:grid-cols-[1fr_300px]">
+      <h1 className="text-2xl font-bold mb-6">Sales History</h1>
+      <div className="grid gap-6 md:grid-cols-[1fr_380px]">
         <div className="flex flex-col gap-6">
           <div className="flex items-center gap-4">
             <Input
               type="text"
-              placeholder="Search transactions by ID or Customer Name..."
+              placeholder="Search sales by ID or Customer Name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1"
             />
-            <Button
+            {/* <Button
               variant="outline"
               size="icon"
               onClick={() => setSelectedTransaction(null)}
             >
               <FilterIcon className="h-4 w-4" />
               <span className="sr-only">Filters</span>
-            </Button>
+            </Button> */}
           </div>
           {selectedTransaction ? (
             <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold">Transaction Details</h2>
+                <h2 className="text-lg font-bold">Sales Details</h2>
                 <Button
                   variant="outline"
                   size="icon"
@@ -138,7 +138,7 @@ export default function Component() {
               </div>
               <div className="grid gap-4">
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="font-medium">ID:</div>
+                  <div className="font-medium">Sale ID:</div>
                   <div>{selectedTransaction.id}</div>
                   <div className="font-medium">Customer:</div>
                   <div>{selectedTransaction.customer}</div>
@@ -176,6 +176,16 @@ export default function Component() {
                   <div>${selectedTransaction.tax.toFixed(2)}</div>
                   <div className="font-medium">Total:</div>
                   <div>${selectedTransaction.total.toFixed(2)}</div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant={"secondary"}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    <span className="sr-only">Edit Transaction</span>
+                  </Button>
+                  <Button variant={"destructive"}>
+                    <Bin className="h-4 w-4 mr-2" />
+                    <span className="sr-only">Delete Transaction</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -234,7 +244,7 @@ export default function Component() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Date Range</Label>
+              <Label className="my-1.5">Date Range</Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="start-date">Start Date</Label>
@@ -357,6 +367,47 @@ function XIcon(props) {
     >
       <path d="M18 6 6 18" />
       <path d="m6 6 12 12" />
+    </svg>
+  );
+}
+
+function Bin(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  );
+}
+
+function Pencil(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+      <path d="m15 5 4 4" />
     </svg>
   );
 }

@@ -9,30 +9,34 @@ import {
 } from "@/components/ui/card";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
-// import { addDays, format } from "date-fns";
-// import { DateRange } from "react-day-picker";
+import { addDays, format } from "date-fns";
+import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
-// import { Calendar } from "@/components/ui/calendar";
-// import {
-//   Popover,
-//   PopoverContent,
-//   PopoverTrigger,
-// } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import SideMenu from "@/components/sidemenu";
 
 export default function Dashboard({
   className,
 }: React.HTMLAttributes<HTMLDivElement>) {
-  //   const [date, setDate] = useState<DateRange | undefined>({
-  //     from: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-  //     to: new Date(), // Set "to" date to current date
-  //   });
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+    to: new Date(), // Set "to" date to current date
+  });
   return (
     <div className="flex h-screen">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
+        
         <div className="flex items-center space-x-4 mb-4 sm:mb-0 sm:mb-4">
           <h1 className="text-xl font-bold">Dashboard</h1>
           <div className={cn("grid gap-2", className)}>
-            {/* <Popover>
+            <Popover>
               <PopoverTrigger asChild>
                 <Button
                   id="date"
@@ -67,7 +71,7 @@ export default function Dashboard({
                   numberOfMonths={2}
                 />
               </PopoverContent>
-            </Popover> */}
+            </Popover>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -547,6 +551,27 @@ function LineChart(props: any) {
         role="application"
       />
     </div>
+  );
+}
+
+function CalendarIcon(props: any) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d="M3 10h18" />
+    </svg>
   );
 }
 
