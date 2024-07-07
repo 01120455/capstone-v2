@@ -30,6 +30,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import Image from "next/image";
 
 export default function Component() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,6 +79,32 @@ export default function Component() {
   const handleDeleteProduct = (id) => {
     setProducts(products.filter((product) => product.id !== id));
   };
+
+  const [editingRow, setEditingRow] = useState(null);
+  const [editData, setEditData] = useState({});
+
+  const handleEdit = (row) => {
+    setEditingRow(row.id);
+    setEditData({ ...row });
+  };
+
+  const handleInputChange = (key, value) => {
+    setEditData((prevData) => ({
+      ...prevData,
+      [key]: value,
+    }));
+  };
+
+  const handleSave = () => {
+    setFilteredPurchases((prevData) =>
+      prevData.map((row) =>
+        row.id === editingRow ? { ...row, ...editData } : row
+      )
+    );
+    setEditingRow(null);
+    setEditData({});
+  };
+
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center justify-between mb-6">
@@ -100,8 +127,117 @@ export default function Component() {
           <TableBody>
             {products.map((product) => (
               <TableRow key={product.id}>
-                <TableCell>
-                  <img
+                {editingRow === product.id ? (
+                  <>
+                    <TableCell>
+                      {/* <Input
+                        type="file"
+                        id="image"
+                        name="image"
+                        value={editData.image}
+                        onChange={(e) => handleInputChange("image", e.target.value)}
+                      /> */}
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={editData.name}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Textarea
+                        id="description"
+                        name="description"
+                        value={editData.description}
+                        onChange={(e) =>
+                          handleInputChange("description", e.target.value)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        id="category"
+                        name="category"
+                        value={editData.category}
+                        onChange={(e) =>
+                          handleInputChange("category", e.target.value)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        id="price"
+                        name="price"
+                        step="0.01"
+                        value={editData.price}
+                        onChange={(e) =>
+                          handleInputChange("price", e.target.value)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        id="inStock"
+                        name="inStock"
+                        min="0"
+                        value={editData.inStock}
+                        onChange={(e) =>
+                          handleInputChange("inStock", e.target.value)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button onClick={handleSave}>Save</Button>
+                    </TableCell>
+                  </>
+                ) : (
+                  <>
+                    <TableCell>
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        width={64}
+                        height={64}
+                        className="rounded"
+                      />
+                    </TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>{product.description}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>{product.inStock}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(product)}
+                        >
+                          <FilePenIcon className="w-4 h-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteProduct(product.id)}
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </>
+                )}
+                {/* <TableCell>
+                  <Image
                     src="/next.svg"
                     alt={product.name}
                     width={64}
@@ -129,7 +265,7 @@ export default function Component() {
                       <span className="sr-only">Delete</span>
                     </Button>
                   </div>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

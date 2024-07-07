@@ -8,122 +8,103 @@ datasource db {
 }
 
 model User {
-  UserID      Int       @id @default(autoincrement())
-  FirstName       String    @db.VarChar(25)
-  MiddleName      String?   @db.VarChar(25)
-  LastName        String    @db.VarChar(25)
-  Role        String    @db.VarChar(50)
-  Status          Status    
-  Sales           Sales[]
-  Purchases       Purchase[]
-  Username        Username[]
-}
-
-model Username {
-  Username    String      @id @unique @db.VarChar(50)
-  UserID      Int
-  PasswordID  Int
-  User        User     @relation(fields: [UserID], references: [UserID])
-  Password    Password @relation(fields: [PasswordID], references: [PasswordID])
-}
-
-model Password {
-  PasswordID  Int      @id @default(autoincrement())
-  Password    String
-  Username    Username[]
+  userid      Int       @id @default(autoincrement())
+  firstname       String    @db.VarChar(25)
+  middlename      String?   @db.VarChar(25)
+  lastname        String    @db.VarChar(25)
+  role        String    @db.VarChar(50)
+  status          Status    
+  username    String      @unique @db.VarChar(50)
+  password    String
+  sales           Sales[]
+  purchases       Purchase[]
 }
 
 model Customer {
-  CustomerID      Int       @id @default(autoincrement())
-  FirstName            String    @db.VarChar(50)
-  MiddleName            String    @db.VarChar(50)
-  LastName            String    @db.VarChar(50)
-  ContactNumber   Int
+  customerid      Int       @id @default(autoincrement())
+  firstname            String    @db.VarChar(50)
+  middlename            String    @db.VarChar(50)
+  lastname            String    @db.VarChar(50)
+  contactnumber   Int
   Sales           Sales[]
 }
 
 model Sales {
-  SalesID         Int       @id @default(autoincrement())
-  CustomerID      Int
-  UserID      Int
-  InvoiceNo       Int
-  Date            DateTime
-  TotalAmount     Float
-  User        User  @relation(fields: [UserID], references: [UserID])
-  Customer    Customer  @relation(fields: [CustomerID], references: [CustomerID])
+  salesid         Int       @id @default(autoincrement())
+  customerid      Int
+  userid      Int
+  invoiceno       Int
+  date            DateTime
+  totalamount     Float
+  user        User  @relation(fields: [salesid], references: [userid])
+  customer    Customer  @relation(fields: [customerid], references: [customerid])
   SalesItems      SalesItem[]
 }
 
 model SalesItem {
-  SalesItemID     Int       @id @default(autoincrement())
-  SalesID         Int
-  ItemID          Int
-  InventoryId     Int?
-  Quantity        Int
-  Weight          Float?
-  PricePerUnit    Float?
-  Sales           Sales     @relation(fields: [SalesID], references: [SalesID])
-  Item            Item      @relation(fields: [ItemID], references: [ItemID])
+  salesitemid     Int       @id @default(autoincrement())
+  salesid         Int
+  itemid          Int
+  inventoryid     Int?
+  quantity        Int
+  weight          Float?
+  priceperunit    Float?
+  Sales           Sales     @relation(fields: [salesitemid], references: [salesid])
+  Item            Item      @relation(fields: [itemid], references: [itemid])
 }
 
 model Supplier {
-  SupplierID      Int       @id @default(autoincrement())
-  FirstName            String    @db.VarChar(50)
-  MiddleName            String    @db.VarChar(50)
-  LastName            String    @db.VarChar(50) 
-  ContactNumber   Int
-  Purchases       Purchase[]
+  supplierid      Int       @id @default(autoincrement())
+  firstname            String    @db.VarChar(50)
+  middlename            String    @db.VarChar(50)
+  lastname            String    @db.VarChar(50) 
+  contactnumber   Int
+  Purchase       Purchase[]
 }
 
 model Purchase {
-  PurchaseID          Int       @id @default(autoincrement())
-  UserID          Int
-  SupplierID          Int
-  OfficialReceiptNo   Int?
-  Agent               String?   @db.VarChar(50)
-  Date                DateTime
-  TotalAmount         Float
-  User            User  @relation(fields: [UserID], references: [UserID])
-  Supplier        Supplier  @relation(fields: [SupplierID], references: [SupplierID])
+  purchaseid          Int       @id @default(autoincrement())
+  userid          Int
+  supplierid          Int
+  officialreceiptno   Int?
+  agent               String?   @db.VarChar(50)
+  date                DateTime
+  totalamount         Float
+  User            User  @relation(fields: [purchaseid], references: [userid])
+  Supplier        Supplier  @relation(fields: [supplierid], references: [supplierid])
   PurchaseItems       PurchaseItem[]
 }
 
 model PurchaseItem {
-  PurchaseItemID  Int     @id @default(autoincrement())
-  PurchaseID      Int
-  itemID          Int
-  Quantity        Int
-  Weight          Float?
-  PricePerUnit    Float?
-  Purchase        Purchase    @relation(fields: [PurchaseID], references: [PurchaseID])
-  Item            Item        @relation(fields: [itemID], references: [ItemID])
+  purchaseitemid  Int     @id @default(autoincrement())
+  purchaseid      Int
+  itemid          Int
+  quantity        Int
+  weight          Float?
+  pricePerUnit    Float?
+  Purchase        Purchase    @relation(fields: [purchaseitemid], references: [purchaseid])
+  Item            Item        @relation(fields: [itemid], references: [itemid])
 }
 
 model Item {
-  ItemID        Int      @id @default(autoincrement())
-  Name          String?  @db.VarChar(50)
-  Type          String   @db.VarChar(50)
-  Quality       String?  @db.VarChar(50)
-  Variety       String?  @db.VarChar(50)
-  SalesItems    SalesItem[]
-  PurchaseItems PurchaseItem[]
+  itemid        Int      @id @default(autoincrement())
+  name          String?  @db.VarChar(50)
+  type          String   @db.VarChar(50)
+  quality       String?  @db.VarChar(50)
+  variety       String?  @db.VarChar(50)
+  salesitem    SalesItem[]
+  purchaseitem PurchaseItem[]
   Inventory   Inventory[]
 }
 
 model Inventory {
-  InventoryID   Int        @id @default(autoincrement())
-  ItemID        Int
-  Quantity      Int
-  Acquisition   Acquisition
-  Item          Item       @relation(fields: [ItemID], references: [ItemID])
+  inventoryid   Int        @id @default(autoincrement())
+  itemid        Int
+  quantity      Int
+  Item          Item       @relation(fields: [inventoryid], references: [itemid])
 }
 
 enum Status {
   active
   inactive
-}
-
-enum Acquisition {
-  Bought
-  Processed
 }

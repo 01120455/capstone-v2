@@ -82,20 +82,70 @@ export default function Component() {
     setSelectedOrder({ supplier, order });
   };
 
-  const [editingRow, setEditingRow] = useState(null);
-  const handleEdit = (rowIndex) => {
-    setEditingRow(rowIndex);
+  const [editingSupplierRow, setEditingSupplierRow] = useState(null);
+  const [editingOrderRow, setEditingOrderRow] = useState(null);
+  const [editSupplierData, setEditSupplierData] = useState({});
+  const [editOrderData, setEditOrderData] = useState({});
+
+  const handleEditSupplier = (supplier) => {
+    setEditingSupplierRow(supplier.id);
+    setEditSupplierData({ ...supplier });
   };
-  const handleSave = (rowIndex, updatedData) => {
+
+  const handleEditOrder = (order) => {
+    setEditingOrderRow(order.id);
+    setEditOrderData({ ...order });
+  };
+
+  const handleInputChange = (key, value, type) => {
+    if (type === "supplier") {
+      setEditSupplierData((prevData) => ({
+        ...prevData,
+        [key]: value,
+      }));
+    } else if (type === "order") {
+      setEditOrderData((prevData) => ({
+        ...prevData,
+        [key]: value,
+      }));
+    }
+  };
+
+  const handleSaveSupplier = () => {
     setSuppliers((prevData) =>
-      prevData.map((row, index) =>
-        index === rowIndex ? { ...row, ...updatedData } : row
+      prevData.map((supplier) =>
+        supplier.id === editingSupplierRow
+          ? { ...supplier, ...editSupplierData }
+          : supplier
       )
     );
-    setEditingRow(null);
+    setEditingSupplierRow(null);
+    setEditSupplierData({});
   };
-  const handleCancel = () => {
-    setEditingRow(null);
+
+  const handleSaveOrder = () => {
+    const updatedSuppliers = suppliers.map((supplier) => {
+      if (supplier.id === selectedOrder.supplier.id) {
+        const updatedOrders = supplier.orders.map((order) =>
+          order.id === editingOrderRow ? { ...order, ...editOrderData } : order
+        );
+        return { ...supplier, orders: updatedOrders };
+      }
+      return supplier;
+    });
+    setSuppliers(updatedSuppliers);
+    setEditingOrderRow(null);
+    setEditOrderData({});
+  };
+
+  const handleCancelSupplier = () => {
+    setEditingSupplierRow(null);
+    setEditSupplierData({});
+  };
+
+  const handleCancelOrder = () => {
+    setEditingOrderRow(null);
+    setEditOrderData({});
   };
 
   return (
@@ -134,32 +184,32 @@ export default function Component() {
                 key={supplier.id}
                 className="border-b border-gray-200 dark:border-gray-700"
               >
-                {editingRow === supplier.id ? (
+                {editingSupplierRow === supplier.id ? (
                   <>
                     <TableCell className="px-4 py-3">
                       <Input
                         type="text"
-                        value={supplier.name}
+                        value={editSupplierData.name || ""}
                         onChange={(e) =>
-                          handleSave(supplier.id, { name: e.target.value })
+                          handleInputChange("name", e.target.value, "supplier")
                         }
                       />
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Input
                         type="text"
-                        value={supplier.email}
+                        value={editSupplierData.email || ""}
                         onChange={(e) =>
-                          handleSave(supplier.id, { email: e.target.value })
+                          handleInputChange("email", e.target.value, "supplier")
                         }
                       />
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Input
                         type="text"
-                        value={supplier.phone}
+                        value={editSupplierData.phone || ""}
                         onChange={(e) =>
-                          handleSave(supplier.id, { phone: e.target.value })
+                          handleInputChange("phone", e.target.value, "supplier")
                         }
                       />
                     </TableCell>
@@ -168,10 +218,18 @@ export default function Component() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={handleCancel}
+                          onClick={handleSaveSupplier}
                         >
                           <CheckIcon className="h-4 w-4" />
                           <span className="sr-only">Save</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleCancelSupplier}
+                        >
+                          <XIcon className="h-4 w-4" />
+                          <span className="sr-only">Cancel</span>
                         </Button>
                       </div>
                     </TableCell>
@@ -190,17 +248,11 @@ export default function Component() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleEdit(supplier.id)}
+                          onClick={() => handleEditSupplier(supplier)}
                         >
                           <FilePenIcon className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        {/* <Button variant="outline" size="sm">
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Delete
-                        </Button> */}
                       </div>
                     </TableCell>
                   </>
@@ -211,27 +263,6 @@ export default function Component() {
         </Table>
       </div>
 
-      {/* <TableCell className="px-4 py-3">{supplier.name}</TableCell>
-                <TableCell className="px-4 py-3">{supplier.email}</TableCell>
-                <TableCell className="px-4 py-3">{supplier.phone}</TableCell>
-                <TableCell className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" color="red">
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div> */}
       <div className="flex justify-end mt-6">
         <Pagination
           currentPage={currentPage}
@@ -239,6 +270,7 @@ export default function Component() {
           onPageChange={handlePageChange}
         />
       </div>
+
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-4">Order History</h2>
         {selectedOrder ? (
@@ -263,39 +295,132 @@ export default function Component() {
                   <TableHead className="font-medium">Item:</TableHead>
                   <TableHead className="font-medium">Quantity:</TableHead>
                   <TableHead className="font-medium">Amount:</TableHead>
+                  <TableHead className="font-medium">Status:</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell>{selectedOrder.order.id}</TableCell>
-                  <TableCell>{selectedOrder.supplier.name}</TableCell>
-                  <TableCell>{selectedOrder.order.date}</TableCell>
-                  <TableCell>{selectedOrder.order.item}</TableCell>
-                  <TableCell>{selectedOrder.order.quantity}</TableCell>
-                  <TableCell>
-                    ${selectedOrder.order.amount.toFixed(2)}
-                  </TableCell>
-                  <TableHead className="font-medium">Status:</TableHead>
-                  <TableCell>
-                    <Badge
-                      className={
-                        selectedOrder.order.status === "Paid"
-                          ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                          : selectedOrder.order.status === "Pending"
-                          ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                          : "red"
-                      }
-                    >
-                      {selectedOrder.order.status}
-                    </Badge>
-                  </TableCell>
+                  {editingOrderRow === selectedOrder.order.id ? (
+                    <>
+                      <TableCell>
+                        <Input
+                          value={editOrderData.id || ""}
+                          onChange={(e) =>
+                            handleInputChange("id", e.target.value, "order")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={editOrderData.name || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "supplier",
+                              e.target.value,
+                              "order"
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="date"
+                          value={editOrderData.date || ""}
+                          onChange={(e) =>
+                            handleInputChange("date", e.target.value, "order")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={editOrderData.item || ""}
+                          onChange={(e) =>
+                            handleInputChange("item", e.target.value, "order")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={editOrderData.quantity || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "quantity",
+                              e.target.value,
+                              "order"
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editOrderData.amount || ""}
+                          onChange={(e) =>
+                            handleInputChange("amount", e.target.value, "order")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={editOrderData.status || ""}
+                          onChange={(e) =>
+                            handleInputChange("status", e.target.value, "order")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleSaveOrder}
+                        >
+                          <CheckIcon className="h-4 w-4" />
+                          <span className="sr-only">Save</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleCancelOrder}
+                        >
+                          <XIcon className="h-4 w-4" />
+                          <span className="sr-only">Cancel</span>
+                        </Button>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell>{selectedOrder.order.id}</TableCell>
+                      <TableCell>{selectedOrder.supplier.name}</TableCell>
+                      <TableCell>{selectedOrder.order.date}</TableCell>
+                      <TableCell>{selectedOrder.order.item}</TableCell>
+                      <TableCell>{selectedOrder.order.quantity}</TableCell>
+                      <TableCell>
+                        ${selectedOrder.order.amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            selectedOrder.order.status === "Paid"
+                              ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                              : selectedOrder.order.status === "Pending"
+                              ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                              : "red"
+                          }
+                        >
+                          {selectedOrder.order.status}
+                        </Badge>
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               </TableBody>
             </Table>
             <div className="flex justify-end mt-4 space-x-2">
               <Button
                 variant="secondary"
-                onClick={() => handleEditClick(selectedOrder.order.id)}
+                onClick={() => handleEditOrder(selectedOrder.order)}
               >
                 <Pencil className="h-4 w-4 mr-2" />
                 <span className="sr-only">Edit Transaction</span>
@@ -375,80 +500,6 @@ export default function Component() {
             ))}
           </div>
         )}
-
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {suppliers.map((supplier) => (
-            <Card key={supplier.id}>
-              <CardHeader>
-                <CardTitle>{supplier.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table className="w-full table-auto">
-                  <TableHeader>
-                    <TableRow className="bg-gray-100 dark:bg-gray-800">
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Date
-                      </TableHead>
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Item
-                      </TableHead>
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Quantity
-                      </TableHead>
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Amount
-                      </TableHead>
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Status
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {supplier.orders.map((order) => (
-                      <TableRow
-                        key={order.id}
-                        className="border-b border-gray-200 dark:border-gray-700"
-                      >
-                        <TableCell className="px-4 py-2">
-                          {order.date}
-                        </TableCell>
-                        <TableCell className="px-4 py-2">
-                          {order.item}
-                        </TableCell>
-                        <TableCell className="px-4 py-2">
-                          {order.quantity}
-                        </TableCell>
-                        <TableCell className="px-4 py-2">
-                          ${order.amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="px-4 py-2">
-                          <Badge
-                            color={
-                              order.status === "Paid"
-                                ? "green"
-                                : order.status === "Pending"
-                                ? "yellow"
-                                : "red"
-                            }
-                          >
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="flex justify-end mt-4">
-                  <Button variant={"secondary"}
-                    onClick={() => handleEditClick(supplier.id)}
-                  >
-                    Edit
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div> */}
       </div>
     </div>
   );
