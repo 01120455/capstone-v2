@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -20,9 +19,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectTrigger,
@@ -30,177 +27,185 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import Image from "next/image";
+import { item, AddItem } from "@/schemas/item.schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 
 export default function Component() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      image: "/placeholder.svg",
-      name: "Acme Desk Lamp",
-      description: "Adjustable LED desk lamp",
-      category: "Lighting",
-      price: 49.99,
-      inStock: 25,
-    },
-    {
-      id: 2,
-      image: "/placeholder.svg",
-      name: "Ergonomic Office Chair",
-      description: "Comfortable and supportive office chair",
-      category: "Furniture",
-      price: 199.99,
-      inStock: 12,
-    },
-    {
-      id: 3,
-      image: "/placeholder.svg",
-      name: "Wireless Keyboard",
-      description: "Bluetooth keyboard with rechargeable battery",
-      category: "Electronics",
-      price: 59.99,
-      inStock: 35,
-    },
-    {
-      id: 4,
-      image: "/placeholder.svg",
-      name: "Bamboo Cutting Board",
-      description: "Durable and eco-friendly cutting board",
-      category: "Kitchen",
-      price: 24.99,
-      inStock: 18,
-    },
-  ]);
-  const handleAddProduct = (newProduct) => {
-    setProducts([...products, newProduct]);
-    setIsModalOpen(false);
-  };
-  const handleDeleteProduct = (id) => {
-    setProducts(products.filter((product) => product.id !== id));
-  };
+  const [items, setItems] = useState<AddItem[] | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
 
-  const [editingRow, setEditingRow] = useState(null);
-  const [editData, setEditData] = useState({});
+  const form = useForm<AddItem>({
+    resolver: zodResolver(item),
+    defaultValues: {
+      name: "",
+      type: "palay",
+      quantity: 0,
+      unitprice: 0,
+      imageurl: "",
+      itemid: 0,
+    },
+  });
 
-  const handleEdit = (row) => {
-    setEditingRow(row.id);
-    setEditData({ ...row });
+  useEffect(() => {
+    console.log(form.formState.errors);
+  }, [form.formState.errors]);
+
+  useEffect(() => {
+    async function getItems() {
+      try {
+        const response = await fetch("/api/product");
+        if (response.ok) {
+          const items = await response.json();
+          setItems(items);
+        } else {
+          console.error("Error fetching items:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    }
+    getItems();
+  }, []);
+
+  const handleAddProduct = () => {
+    setShowModal(true);
+
+    form.reset({
+      name: "",
+      type: "palay",
+      quantity: 0,
+      unitprice: 0,
+      itemid: 0,
+    });
   };
 
-  const handleInputChange = (key, value) => {
-    setEditData((prevData) => ({
-      ...prevData,
-      [key]: value,
-    }));
+  const handleEdit = (item: AddItem) => {
+    setShowModal(true);
+
+    form.reset({
+      itemid: item.itemid,
+      name: item.name,
+      type: item.type,
+      quantity: item.quantity,
+      unitprice: item.unitprice,
+    });
   };
 
-  const handleSave = () => {
-    setFilteredPurchases((prevData) =>
-      prevData.map((row) =>
-        row.id === editingRow ? { ...row, ...editData } : row
-      )
-    );
-    setEditingRow(null);
-    setEditData({});
+  const handleCancel = () => {
+    setShowModal(false);
+  };
+
+  const handleSubmit = async (values: AddItem) => {
+    console.log("values", values);
+    try {
+      if (values.itemid) {
+        await axios.put(`/api/product/`, values, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      } else {
+        await axios.post("/api/product", values, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
+      setShowModal(false);
+      refreshItems();
+      form.reset();
+
+      console.log("Item added/updated successfully");
+    } catch (error) {
+      console.error("Error adding item:", error);
+    }
+  };
+
+  const handleDelete = async (itemid: string) => {
+    try {
+      const response = await axios.delete(`/api/product-delete/${itemid}`);
+      console.log("Item deleted successfully:", response.data);
+      refreshItems();
+      setShowAlert(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
+  };
+
+  const handleDeleteItem = (item: AddItem) => {
+    setItemToDelete(item);
+    setShowAlert(true);
+  };
+
+  const handleDeleteCancel = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    setShowAlert(false);
+    setItemToDelete(null);
+    form.reset();
+  };
+
+  const refreshItems = async () => {
+    try {
+      const response = await fetch("/api/product");
+      if (response.ok) {
+        const items = await response.json();
+        setItems(items);
+      } else {
+        console.error("Error fetching items:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
   };
 
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Product Management</h1>
-        <Button onClick={() => setIsModalOpen(true)}>Add Product</Button>
+        <Button onClick={handleAddProduct}>Add Product</Button>
       </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Image</TableHead>
+              {/* <TableHead>Image</TableHead> */}
               <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>In Stock</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Unit Price</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                {editingRow === product.id ? (
-                  <>
-                    <TableCell>
-                      {/* <Input
-                        type="file"
-                        id="image"
-                        name="image"
-                        value={editData.image}
-                        onChange={(e) => handleInputChange("image", e.target.value)}
-                      /> */}
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={editData.name}
-                        onChange={(e) =>
-                          handleInputChange("name", e.target.value)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Textarea
-                        id="description"
-                        name="description"
-                        value={editData.description}
-                        onChange={(e) =>
-                          handleInputChange("description", e.target.value)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="text"
-                        id="category"
-                        name="category"
-                        value={editData.category}
-                        onChange={(e) =>
-                          handleInputChange("category", e.target.value)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        id="price"
-                        name="price"
-                        step="0.01"
-                        value={editData.price}
-                        onChange={(e) =>
-                          handleInputChange("price", e.target.value)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        id="inStock"
-                        name="inStock"
-                        min="0"
-                        value={editData.inStock}
-                        onChange={(e) =>
-                          handleInputChange("inStock", e.target.value)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button onClick={handleSave}>Save</Button>
-                    </TableCell>
-                  </>
-                ) : (
-                  <>
-                    <TableCell>
+            {items &&
+              items.map((item: AddItem, index: number) => (
+                <TableRow key={index}>
+                  {/* <TableCell>
                       <Image
                         src={product.image}
                         alt={product.name}
@@ -208,177 +213,162 @@ export default function Component() {
                         height={64}
                         className="rounded"
                       />
-                    </TableCell>
-                    <TableCell>{product.name}</TableCell>
-                    <TableCell>{product.description}</TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
-                    <TableCell>{product.inStock}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(product)}
-                        >
-                          <FilePenIcon className="w-4 h-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteProduct(product.id)}
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </>
-                )}
-                {/* <TableCell>
-                  <Image
-                    src="/next.svg"
-                    alt={product.name}
-                    width={64}
-                    height={64}
-                    className="rounded"
-                  />
-                </TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.description}</TableCell>
-                <TableCell>{product.category}</TableCell>
-                <TableCell>${product.price.toFixed(2)}</TableCell>
-                <TableCell>{product.inStock}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <FilePenIcon className="w-4 h-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteProduct(product.id)}
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </div>
-                </TableCell> */}
-              </TableRow>
-            ))}
+                    </TableCell> */}
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.type}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>{item.unitprice}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(item)}
+                      >
+                        <FilePenIcon className="w-4 h-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteItem(item)}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </div>
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogTrigger asChild>
-          {/* <Button>Add Product</Button> */}
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Add New Product</DialogTitle>
-            <DialogDescription>
-              Fill out the form to add a new product to your inventory.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              const newProduct = {
-                id: products.length + 1,
-                image: formData.get("image") || "/placeholder.svg",
-                name: formData.get("name"),
-                description: formData.get("description"),
-                category: formData.get("category"),
-                price: parseFloat(formData.get("price")),
-                inStock: parseInt(formData.get("inStock")),
-              };
-              handleAddProduct(newProduct);
-            }}
-          >
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Label htmlFor="image" className="md:col-span-1">
-                  Image
-                </Label>
-                <div className="md:col-span-3">
-                  <Input type="file" id="image" name="image" />
+      {itemToDelete && (
+        <AlertDialog open={showAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                item {itemToDelete?.itemid} {itemToDelete?.name}{" "}
+                {itemToDelete?.quantity} and remove their data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleDeleteCancel}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleDelete(itemToDelete.itemid)}
+              >
+                Continue
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+      {showModal && (
+        <Dialog open={showModal} onOpenChange={handleCancel}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>
+                {form.getValues("itemid") ? "Edit Product" : "Add New Product"}
+              </DialogTitle>
+              <DialogDescription>
+                Fill out the form to{" "}
+                {form.getValues("itemid") ? "edit a" : "add a new"} product to
+                your inventory.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form
+                className="w-full max-w-4xl mx-auto p-6"
+                onSubmit={form.handleSubmit(handleSubmit)}
+              >
+                <div className="grid grid-cols-2 gap-4 py-4">
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel htmlFor="name">Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} id="name" type="text" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel htmlFor="type">Type</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              {...field}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type">
+                                  {field.value}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="bigas">Bigas</SelectItem>
+                                <SelectItem value="palay">Palay</SelectItem>
+                                <SelectItem value="resico">Resico</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel htmlFor="quantity">Quantity</FormLabel>
+                          <FormControl>
+                            <Input {...field} id="quantity" type="number" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="unitprice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel htmlFor="unitprice">Unit Price</FormLabel>
+                          <FormControl>
+                            <Input {...field} id="unitprice" type="number" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Label htmlFor="name" className="md:col-span-1">
-                  Name
-                </Label>
-                <div className="md:col-span-3">
-                  <Input type="text" id="name" name="name" required />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Label htmlFor="description" className="md:col-span-1">
-                  Description
-                </Label>
-                <div className="md:col-span-3">
-                  <Textarea id="description" name="description" required />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Label htmlFor="category" className="md:col-span-1">
-                  Category
-                </Label>
-                <div className="md:col-span-3">
-                  <Select id="category" name="category" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Lighting">Lighting</SelectItem>
-                      <SelectItem value="Furniture">Furniture</SelectItem>
-                      <SelectItem value="Electronics">Electronics</SelectItem>
-                      <SelectItem value="Kitchen">Kitchen</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Label htmlFor="price" className="md:col-span-1">
-                  Price
-                </Label>
-                <div className="md:col-span-3">
-                  <Input
-                    type="number"
-                    id="price"
-                    name="price"
-                    step="0.01"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Label htmlFor="inStock" className="md:col-span-1">
-                  In Stock
-                </Label>
-                <div className="md:col-span-3">
-                  <Input
-                    type="number"
-                    id="inStock"
-                    name="inStock"
-                    min="0"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Save</Button>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+                <DialogFooter>
+                  <Button type="submit">Save</Button>
+                  <Button variant="outline" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -89,6 +89,17 @@ export default function Component() {
 
   const handleAddUser = () => {
     setShowModal(true);
+
+    form.reset({
+      firstname: "",
+      middlename: "",
+      lastname: "",
+      role: "",
+      status: "active",
+      username: "",
+      password: "",
+      userid: 0,
+    });
   };
 
   const handleEditUser = (user: AddUser) => {
@@ -106,8 +117,7 @@ export default function Component() {
     });
   };
 
-  const handleCancel = (event: any) => {
-    event.preventDefault();
+  const handleCancel = () => {
     setShowModal(false);
     form.reset();
   };
@@ -155,7 +165,7 @@ export default function Component() {
   //   }
   // };
 
-  const handleDelete = async (userid:string) => {
+  const handleDelete = async (userid: string) => {
     try {
       const response = await axios.delete(`/api/user-delete/${userid}`);
       console.log("User deleted successfully:", response.data);
@@ -278,7 +288,7 @@ export default function Component() {
         </AlertDialog>
       )}
       {showModal && (
-        <Dialog open={showModal}>
+        <Dialog open={showModal} onOpenChange={handleCancel}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>

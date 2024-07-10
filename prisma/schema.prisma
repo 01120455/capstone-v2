@@ -35,6 +35,8 @@ model Sales {
   userid      Int
   invoiceno       Int
   date            DateTime
+  status          TransactionStatus
+  frommilling    Boolean
   totalamount     Float
   user        User  @relation(fields: [salesid], references: [userid])
   customer    Customer  @relation(fields: [customerid], references: [customerid])
@@ -66,9 +68,9 @@ model Purchase {
   purchaseid          Int       @id @default(autoincrement())
   userid          Int
   supplierid          Int
-  officialreceiptno   Int?
   agent               String?   @db.VarChar(50)
   date                DateTime
+  status             TransactionStatus
   totalamount         Float
   User            User  @relation(fields: [purchaseid], references: [userid])
   Supplier        Supplier  @relation(fields: [supplierid], references: [supplierid])
@@ -79,9 +81,12 @@ model PurchaseItem {
   purchaseitemid  Int     @id @default(autoincrement())
   purchaseid      Int
   itemid          Int
-  quantity        Int
+  quality        String?  @db.VarChar(50)
+  variety        String?  @db.VarChar(50)
+  quantity        Int?
+  priceperunit    Float?
   weight          Float?
-  pricePerUnit    Float?
+  priceperkg      Float?
   Purchase        Purchase    @relation(fields: [purchaseitemid], references: [purchaseid])
   Item            Item        @relation(fields: [itemid], references: [itemid])
 }
@@ -89,22 +94,35 @@ model PurchaseItem {
 model Item {
   itemid        Int      @id @default(autoincrement())
   name          String?  @db.VarChar(50)
-  type          String   @db.VarChar(50)
-  quality       String?  @db.VarChar(50)
-  variety       String?  @db.VarChar(50)
+  type          ItemType
+  quantity      Int
+  unitprice    Float
   salesitem    SalesItem[]
   purchaseitem PurchaseItem[]
-  Inventory   Inventory[]
+  itemimage    ItemImage[]
 }
 
-model Inventory {
-  inventoryid   Int        @id @default(autoincrement())
-  itemid        Int
-  quantity      Int
-  Item          Item       @relation(fields: [inventoryid], references: [itemid])
+model ItemImage {
+  ImageID      Int       @id @default(autoincrement())
+  itemid       Int
+  imageurl     String
+  Item         Item      @relation(fields: [ImageID], references: [itemid])
 }
+
 
 enum Status {
   active
   inactive
+}
+
+enum TransactionStatus {
+  pending
+  paid
+  cancelled
+}
+
+enum ItemType {
+  bigas
+  palay
+  resico
 }
