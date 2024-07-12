@@ -173,7 +173,7 @@ export const PUT = async (req: NextRequest) => {
     if (!itemFound) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     } else {
-      // Update the user
+
       const updateItem = await prisma.item.update({
         where: { itemid },
         data: {

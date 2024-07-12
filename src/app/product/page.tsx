@@ -45,13 +45,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Image from "next/image";
-import { item, AddItem } from "@/schemas/item.schema";
+import { item, AddItem, ViewItem } from "@/schemas/item.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 
 export default function Component() {
-  const [items, setItems] = useState<AddItem[] | null>(null);
+  const [items, setItems] = useState<ViewItem[] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
@@ -181,7 +181,7 @@ export default function Component() {
 
     if (selectedFile) {
       formData.append("image", selectedFile);
-    } 
+    }
 
     try {
       const uploadRes = await fetch("/api/product", {
@@ -249,7 +249,7 @@ export default function Component() {
         <Table>
           <TableHeader>
             <TableRow>
-              {/* <TableHead>Image</TableHead> */}
+              <TableHead>Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Quantity</TableHead>
@@ -259,17 +259,17 @@ export default function Component() {
           </TableHeader>
           <TableBody>
             {items &&
-              items.map((item: AddItem, index: number) => (
+              items.map((item, index: number) => (
                 <TableRow key={index}>
-                  {/* <TableCell>
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        width={64}
-                        height={64}
-                        className="rounded"
-                      />
-                    </TableCell> */}
+                  <TableCell>
+                    <Image
+                      src={item.itemimage[0]?.imagepath ?? ""}
+                      alt="Product Image"
+                      width={64}
+                      height={64}
+                      className="rounded"
+                    />
+                  </TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.type}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
