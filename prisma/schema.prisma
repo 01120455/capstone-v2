@@ -103,10 +103,10 @@ model Item {
 }
 
 model ItemImage {
-  ImageID      Int       @id @default(autoincrement())
+  imageid      Int       @id @default(autoincrement())
   itemid       Int
-  imageurl     String
-  Item         Item      @relation(fields: [ImageID], references: [itemid])
+  imagepath     String
+  Item         Item      @relation(fields: [itemid], references: [itemid])
 }
 
 

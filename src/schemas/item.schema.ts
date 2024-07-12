@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+
 export const item = z.object({
   itemid: z.coerce.number().optional(),
   name: z.string(),
@@ -10,7 +11,8 @@ export const item = z.object({
     .default("palay"),
   quantity: z.coerce.number(),
   unitprice: z.coerce.number().multipleOf(0.01),
-  imageurl: z.string().optional(),
+  imagepath: z.string().optional(),
+  image: z.any().optional(),
 });
 
 export type AddItem = z.infer<typeof item>;

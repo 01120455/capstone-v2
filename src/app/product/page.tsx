@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -55,6 +55,7 @@ export default function Component() {
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File>();
 
   const form = useForm<AddItem>({
     resolver: zodResolver(item),
@@ -63,8 +64,9 @@ export default function Component() {
       type: "palay",
       quantity: 0,
       unitprice: 0,
-      imageurl: "",
+      imagepath: "",
       itemid: 0,
+      image: undefined,
     },
   });
 
@@ -88,6 +90,20 @@ export default function Component() {
     }
     getItems();
   }, []);
+
+  const refreshItems = async () => {
+    try {
+      const response = await fetch("/api/product");
+      if (response.ok) {
+        const items = await response.json();
+        setItems(items);
+      } else {
+        console.error("Error fetching items:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
 
   const handleAddProduct = () => {
     setShowModal(true);
@@ -115,29 +131,76 @@ export default function Component() {
 
   const handleCancel = () => {
     setShowModal(false);
+    setSelectedFile(undefined);
+
+    form.reset({
+      name: "",
+      type: "palay",
+      quantity: 0,
+      unitprice: 0,
+      itemid: 0,
+    });
   };
 
-  const handleSubmit = async (values: AddItem) => {
-    console.log("values", values);
-    try {
-      if (values.itemid) {
-        await axios.put(`/api/product/`, values, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      } else {
-        await axios.post("/api/product", values, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      }
-      setShowModal(false);
-      refreshItems();
-      form.reset();
+  // const handleSubmit = async (values: AddItem) => {
+  //   console.log("values", values);
+  //   try {
+  //     if (values.itemid) {
+  //       await axios.put(`/api/product/`, values, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //     } else {
+  //       await axios.post("/api/product", values, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //     }
+  //     setShowModal(false);
+  //     refreshItems();
+  //     form.reset();
 
-      console.log("Item added/updated successfully");
+  //     console.log("Item added/updated successfully");
+  //   } catch (error) {
+  //     console.error("Error adding item:", error);
+  //   }
+  // };
+
+  const fileRef = form.register("image");
+
+  const handleSubmit = async (values: AddItem) => {
+    console.log("Form Values:", values);
+    const formData = new FormData();
+
+    formData.append("name", values.name);
+    formData.append("type", values.type);
+    formData.append("quantity", values.quantity.toString());
+    formData.append("unitprice", values.unitprice.toString());
+
+    if (selectedFile) {
+      formData.append("image", selectedFile);
+    } 
+
+    try {
+      const uploadRes = await fetch("/api/product", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (uploadRes.ok) {
+        const uploadResult = await uploadRes.json();
+        console.log("Image uploaded:", uploadResult.itemimage.imagepath);
+
+        setShowModal(false);
+        refreshItems();
+        form.reset();
+
+        console.log("Item added/updated successfully");
+      } else {
+        console.error("Upload failed", await uploadRes.text());
+      }
     } catch (error) {
       console.error("Error adding item:", error);
     }
@@ -169,17 +232,10 @@ export default function Component() {
     form.reset();
   };
 
-  const refreshItems = async () => {
-    try {
-      const response = await fetch("/api/product");
-      if (response.ok) {
-        const items = await response.json();
-        setItems(items);
-      } else {
-        console.error("Error fetching items:", response.status);
-      }
-    } catch (error) {
-      console.error("Error fetching items:", error);
+  const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
     }
   };
 
@@ -286,6 +342,25 @@ export default function Component() {
                 onSubmit={form.handleSubmit(handleSubmit)}
               >
                 <div className="grid grid-cols-2 gap-4 py-4">
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel htmlFor="file">Upload Image</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...fileRef}
+                              id="file"
+                              type="file"
+                              onChange={handleImage}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
