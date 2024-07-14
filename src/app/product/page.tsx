@@ -117,7 +117,7 @@ export default function Component() {
     });
   };
 
-  const handleEdit = (item: AddItem) => {
+  const handleEdit = (item: ViewItem) => {
     setShowModal(true);
 
     form.reset({
@@ -126,6 +126,7 @@ export default function Component() {
       type: item.type,
       quantity: item.quantity,
       unitprice: item.unitprice,
+      imagepath: item.itemimage[0]?.imagepath ?? "",
     });
   };
 
@@ -170,53 +171,57 @@ export default function Component() {
 
   const fileRef = form.register("image");
 
-  const handleSubmit = async (values: AddItem) => {
+  const handleSubmit = async (values: AddItem, isEdit: boolean = false) => {
     console.log("Form Values:", values);
     const formData = new FormData();
-
+  
     formData.append("name", values.name);
     formData.append("type", values.type);
     formData.append("quantity", values.quantity.toString());
     formData.append("unitprice", values.unitprice.toString());
-
+  
     if (selectedFile) {
       formData.append("image", selectedFile);
     }
-
+  
     try {
-      const uploadRes = await fetch("/api/product", {
-        method: "POST",
+      let method = "POST";
+      let endpoint = "/api/product";
+  
+      if (isEdit && values.itemid) {
+        method = "PUT";
+        endpoint = `/api/product/`; 
+        formData.append("itemid", values.itemid.toString());
+      }
+  
+      const uploadRes = await fetch(endpoint, {
+        method: method,
         body: formData,
       });
-
+  
       if (uploadRes.ok) {
         const uploadResult = await uploadRes.json();
-        console.log("Image uploaded:", uploadResult.itemimage.imagepath);
-
+        if (isEdit) {
+          console.log("Item updated successfully");
+        } else {
+          console.log("Item added successfully");
+        }
+  
+        if (uploadResult.itemimage && uploadResult.itemimage[0]) {
+          console.log("Image uploaded:", uploadResult.itemimage[0].imagepath);
+        }
+  
         setShowModal(false);
         refreshItems();
         form.reset();
-
-        console.log("Item added/updated successfully");
       } else {
         console.error("Upload failed", await uploadRes.text());
       }
     } catch (error) {
-      console.error("Error adding item:", error);
+      console.error("Error adding/updating item:", error);
     }
   };
-
-  const handleDelete = async (itemid: string) => {
-    try {
-      const response = await axios.delete(`/api/product-delete/${itemid}`);
-      console.log("Item deleted successfully:", response.data);
-      refreshItems();
-      setShowAlert(false);
-      setItemToDelete(null);
-    } catch (error) {
-      console.error("Error deleting item:", error);
-    }
-  };
+  
 
   const handleDeleteItem = (item: AddItem) => {
     setItemToDelete(item);

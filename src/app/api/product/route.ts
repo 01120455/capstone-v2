@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import item, { item as itemSchema } from "../../../schemas/item.schema";
 import { z } from "zod";
-import { stat, mkdir, writeFile, readFile } from "fs/promises";
+import { stat, mkdir, writeFile, unlink } from "fs/promises";
 import { join } from "path";
 import mime from "mime";
 import _ from "lodash";
@@ -44,7 +43,7 @@ export const POST = async (req: NextRequest) => {
 
     if (!name || !type || isNaN(quantity) || isNaN(unitprice)) {
       return NextResponse.json(
-        { error: "All fields are required and must be valid" },
+        { error: "All fields are required and must be valid to be added" },
         { status: 400 }
       );
     }
@@ -158,34 +157,170 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// export const PUT = async (req: NextRequest) => {
+//   try {
+//     const body = await req.json();
+//     const { itemid, name, type, quantity, unitprice, imagepath } =
+//       await itemSchema.parseAsync(body);
+
+//     let itemFound = await prisma.item.findFirst({
+//       where: {
+//         itemid,
+//       },
+//     });
+
+//     if (!itemFound) {
+//       return NextResponse.json({ error: "Item not found" }, { status: 404 });
+//     } else {
+
+//       const updateItem = await prisma.item.update({
+//         where: { itemid },
+//         data: {
+//           name,
+//           type,
+//           quantity,
+//           unitprice,
+//         },
+//       });
+
+//       return NextResponse.json(updateItem, { status: 200 });
+//     }
+//   } catch (error) {
+//     console.error("Error updating item:", error);
+//     return NextResponse.json(
+//       { error: "Internal server error" },
+//       { status: 500 }
+//     );
+//   }
+// };
+
 export const PUT = async (req: NextRequest) => {
   try {
-    const body = await req.json();
-    const { itemid, name, type, quantity, unitprice, imagepath } =
-      await itemSchema.parseAsync(body);
+    const formData = await req.formData();
 
-    let itemFound = await prisma.item.findFirst({
-      where: {
-        itemid,
+    const itemId = parseInt(formData.get("itemid") as string, 10);
+    const name = formData.get("name") as string;
+    const typeString = formData.get("type") as string;
+    const quantity = parseInt(formData.get("quantity") as string, 10);
+    const unitprice = parseFloat(formData.get("unitprice") as string);
+    const image = formData.get("image") as File | null;
+
+    if (!Object.values(ItemType).includes(typeString as ItemType)) {
+      return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
+    }
+
+    const type = typeString as ItemType;
+
+    if (
+      !name ||
+      !type ||
+      isNaN(quantity) ||
+      isNaN(unitprice) ||
+      isNaN(itemId)
+    ) {
+      return NextResponse.json(
+        { error: "All fields are required and must be valid to be updated" },
+        { status: 400 }
+      );
+    }
+
+    const existingItem = await prisma.item.findUnique({
+      where: { itemid: itemId },
+      include: { itemimage: true },
+    });
+
+    if (!existingItem) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
+    let fileUrl = null;
+
+    if (image) {
+      if (image.size > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { error: "File is too large" },
+          { status: 400 }
+        );
+      }
+
+      if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
+        return NextResponse.json(
+          { error: "Invalid file type" },
+          { status: 400 }
+        );
+      }
+
+      const buffer = await image.arrayBuffer();
+      const relativeUploadDir = `/uploads/${new Date()
+        .toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+        .replace(/\//g, "-")}`;
+      const uploadDir = join(process.cwd(), "public", relativeUploadDir);
+
+      try {
+        await stat(uploadDir);
+      } catch (e: any) {
+        if (e.code === "ENOENT") {
+          await mkdir(uploadDir, { recursive: true });
+        } else {
+          console.error(
+            "Error while trying to create directory when uploading a file\n",
+            e
+          );
+          return NextResponse.json(
+            { error: "Internal server error" },
+            { status: 500 }
+          );
+        }
+      }
+
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const filename = `${image.name.replace(
+        /\s/g,
+        "-"
+      )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
+      await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
+      fileUrl = `${relativeUploadDir}/${filename}`;
+
+      if (existingItem.itemimage.length > 0) {
+        const oldImagePath = join(
+          process.cwd(),
+          "public",
+          existingItem.itemimage[0].imagepath
+        );
+        try {
+          await unlink(oldImagePath);
+        } catch (e: any) {
+          console.error("Error deleting old image file\n", e);
+        }
+      }
+    }
+
+    const updatedItem = await prisma.item.update({
+      where: { itemid: itemId },
+      data: {
+        name,
+        type,
+        quantity,
+        unitprice,
+        itemimage: fileUrl
+          ? {
+              deleteMany: {}, // delete all existing images
+              create: {
+                imagepath: fileUrl,
+              },
+            }
+          : undefined,
+      },
+      include: {
+        itemimage: true,
       },
     });
 
-    if (!itemFound) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
-    } else {
-
-      const updateItem = await prisma.item.update({
-        where: { itemid },
-        data: {
-          name,
-          type,
-          quantity,
-          unitprice,
-        },
-      });
-
-      return NextResponse.json(updateItem, { status: 200 });
-    }
+    return NextResponse.json(updatedItem, { status: 200 });
   } catch (error) {
     console.error("Error updating item:", error);
     return NextResponse.json(
