@@ -19,6 +19,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import SideMenu from "@/components/sidemenu";
 
 export default function Component() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,21 +101,26 @@ export default function Component() {
         );
       });
   }, [filters, searchTerm]);
+
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+
   return (
-    <div className="container mx-auto px-4 md:px-6 py-8">
-      <h1 className="text-2xl font-bold mb-6">Sales History</h1>
-      <div className="grid gap-6 md:grid-cols-[1fr_380px]">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <Input
-              type="text"
-              placeholder="Search sales by ID or Customer Name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1"
-            />
-            {/* <Button
+    <div className="flex h-screen">
+      <SideMenu />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="container mx-auto px-4 md:px-6 py-8">
+          <h1 className="text-2xl font-bold mb-6">Sales History</h1>
+          <div className="grid gap-6 md:grid-cols-[1fr_380px]">
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-4">
+                <Input
+                  type="text"
+                  placeholder="Search sales by ID or Customer Name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1"
+                />
+                {/* <Button
               variant="outline"
               size="icon"
               onClick={() => setSelectedTransaction(null)}
@@ -122,188 +128,190 @@ export default function Component() {
               <FilterIcon className="h-4 w-4" />
               <span className="sr-only">Filters</span>
             </Button> */}
-          </div>
-          {selectedTransaction ? (
-            <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold">Sales Details</h2>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setSelectedTransaction(null)}
-                >
-                  <XIcon className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </Button>
               </div>
-              <div className="grid gap-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="font-medium">Sale ID:</div>
-                  <div>{selectedTransaction.id}</div>
-                  <div className="font-medium">Customer:</div>
-                  <div>{selectedTransaction.customer}</div>
-                  <div className="font-medium">Date:</div>
-                  <div>{selectedTransaction.date}</div>
-                  <div className="font-medium">Payment Method:</div>
-                  <div>{selectedTransaction.paymentMethod}</div>
+              {selectedTransaction ? (
+                <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold">Sales Details</h2>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setSelectedTransaction(null)}
+                    >
+                      <XIcon className="h-4 w-4" />
+                      <span className="sr-only">Close</span>
+                    </Button>
+                  </div>
+                  <div className="grid gap-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="font-medium">Sale ID:</div>
+                      <div>{selectedTransaction.id}</div>
+                      <div className="font-medium">Customer:</div>
+                      <div>{selectedTransaction.customer}</div>
+                      <div className="font-medium">Date:</div>
+                      <div>{selectedTransaction.date}</div>
+                      <div className="font-medium">Payment Method:</div>
+                      <div>{selectedTransaction.paymentMethod}</div>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead>Quantity</TableHead>
+                          <TableHead>Price</TableHead>
+                          <TableHead>Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedTransaction.items.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{item.name}</TableCell>
+                            <TableCell>{item.quantity}</TableCell>
+                            <TableCell>${item.price.toFixed(2)}</TableCell>
+                            <TableCell>
+                              ${(item.quantity * item.price).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="font-medium">Subtotal:</div>
+                      <div>${selectedTransaction.subtotal.toFixed(2)}</div>
+                      <div className="font-medium">Tax:</div>
+                      <div>${selectedTransaction.tax.toFixed(2)}</div>
+                      <div className="font-medium">Total:</div>
+                      <div>${selectedTransaction.total.toFixed(2)}</div>
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant={"secondary"}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        <span className="sr-only">Edit Transaction</span>
+                      </Button>
+                      <Button variant={"destructive"}>
+                        <Bin className="h-4 w-4 mr-2" />
+                        <span className="sr-only">Delete Transaction</span>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Price</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Date</TableHead>
                       <TableHead>Total</TableHead>
+                      <TableHead>Payment</TableHead>
+                      <TableHead />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedTransaction.items.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.price.toFixed(2)}</TableCell>
+                    {filteredTransactions.map((transaction) => (
+                      <TableRow
+                        key={transaction.id}
+                        onClick={() => setSelectedTransaction(transaction)}
+                        className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      >
+                        <TableCell>{transaction.id}</TableCell>
+                        <TableCell>{transaction.customer}</TableCell>
+                        <TableCell>{transaction.date}</TableCell>
+                        <TableCell>${transaction.total.toFixed(2)}</TableCell>
+                        <TableCell>{transaction.paymentMethod}</TableCell>
                         <TableCell>
-                          ${(item.quantity * item.price).toFixed(2)}
+                          <Button variant="outline" size="icon">
+                            <ArrowRightIcon className="h-4 w-4" />
+                            <span className="sr-only">View details</span>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="font-medium">Subtotal:</div>
-                  <div>${selectedTransaction.subtotal.toFixed(2)}</div>
-                  <div className="font-medium">Tax:</div>
-                  <div>${selectedTransaction.tax.toFixed(2)}</div>
-                  <div className="font-medium">Total:</div>
-                  <div>${selectedTransaction.total.toFixed(2)}</div>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant={"secondary"}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    <span className="sr-only">Edit Transaction</span>
-                  </Button>
-                  <Button variant={"destructive"}>
-                    <Bin className="h-4 w-4 mr-2" />
-                    <span className="sr-only">Delete Transaction</span>
-                  </Button>
-                </div>
-              </div>
+              )}
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.map((transaction) => (
-                  <TableRow
-                    key={transaction.id}
-                    onClick={() => setSelectedTransaction(transaction)}
-                    className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+            <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
+              <h2 className="text-lg font-bold mb-4">Filters</h2>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="customer">Customer</Label>
+                  <Input
+                    id="customer"
+                    type="text"
+                    placeholder="Enter customer name"
+                    value={filters.customer}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        customer: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label className="my-1.5">Date Range</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="start-date">Start Date</Label>
+                      <Input
+                        id="start-date"
+                        type="date"
+                        value={filters.dateRange.start || ""}
+                        onChange={(e) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            dateRange: {
+                              ...prev.dateRange,
+                              start: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="end-date">End Date</Label>
+                      <Input
+                        id="end-date"
+                        type="date"
+                        value={filters.dateRange.end || ""}
+                        onChange={(e) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            dateRange: {
+                              ...prev.dateRange,
+                              end: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="payment-method">Payment Method</Label>
+                  <Select
+                    id="payment-method"
+                    value={filters.paymentMethod}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        paymentMethod: value,
+                      }))
+                    }
                   >
-                    <TableCell>{transaction.id}</TableCell>
-                    <TableCell>{transaction.customer}</TableCell>
-                    <TableCell>{transaction.date}</TableCell>
-                    <TableCell>${transaction.total.toFixed(2)}</TableCell>
-                    <TableCell>{transaction.paymentMethod}</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="icon">
-                        <ArrowRightIcon className="h-4 w-4" />
-                        <span className="sr-only">View details</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-        <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
-          <h2 className="text-lg font-bold mb-4">Filters</h2>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="customer">Customer</Label>
-              <Input
-                id="customer"
-                type="text"
-                placeholder="Enter customer name"
-                value={filters.customer}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    customer: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label className="my-1.5">Date Range</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="start-date">Start Date</Label>
-                  <Input
-                    id="start-date"
-                    type="date"
-                    value={filters.dateRange.start || ""}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        dateRange: {
-                          ...prev.dateRange,
-                          start: e.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="end-date">End Date</Label>
-                  <Input
-                    id="end-date"
-                    type="date"
-                    value={filters.dateRange.end || ""}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        dateRange: {
-                          ...prev.dateRange,
-                          end: e.target.value,
-                        },
-                      }))
-                    }
-                  />
+                    <SelectTrigger>
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Debit Card">Debit Card</SelectItem>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="payment-method">Payment Method</Label>
-              <Select
-                id="payment-method"
-                value={filters.paymentMethod}
-                onValueChange={(value) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    paymentMethod: value,
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Credit Card">Credit Card</SelectItem>
-                  <SelectItem value="Debit Card">Debit Card</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
         </div>

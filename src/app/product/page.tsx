@@ -48,7 +48,7 @@ import Image from "next/image";
 import { item, AddItem, ViewItem } from "@/schemas/item.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import SideMenu from "@/components/sidemenu";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
@@ -245,6 +245,9 @@ export default function Component() {
   };
 
   return (
+    <div className="flex h-screen">
+      <SideMenu />
+      <div className="flex-1 overflow-y-auto p-8">
     <div className="p-6 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Product Management</h1>
@@ -450,6 +453,8 @@ export default function Component() {
         </Dialog>
       )}
     </div>
+  </div>
+</div>
   );
 }
 

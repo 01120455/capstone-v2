@@ -3,6 +3,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export default function SideMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,97 +20,207 @@ export default function SideMenu() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white shadow-lg lg:w-64">
-      <div className="flex items-center justify-between p-4 border-b">
-        <button className="lg:hidden text-gray-500" onClick={toggleMenu}>
-          <MenuIcon className="w-6 h-6" />
-        </button>
-        <span className="text-lg font-semibold hidden lg:block">Point of Sale</span>
-      </div>
-      <div
-        className={`flex flex-col flex-grow overflow-auto lg:block ${
-          isMenuOpen ? "block" : "hidden"
-        }`}
-      >
-      <nav className="mt-4 space-y-1">
-        <Link
-          className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-          href="#"
-          prefetch={false}
-        >
-          <LayoutDashboardIcon className="inline-block w-6 h-6 mr-3" />
-          <span>Dashboard</span>
-        </Link>
-        <Link
-          className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-          href="#"
-          prefetch={false}
-        >
-          <BoxIcon className="inline-block w-6 h-6 mr-3" />
-          <span>Product</span>
-        </Link>
-        <Link
-          className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-          href="#"
-          prefetch={false}
-        >
-          <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
-          <span>Sales</span>
-        </Link>
-        <Link
-          className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-          href="#"
-          prefetch={false}
-        >
-          <UserIcon className="inline-block w-6 h-6 mr-3" />
-          <span>Customer</span>
-        </Link>
-        <Link
-          className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-          href="#"
-          prefetch={false}
-        >
-          <TruckIcon className="inline-block w-6 h-6 mr-3" />
-          <span>Supplier</span>
-        </Link>
-        <Link
-          className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-          href="#"
-          prefetch={false}
-        >
-          <CalendarIcon className="inline-block w-6 h-6 mr-3" />
-          <span>Sales History</span>
-        </Link>
-        <Link
-          className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-          href="#"
-          prefetch={false}
-        >
-          <UsersIcon className="inline-block w-6 h-6 mr-3" />
-          <span>User</span>
-        </Link>
-        <div className="flex items-center p-3 space-x-3">
-          <MoonIcon className="inline-block w-6 h-6" />
-          <span>Dark mode</span>
-          <Switch id="dark-mode-toggle" className="ml-auto" />
-        </div>
-      </nav>
-      <div className="flex items-center p-4 space-x-3 border-t">
-        <Avatar>
-          <AvatarImage src="/placeholder-user.jpg" />
-          <AvatarFallback>U</AvatarFallback>
-        </Avatar>
-        <div className="ml-3">
-          <span className="block text-sm font-medium text-gray-800">
-            Username
-          </span>
-          <span className="block text-xs text-gray-500">
-            username@example.com
+    <div className="relative h-screen">
+      <div className="flex flex-col h-screen bg-white shadow-lg lg:w-64">
+        <div className="flex items-center justify-between p-4 border-b">
+          <button className="lg:hidden text-gray-500" onClick={toggleMenu}>
+            <MenuIcon className="w-6 h-6" />
+          </button>
+          <span className="text-lg font-semibold hidden lg:block">
+            Point of Sale
           </span>
         </div>
-      </div>
+        <div
+          className={`flex flex-col flex-grow overflow-auto lg:block ${
+            isMenuOpen ? "block" : "hidden"
+          }`}
+        >
+          <nav className="mt-4 space-y-1">
+            <Link
+              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              href="/dashboard"
+              prefetch={false}
+            >
+              <LayoutDashboardIcon className="inline-block w-6 h-6 mr-3" />
+              <span>Dashboard</span>
+            </Link>
+            <Link
+              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              href="/product"
+              prefetch={false}
+            >
+              <BoxIcon className="inline-block w-6 h-6 mr-3" />
+              <span>Product</span>
+            </Link>
+            <Link
+              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              href="/sales"
+              prefetch={false}
+            >
+              <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
+              <span>Sales</span>
+            </Link>
+            <Link
+              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              href="/customer"
+              prefetch={false}
+            >
+              <UserIcon className="inline-block w-6 h-6 mr-3" />
+              <span>Customer</span>
+            </Link>
+            <Link
+              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              href="/supplier"
+              prefetch={false}
+            >
+              <TruckIcon className="inline-block w-6 h-6 mr-3" />
+              <span>Supplier</span>
+            </Link>
+            <Link
+              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              href="/saleshistory"
+              prefetch={false}
+            >
+              <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+              <span>Sales History</span>
+            </Link>
+            <Link
+              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              href="/user"
+              prefetch={false}
+            >
+              <UsersIcon className="inline-block w-6 h-6 mr-3" />
+              <span>Users</span>
+            </Link>
+            {/* <div className="flex items-center p-3 space-x-3">
+            <MoonIcon className="inline-block w-6 h-6" />
+            <span>Dark mode</span>
+            <Switch id="dark-mode-toggle" className="ml-auto" />
+          </div> */}
+          </nav>
+
+          <div className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 flex items-center justify-between p-4">
+            <div className="flex items-center space-x-3">
+              <Avatar>
+                <AvatarImage src="/placeholder-user.jpg" />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-800">
+                  Bain Hansly Repato
+                </span>
+                <span className="text-xs text-gray-500">Bain27</span>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <EllipsisIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100">
+                    <ProfileIcon className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100">
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100">
+                    <LogoutIcon className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+function LogoutIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#374151"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" x2="9" y1="12" y2="12" />
+    </svg>
+  );
+}
+
+function SettingsIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#374151"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function ProfileIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#374151"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function EllipsisIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#374151"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="12" cy="5" r="1" />
+      <circle cx="12" cy="19" r="1" />
+    </svg>
   );
 }
 
