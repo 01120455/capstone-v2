@@ -174,31 +174,31 @@ export default function Component() {
   const handleSubmit = async (values: AddItem, isEdit: boolean = false) => {
     console.log("Form Values:", values);
     const formData = new FormData();
-  
+
     formData.append("name", values.name);
     formData.append("type", values.type);
     formData.append("quantity", values.quantity.toString());
     formData.append("unitprice", values.unitprice.toString());
-  
+
     if (selectedFile) {
       formData.append("image", selectedFile);
     }
-  
+
     try {
       let method = "POST";
       let endpoint = "/api/product";
-  
+
       if (isEdit && values.itemid) {
         method = "PUT";
-        endpoint = `/api/product/`; 
+        endpoint = `/api/product/`;
         formData.append("itemid", values.itemid.toString());
       }
-  
+
       const uploadRes = await fetch(endpoint, {
         method: method,
         body: formData,
       });
-  
+
       if (uploadRes.ok) {
         const uploadResult = await uploadRes.json();
         if (isEdit) {
@@ -206,11 +206,11 @@ export default function Component() {
         } else {
           console.log("Item added successfully");
         }
-  
+
         if (uploadResult.itemimage && uploadResult.itemimage[0]) {
           console.log("Image uploaded:", uploadResult.itemimage[0].imagepath);
         }
-  
+
         setShowModal(false);
         refreshItems();
         form.reset();
@@ -221,7 +221,25 @@ export default function Component() {
       console.error("Error adding/updating item:", error);
     }
   };
-  
+
+  const handleDelete = async (itemid: number) => {
+    try {
+      const response = await fetch(`/api/product-delete/${itemid}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        console.log("Item deleted successfully");
+        setShowAlert(false);
+        setItemToDelete(null);
+        refreshItems();
+      } else {
+        console.error("Error deleting item:", response.status);
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
+  };
 
   const handleDeleteItem = (item: AddItem) => {
     setItemToDelete(item);
@@ -244,217 +262,264 @@ export default function Component() {
     }
   };
 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 768); // Adjust 768 as per your design's breakpoint
+    };
+
+    handleResize(); // Initial check
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen">
       <SideMenu />
-      <div className="flex-1 overflow-y-auto p-8">
-    <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Product Management</h1>
-        <Button onClick={handleAddProduct}>Add Product</Button>
-      </div>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Image</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Unit Price</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items &&
-              items.map((item, index: number) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <Image
-                      src={item.itemimage[0]?.imagepath ?? ""}
-                      alt="Product Image"
-                      width={64}
-                      height={64}
-                      className="rounded"
-                    />
-                  </TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.type}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
-                  <TableCell>{item.unitprice}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <FilePenIcon className="w-4 h-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteItem(item)}
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+      <div className="flex-1 overflow-y-auto p-5">
+        <div className="p-6 md:p-8">
+          <div className="flex  items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold ">Product Management</h1>
+            <Button onClick={handleAddProduct}>
+              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : 'Add Product'}
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Unit Price</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </div>
-      {itemToDelete && (
-        <AlertDialog open={showAlert}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                item {itemToDelete?.itemid} {itemToDelete?.name}{" "}
-                {itemToDelete?.quantity} and remove their data from our servers.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleDeleteCancel}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => handleDelete(itemToDelete.itemid)}
-              >
-                Continue
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-      {showModal && (
-        <Dialog open={showModal} onOpenChange={handleCancel}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>
-                {form.getValues("itemid") ? "Edit Product" : "Add New Product"}
-              </DialogTitle>
-              <DialogDescription>
-                Fill out the form to{" "}
-                {form.getValues("itemid") ? "edit a" : "add a new"} product to
-                your inventory.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form
-                className="w-full max-w-4xl mx-auto p-6"
-                onSubmit={form.handleSubmit(handleSubmit)}
-              >
-                <div className="grid grid-cols-2 gap-4 py-4">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="image"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor="file">Upload Image</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...fileRef}
-                              id="file"
-                              type="file"
-                              onChange={handleImage}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor="name">Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} id="name" type="text" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor="type">Type</FormLabel>
-                          <FormControl>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              {...field}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select type">
-                                  {field.value}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="bigas">Bigas</SelectItem>
-                                <SelectItem value="palay">Palay</SelectItem>
-                                <SelectItem value="resico">Resico</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="quantity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor="quantity">Quantity</FormLabel>
-                          <FormControl>
-                            <Input {...field} id="quantity" type="number" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="unitprice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor="unitprice">Unit Price</FormLabel>
-                          <FormControl>
-                            <Input {...field} id="unitprice" type="number" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit">Save</Button>
-                  <Button variant="outline" onClick={handleCancel}>
+              </TableHeader>
+              <TableBody>
+                {items &&
+                  items.map((item, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Image
+                          src={item.itemimage[0]?.imagepath ?? ""}
+                          alt="Product Image"
+                          width={64}
+                          height={64}
+                          className="rounded"
+                        />
+                      </TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.type}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.unitprice}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <FilePenIcon className="w-4 h-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteItem(item)}
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+          {itemToDelete && (
+            <AlertDialog open={showAlert}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the item {itemToDelete?.itemid} {itemToDelete?.name}{" "}
+                    {itemToDelete?.quantity} and remove their data from our
+                    servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handleDeleteCancel}>
                     Cancel
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      )}
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDelete(itemToDelete.itemid)}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {showModal && (
+            <Dialog open={showModal} onOpenChange={handleCancel}>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {form.getValues("itemid")
+                      ? "Edit Product"
+                      : "Add New Product"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Fill out the form to{" "}
+                    {form.getValues("itemid") ? "edit a" : "add a new"} product
+                    to your inventory.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form
+                    className="w-full max-w-4xl mx-auto p-6"
+                    onSubmit={form.handleSubmit(handleSubmit)}
+                  >
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="image"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="file">Upload Image</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...fileRef}
+                                  id="file"
+                                  type="file"
+                                  onChange={handleImage}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="name">Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} id="name" type="text" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="type"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="type">Type</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="bigas">Bigas</SelectItem>
+                                    <SelectItem value="palay">Palay</SelectItem>
+                                    <SelectItem value="resico">
+                                      Resico
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="quantity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="quantity">Quantity</FormLabel>
+                              <FormControl>
+                                <Input {...field} id="quantity" type="number" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="unitprice"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="unitprice">
+                                Unit Price
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="unitprice"
+                                  type="number"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit">Save</Button>
+                      <Button variant="outline" onClick={handleCancel}>
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+  );
+}
+
+function PlusIcon(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </svg>
   );
 }
 

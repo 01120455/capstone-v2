@@ -157,43 +157,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// export const PUT = async (req: NextRequest) => {
-//   try {
-//     const body = await req.json();
-//     const { itemid, name, type, quantity, unitprice, imagepath } =
-//       await itemSchema.parseAsync(body);
-
-//     let itemFound = await prisma.item.findFirst({
-//       where: {
-//         itemid,
-//       },
-//     });
-
-//     if (!itemFound) {
-//       return NextResponse.json({ error: "Item not found" }, { status: 404 });
-//     } else {
-
-//       const updateItem = await prisma.item.update({
-//         where: { itemid },
-//         data: {
-//           name,
-//           type,
-//           quantity,
-//           unitprice,
-//         },
-//       });
-
-//       return NextResponse.json(updateItem, { status: 200 });
-//     }
-//   } catch (error) {
-//     console.error("Error updating item:", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// };
-
 export const PUT = async (req: NextRequest) => {
   try {
     const formData = await req.formData();
@@ -330,6 +293,40 @@ export const PUT = async (req: NextRequest) => {
   }
 };
 
+// export const DELETE = async (req: NextRequest) => {
+//   try {
+//     const body = await req.json();
+//     const { itemid } = await z
+//       .object({
+//         itemid: z.number(),
+//       })
+//       .parseAsync(body);
+
+//     let itemFound = await prisma.item.findFirst({
+//       where: {
+//         itemid,
+//       },
+//     });
+
+//     if (!itemFound) {
+//       return NextResponse.json({ error: "Item not found" }, { status: 404 });
+//     } else {
+//       // Delete the user
+//       const deleteItem = await prisma.item.delete({
+//         where: { itemid },
+//       });
+
+//       return NextResponse.json(deleteItem, { status: 200 });
+//     }
+//   } catch (error) {
+//     console.error("Error deleting Item:", error);
+//     return NextResponse.json(
+//       { error: "Internal server error" },
+//       { status: 500 }
+//     );
+//   }
+// };
+
 export const DELETE = async (req: NextRequest) => {
   try {
     const body = await req.json();
@@ -339,22 +336,43 @@ export const DELETE = async (req: NextRequest) => {
       })
       .parseAsync(body);
 
-    let itemFound = await prisma.item.findFirst({
+    const itemFound = await prisma.item.findUnique({
       where: {
         itemid,
+      },
+      include: {
+        itemimage: true,
       },
     });
 
     if (!itemFound) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
-    } else {
-      // Delete the user
-      const deleteItem = await prisma.item.delete({
-        where: { itemid },
-      });
-
-      return NextResponse.json(deleteItem, { status: 200 });
     }
+
+    if (itemFound.itemimage.length > 0) {
+      await prisma.itemImage.deleteMany({
+        where: { itemid: itemFound.itemid },
+      });
+    }
+
+    const deleteItem = await prisma.item.delete({
+      where: { itemid },
+    });
+
+    if (itemFound.itemimage.length > 0) {
+      const imagePath = join(
+        process.cwd(),
+        "public",
+        itemFound.itemimage[0].imagepath
+      );
+      try {
+        await unlink(imagePath);
+      } catch (e: any) {
+        console.error("Error deleting image file\n", e);
+      }
+    }
+
+    return NextResponse.json(deleteItem, { status: 200 });
   } catch (error) {
     console.error("Error deleting Item:", error);
     return NextResponse.json(
@@ -363,3 +381,4 @@ export const DELETE = async (req: NextRequest) => {
     );
   }
 };
+
