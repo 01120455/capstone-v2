@@ -308,8 +308,8 @@ export default function Component() {
                         <Image
                           src={item.itemimage[0]?.imagepath ?? ""}
                           alt="Product Image"
-                          width={64}
-                          height={64}
+                          width={250}
+                          height={250}
                           className="rounded"
                         />
                       </TableCell>
