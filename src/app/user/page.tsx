@@ -166,7 +166,7 @@ export default function Component() {
   //   }
   // };
 
-  const handleDelete = async (userid: string) => {
+  const handleDelete = async (userid: number | undefined) => {
     try {
       const response = await axios.delete(`/api/user-delete/${userid}`);
       console.log("User deleted successfully:", response.data);
@@ -206,14 +206,31 @@ export default function Component() {
     }
   };
 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 768); // Adjust 768 as per your design's breakpoint
+    };
+
+    handleResize(); // Initial check
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen">
       <SideMenu />
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="w-full max-w-4xl mx-auto p-6">
-          <div className="flex justify-between items-center mb-6">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full max-w-4xl mx-auto p-4">
+          <div className="flex justify-between items-center mb-6 -mr-6">
             <h1 className="text-2xl font-bold">User Management</h1>
-            <Button onClick={handleAddUser}>Add User</Button>
+            <Button onClick={handleAddUser}>
+            {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add User"}
+            </Button>
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <Table>
@@ -493,6 +510,25 @@ export default function Component() {
   );
 }
 
+function PlusIcon(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </svg>
+  );
+}
+
 function FilePenIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -533,189 +569,4 @@ function TrashIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
     </svg>
   );
-}
-
-{
-  /* <Card>
-              <CardHeader>
-                <CardTitle>
-                  {form.getValues("userid") ? "Edit User" : "Add User"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="firstname"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor="firstname">First Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              id="firstname"
-                              placeholder="John"
-                              defaultValue={field.value}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="middlename"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor="middlename">
-                            Middle Name
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              id="middlename"
-                              placeholder="Alcarra"
-                              defaultValue={field.value}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <FormField
-                    control={form.control}
-                    name="lastname"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel htmlFor="lastname">Last Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            id="lastname"
-                            placeholder="Doe"
-                            defaultValue={field.value}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel htmlFor="role">Role</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            {...field}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select role">
-                                {field.value}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="manager">Manager</SelectItem>
-                              <SelectItem value="sales">Sales</SelectItem>
-                              <SelectItem value="inventory">
-                                Inventory
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel htmlFor="status">Status</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            {...field}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status">
-                                {field.value}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <FormField
-                    control={form.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel htmlFor="username">Username</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            id="username"
-                            placeholder="JohnDoe@gmail.com"
-                            defaultValue={field.value}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel htmlFor="password">Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            id="password"
-                            type="password"
-                            defaultValue={field.value}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="ml-auto" type="submit">
-                  Save
-                </Button>
-                <Button
-                  variant="outline"
-                  className="ml-2"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </Button>
-              </CardFooter>
-            </Card> */
 }

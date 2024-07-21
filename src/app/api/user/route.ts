@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import user, { user as userSchema } from "../../../schemas/User.schema";
 import { z } from "zod";
+import { hashPassword } from "../../../utils/hash";
 
 const prisma = new PrismaClient();
 
@@ -18,16 +19,18 @@ export const POST = async (req: NextRequest) => {
       password,
     } = await userSchema.parseAsync(body);
 
+    const hashedPassword = await hashPassword(password);
+
     // Create the user
     const createUser = await prisma.user.create({
-      data : {
-       firstname,
+      data: {
+        firstname,
         middlename,
         lastname,
         role,
         status,
         username,
-        password,
+        password: hashedPassword,
       },
     });
 
@@ -39,7 +42,7 @@ export const POST = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-}
+};
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,8 +60,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(users, { status: 200 });
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -88,10 +90,7 @@ export const PUT = async (req: NextRequest) => {
     });
 
     if (!userFound) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     } else {
       // Update the user
       const updateUser = await prisma.user.update({
@@ -116,14 +115,16 @@ export const PUT = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-}
+};
 
 export const DELETE = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { userid } = await z.object({
-      userid: z.number(),
-    }).parseAsync(body);
+    const { userid } = await z
+      .object({
+        userid: z.number(),
+      })
+      .parseAsync(body);
 
     let userFound = await prisma.user.findFirst({
       where: {
@@ -132,10 +133,7 @@ export const DELETE = async (req: NextRequest) => {
     });
 
     if (!userFound) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     } else {
       // Delete the user
       const deleteUser = await prisma.user.delete({
@@ -151,5 +149,4 @@ export const DELETE = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-}
-
+};

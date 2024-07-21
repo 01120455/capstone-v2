@@ -143,35 +143,60 @@ export default function Component() {
     });
   };
 
-  // const handleSubmit = async (values: AddItem) => {
-  //   console.log("values", values);
-  //   try {
-  //     if (values.itemid) {
-  //       await axios.put(`/api/product/`, values, {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //     } else {
-  //       await axios.post("/api/product", values, {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //     }
-  //     setShowModal(false);
-  //     refreshItems();
-  //     form.reset();
+  const fileRef = form.register("image");
 
-  //     console.log("Item added/updated successfully");
+  // const handleSubmit = async (values: AddItem, isEdit: boolean = false) => {
+  //   console.log("Form Values:", values);
+  //   const formData = new FormData();
+
+  //   formData.append("name", values.name);
+  //   formData.append("type", values.type);
+  //   formData.append("quantity", values.quantity.toString());
+  //   formData.append("unitprice", values.unitprice.toString());
+
+  //   if (selectedFile) {
+  //     formData.append("image", selectedFile);
+  //   }
+
+  //   try {
+  //     let method = "POST";
+  //     let endpoint = "/api/product";
+
+  //     if (isEdit && values.itemid) {
+  //       method = "PUT";
+  //       endpoint = `/api/product/`;
+  //       formData.append("itemid", values.itemid.toString());
+  //     }
+
+  //     const uploadRes = await fetch(endpoint, {
+  //       method: method,
+  //       body: formData,
+  //     });
+
+  //     if (uploadRes.ok) {
+  //       const uploadResult = await uploadRes.json();
+  //       if (isEdit) {
+  //         console.log("Item updated successfully");
+  //       } else {
+  //         console.log("Item added successfully");
+  //       }
+
+  //       if (uploadResult.itemimage && uploadResult.itemimage[0]) {
+  //         console.log("Image uploaded:", uploadResult.itemimage[0].imagepath);
+  //       }
+
+  //       setShowModal(false);
+  //       refreshItems();
+  //       form.reset();
+  //     } else {
+  //       console.error("Upload failed", await uploadRes.text());
+  //     }
   //   } catch (error) {
-  //     console.error("Error adding item:", error);
+  //     console.error("Error adding/updating item:", error);
   //   }
   // };
 
-  const fileRef = form.register("image");
-
-  const handleSubmit = async (values: AddItem, isEdit: boolean = false) => {
+  const handleSubmit = async (values: AddItem) => {
     console.log("Form Values:", values);
     const formData = new FormData();
 
@@ -188,7 +213,7 @@ export default function Component() {
       let method = "POST";
       let endpoint = "/api/product";
 
-      if (isEdit && values.itemid) {
+      if (values.itemid) {
         method = "PUT";
         endpoint = `/api/product/`;
         formData.append("itemid", values.itemid.toString());
@@ -201,7 +226,7 @@ export default function Component() {
 
       if (uploadRes.ok) {
         const uploadResult = await uploadRes.json();
-        if (isEdit) {
+        if (values.itemid) {
           console.log("Item updated successfully");
         } else {
           console.log("Item added successfully");
@@ -222,7 +247,7 @@ export default function Component() {
     }
   };
 
-  const handleDelete = async (itemid: number) => {
+  const handleDelete = async (itemid: number | undefined) => {
     try {
       const response = await fetch(`/api/product-delete/${itemid}`, {
         method: "DELETE",
@@ -282,10 +307,10 @@ export default function Component() {
       <SideMenu />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="p-6 md:p-8">
-          <div className="flex  items-center justify-between mb-6">
+          <div className="flex  items-center justify-between mb-6 -mr-6">
             <h1 className="text-2xl font-bold ">Product Management</h1>
             <Button onClick={handleAddProduct}>
-              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : 'Add Product'}
+              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
           </div>
           <div className="overflow-x-auto">
