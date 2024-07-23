@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import user, { user as userSchema } from "../../../schemas/User.schema";
+import { user as userSchema } from "../../../schemas/User.schema";
 import { z } from "zod";
 import { hashPassword } from "../../../utils/hash";
 

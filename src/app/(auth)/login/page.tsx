@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -15,34 +14,50 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { Login, loginSchema } from "@/schemas/User.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function Home() {
   const router = useRouter();
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
+  const form = useForm<Login>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const handleSubmit = async (values: Login) => {
     try {
-      const response = await fetch("/api", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          data: JSON.stringify(values),
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(values),
       });
-      if (response.ok) {
-        console.log("Authentication successful!");
-        router.push("/dashboard");
-      } else {
-        const data = await response.json();
-        setError(data.message);
+
+      if (!response.ok) {
+        throw new Error("Invalid username or password");
       }
+
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Error authenticating employee:", error);
-      setError("Error authenticating employee");
+      console.error("Error authenticating user:", error);
+      return new Response(
+        JSON.stringify({ error: "Error authenticating user" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
     }
   };
 
@@ -76,19 +91,60 @@ export default function Home() {
                       Login in to your account to continue
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="username">Username</Label>
-                      <Input id="username" type="username" required />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" required />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button>Login</Button>
-                  </CardFooter>
+                  <Form {...form}>
+                    <form
+                      className="w-full max-w-4xl mx-auto p-6"
+                      onSubmit={form.handleSubmit(handleSubmit)}
+                    >
+                      <CardContent className="space-y-2">
+                        <div className="space-y-1">
+                          <FormField
+                            control={form.control}
+                            name="username"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="username">
+                                  Username
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="username"
+                                    type="username"
+                                    required
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="password">
+                                  Password
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="password"
+                                    type="password"
+                                    required
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button type="submit">Login</Button>
+                      </CardFooter>
+                    </form>
+                  </Form>
                 </Card>
               </TabsContent>
               <TabsContent value="register">
@@ -118,31 +174,6 @@ export default function Home() {
               </TabsContent>
             </Tabs>
           </div>
-          {/* <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold">Welcome to 3R Shane</h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              Sign in to your account to continue
-            </p>
-          </div>
-          <form className="space-y-4">
-            <div>
-              <Label htmlFor="email">Username</Label>
-              <Input id="username" type="username" placeholder="" required />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
-            </div>
-            <Button type="submit" className="w-full">
-              Sign In
-            </Button>
-          </form>
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-            Don&apos;t have an account?{" "}
-            <Link href="#" className="underline" prefetch={false}>
-              Sign up
-            </Link>
-          </div> */}
         </div>
       </div>
     </div>

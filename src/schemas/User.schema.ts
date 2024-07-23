@@ -15,6 +15,13 @@ export const user = z.object({
   password: z.string(),
 });
 
-export type AddUser = z.infer<typeof user>;
+export const loginSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});
 
-export default user;
+
+export type AddUser = z.infer<typeof user>;
+export type Login = z.infer<typeof loginSchema>;
+
+
