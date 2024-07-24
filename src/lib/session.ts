@@ -11,7 +11,7 @@ export const sessionOptions: SessionOptions = {
 };
 
 export interface SessionData {
-  userId?: number;
+  userid?: number;
   firstname?: string;
   middlename?: string;
   lastname?: string;

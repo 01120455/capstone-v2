@@ -6,15 +6,7 @@ import { sessionOptions, SessionData, defaultSession } from "@/lib/session";
 import { cookies } from "next/headers";
 import { compare } from "bcrypt";
 import { loginSchema } from "@/schemas/User.schema";
-
-export const getSession = async () => {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
-
-  if (!session.isLoggedIn) {
-    session.isLoggedIn = defaultSession.isLoggedIn;
-  }
-  return session;
-};
+import { getSession } from "@/lib/actions";
 
 const prisma = new PrismaClient();
 
@@ -53,8 +45,11 @@ export const POST = async (req: NextRequest) => {
     }
 
     session.isLoggedIn = true;
-    session.userId = usernames.userid;
+    session.userid = usernames.userid;
     session.username = usernames.username;
+    session.firstname = usernames.firstname;
+    session.lastname = usernames.lastname;
+    session.role = usernames.role;
     await session.save();
     return new Response(JSON.stringify({ message: "Login successful" }), {
       status: 200,

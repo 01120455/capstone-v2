@@ -222,8 +222,8 @@ export default function Component() {
   }, []);
 
   return (
-    <div className="flex h-screen">
-      <SideMenu />
+    // <div className="flex h-screen">
+    //   <SideMenu />
       <div className="flex-1 overflow-y-auto p-6">
         <div className="w-full max-w-4xl mx-auto p-4">
           <div className="flex justify-between items-center mb-6 -mr-6">
@@ -506,7 +506,7 @@ export default function Component() {
           )}
         </div>
       </div>
-    </div>
+    // </div>
   );
 }
 
