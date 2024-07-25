@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@/interfaces/user";
 
-// Define roles
 const ROLES = {
   SALES: "sales",
   INVENTORY: "inventory",
@@ -32,7 +31,6 @@ export default function SideMenu() {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       if (response.ok) {
-        // Handle successful logout (e.g., redirect to login page or refresh the page)
         window.location.href = "/login";
       } else {
         throw new Error(`Logout failed with status: ${response.status}`);
@@ -60,7 +58,6 @@ export default function SideMenu() {
     fetchUser();
   }, []);
 
-  // Function to check if the current user has access to the menu item
   const canAccessMenuItem = (role) => {
     if (user?.role === ROLES.ADMIN) return true;
     if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;

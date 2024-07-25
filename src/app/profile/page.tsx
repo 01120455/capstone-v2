@@ -36,7 +36,6 @@ export default function Component() {
         </header>
 
         <div className="flex flex-col lg:flex-row">
-          {/* Aside section */}
           <aside className="flex flex-col items-start p-4 space-y-4 mb-4 lg:mb-0">
             <div className="p-6 grid gap-4">
               <div className="grid gap-2">

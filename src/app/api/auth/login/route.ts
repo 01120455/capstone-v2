@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const res = NextResponse.json({ 
     message: "Logged in",
-    role: user.role, // Add user role to response
+    role: user.role, 
   });
 
   const session = await getIronSession(req, res, sessionOptions);

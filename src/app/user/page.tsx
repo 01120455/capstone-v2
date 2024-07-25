@@ -210,10 +210,10 @@ export default function Component() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768); // Adjust 768 as per your design's breakpoint
+      setIsSmallScreen(window.innerWidth < 768); 
     };
 
-    handleResize(); // Initial check
+    handleResize(); 
     window.addEventListener("resize", handleResize);
 
     return () => {

@@ -92,7 +92,6 @@ export const PUT = async (req: NextRequest) => {
     if (!userFound) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     } else {
-      // Update the user
       const updateUser = await prisma.user.update({
         where: { userid },
         data: {
@@ -135,7 +134,6 @@ export const DELETE = async (req: NextRequest) => {
     if (!userFound) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     } else {
-      // Delete the user
       const deleteUser = await prisma.user.delete({
         where: { userid },
       });
