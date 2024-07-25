@@ -55,8 +55,8 @@ export default function Component() {
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
-    // <div className="flex h-screen">
-    //   <SideMenu />
+    <div className="flex h-screen">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <div className="flex flex-col h-screen">
           <header className="bg-white shadow-sm p-4 flex items-center justify-between">
@@ -154,6 +154,6 @@ export default function Component() {
           </div>
         </div>
       </div>
-    // </div>
+    </div>
   );
 }

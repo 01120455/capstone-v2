@@ -23,3 +23,9 @@ export interface SessionData {
 export const defaultSession: SessionData = {
   isLoggedIn: false,
 };
+
+declare module "iron-session" {
+  interface IronSessionData {
+    user?: SessionData;
+  }
+}

@@ -107,8 +107,8 @@ export default function Component() {
     );
   };
   return (
-    // <div className="flex h-screen">
-    //   <SideMenu />
+    <div className="flex h-screen">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <div className="container mx-auto py-8">
           <h1 className="text-2xl font-bold mb-6">Order Management</h1>
@@ -240,6 +240,6 @@ export default function Component() {
           </div>
         </div>
       </div>
-    // </div>
+    </div>
   );
 }

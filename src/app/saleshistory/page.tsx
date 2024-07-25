@@ -105,8 +105,8 @@ export default function Component() {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   return (
-    // <div className="flex h-screen">
-    //   <SideMenu />
+    <div className="flex h-screen">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <div className="container mx-auto px-4 md:px-6 py-8">
           <h1 className="text-2xl font-bold mb-6">Sales History</h1>
@@ -316,7 +316,7 @@ export default function Component() {
           </div>
         </div>
       </div>
-    // </div>
+    </div>
   );
 }
 

@@ -12,6 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@/interfaces/user";
 
+// Define roles
+const ROLES = {
+  SALES: "sales",
+  INVENTORY: "inventory",
+  MANAGER: "manager",
+  ADMIN: "admin",
+};
+
 export default function SideMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -20,25 +28,46 @@ export default function SideMenu() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const logout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (response.ok) {
+        // Handle successful logout (e.g., redirect to login page or refresh the page)
+        window.location.href = "/login";
+      } else {
+        throw new Error(`Logout failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await fetch("/api/auth/session", {
-          method: "GET", 
+          method: "GET",
         });
-        console.log("Response status:", response.status);
-        console.log("Response body:", await response.text()); 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const session = await response.json();
-        setUser(session?.user || null);
+        setUser(session || null);
       } catch (error) {
         console.error("Failed to fetch session", error);
       }
     };
     fetchUser();
   }, []);
+
+  // Function to check if the current user has access to the menu item
+  const canAccessMenuItem = (role) => {
+    if (user?.role === ROLES.ADMIN) return true;
+    if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+    return false;
+  };
 
   return (
     <div className="relative h-screen">
@@ -57,62 +86,158 @@ export default function SideMenu() {
           }`}
         >
           <nav className="mt-4 space-y-1">
-            <Link
-              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-              href="/dashboard"
-              prefetch={false}
-            >
-              <LayoutDashboardIcon className="inline-block w-6 h-6 mr-3" />
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-              href="/product"
-              prefetch={false}
-            >
-              <BoxIcon className="inline-block w-6 h-6 mr-3" />
-              <span>Product</span>
-            </Link>
-            <Link
-              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-              href="/sales"
-              prefetch={false}
-            >
-              <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
-              <span>Sales</span>
-            </Link>
-            <Link
-              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-              href="/customer"
-              prefetch={false}
-            >
-              <UserIcon className="inline-block w-6 h-6 mr-3" />
-              <span>Customer</span>
-            </Link>
-            <Link
-              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-              href="/supplier"
-              prefetch={false}
-            >
-              <TruckIcon className="inline-block w-6 h-6 mr-3" />
-              <span>Supplier</span>
-            </Link>
-            <Link
-              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-              href="/saleshistory"
-              prefetch={false}
-            >
-              <CalendarIcon className="inline-block w-6 h-6 mr-3" />
-              <span>Sales History</span>
-            </Link>
-            <Link
-              className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-              href="/user"
-              prefetch={false}
-            >
-              <UsersIcon className="inline-block w-6 h-6 mr-3" />
-              <span>Users</span>
-            </Link>
+            {canAccessMenuItem(ROLES.ADMIN) && (
+              <>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/dashboard"
+                  prefetch={false}
+                >
+                  <LayoutDashboardIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Dashboard</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/product"
+                  prefetch={false}
+                >
+                  <BoxIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Product</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/sales"
+                  prefetch={false}
+                >
+                  <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Sales</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/saleshistory"
+                  prefetch={false}
+                >
+                  <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Sales History</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/customer"
+                  prefetch={false}
+                >
+                  <UserIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Customer</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/supplier"
+                  prefetch={false}
+                >
+                  <TruckIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Supplier</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/user"
+                  prefetch={false}
+                >
+                  <UsersIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Users</span>
+                </Link>
+              </>
+            )}
+            {user?.role === ROLES.MANAGER && (
+              <>
+              <Link
+                className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                href="/dashboard"
+                prefetch={false}
+              >
+                <LayoutDashboardIcon className="inline-block w-6 h-6 mr-3" />
+                <span>Dashboard</span>
+              </Link>
+              <Link
+                className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                href="/product"
+                prefetch={false}
+              >
+                <BoxIcon className="inline-block w-6 h-6 mr-3" />
+                <span>Product</span>
+              </Link>
+              <Link
+                className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                href="/sales"
+                prefetch={false}
+              >
+                <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
+                <span>Sales</span>
+              </Link>
+              <Link
+                className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                href="/saleshistory"
+                prefetch={false}
+              >
+                <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                <span>Sales History</span>
+              </Link>
+              <Link
+                className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                href="/customer"
+                prefetch={false}
+              >
+                <UserIcon className="inline-block w-6 h-6 mr-3" />
+                <span>Customer</span>
+              </Link>
+              <Link
+                className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                href="/supplier"
+                prefetch={false}
+              >
+                <TruckIcon className="inline-block w-6 h-6 mr-3" />
+                <span>Supplier</span>
+              </Link>
+            </>
+            )}
+            {user?.role === ROLES.SALES && (
+              <>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/sales"
+                  prefetch={false}
+                >
+                  <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Sales</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/saleshistory"
+                  prefetch={false}
+                >
+                  <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Sales History</span>
+                </Link>
+              </>
+            )}
+            {user?.role === ROLES.INVENTORY && (
+              <>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/product"
+                  prefetch={false}
+                >
+                  <BoxIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Product</span>
+                </Link>
+                <Link
+                  className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  href="/supplier"
+                  prefetch={false}
+                >
+                  <TruckIcon className="inline-block w-6 h-6 mr-3" />
+                  <span>Supplier</span>
+                </Link>
+              </>
+            )}
           </nav>
 
           <div className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 flex items-center justify-between p-4">
@@ -123,7 +248,9 @@ export default function SideMenu() {
               </Avatar>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-800">
-                  {(user?.firstname && user?.lastname) || "Guest"}
+                  {user?.firstname && user?.lastname
+                    ? `${user.firstname} ${user.lastname}`
+                    : "Guest"}
                 </span>
                 <span className="text-xs text-gray-500">
                   {user?.username || "guest"}
@@ -142,7 +269,10 @@ export default function SideMenu() {
                     <ProfileIcon className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100">
+                  <DropdownMenuItem
+                    className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100"
+                    onClick={logout}
+                  >
                     <LogoutIcon className="mr-2 h-4 w-4" />
                     <span>Logout</span>
                   </DropdownMenuItem>
@@ -155,6 +285,7 @@ export default function SideMenu() {
     </div>
   );
 }
+
 
 function LogoutIcon(props) {
   return (

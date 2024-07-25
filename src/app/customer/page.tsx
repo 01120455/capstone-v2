@@ -134,8 +134,8 @@ export default function Component() {
 
 
   return (
-    // <div className="flex h-screen">
-    //   <SideMenu />
+    <div className="flex h-screen">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <div className="flex flex-col h-full">
           <header className="bg-gray-100 dark:bg-gray-900 py-4 px-6 flex items-center justify-between">
@@ -383,7 +383,7 @@ export default function Component() {
           </div>
         </div>
       </div>
-    // </div>
+    </div>
   );
 }
 

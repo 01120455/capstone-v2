@@ -1,71 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { z } from "zod";
 import { getIronSession } from "iron-session";
-import { sessionOptions, SessionData, defaultSession } from "@/lib/session";
-import { cookies } from "next/headers";
-import { compare } from "bcrypt";
-import { loginSchema } from "@/schemas/User.schema";
-import { getSession } from "@/lib/actions";
+import bcrypt from "bcrypt";
+import { PrismaClient } from "@prisma/client";
+import { sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
-export const POST = async (req: NextRequest) => {
-  const session = await getSession();
-  try {
-    const { username, password } = loginSchema.parse(await req.json());
-    const usernames = await prisma.user.findUnique({
-      where: {
-        username,
-      },
-    });
-    if (!usernames) {
-      return new Response(
-        JSON.stringify({ message: "Invalid username or password" }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
+export async function POST(req: NextRequest) {
+  const { username, password } = await req.json();
 
-    const passwordMatch = await compare(password, usernames.password);
-    if (!passwordMatch) {
-      return new Response(
-        JSON.stringify({ message: "Invalid username or password" }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
+  const user = await prisma.user.findUnique({ where: { username } });
 
-    session.isLoggedIn = true;
-    session.userid = usernames.userid;
-    session.username = usernames.username;
-    session.firstname = usernames.firstname;
-    session.lastname = usernames.lastname;
-    session.role = usernames.role;
-    await session.save();
-    return new Response(JSON.stringify({ message: "Login successful" }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ message: "Invalid username or password" }),
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return NextResponse.json(
+      { message: "Invalid username or password" },
+      { status: 401 }
     );
   }
-};
+
+  const res = NextResponse.json({ 
+    message: "Logged in",
+    role: user.role, // Add user role to response
+  });
+
+  const session = await getIronSession(req, res, sessionOptions);
+  session.user = {
+    userid: user.userid,
+    firstname: user.firstname,
+    middlename: user.middlename ?? undefined,
+    lastname: user.lastname,
+    role: user.role,
+    username: user.username,
+    isLoggedIn: true,
+  };
+  await session.save();
+  return res;
+}

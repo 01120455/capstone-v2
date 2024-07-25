@@ -42,22 +42,32 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          data: JSON.stringify(values),
         },
         body: JSON.stringify(values),
       });
-
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        throw new Error("Invalid username or password");
+        throw new Error(data.message || "Invalid username or password");
       }
-
-      router.push("/dashboard");
+  
+      switch (data.role) {
+        case 'admin':
+        case 'manager':
+          router.push("/dashboard");
+          break;
+        case 'sales':
+          router.push("/sales");
+          break;
+        case 'inventory':
+          router.push("/product");
+          break;
+        default:
+          throw new Error("Unknown role");
+      }
     } catch (error) {
       console.error("Error authenticating user:", error);
-      return new Response(
-        JSON.stringify({ error: "Error authenticating user" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
     }
   };
 
@@ -103,14 +113,12 @@ export default function Home() {
                             name="username"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="username">
-                                  Username
-                                </FormLabel>
+                                <FormLabel htmlFor="username">Username</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
                                     id="username"
-                                    type="username"
+                                    type="text"
                                     required
                                   />
                                 </FormControl>
@@ -124,9 +132,7 @@ export default function Home() {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="password">
-                                  Password
-                                </FormLabel>
+                                <FormLabel htmlFor="password">Password</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
@@ -155,11 +161,10 @@ export default function Home() {
                       Register to create an account
                     </CardDescription>
                   </CardHeader>
-                  {/* <Form> */}
                   <CardContent className="space-y-2">
                     <div className="space-y-1">
                       <Label htmlFor="username">Username</Label>
-                      <Input id="username" type="username" required />
+                      <Input id="username" type="text" required />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="password">Password</Label>
@@ -169,7 +174,6 @@ export default function Home() {
                   <CardFooter>
                     <Button>Register</Button>
                   </CardFooter>
-                  {/* </Form> */}
                 </Card>
               </TabsContent>
             </Tabs>
