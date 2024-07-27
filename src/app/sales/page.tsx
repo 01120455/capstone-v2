@@ -1,57 +1,78 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SideMenu from "@/components/sidemenu";
+import { ViewItem } from "@/schemas/item.schema";
+import Image from "next/image";
 
 export default function Component() {
-  const products = [
+  const [items, setItems] = useState<ViewItem[] | null>(null);
+  const [cart, setCart] = useState<
     {
-      id: 1,
-      name: "mais",
-      price: 4.99,
-      image: "/placeholder.svg",
-    },
-    {
-      id: 2,
-      name: "mangga",
-      price: 2.99,
-      image: "/placeholder.svg",
-    },
-    {
-      id: 3,
-      name: "Avocado",
-      price: 6.99,
-      image: "/placeholder.svg",
-    },
-    {
-      id: 4,
-      name: "Lata",
-      price: 3.99,
-      image: "/placeholder.svg",
-    },
-    {
-      id: 5,
-      name: "Bagang ng baka",
-      price: 2.49,
-      image: "/placeholder.svg",
-    },
-  ];
-  const [cart, setCart] = useState([]);
-  const addToCart = (product, quantity = 1) => {
-    setCart([...cart, { ...product, quantity }]);
+      id: number;
+      name: string;
+      price: number;
+      quantity: number;
+      imagepath: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    async function getItems() {
+      try {
+        const response = await fetch("/api/product");
+        if (response.ok) {
+          const items = await response.json();
+          setItems(items);
+        } else {
+          console.error("Error fetching items:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    }
+    getItems();
+  }, []);
+
+  const addToCart = (item: ViewItem, quantity: number = 1) => {
+    // Transform the item to match the cart structure
+    const cartItem = {
+      id: item.itemid, // Assuming itemid is the unique identifier
+      name: item.name,
+      price: item.unitprice,
+      quantity,
+      imagepath: item.itemimage[0]?.imagepath ?? "",
+    };
+
+    const existingItemIndex = cart.findIndex(
+      (cartItem) => cartItem.id === item.itemid
+    );
+
+    if (existingItemIndex > -1) {
+      // Update quantity if item already exists in the cart
+      const updatedCart = [...cart];
+      updatedCart[existingItemIndex].quantity += quantity;
+      setCart(updatedCart);
+    } else {
+      // Add new item to cart
+      setCart([...cart, cartItem]);
+    }
   };
-  const removeFromCart = (index) => {
+
+  const removeFromCart = (index: number) => {
     const updatedCart = [...cart];
     updatedCart.splice(index, 1);
     setCart(updatedCart);
   };
-  const updateQuantity = (index, quantity) => {
+
+  const updateQuantity = (index: number, quantity: number) => {
     const updatedCart = [...cart];
     updatedCart[index].quantity = quantity;
     setCart(updatedCart);
   };
+
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
@@ -64,42 +85,32 @@ export default function Component() {
           </header>
           <div className="flex-1 overflow-auto p-4 md:p-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  className="bg-white rounded-lg shadow-sm p-4 flex flex-col"
-                >
-                  <img
-                    src="/placeholder.svg"
-                    alt={product.name}
-                    width={200}
-                    height={200}
-                    className="rounded-lg mb-4 object-cover"
-                  />
-                  <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
-                  <p className="text-gray-500 mb-4">
-                    ${product.price.toFixed(2)}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {/* <Input
-                  type="number"
-                  min={1}
-                  defaultValue={1}
-                  className="w-20 text-right"
-                  onChange={(e) =>
-                    addToCart(product, parseInt(e.target.value, 10))
-                  }
-                /> */}
-                    <Button
-                      variant="outline"
-                      className="px-4 py-2"
-                      onClick={() => addToCart(product)}
-                    >
-                      Add to Cart
-                    </Button>
+              {items &&
+                items.map((item) => (
+                  <div
+                    key={item.itemid}
+                    className="bg-white rounded-lg shadow-sm p-4 flex flex-col"
+                  >
+                    <Image
+                      src={item.itemimage[0]?.imagepath ?? ""}
+                      alt="Product Image"
+                      width={250}
+                      height={250}
+                      className="rounded-lg mb-4 object-cover"
+                    />
+                    <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
+                    <p className="text-gray-500 mb-4">₱{item.unitprice}</p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        className="px-4 py-2"
+                        onClick={() => addToCart(item)}
+                      >
+                        Add to Cart
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
           <div className="bg-white shadow-t p-4 md:p-8">
@@ -107,20 +118,20 @@ export default function Component() {
             <div className="space-y-4">
               {cart.map((item, index) => (
                 <div
-                  key={index}
+                  key={item.id}
                   className="bg-gray-100 rounded-lg p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">
-                    <img
-                      src="/placeholder.svg"
+                    <Image
+                      src={item.imagepath}
                       alt={item.name}
-                      width={64}
-                      height={64}
+                      width={160}
+                      height={160}
                       className="rounded-lg object-cover"
                     />
                     <div>
                       <h3 className="text-lg font-semibold">{item.name}</h3>
-                      <p className="text-gray-500">${item.price.toFixed(2)}</p>
+                      <p className="text-gray-500">₱{item.price}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
