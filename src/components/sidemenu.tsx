@@ -262,9 +262,11 @@ export default function SideMenu() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 <DropdownMenuGroup>
-                  <DropdownMenuItem className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100">
-                    <ProfileIcon className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                  <DropdownMenuItem 
+                  className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100"
+                  onClick={() => window.location.href = "/profile"}>
+                        <ProfileIcon className="inline-block mr-2 h-4 w-4" />
+                        <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100"

@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -12,8 +13,30 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import SideMenu from "@/components/sidemenu";
+import { useEffect, useState } from "react";
+import { User } from "@/interfaces/user";
 
 export default function Component() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/session", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const session = await response.json();
+        setUser(session || null);
+      } catch (error) {
+        console.error("Failed to fetch session", error);
+      }
+    };
+    fetchUser();
+  }, []);
+
   return (
     <div className="flex h-screen">
       <SideMenu />
@@ -24,11 +47,15 @@ export default function Component() {
               <div className="flex items-center gap-4">
                 <Avatar className="h-32 w-32">
                   <AvatarImage src="/placeholder-user.jpg" />
-                  <AvatarFallback>JP</AvatarFallback>
+                  <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1">
-                  <h2 className="text-4xl font-bold">Bain Hansly Repato</h2>
-                  <p className="text-xl text-muted-foreground">Admin</p>
+                  <h2 className="text-4xl font-bold">
+                    {user?.firstname && user?.middlename && user?.lastname
+                      ? `${user.firstname} ${user.middlename} ${user.lastname}`
+                      : "Guest"}
+                  </h2>
+                  <p className="text-xl text-muted-foreground">{user?.role}</p>
                 </div>
               </div>
             </div>
@@ -43,14 +70,18 @@ export default function Component() {
                   <span className="text-muted-foreground">Status:</span>
                   <Badge
                     variant="secondary"
-                    className="bg-green-500 text-green-50"
+                    className={`px-2 py-1 rounded-full ${
+                      user?.status === "active"
+                        ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                        : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                    }`}
                   >
-                    Active
+                    {user?.status}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Username:</span>
-                  <span>Bain27</span>
+                  <span>{user?.username}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Password:</span>
@@ -61,19 +92,19 @@ export default function Component() {
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground">First Name:</span>
-                  <span>Bain Hansly</span>
+                  <span>{user?.firstname}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Middle Name:</span>
-                  <span>Cruz</span>
+                  <span>{user?.middlename}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Last Name:</span>
-                  <span>Repato</span>
+                  <span>{user?.lastname}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Role:</span>
-                  <span>Admin</span>
+                  <span>{user?.role}</span>
                 </div>
               </div>
             </div>
@@ -82,38 +113,38 @@ export default function Component() {
           {/* Inputs section */}
           <div className="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-2">
             <div className="space-y-2 ml-10">
-                <Label htmlFor="profilePicture">Profile Picture</Label>
-                <Input id="profilePicture" type="file" />
+              <Label htmlFor="profilePicture">Profile Picture</Label>
+              <Input id="profilePicture" type="file" />
             </div>
             <div className="space-y-2 ml-10">
               <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" defaultValue="Bain Hansly" />
+              <Input id="firstName" defaultValue="" />
             </div>
             <div className="space-y-2 ml-10">
               <Label htmlFor="middleName">Middle Name</Label>
-              <Input id="middleName" defaultValue="Cruz" />
+              <Input id="middleName" defaultValue="" />
             </div>
             <div className="space-y-2 ml-10">
               <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" defaultValue="Repato" />
+              <Input id="lastName" defaultValue="" />
             </div>
             <div className="space-y-2 ml-10">
               <Label htmlFor="role">Role</Label>
-              <Select defaultValue="admin">
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="sales">Sales</SelectItem>
-                <SelectItem value="inventory">Inventory</SelectItem>
-              </SelectContent>
+              <Select defaultValue="">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="sales">Sales</SelectItem>
+                  <SelectItem value="inventory">Inventory</SelectItem>
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-2 ml-10">
               <Label htmlFor="status">Status</Label>
-              <Select defaultValue="active">
+              <Select defaultValue="">
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -125,11 +156,11 @@ export default function Component() {
             </div>
             <div className="space-y-2 ml-10">
               <Label htmlFor="username">Username</Label>
-              <Input id="username" defaultValue="johndoe" />
+              <Input id="username" defaultValue="" />
             </div>
             <div className="space-y-2 ml-10">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" defaultValue="password123" />
+              <Input id="password" type="password" />
             </div>
           </div>
         </div>

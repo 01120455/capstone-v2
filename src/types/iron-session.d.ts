@@ -9,6 +9,7 @@ declare module "iron-session" {
       lastname: string;
       role: string;
       username: string;
+      status: string;
       isLoggedIn: boolean;
     };
   }

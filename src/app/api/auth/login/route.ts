@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     lastname: user.lastname,
     role: user.role,
     username: user.username,
+    status: user.status,
     isLoggedIn: true,
   };
   await session.save();
