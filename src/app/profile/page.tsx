@@ -128,7 +128,7 @@ export default function Component() {
               <Label htmlFor="lastName">Last Name</Label>
               <Input id="lastName" defaultValue="" />
             </div>
-            <div className="space-y-2 ml-10">
+            {/* <div className="space-y-2 ml-10">
               <Label htmlFor="role">Role</Label>
               <Select defaultValue="">
                 <SelectTrigger>
@@ -153,7 +153,7 @@ export default function Component() {
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
             <div className="space-y-2 ml-10">
               <Label htmlFor="username">Username</Label>
               <Input id="username" defaultValue="" />

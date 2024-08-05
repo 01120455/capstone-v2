@@ -9,6 +9,7 @@ datasource db {
 
 model User {
   userid      Int       @id @default(autoincrement())
+  imagepath       String?
   firstname       String    @db.VarChar(25)
   middlename      String?   @db.VarChar(25)
   lastname        String    @db.VarChar(25)

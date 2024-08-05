@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -50,16 +50,20 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import SideMenu from "@/components/sidemenu";
+import Image from "next/image";
+import { get } from "lodash";
 
 export default function Component() {
   const [users, setUsers] = useState<AddUser[] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [userToDelete, setUserToDelete] = useState<AddUser | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File>();
 
   const form = useForm<AddUser>({
     resolver: zodResolver(user),
     defaultValues: {
+      imagepath: "",
       firstname: "",
       middlename: "",
       lastname: "",
@@ -68,8 +72,13 @@ export default function Component() {
       username: "",
       password: "",
       userid: 0,
+      image: undefined,
     },
   });
+
+  useEffect(() => {
+    console.log(form.formState.errors);
+  }, [form.formState.errors]);
 
   useEffect(() => {
     async function getUsers() {
@@ -92,6 +101,7 @@ export default function Component() {
     setShowModal(true);
 
     form.reset({
+      imagepath: "",
       firstname: "",
       middlename: "",
       lastname: "",
@@ -108,13 +118,14 @@ export default function Component() {
 
     form.reset({
       userid: user.userid,
+      imagepath: user.imagepath ?? "",
       firstname: user.firstname,
       middlename: user.middlename,
       lastname: user.lastname,
       role: user.role,
       status: user.status,
       username: user.username,
-      password: user.password,
+      password: "",
     });
   };
 
@@ -123,48 +134,97 @@ export default function Component() {
     form.reset();
   };
 
+  // const handleSubmit = async (values: AddUser) => {
+  //   console.log("values", values);
+  //   try {
+  //     if (values.userid) {
+  //       await axios.put(`/api/user/`, values, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //     } else {
+  //       await axios.post("/api/user", values, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //     }
+  //     setShowModal(false);
+  //     form.reset();
+  //     refreshUsers();
+  //     console.log("User added/updated successfully");
+  //   } catch (error) {
+  //     console.error("Error adding user:", error);
+  //   }
+  // };
+
+  const fileRef = form.register("image");
+
   const handleSubmit = async (values: AddUser) => {
-    console.log("values", values);
+    console.log("Form Values:", values);
+    const formData = new FormData();
+
+    formData.append("firstname", values.firstname);
+    formData.append("middlename", values.middlename);
+    formData.append("lastname", values.lastname);
+    formData.append("role", values.role);
+    formData.append("status", values.status);
+    formData.append("username", values.username);
+
+    if (selectedFile) {
+      formData.append("image", selectedFile);
+    }
+
+    if (values.password) {
+      formData.append("password", values.password);
+    }
+
     try {
+      let method = "POST";
+      let endpoint = "/api/user";
+
       if (values.userid) {
-        await axios.put(`/api/user/`, values, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      } else {
-        await axios.post("/api/user", values, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        method = "PUT";
+        endpoint = `/api/user/`;
+        formData.append("userid", values.userid.toString());
       }
-      setShowModal(false);
-      form.reset();
-      refreshUsers();
-      console.log("User added/updated successfully");
+
+      const uploadRes = await fetch(endpoint, {
+        method: method,
+        body: formData,
+      });
+
+      if (uploadRes.ok) {
+        const uploadResult = await uploadRes.json();
+        if (values.userid) {
+          console.log("User updated successfully:", uploadResult);
+        } else {
+          console.log("User added successfully:", uploadResult);
+        }
+
+        if (uploadResult.imagepath) {
+          console.log("Image uploaded successfully:", uploadResult.imagepath);
+        }
+
+        setShowModal(false);
+        refreshUsers();
+        form.reset();
+      } else {
+        console.error("Error uploading image:", uploadRes.status);
+      }
     } catch (error) {
-      console.error("Error adding user:", error);
+      console.error("Error adding/updating user:", error);
     }
   };
 
-  // const handleDelete = async (values: AddUser) => {
-  //   try {
-  //     if (!values.userid) {
-  //       console.error("User ID is undefined or null.");
-  //       return;
-  //     }
-
-  //     const response = await axios.delete(`/api/user/` + values.userid);
-
-  //     setShowAlert(false);
-  //     form.reset();
-  //     refreshUsers();
-  //     console.log("User deleted successfully");
-  //   } catch (error) {
-  //     console.error("Error deleting user:", error);
-  //   }
-  // };
+  const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+  
 
   const handleDelete = async (userid: number | undefined) => {
     try {
@@ -210,10 +270,10 @@ export default function Component() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768); 
+      setIsSmallScreen(window.innerWidth < 768);
     };
 
-    handleResize(); 
+    handleResize();
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -229,13 +289,14 @@ export default function Component() {
           <div className="flex justify-between items-center mb-6 -mr-6">
             <h1 className="text-2xl font-bold">User Management</h1>
             <Button onClick={handleAddUser}>
-            {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add User"}
+              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add User"}
             </Button>
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
@@ -247,6 +308,15 @@ export default function Component() {
                 {users &&
                   users.map((user: AddUser, index: number) => (
                     <TableRow key={index}>
+                      <TableCell>
+                        <Image
+                          src={user.imagepath ?? ""}
+                          alt="User Image"
+                          width={250}
+                          height={250}
+                          className="rounded"
+                        />
+                      </TableCell>
                       <TableCell>
                         {user.firstname} {user.middlename} {user.lastname}
                       </TableCell>
@@ -330,6 +400,25 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
+                          name="imagepath"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="file">Upload Image</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...fileRef}
+                                  id="file"
+                                  type="file"
+                                  onChange={handleImage}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
                           name="firstname"
                           render={({ field }) => (
                             <FormItem>
@@ -369,129 +458,140 @@ export default function Component() {
                           )}
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="lastname"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="lastname">Last Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                id="lastname"
-                                placeholder="Doe"
-                                defaultValue={field.value}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="role"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="role">Role</FormLabel>
-                            <FormControl>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                {...field}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select role">
-                                    {field.value}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="manager">
-                                    Manager
-                                  </SelectItem>
-                                  <SelectItem value="sales">Sales</SelectItem>
-                                  <SelectItem value="inventory">
-                                    Inventory
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="status">Status</FormLabel>
-                            <FormControl>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                {...field}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select status">
-                                    {field.value}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="active">Active</SelectItem>
-                                  <SelectItem value="inactive">
-                                    Inactive
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="username">Username</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                id="username"
-                                placeholder="JohnDoe@gmail.com"
-                                defaultValue={field.value}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="password">Password</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                id="password"
-                                type="password"
-                                defaultValue={field.value}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="lastname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="lastname">
+                                Last Name
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="lastname"
+                                  placeholder="Doe"
+                                  defaultValue={field.value}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="role"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="role">Role</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select role">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                    <SelectItem value="manager">
+                                      Manager
+                                    </SelectItem>
+                                    <SelectItem value="sales">Sales</SelectItem>
+                                    <SelectItem value="inventory">
+                                      Inventory
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="status"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="status">Status</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select status">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="active">
+                                      Active
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                      Inactive
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="username">Username</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="username"
+                                  placeholder="JohnDoe@gmail.com"
+                                  defaultValue={field.value}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="password">Password</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="password"
+                                  type="password"
+                                  defaultValue={field.value}
+                                  placeholder={
+                                    form.getValues("userid")
+                                      ? "Leave blank if not changing"
+                                      : "Enter password"
+                                  }
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button type="submit">Save</Button>

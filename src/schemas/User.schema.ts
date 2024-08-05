@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const user = z.object({
   userid: z.coerce.number().optional(),
+  imagepath: z.string().optional(),
   firstname: z.string(),
   middlename: z.string(),
   lastname: z.string(),
@@ -12,7 +13,8 @@ export const user = z.object({
     })
     .default("active"),
   username: z.string(),
-  password: z.string(),
+  password: z.string().optional(),
+  image: z.any().optional().nullable(),
 });
 
 export const loginSchema = z.object({
