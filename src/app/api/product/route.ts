@@ -145,11 +145,21 @@ export const POST = async (req: NextRequest) => {
     // Cast the string to the enum
     const type = typeString as ItemType;
 
-    const quantity = parseInt(formData.get("quantity") as string, 10);
+    const stock = parseInt(formData.get("stock") as string, 10);
     const unitprice = parseFloat(formData.get("unitprice") as string);
     const image = formData.get("image") as File | null;
 
-    if (!name || !type || isNaN(quantity) || isNaN(unitprice)) {
+    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
+    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
+
+    if (isNaN(reorderlevel) || isNaN(criticallevel)) {
+      return NextResponse.json(
+        { error: "Reorder level and critical level must be valid numbers and not negative values" },
+        { status: 400 }
+      );
+    }
+
+    if (!name || !type || isNaN(stock) || isNaN(unitprice)) {
       return NextResponse.json(
         { error: "All fields are required and must be valid to be added" },
         { status: 400 }
@@ -210,8 +220,10 @@ export const POST = async (req: NextRequest) => {
       data: {
         name,
         type,
-        quantity,
+        stock,
         unitprice,
+        reorderlevel,
+        criticallevel,
         itemimage: fileUrl
           ? {
               create: {
@@ -242,8 +254,10 @@ export async function GET(req: NextRequest) {
         itemid: true,
         name: true,
         type: true,
-        quantity: true,
+        stock: true,
         unitprice: true,
+        reorderlevel: true,
+        criticallevel: true,
         itemimage: {
           select: {
             imagepath: true,
@@ -405,9 +419,18 @@ export const PUT = async (req: NextRequest) => {
     const itemId = parseInt(formData.get("itemid") as string, 10);
     const name = formData.get("name") as string;
     const typeString = formData.get("type") as string;
-    const quantity = parseInt(formData.get("quantity") as string, 10);
+    const stock = parseInt(formData.get("stock") as string, 10);
     const unitprice = parseFloat(formData.get("unitprice") as string);
+    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
+    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
     const image = formData.get("image") as File | null;
+    
+    if (isNaN(reorderlevel) || isNaN(criticallevel)) {
+      return NextResponse.json(
+        { error: "Reorder level and critical level must be valid numbers and not negative values" },
+        { status: 400 }
+      );
+    }
 
     if (!Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
@@ -415,7 +438,7 @@ export const PUT = async (req: NextRequest) => {
 
     const type = typeString as ItemType;
 
-    if (!name || !type || isNaN(quantity) || isNaN(unitprice) || isNaN(itemId)) {
+    if (!name || !type || isNaN(stock) || isNaN(unitprice) || isNaN(itemId)) {
       return NextResponse.json(
         { error: "All fields are required and must be valid to be updated" },
         { status: 400 }
@@ -496,8 +519,10 @@ export const PUT = async (req: NextRequest) => {
       data: {
         name,
         type,
-        quantity,
+        stock,
         unitprice,
+        reorderlevel,
+        criticallevel,
         itemimage: fileUrl
           ? {
               deleteMany: {}, // delete all existing images

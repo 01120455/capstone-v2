@@ -24,9 +24,9 @@ model User {
 model Customer {
   customerid      Int       @id @default(autoincrement())
   firstname            String    @db.VarChar(50)
-  middlename            String    @db.VarChar(50)
+  middlename            String?    @db.VarChar(50)
   lastname            String    @db.VarChar(50)
-  contactnumber   Int
+  contactnumber   Int?
   Sales           Sales[]
 }
 
@@ -58,9 +58,7 @@ model SalesItem {
 
 model Supplier {
   supplierid      Int       @id @default(autoincrement())
-  firstname            String    @db.VarChar(50)
-  middlename            String    @db.VarChar(50)
-  lastname            String    @db.VarChar(50) 
+  suppliername            String    @db.VarChar(150)
   contactnumber   Int
   Purchase       Purchase[]
 }
@@ -96,8 +94,10 @@ model Item {
   itemid        Int      @id @default(autoincrement())
   name          String?  @db.VarChar(50)
   type          ItemType
-  quantity      Int
+  stock      Int
   unitprice    Float
+  reorderlevel  Int 
+  criticallevel Int
   salesitem    SalesItem[]
   purchaseitem PurchaseItem[]
   itemimage    ItemImage[]

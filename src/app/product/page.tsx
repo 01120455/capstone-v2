@@ -62,8 +62,10 @@ export default function Component() {
     defaultValues: {
       name: "",
       type: "palay",
-      quantity: 0,
+      stock: 0,
       unitprice: 0,
+      reorderlevel: 0,
+      criticallevel: 0,
       imagepath: "",
       itemid: 0,
       image: undefined,
@@ -111,8 +113,10 @@ export default function Component() {
     form.reset({
       name: "",
       type: "palay",
-      quantity: 0,
+      stock: 0,
       unitprice: 0,
+      reorderlevel: 0,
+      criticallevel: 0,
       itemid: 0,
     });
   };
@@ -124,8 +128,10 @@ export default function Component() {
       itemid: item.itemid,
       name: item.name,
       type: item.type,
-      quantity: item.quantity,
+      stock: item.stock,
       unitprice: item.unitprice,
+      reorderlevel: item.reorderlevel,
+      criticallevel: item.criticallevel,
       imagepath: item.itemimage[0]?.imagepath ?? "",
     });
   };
@@ -137,8 +143,10 @@ export default function Component() {
     form.reset({
       name: "",
       type: "palay",
-      quantity: 0,
+      stock: 0,
       unitprice: 0,
+      reorderlevel: 0,
+      criticallevel: 0,
       itemid: 0,
     });
   };
@@ -151,7 +159,7 @@ export default function Component() {
 
   //   formData.append("name", values.name);
   //   formData.append("type", values.type);
-  //   formData.append("quantity", values.quantity.toString());
+  //   formData.append("stock", values.stock.toString());
   //   formData.append("unitprice", values.unitprice.toString());
 
   //   if (selectedFile) {
@@ -202,8 +210,10 @@ export default function Component() {
 
     formData.append("name", values.name);
     formData.append("type", values.type);
-    formData.append("quantity", values.quantity.toString());
+    formData.append("stock", values.stock.toString());
     formData.append("unitprice", values.unitprice.toString());
+    formData.append("reorderlevel", values.reorderlevel.toString());
+    formData.append("criticallevel", values.criticallevel.toString());
 
     if (selectedFile) {
       formData.append("image", selectedFile);
@@ -320,8 +330,10 @@ export default function Component() {
                   <TableHead>Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Quantity</TableHead>
+                  <TableHead>stock</TableHead>
                   <TableHead>Unit Price</TableHead>
+                  <TableHead>Reorder Level</TableHead>
+                  <TableHead>Critical Level</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -340,8 +352,10 @@ export default function Component() {
                       </TableCell>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item.type}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.stock}</TableCell>
                       <TableCell>{item.unitprice}</TableCell>
+                      <TableCell>{item.reorderlevel}</TableCell>
+                      <TableCell>{item.criticallevel}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button
@@ -374,8 +388,8 @@ export default function Component() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the item {itemToDelete?.itemid} {itemToDelete?.name}{" "}
-                    {itemToDelete?.quantity} and remove their data from our
+                    the item name {itemToDelete?.name} {""} which consists of 
+                    {itemToDelete?.stock} stocks and remove their data from our
                     servers.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -480,12 +494,12 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="quantity"
+                          name="stock"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="quantity">Quantity</FormLabel>
+                              <FormLabel htmlFor="stock">stock</FormLabel>
                               <FormControl>
-                                <Input {...field} id="quantity" type="number" />
+                                <Input {...field} id="stock" type="number" />
                               </FormControl>
                             </FormItem>
                           )}
@@ -504,6 +518,42 @@ export default function Component() {
                                 <Input
                                   {...field}
                                   id="unitprice"
+                                  type="number"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="reorderlevel"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="reorderlevel">
+                                Reorder Level
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="reorderlevel"
+                                  type="number"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="criticallevel"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="criticallevel">
+                                Critical Level
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="criticallevel"
                                   type="number"
                                 />
                               </FormControl>

@@ -8,8 +8,10 @@ export const item = z.object({
       invalid_type_error: "Invalid Type Received",
     })
     .default("palay"),
-  quantity: z.coerce.number().min(0, "Quantity cannot be negative"),
+  stock: z.coerce.number().min(0, "Quantity cannot be negative"),
   unitprice: z.coerce.number().multipleOf(0.01).min(0, "Quantity cannot be negative"),
+  reorderlevel: z.coerce.number().min(0, "Reorder level cannot be negative"),
+  criticallevel: z.coerce.number().min(0, "Critical level cannot be negative"),
   imagepath: z.string().optional(),
   image: z.any().optional(),
 });
@@ -18,8 +20,10 @@ export const viewItem = z.object({
   itemid: z.number(),
   name: z.string(),
   type: z.enum(["bigas", "palay", "resico"],),
-  quantity: z.number(),
+  stock: z.number(),
   unitprice: z.number(),
+  reorderlevel: z.number(),
+  criticallevel: z.number(),
   itemimage: z.array(
     z.object({
       imagepath: z.string().optional(),

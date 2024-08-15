@@ -21,7 +21,6 @@ export default function Component() {
     {
       id: 1,
       name: "Acme Inc.",
-      email: "info@acme.com",
       phone: "555-1234",
       orders: [
         {
@@ -29,6 +28,7 @@ export default function Component() {
           date: "2023-04-15",
           item: "Product A",
           quantity: 50,
+          agent: "John Doe",
           amount: 1500,
           status: "Paid",
         },
@@ -39,7 +39,6 @@ export default function Component() {
     {
       id: 2,
       name: "Globex Corporation",
-      email: "orders@globex.com",
       phone: "555-5678",
       orders: [
         { id: 1, date: "2023-05-01", amount: 3000, status: "Paid" },
@@ -50,7 +49,6 @@ export default function Component() {
     {
       id: 3,
       name: "Stark Industries",
-      email: "contact@stark.com",
       phone: "555-9012",
       orders: [
         { id: 1, date: "2023-06-01", amount: 4000, status: "Paid" },
@@ -172,9 +170,6 @@ export default function Component() {
                     Name
                   </TableHead>
                   <TableHead className="px-4 py-3 text-left font-medium">
-                    Email
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium">
                     Phone
                   </TableHead>
                   <TableHead className="px-4 py-3 text-left font-medium">
@@ -197,19 +192,6 @@ export default function Component() {
                             onChange={(e) =>
                               handleInputChange(
                                 "name",
-                                e.target.value,
-                                "supplier"
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          <Input
-                            type="text"
-                            value={editSupplierData.email || ""}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "email",
                                 e.target.value,
                                 "supplier"
                               )
@@ -254,9 +236,6 @@ export default function Component() {
                       <>
                         <TableCell className="px-4 py-3">
                           {supplier.name}
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          {supplier.email}
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           {supplier.phone}
@@ -312,6 +291,7 @@ export default function Component() {
                       <TableHead className="font-medium">Date:</TableHead>
                       <TableHead className="font-medium">Item:</TableHead>
                       <TableHead className="font-medium">Quantity:</TableHead>
+                      <TableHead className="font-medium">Agent:</TableHead>
                       <TableHead className="font-medium">Amount:</TableHead>
                       <TableHead className="font-medium">Status:</TableHead>
                     </TableRow>
@@ -380,6 +360,18 @@ export default function Component() {
                           </TableCell>
                           <TableCell>
                             <Input
+                              value={editOrderData.agent || ""}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "agent",
+                                  e.target.value,
+                                  "order"
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
                               type="number"
                               step="0.01"
                               value={editOrderData.amount || ""}
@@ -430,6 +422,7 @@ export default function Component() {
                           <TableCell>{selectedOrder.order.date}</TableCell>
                           <TableCell>{selectedOrder.order.item}</TableCell>
                           <TableCell>{selectedOrder.order.quantity}</TableCell>
+                          <TableCell>{selectedOrder.order.agent}</TableCell>
                           <TableCell>
                             ${selectedOrder.order.amount.toFixed(2)}
                           </TableCell>
@@ -486,6 +479,9 @@ export default function Component() {
                               Quantity
                             </TableHead>
                             <TableHead className="px-4 py-2 text-left font-medium">
+                              Agent
+                            </TableHead>
+                            <TableHead className="px-4 py-2 text-left font-medium">
                               Amount
                             </TableHead>
                             <TableHead className="px-4 py-2 text-left font-medium">
@@ -508,6 +504,9 @@ export default function Component() {
                               </TableCell>
                               <TableCell className="px-4 py-2">
                                 {order.quantity}
+                              </TableCell>
+                              <TableCell className="px-4 py-2">
+                                {order.agent}
                               </TableCell>
                               <TableCell className="px-4 py-2">
                                 ${order.amount.toFixed(2)}

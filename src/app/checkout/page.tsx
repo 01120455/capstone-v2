@@ -39,14 +39,32 @@ export default function Component() {
             </h2>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <label htmlFor="name" className="text-sm font-medium">
-                  Name
+                <label htmlFor="firstname" className="text-sm font-medium">
+                  First Name
                 </label>
-                <Input id="name" placeholder="Enter your name" />
+                <Input id="firstname" placeholder="Enter customer's first name" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="middlename" className="text-sm font-medium">
+                  Middle Name
+                </label>
+                <Input id="middlename" placeholder="Enter customer's middle name (Optional)" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="lastname" className="text-sm font-medium">
+                  Last Name
+                </label>
+                <Input id="lastname" placeholder="Enter customer's last name" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="contactnumber" className="text-sm font-medium">
+                  Contact Number
+                </label>
+                <Input id="contactnumber" type="number" placeholder="Enter customer's contact number (optional)" />
               </div>
             </div>
           </div>
-          <div>
+          {/* <div>
             <h2 className="text-lg md:text-xl font-semibold mb-2">
               Payment Options
             </h2>
@@ -85,7 +103,7 @@ export default function Component() {
                 </div>
               </RadioGroup>
             </div>
-          </div>
+          </div> */}
         </div>
         <div className="grid gap-6 md:gap-8 bg-gray-100 p-6 rounded-md dark:bg-gray-800">
           <div>
@@ -142,7 +160,8 @@ export default function Component() {
       </div>
       <div className="flex justify-end mt-8 md:mt-12 gap-2">
         <Button variant="outline">Cancel</Button>
-        <Button>Place Order</Button>
+        <Button variant="secondary">Update</Button>
+        <Button>Checkout</Button>
       </div>
     </div>
     </div>

@@ -2,6 +2,10 @@
   @tailwind components;
   @tailwind utilities;
 
+  @import '@fontsource/inter/400.css'; /* Regular weight */
+@import '@fontsource/inter/700.css'; /* Bold weight */
+
+
   @layer base {
     :root {
       --background: 0 0% 100%;
@@ -72,5 +76,6 @@
     }
     body {
       @apply bg-background text-foreground;
+      font-family: 'Inter', sans-serif;
     }
   }
