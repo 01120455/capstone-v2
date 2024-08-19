@@ -18,7 +18,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,7 +49,6 @@ import { item, AddItem, ViewItem } from "@/schemas/item.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
-import { set } from "lodash";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
@@ -58,17 +56,13 @@ export default function Component() {
   const [showAlert, setShowAlert] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
-  const [showImage, setShowImage] = useState<ViewItem | null>(null);
-  const [showImageModal, setShowImageModal] = useState(false);
 
-  
   const form = useForm<AddItem>({
     resolver: zodResolver(item),
     defaultValues: {
       name: "",
       type: "palay",
       stock: 0,
-      unitofmeasurement: "",
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -120,7 +114,6 @@ export default function Component() {
       name: "",
       type: "palay",
       stock: 0,
-      unitofmeasurement: "",
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -136,7 +129,6 @@ export default function Component() {
       name: item.name,
       type: item.type,
       stock: item.stock,
-      unitofmeasurement: item.unitofmeasurement,
       unitprice: item.unitprice,
       reorderlevel: item.reorderlevel,
       criticallevel: item.criticallevel,
@@ -152,7 +144,6 @@ export default function Component() {
       name: "",
       type: "palay",
       stock: 0,
-      unitofmeasurement: "",
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -220,7 +211,6 @@ export default function Component() {
     formData.append("name", values.name);
     formData.append("type", values.type);
     formData.append("stock", values.stock.toString());
-    formData.append("unitofmeasurement", values.unitofmeasurement);
     formData.append("unitprice", values.unitprice.toString());
     formData.append("reorderlevel", values.reorderlevel.toString());
     formData.append("criticallevel", values.criticallevel.toString());
@@ -322,23 +312,13 @@ export default function Component() {
     };
   }, []);
 
-  const handleShowImage = async (item: ViewItem) => {
-    setShowImage(item);
-    setShowImageModal(true);
-  };
-
-  const closeImage = () => {
-    setShowImageModal(false);
-    setShowImage(null);
-  };
-
   return (
     <div className="flex h-screen">
       <SideMenu />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="p-6 md:p-8">
           <div className="flex  items-center justify-between mb-6 -mr-6">
-            <h1 className="text-2xl font-bold ">Product Management</h1>
+            <h1 className="text-2xl font-bold ">Material Procurement Management</h1>
             <Button onClick={handleAddProduct}>
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
@@ -347,16 +327,14 @@ export default function Component() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Unit of Measurement</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead>Reorder Level</TableHead>
-                  <TableHead>Critical Level</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead>Updated At</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Weight</TableHead>
+                  <TableHead>price per unit</TableHead>
+                  <TableHead>Supplier Name</TableHead>
+                  <TableHead>Contact No.</TableHead>
+                  <TableHead>Payment Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -364,59 +342,14 @@ export default function Component() {
                 {items &&
                   items.map((item, index: number) => (
                     <TableRow key={index}>
-                      {/* <TableCell>
-                        <Image
-                          src={item.itemimage[0]?.imagepath ?? ""}
-                          alt="Product Image"
-                          width={250}
-                          height={250}
-                          className="rounded"
-                        />
-                      </TableCell> */}
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleShowImage(item)}
-                        >
-                          View Image
-                        </Button>
-                      </TableCell>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item.type}</TableCell>
-                      <TableCell>{item.stock}</TableCell>
-                      <TableCell>{item.unitofmeasurement}</TableCell>
-                      <TableCell>{item.unitprice}</TableCell>
-                      <TableCell>{item.reorderlevel}</TableCell>
-                      <TableCell>{item.criticallevel}</TableCell>
-                      <TableCell>
-                        {item.createdat
-                          ? new Date(item.createdat).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {item.updatedat
-                          ? new Date(item.updatedat).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )
-                          : "N/A"}
-                      </TableCell>
+                      <TableCell>quantity from purchaseitem</TableCell>
+                      <TableCell>weight from purchaseitem</TableCell>
+                      <TableCell>price per unit from purchaseitem</TableCell>
+                      <TableCell>supplier name from supplier</TableCell>
+                      <TableCell>contact no. from supplier</TableCell>
+                      <TableCell>payment status from purchaseitem</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button
@@ -442,42 +375,6 @@ export default function Component() {
               </TableBody>
             </Table>
           </div>
-          <>
-          {showImageModal && showImage && (
-  <Dialog open={showImageModal} onOpenChange={closeImage}>
-    <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
-      <div className="flex flex-col">
-        <DialogHeader className="mb-2 flex items-start">
-          <DialogTitle className="text-left flex-grow">Product Image</DialogTitle>
-        </DialogHeader>
-        <DialogDescription className="mb-4 text-left">
-          <p>You can click outside to close</p>
-        </DialogDescription>
-        <div className="flex-grow flex items-center justify-center overflow-hidden">
-          <div className="relative w-full h-[400px]">
-            { showImage.itemimage[0]?.imagepath ? (
-              <Image
-                src={showImage.itemimage[0].imagepath}
-                alt="Product Image"
-                fill
-                sizes="(max-width: 600px) 100vw, 50vw"
-                style={{ objectFit: "contain" }}
-                className="absolute"
-              />
-            ) : (
-              <p className="text-center">No image available</p>
-            )}
-          </div>
-        </div>
-        <DialogFooter className="mt-4">
-          <Button onClick={closeImage}>Close</Button>
-        </DialogFooter>
-      </div>
-    </DialogContent>
-  </Dialog>
-)}
-
-          </>
           {itemToDelete && (
             <AlertDialog open={showAlert}>
               <AlertDialogContent>
@@ -485,10 +382,9 @@ export default function Component() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the item name {itemToDelete?.name} {""} which consists of{" "}
-                    {""}
+                    the item name {itemToDelete?.name} {""} which consists of 
                     {itemToDelete?.stock} stocks and remove their data from our
-                    database.
+                    servers.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -598,26 +494,6 @@ export default function Component() {
                               <FormLabel htmlFor="stock">stock</FormLabel>
                               <FormControl>
                                 <Input {...field} id="stock" type="number" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="unitofmeasurement"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="unitofmeasurement">
-                                Unit of Measurement
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="unitofmeasurement"
-                                  type="text"
-                                />
                               </FormControl>
                             </FormItem>
                           )}

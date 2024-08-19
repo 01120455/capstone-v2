@@ -1,3 +1,4 @@
+import { create } from "lodash";
 import { z } from "zod";
 
 export const item = z.object({
@@ -9,6 +10,7 @@ export const item = z.object({
     })
     .default("palay"),
   stock: z.coerce.number().min(0, "Quantity cannot be negative"),
+  unitofmeasurement: z.string().min(1, "Unit of Measurement is required").max(100, "Unit of Measurement is too long"),
   unitprice: z.coerce.number().multipleOf(0.01).min(0, "Quantity cannot be negative"),
   reorderlevel: z.coerce.number().min(0, "Reorder level cannot be negative"),
   criticallevel: z.coerce.number().min(0, "Critical level cannot be negative"),
@@ -21,6 +23,7 @@ export const viewItem = z.object({
   name: z.string(),
   type: z.enum(["bigas", "palay", "resico"],),
   stock: z.number(),
+  unitofmeasurement: z.string(),
   unitprice: z.number(),
   reorderlevel: z.number(),
   criticallevel: z.number(),
@@ -29,6 +32,8 @@ export const viewItem = z.object({
       imagepath: z.string().optional(),
     })
   ),
+  createdat: z.string().optional(),
+  updatedat: z.string().optional(),
 });
 
 export type AddItem = z.infer<typeof item>;

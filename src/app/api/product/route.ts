@@ -137,24 +137,43 @@ export const POST = async (req: NextRequest) => {
     const name = formData.get("name") as string;
     const typeString = formData.get("type") as string;
 
-    // Verify if the typeString is a valid ItemType
     if (!Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
 
-    // Cast the string to the enum
     const type = typeString as ItemType;
 
     const stock = parseInt(formData.get("stock") as string, 10);
+    const unitofmeasurement = formData.get("unitofmeasurement") as string;
     const unitprice = parseFloat(formData.get("unitprice") as string);
     const image = formData.get("image") as File | null;
+
+    if (!unitofmeasurement) {
+      return NextResponse.json(
+        { error: "Unit of measurement is required" },
+        { status: 400 }
+      );
+    }
+
+    if (isNaN(stock) || isNaN(unitprice)) {
+      return NextResponse.json(
+        {
+          error:
+            "Stock and unit price must be valid numbers and not negative values",
+        },
+        { status: 400 }
+      );
+    }
 
     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
 
     if (isNaN(reorderlevel) || isNaN(criticallevel)) {
       return NextResponse.json(
-        { error: "Reorder level and critical level must be valid numbers and not negative values" },
+        {
+          error:
+            "Reorder level and critical level must be valid numbers and not negative values",
+        },
         { status: 400 }
       );
     }
@@ -221,6 +240,7 @@ export const POST = async (req: NextRequest) => {
         name,
         type,
         stock,
+        unitofmeasurement,
         unitprice,
         reorderlevel,
         criticallevel,
@@ -255,6 +275,7 @@ export async function GET(req: NextRequest) {
         name: true,
         type: true,
         stock: true,
+        unitofmeasurement: true,
         unitprice: true,
         reorderlevel: true,
         criticallevel: true,
@@ -263,6 +284,8 @@ export async function GET(req: NextRequest) {
             imagepath: true,
           },
         },
+        createdat: true,
+        updatedat: true,
       },
     });
 
@@ -420,14 +443,35 @@ export const PUT = async (req: NextRequest) => {
     const name = formData.get("name") as string;
     const typeString = formData.get("type") as string;
     const stock = parseInt(formData.get("stock") as string, 10);
+    const unitofmeasurement = formData.get("unitofmeasurement") as string;
     const unitprice = parseFloat(formData.get("unitprice") as string);
     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
     const image = formData.get("image") as File | null;
-    
+
+    if (isNaN(stock) || isNaN(unitprice)) {
+      return NextResponse.json(
+        {
+          error:
+            "Stock and unit price must be valid numbers and not negative values",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!unitofmeasurement) {
+      return NextResponse.json(
+        { error: "Unit of measurement is required" },
+        { status: 400 }
+      );
+    }
+
     if (isNaN(reorderlevel) || isNaN(criticallevel)) {
       return NextResponse.json(
-        { error: "Reorder level and critical level must be valid numbers and not negative values" },
+        {
+          error:
+            "Reorder level and critical level must be valid numbers and not negative values",
+        },
         { status: 400 }
       );
     }
@@ -496,7 +540,10 @@ export const PUT = async (req: NextRequest) => {
       }
 
       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const filename = `${image.name.replace(/\s/g, "-")}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
+      const filename = `${image.name.replace(
+        /\s/g,
+        "-"
+      )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
       await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
       fileUrl = `${relativeUploadDir}/${filename}`;
 
@@ -520,6 +567,7 @@ export const PUT = async (req: NextRequest) => {
         name,
         type,
         stock,
+        unitofmeasurement,
         unitprice,
         reorderlevel,
         criticallevel,
@@ -635,4 +683,3 @@ export const DELETE = async (req: NextRequest) => {
     );
   }
 };
-

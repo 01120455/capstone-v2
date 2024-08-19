@@ -67,7 +67,6 @@ model Purchase {
   purchaseid          Int       @id @default(autoincrement())
   userid          Int
   supplierid          Int
-  agent               String?   @db.VarChar(50)
   date                DateTime
   status             TransactionStatus
   totalamount         Float
@@ -80,8 +79,6 @@ model PurchaseItem {
   purchaseitemid  Int     @id @default(autoincrement())
   purchaseid      Int
   itemid          Int
-  quality        String?  @db.VarChar(50)
-  variety        String?  @db.VarChar(50)
   quantity        Int?
   priceperunit    Float?
   weight          Float?
@@ -95,9 +92,12 @@ model Item {
   name          String?  @db.VarChar(50)
   type          ItemType
   stock      Int
+  unitofmeasurement String? @db.VarChar(50)
   unitprice    Float
-  reorderlevel  Int 
-  criticallevel Int
+  reorderlevel  Int? 
+  criticallevel Int?
+  createdat    DateTime  @default(now())
+  updatedat    DateTime? @updatedAt
   salesitem    SalesItem[]
   purchaseitem PurchaseItem[]
   itemimage    ItemImage[]
