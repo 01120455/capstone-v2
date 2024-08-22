@@ -79,3 +79,56 @@
       font-family: 'Inter', sans-serif;
     }
   }
+
+
+
+/* Base styles for the alert */
+.fixed-alert {
+  position: fixed;
+  top: 10px;
+  left: 75%; 
+  transform: translateX(-50%);
+  z-index: 9999;
+  max-width: 90%; /* Ensure it doesn't exceed screen width */
+  margin: 0 auto;
+  opacity: 1;
+  transition: opacity 1s ease-out;
+}
+
+/* Styles for success alert */
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* Styles for error alert */
+.alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Fade-out effect */
+.fade-out {
+  opacity: 0;
+}
+
+/* Media Queries for Mobile Devices */
+
+/* For devices with a screen width of 600px or less */
+@media (max-width: 600px) {
+  .fixed-alert {
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%);
+  }
+}
+
+/* For devices with a screen width of 400px or less */
+@media (max-width: 400px) {
+  .fixed-alert {
+    max-width: 100%; /* Ensure alert doesn't overflow the screen width */
+  }
+
+  .alert-success, .alert-error {
+    font-size: 14px; /* Reduce font size for better fit on small screens */
+  }
+}

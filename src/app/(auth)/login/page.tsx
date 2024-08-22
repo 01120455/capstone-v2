@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +25,14 @@ import {
 import { useForm } from "react-hook-form";
 import { Login, loginSchema } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function Home() {
+  const [alert, setAlert] = useState<{
+    message: string;
+    type: "error" | "success";
+  } | null>(null);
+  const [fadeOut, setFadeOut] = useState(false);
   const router = useRouter();
 
   const form = useForm<Login>({
@@ -36,6 +43,22 @@ export default function Home() {
     },
   });
 
+  const handleAlertDismiss = useCallback(() => {
+    setFadeOut(true);
+    setTimeout(() => {
+      setAlert(null);
+      setFadeOut(false); // Reset fadeOut for the next alert
+    }, 1000); // 1000ms matches the fade-out duration
+  }, []);
+
+  useEffect(() => {
+    if (alert) {
+      const timer = setTimeout(() => handleAlertDismiss(), 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [alert, handleAlertDismiss]);
+
   const handleSubmit = async (values: Login) => {
     try {
       const response = await fetch("/api/auth/login", {
@@ -45,22 +68,35 @@ export default function Home() {
         },
         body: JSON.stringify(values),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
-        throw new Error(data.message || "Invalid username or password");
+        setAlert({
+          message: data.message || "Invalid username or password",
+          type: "error",
+        });
+        return;
       }
-  
+
+      if (response.ok) {
+        setAlert({
+          message: data.message,
+          type: "success",
+        });
+      }
+
+      setAlert(null);
+
       switch (data.role) {
-        case 'admin':
-        case 'manager':
+        case "admin":
+        case "manager":
           router.push("/dashboard");
           break;
-        case 'sales':
+        case "sales":
           router.push("/sales");
           break;
-        case 'inventory':
+        case "inventory":
           router.push("/product");
           break;
         default:
@@ -68,6 +104,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error authenticating user:", error);
+      setAlert({ message: "An unexpected error occurred", type: "error" });
     }
   };
 
@@ -91,7 +128,7 @@ export default function Home() {
             <Tabs defaultValue="login" className="w-[400px]">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+                {/* <TabsTrigger value="register">Register</TabsTrigger> */}
               </TabsList>
               <TabsContent value="login">
                 <Card>
@@ -113,7 +150,9 @@ export default function Home() {
                             name="username"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="username">Username</FormLabel>
+                                <FormLabel htmlFor="username">
+                                  Username
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
@@ -132,7 +171,9 @@ export default function Home() {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="password">Password</FormLabel>
+                                <FormLabel htmlFor="password">
+                                  Password
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
@@ -153,7 +194,7 @@ export default function Home() {
                   </Form>
                 </Card>
               </TabsContent>
-              <TabsContent value="register">
+              {/* <TabsContent value="register">
                 <Card>
                   <CardHeader>
                     <CardTitle>Register</CardTitle>
@@ -175,11 +216,45 @@ export default function Home() {
                     <Button>Register</Button>
                   </CardFooter>
                 </Card>
-              </TabsContent>
+              </TabsContent> */}
             </Tabs>
           </div>
+          {alert && (
+            <div
+              className={`fixed-alert ${fadeOut ? "fade-out" : ""} ${
+                alert.type === "error" ? "alert-error" : "alert-success"
+              }`}
+            >
+              <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>
+                  {alert.type === "error" ? "Error" : "Success"}
+                </AlertTitle>
+                <AlertDescription>{alert.message}</AlertDescription>
+              </Alert>
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function Terminal(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline points="4 17 10 11 4 5" />
+      <line x1="12" x2="20" y1="19" y2="19" />
+    </svg>
   );
 }

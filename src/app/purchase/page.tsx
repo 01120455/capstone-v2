@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +19,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,35 +46,40 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Image from "next/image";
-import { item, AddItem, ViewItem } from "@/schemas/item.schema";
+import {
+  purchase,
+  AddPurchase,
+  ViewPurchase,
+  TablePurchase,
+} from "@/schemas/purchase.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
-import { set } from "lodash";
 
 export default function Component() {
-  const [items, setItems] = useState<ViewItem[] | null>(null);
+  const [purchases, setPurchases] = useState<TablePurchase[] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File>();
-  const [showImage, setShowImage] = useState<ViewItem | null>(null);
-  const [showImageModal, setShowImageModal] = useState(false);
+  const [purchaseToDelete, setPurchaseToDelete] = useState<AddPurchase | null>(
+    null
+  );
 
-  
-  const form = useForm<AddItem>({
-    resolver: zodResolver(item),
+  const form = useForm<AddPurchase>({
+    resolver: zodResolver(purchase),
     defaultValues: {
+      purchaseid: 0,
+      supplierid: 0,
+      suppliername: "",
+      contactnumber: "",
+      itemid: 0,
       name: "",
       type: "palay",
-      stock: 0,
       unitofmeasurement: "",
-      unitprice: 0,
-      reorderlevel: 0,
-      criticallevel: 0,
-      imagepath: "",
-      itemid: 0,
-      image: undefined,
+      status: "pending",
+      totalamount: 0,
+      noofsack: 0,
+      totalweight: 0,
+      priceperunit: 0,
     },
   });
 
@@ -83,160 +88,118 @@ export default function Component() {
   }, [form.formState.errors]);
 
   useEffect(() => {
-    async function getItems() {
+    async function getPurchase() {
       try {
-        const response = await fetch("/api/product");
+        const response = await fetch("/api/purchase");
         if (response.ok) {
-          const items = await response.json();
-          setItems(items);
+          const purchases = await response.json();
+          setPurchases(purchases);
         } else {
-          console.error("Error fetching items:", response.status);
+          console.error("Error fetching purchase history:", response.status);
         }
       } catch (error) {
         console.error("Error fetching items:", error);
       }
     }
-    getItems();
+    getPurchase();
   }, []);
 
-  const refreshItems = async () => {
+  const refreshPurchases = async () => {
     try {
-      const response = await fetch("/api/product");
+      const response = await fetch("/api/purchase");
       if (response.ok) {
-        const items = await response.json();
-        setItems(items);
+        const purchases = await response.json();
+        setPurchases(purchases);
       } else {
-        console.error("Error fetching items:", response.status);
+        console.error("Error fetching purchases:", response.status);
       }
     } catch (error) {
-      console.error("Error fetching items:", error);
+      console.error("Error fetching purchases:", error);
     }
   };
 
-  const handleAddProduct = () => {
+  const handleAddPurchase = () => {
     setShowModal(true);
 
     form.reset({
+      purchaseid: 0,
+      supplierid: 0,
+      suppliername: "",
+      contactnumber: "",
+      itemid: 0,
       name: "",
       type: "palay",
-      stock: 0,
       unitofmeasurement: "",
-      unitprice: 0,
-      reorderlevel: 0,
-      criticallevel: 0,
-      itemid: 0,
+      status: "pending",
+      totalamount: 0,
+      noofsack: 0,
+      totalweight: 0,
+      priceperunit: 0,
     });
   };
 
-  const handleEdit = (item: ViewItem) => {
+  const handleEdit = (purchase: TablePurchase) => {
     setShowModal(true);
 
     form.reset({
-      itemid: item.itemid,
-      name: item.name,
-      type: item.type,
-      stock: item.stock,
-      unitofmeasurement: item.unitofmeasurement,
-      unitprice: item.unitprice,
-      reorderlevel: item.reorderlevel,
-      criticallevel: item.criticallevel,
-      imagepath: item.itemimage[0]?.imagepath ?? "",
+      purchaseid: purchase.purchaseid,
+      supplierid: purchase.Supplier.supplierid,
+      suppliername: purchase.Supplier.suppliername,
+      contactnumber: purchase.Supplier.contactnumber,
+      itemid: purchase.PurchaseItems[0].itemid,
+      name: purchase.PurchaseItems[0].Item.name,
+      type: purchase.PurchaseItems[0].Item.type,
+      unitofmeasurement: purchase.PurchaseItems[0].Item.unitofmeasurement,
+      status: purchase.status,
+      totalamount: purchase.totalamount,
+      noofsack: purchase.PurchaseItems[0].noofsack,
+      totalweight: purchase.PurchaseItems[0].totalweight,
+      priceperunit: purchase.PurchaseItems[0].priceperunit,
     });
   };
 
   const handleCancel = () => {
     setShowModal(false);
-    setSelectedFile(undefined);
 
     form.reset({
+      purchaseid: 0,
+      supplierid: 0,
+      suppliername: "",
+      contactnumber: "",
+      itemid: 0,
       name: "",
       type: "palay",
-      stock: 0,
       unitofmeasurement: "",
-      unitprice: 0,
-      reorderlevel: 0,
-      criticallevel: 0,
-      itemid: 0,
+      status: "pending",
+      totalamount: 0,
+      noofsack: 0,
+      totalweight: 0,
+      priceperunit: 0,
     });
   };
 
-  const fileRef = form.register("image");
-
-  // const handleSubmit = async (values: AddItem, isEdit: boolean = false) => {
-  //   console.log("Form Values:", values);
-  //   const formData = new FormData();
-
-  //   formData.append("name", values.name);
-  //   formData.append("type", values.type);
-  //   formData.append("stock", values.stock.toString());
-  //   formData.append("unitprice", values.unitprice.toString());
-
-  //   if (selectedFile) {
-  //     formData.append("image", selectedFile);
-  //   }
-
-  //   try {
-  //     let method = "POST";
-  //     let endpoint = "/api/product";
-
-  //     if (isEdit && values.itemid) {
-  //       method = "PUT";
-  //       endpoint = `/api/product/`;
-  //       formData.append("itemid", values.itemid.toString());
-  //     }
-
-  //     const uploadRes = await fetch(endpoint, {
-  //       method: method,
-  //       body: formData,
-  //     });
-
-  //     if (uploadRes.ok) {
-  //       const uploadResult = await uploadRes.json();
-  //       if (isEdit) {
-  //         console.log("Item updated successfully");
-  //       } else {
-  //         console.log("Item added successfully");
-  //       }
-
-  //       if (uploadResult.itemimage && uploadResult.itemimage[0]) {
-  //         console.log("Image uploaded:", uploadResult.itemimage[0].imagepath);
-  //       }
-
-  //       setShowModal(false);
-  //       refreshItems();
-  //       form.reset();
-  //     } else {
-  //       console.error("Upload failed", await uploadRes.text());
-  //     }
-  //   } catch (error) {
-  //     console.error("Error adding/updating item:", error);
-  //   }
-  // };
-
-  const handleSubmit = async (values: AddItem) => {
+  const handleSubmit = async (values: AddPurchase) => {
     console.log("Form Values:", values);
     const formData = new FormData();
 
     formData.append("name", values.name);
     formData.append("type", values.type);
-    formData.append("stock", values.stock.toString());
-    formData.append("unitofmeasurement", values.unitofmeasurement);
-    formData.append("unitprice", values.unitprice.toString());
-    formData.append("reorderlevel", values.reorderlevel.toString());
-    formData.append("criticallevel", values.criticallevel.toString());
-
-    if (selectedFile) {
-      formData.append("image", selectedFile);
-    }
+    formData.append("noofsack", values.noofsack.toString());
+    formData.append("totalweight", values.totalweight.toString());
+    formData.append("priceperunit", values.priceperunit.toString());
+    formData.append("unitofmeasurement", values.unitofmeasurement.toString());
+    formData.append("suppliername", values.suppliername);
+    formData.append("contactnumber", values.contactnumber);
+    formData.append("status", values.status);
 
     try {
       let method = "POST";
-      let endpoint = "/api/product";
+      let endpoint = "/api/purchase";
 
-      if (values.itemid) {
+      if (values.purchaseid) {
         method = "PUT";
-        endpoint = `/api/product/`;
-        formData.append("itemid", values.itemid.toString());
+        endpoint = `/api/purchase/`;
+        formData.append("purchaseid", values.purchaseid.toString());
       }
 
       const uploadRes = await fetch(endpoint, {
@@ -245,70 +208,47 @@ export default function Component() {
       });
 
       if (uploadRes.ok) {
-        const uploadResult = await uploadRes.json();
-        if (values.itemid) {
-          console.log("Item updated successfully");
+        if (values.purchaseid) {
+          console.log("Purchase updated successfully");
         } else {
-          console.log("Item added successfully");
-        }
-
-        if (uploadResult.itemimage && uploadResult.itemimage[0]) {
-          console.log("Image uploaded:", uploadResult.itemimage[0].imagepath);
+          console.log("Purchase added successfully");
         }
 
         setShowModal(false);
-        refreshItems();
+        refreshPurchases();
         form.reset();
       } else {
         console.error("Upload failed", await uploadRes.text());
       }
     } catch (error) {
-      console.error("Error adding/updating item:", error);
+      console.error("Error adding/updating purchase:", error);
     }
   };
 
-  // const handleDelete = async (itemid: number | undefined) => {
-  //   try {
-  //     const response = await fetch(`/api/product-delete/${itemid}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     if (response.ok) {
-  //       console.log("Item deleted successfully");
-  //       setShowAlert(false);
-  //       setItemToDelete(null);
-  //       refreshItems();
-  //     } else {
-  //       console.error("Error deleting item:", response.status);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting item:", error);
-  //   }
-  // };
-
-  const handleDelete = async (itemid: number | undefined) => {
+  const handleDelete = async (purchaseid: number | undefined) => {
     try {
-      const response = await fetch(`/api/product-soft-delete/${itemid}`, {
-        method: "PUT",
+      const response = await fetch(`/api/purchase-delete/${purchaseid}`, {
+        method: "DELETE",
       });
 
       if (response.ok) {
-        console.log("Item deleted successfully");
+        console.log("Purchased product deleted successfully");
         setShowAlert(false);
-        setItemToDelete(null);
-        refreshItems();
+        setPurchaseToDelete(null);
+        refreshPurchases();
       } else {
-        console.error("Error deleting item:", response.status);
+        console.error("Error deleting purchase:", response.status);
       }
     } catch (error) {
-      console.error("Error deleting item:", error);
+      console.error("Error deleting purchase:", error);
     }
   };
 
 
   
-  const handleDeleteItem = (item: AddItem) => {
-    setItemToDelete(item);
+
+  const handleDeletePurchase = (purchase: AddPurchase) => {
+    setPurchaseToDelete(purchase);
     setShowAlert(true);
   };
 
@@ -317,25 +257,18 @@ export default function Component() {
   ) => {
     event.preventDefault();
     setShowAlert(false);
-    setItemToDelete(null);
+    setPurchaseToDelete(null);
     form.reset();
-  };
-
-  const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
   };
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768); // Adjust 768 as per your design's breakpoint
+      setIsSmallScreen(window.innerWidth < 768);
     };
 
-    handleResize(); // Initial check
+    handleResize();
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -343,24 +276,16 @@ export default function Component() {
     };
   }, []);
 
-  const handleShowImage = async (item: ViewItem) => {
-    setShowImage(item);
-    setShowImageModal(true);
-  };
-
-  const closeImage = () => {
-    setShowImageModal(false);
-    setShowImage(null);
-  };
-
   return (
     <div className="flex h-screen">
       <SideMenu />
       <div className="flex-1 overflow-y-auto p-5">
         <div className="p-6 md:p-8">
           <div className="flex  items-center justify-between mb-6 -mr-6">
-            <h1 className="text-2xl font-bold ">Product Management</h1>
-            <Button onClick={handleAddProduct}>
+            <h1 className="text-2xl font-bold ">
+              Material Procurement Management
+            </h1>
+            <Button onClick={handleAddPurchase}>
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
           </div>
@@ -368,51 +293,51 @@ export default function Component() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Stock</TableHead>
+                  <TableHead>Item Name</TableHead>
+                  <TableHead>Item Type</TableHead>
+                  <TableHead>No of Sacks</TableHead>
                   <TableHead>Unit of Measurement</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead>Reorder Level</TableHead>
-                  <TableHead>Critical Level</TableHead>
-                  <TableHead>Created At</TableHead>
+                  <TableHead>Price Per Kilogram</TableHead>
+                  <TableHead>Total Weight</TableHead>
+                  <TableHead>Created by</TableHead>
+                  <TableHead>Supplier Name</TableHead>
+                  <TableHead>Contact No.</TableHead>
+                  <TableHead>Payment Status</TableHead>
+                  <TableHead>Total Amount</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead>Updated At</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items &&
-                  items.map((item, index: number) => (
-                    <TableRow key={index}>
-                      {/* <TableCell>
-                        <Image
-                          src={item.itemimage[0]?.imagepath ?? ""}
-                          alt="Product Image"
-                          width={250}
-                          height={250}
-                          className="rounded"
-                        />
-                      </TableCell> */}
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleShowImage(item)}
-                        >
-                          View Image
-                        </Button>
-                      </TableCell>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.type}</TableCell>
-                      <TableCell>{item.stock}</TableCell>
-                      <TableCell>{item.unitofmeasurement}</TableCell>
-                      <TableCell>{item.unitprice}</TableCell>
-                      <TableCell>{item.reorderlevel}</TableCell>
-                      <TableCell>{item.criticallevel}</TableCell>
-                      <TableCell>
-                        {item.createdat
-                          ? new Date(item.createdat).toLocaleDateString(
+                <>
+                  {purchases &&
+                    purchases.map((purchase, index: number) => (
+                      <TableRow key={index}>
+                        {/* Assuming `purchase` is of type `ViewPurchase` */}
+                        {purchase.PurchaseItems.map((item, itemIndex) => (
+                          <React.Fragment key={itemIndex}>
+                            <TableCell>{item.Item.name}</TableCell>
+                            <TableCell>{item.Item.type}</TableCell>
+                            <TableCell>{item.noofsack}</TableCell>
+                            <TableCell>{item.Item.unitofmeasurement}</TableCell>
+                            <TableCell>{item.priceperunit}</TableCell>
+                            <TableCell>{item.totalweight}</TableCell>
+                          </React.Fragment>
+                        ))}
+                        {/* Rendering user details */}
+                        <TableCell>
+                          {purchase.User.firstname} {purchase.User.lastname}
+                        </TableCell>
+                        {/* Rendering supplier details */}
+                        <TableCell>{purchase.Supplier.suppliername}</TableCell>
+                        <TableCell>{purchase.Supplier.contactnumber}</TableCell>
+                        {/* Rendering status, total amount, and date */}
+                        <TableCell>{purchase.status}</TableCell>
+                        <TableCell>{purchase.totalamount}</TableCell>
+                        <TableCell>
+                        {purchase.date
+                          ? new Date(purchase.date).toLocaleDateString(
                               "en-US",
                               {
                                 year: "numeric",
@@ -425,8 +350,8 @@ export default function Component() {
                           : "N/A"}
                       </TableCell>
                       <TableCell>
-                        {item.updatedat
-                          ? new Date(item.updatedat).toLocaleDateString(
+                        {purchase.updatedat
+                          ? new Date(purchase.updatedat).toLocaleDateString(
                               "en-US",
                               {
                                 year: "numeric",
@@ -438,78 +363,42 @@ export default function Component() {
                             )
                           : "N/A"}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <FilePenIcon className="w-4 h-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteItem(item)}
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(purchase)}
+                            >
+                              <FilePenIcon className="w-4 h-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeletePurchase(purchase)}
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </>
               </TableBody>
             </Table>
           </div>
-          <>
-          {showImageModal && showImage && (
-  <Dialog open={showImageModal} onOpenChange={closeImage}>
-    <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
-      <div className="flex flex-col">
-        <DialogHeader className="mb-2 flex items-start">
-          <DialogTitle className="text-left flex-grow">Product Image</DialogTitle>
-        </DialogHeader>
-        <DialogDescription className="mb-4 text-left">
-          <p>You can click outside to close</p>
-        </DialogDescription>
-        <div className="flex-grow flex items-center justify-center overflow-hidden">
-          <div className="relative w-full h-[400px]">
-            { showImage.itemimage[0]?.imagepath ? (
-              <Image
-                src={showImage.itemimage[0].imagepath}
-                alt="Product Image"
-                fill
-                sizes="(max-width: 600px) 100vw, 50vw"
-                style={{ objectFit: "contain" }}
-                className="absolute"
-              />
-            ) : (
-              <p className="text-center">No image available</p>
-            )}
-          </div>
-        </div>
-        <DialogFooter className="mt-4">
-          <Button onClick={closeImage}>Close</Button>
-        </DialogFooter>
-      </div>
-    </DialogContent>
-  </Dialog>
-)}
-
-          </>
-          {itemToDelete && (
+          {purchaseToDelete && (
             <AlertDialog open={showAlert}>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the item name {itemToDelete?.name} {""} which consists of{" "}
-                    {""}
-                    {itemToDelete?.stock} stocks and remove their data from our
-                    database.
+                    the item name {purchaseToDelete?.name} {""} type{" "}
+                    {purchaseToDelete.type} {""}
+                    from supplier {purchaseToDelete?.suppliername}.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -517,7 +406,7 @@ export default function Component() {
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleDelete(itemToDelete.itemid)}
+                    onClick={() => handleDelete(purchaseToDelete.purchaseid)}
                   >
                     Continue
                   </AlertDialogAction>
@@ -530,14 +419,14 @@ export default function Component() {
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>
-                    {form.getValues("itemid")
-                      ? "Edit Product"
-                      : "Add New Product"}
+                    {form.getValues("purchaseid")
+                      ? "Edit Purchase of Product"
+                      : "Add New Purchase of Product"}
                   </DialogTitle>
                   <DialogDescription>
                     Fill out the form to{" "}
-                    {form.getValues("itemid") ? "edit a" : "add a new"} product
-                    to your inventory.
+                    {form.getValues("purchaseid") ? "edit a" : "add a new"}{" "}
+                    purchase product to your inventory.
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -549,29 +438,10 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="image"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="file">Upload Image</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...fileRef}
-                                  id="file"
-                                  type="file"
-                                  onChange={handleImage}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="name">Name</FormLabel>
+                              <FormLabel htmlFor="name">Item Name</FormLabel>
                               <FormControl>
                                 <Input {...field} id="name" type="text" />
                               </FormControl>
@@ -585,7 +455,7 @@ export default function Component() {
                           name="type"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="type">Type</FormLabel>
+                              <FormLabel htmlFor="type">Item Type</FormLabel>
                               <FormControl>
                                 <Select
                                   onValueChange={field.onChange}
@@ -613,12 +483,14 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="stock"
+                          name="noofsack"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="stock">stock</FormLabel>
+                              <FormLabel htmlFor="noofsack">
+                                No. of sacks
+                              </FormLabel>
                               <FormControl>
-                                <Input {...field} id="stock" type="number" />
+                                <Input {...field} id="noofsack" type="number" />
                               </FormControl>
                             </FormItem>
                           )}
@@ -647,54 +519,113 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="unitprice"
+                          name="totalweight"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="unitprice">
-                                Unit Price
+                              <FormLabel htmlFor="totalweight">
+                                Total weight
                               </FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="unitprice"
+                                  id="totalweight"
                                   type="number"
                                 />
                               </FormControl>
                             </FormItem>
                           )}
                         />
+                      </div>
+                      <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="reorderlevel"
+                          name="priceperunit"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="reorderlevel">
-                                Reorder Level
+                              <FormLabel htmlFor="priceperunit">
+                                Price per unit
                               </FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="reorderlevel"
+                                  id="priceperunit"
                                   type="number"
                                 />
                               </FormControl>
                             </FormItem>
                           )}
                         />
+                      </div>
+                      <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="criticallevel"
+                          name="suppliername"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="criticallevel">
-                                Critical Level
+                              <FormLabel htmlFor="suppliername">
+                                Supplier Name
                               </FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="criticallevel"
-                                  type="number"
+                                  id="suppliername"
+                                  type="text"
                                 />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="contactnumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="contactnumber">
+                                Contact Number
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="contactnumber"
+                                  type="text"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="status"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="status">
+                                Payment Status
+                              </FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select status">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="pending">
+                                      Pending
+                                    </SelectItem>
+                                    <SelectItem value="paid">Paid</SelectItem>
+                                    <SelectItem value="cancelled">
+                                      Cancelled
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </FormControl>
                             </FormItem>
                           )}

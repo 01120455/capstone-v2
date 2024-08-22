@@ -5,16 +5,10 @@ import { stat, mkdir, writeFile, unlink } from "fs/promises";
 import { join } from "path";
 import mime from "mime";
 import _ from "lodash";
+import { getIronSession } from "iron-session";
+import { sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
-
-const MAX_FILE_SIZE = 5000000; // 5MB
-const ACCEPTED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-];
 
 enum ItemType {
   bigas = "bigas",
@@ -22,194 +16,52 @@ enum ItemType {
   resico = "resico",
 }
 
-
-// export const POST = async (req: NextRequest) => {
-//   try {
-//     const formData = await req.formData();
-
-//     const name = formData.get("name") as string;
-//     const typeString = formData.get("type") as string;
-
-//     if (!Object.values(ItemType).includes(typeString as ItemType)) {
-//       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
-//     }
-
-//     const type = typeString as ItemType;
-
-//     const stock = parseInt(formData.get("stock") as string, 10);
-//     const unitofmeasurement = formData.get("unitofmeasurement") as string;
-//     const unitprice = parseFloat(formData.get("unitprice") as string);
-//     const image = formData.get("image") as File | null;
-
-//     if (!unitofmeasurement) {
-//       return NextResponse.json(
-//         { error: "Unit of measurement is required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (isNaN(stock) || isNaN(unitprice)) {
-//       return NextResponse.json(
-//         {
-//           error:
-//             "Stock and unit price must be valid numbers and not negative values",
-//         },
-//         { status: 400 }
-//       );
-//     }
-
-//     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-//     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
-
-//     if (isNaN(reorderlevel) || isNaN(criticallevel)) {
-//       return NextResponse.json(
-//         {
-//           error:
-//             "Reorder level and critical level must be valid numbers and not negative values",
-//         },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (!name || !type || isNaN(stock) || isNaN(unitprice)) {
-//       return NextResponse.json(
-//         { error: "All fields are required and must be valid to be added" },
-//         { status: 400 }
-//       );
-//     }
-
-//     let fileUrl = null;
-
-//     if (image) {
-//       if (image.size > MAX_FILE_SIZE) {
-//         return NextResponse.json(
-//           { error: "File is too large" },
-//           { status: 400 }
-//         );
-//       }
-
-//       if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
-//         return NextResponse.json(
-//           { error: "Invalid file type" },
-//           { status: 400 }
-//         );
-//       }
-
-//       const buffer = await image.arrayBuffer();
-
-//       // Sanitize the name to create a valid folder name
-//       const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
-//       const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
-//       const uploadDir = join(process.cwd(), "public", relativeUploadDir);
-
-//       try {
-//         await stat(uploadDir);
-//       } catch (e: any) {
-//         if (e.code === "ENOENT") {
-//           await mkdir(uploadDir, { recursive: true });
-//         } else {
-//           console.error(
-//             "Error while trying to create directory when uploading a file\n",
-//             e
-//           );
-//           return NextResponse.json(
-//             { error: "Internal server error" },
-//             { status: 500 }
-//           );
-//         }
-//       }
-
-//       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-//       const filename = `${image.name.replace(
-//         /\s/g,
-//         "-"
-//       )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
-//       await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
-//       fileUrl = `${relativeUploadDir}/${filename}`;
-//     }
-
-//     const newItem = await prisma.item.create({
-//       data: {
-//         name,
-//         type,
-//         stock,
-//         unitofmeasurement,
-//         unitprice,
-//         reorderlevel,
-//         criticallevel,
-//         itemimage: fileUrl
-//           ? {
-//               create: {
-//                 imagepath: fileUrl,
-//               },
-//             }
-//           : undefined,
-//       },
-//       include: {
-//         itemimage: true,
-//       },
-//     });
-
-//     return NextResponse.json(newItem, { status: 201 });
-//   } catch (error) {
-//     console.error("Error creating item:", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// };
-
-// export async function GET(req: NextRequest) {
-//   try {
-//     const items = await prisma.item.findMany({
-//       select: {
-//         itemid: true,
-//         name: true,
-//         type: true,
-//         stock: true,
-//         unitofmeasurement: true,
-//         unitprice: true,
-//         reorderlevel: true,
-//         criticallevel: true,
-//         itemimage: {
-//           select: {
-//             imagepath: true,
-//           },
-//         },
-//         createdat: true,
-//         updatedat: true,
-//       },
-//     });
-
-//     return NextResponse.json(items, { status: 200 });
-//   } catch (error) {
-//     console.error("Error fetching items:", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// }
+enum Status {
+  pending = "pending",
+  paid = "paid",
+  cancelled = "cancelled",
+}
 
 export const POST = async (req: NextRequest) => {
   try {
+    const session = await getIronSession(req, NextResponse.next(), sessionOptions);
+
+    const userid = session.user.userid;
+
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
+    console.log("Name:", name);
+
     const typeString = formData.get("type") as string;
+    console.log("Type:", typeString);
 
     if (!Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
-
     const type = typeString as ItemType;
-    const stock = parseInt(formData.get("stock") as string, 10);
+
+    const noofsack = parseInt(formData.get("noofsack") as string, 10);
+    console.log("No of Sack:", noofsack);
+
+    const priceperunit = parseFloat(formData.get("priceperunit") as string);
+    console.log("Price per unit:", priceperunit);
+
+    if (isNaN(noofsack) || isNaN(priceperunit)) {
+      return NextResponse.json(
+        {
+          error:
+            "Number of sack and unit price must be valid numbers and not negative values",
+        },
+        { status: 400 }
+      );
+    }
+
+    const totalweight = parseFloat(formData.get("totalweight") as string);
+    console.log("Total weight:", totalweight);
+
     const unitofmeasurement = formData.get("unitofmeasurement") as string;
-    const unitprice = parseFloat(formData.get("unitprice") as string);
-    const image = formData.get("image") as File | null;
-    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
+    console.log("Unit of Measurement:", unitofmeasurement);
 
     if (!unitofmeasurement) {
       return NextResponse.json(
@@ -218,127 +70,107 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    if (isNaN(stock) || isNaN(unitprice) || isNaN(reorderlevel) || isNaN(criticallevel)) {
+    if (!name || !type || isNaN(noofsack) || isNaN(totalweight)) {
       return NextResponse.json(
-        {
-          error:
-            "Stock, unit price, reorder level, and critical level must be valid numbers and not negative values",
-        },
+        { error: "All fields are required and must be valid to be added" },
         { status: 400 }
       );
     }
 
-    if (!name || !type) {
+    const suppliername = formData.get("suppliername") as string;
+    console.log("Supplier name:", suppliername);
+
+    const contactnumber = BigInt(formData.get("contactnumber") as string);
+    console.log("Contact number:", contactnumber);
+
+    if (!suppliername || !contactnumber) {
       return NextResponse.json(
-        { error: "Name and type are required" },
+        { error: "Supplier name and contact number are required" },
         { status: 400 }
       );
     }
 
-    // Handle file upload
-    let fileUrl = null;
+    const statusString = formData.get("status") as string;
+    console.log("Status:", statusString);
+    const status = statusString as Status;
+    const totalamount = totalweight * priceperunit;
+    console.log("Total amount:", totalamount);
 
-    if (image) {
-      if (image.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          { error: "File is too large" },
-          { status: 400 }
-        );
-      }
-
-      if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
-        return NextResponse.json(
-          { error: "Invalid file type" },
-          { status: 400 }
-        );
-      }
-
-      const buffer = await image.arrayBuffer();
-      const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
-      const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
-      const uploadDir = join(process.cwd(), "public", relativeUploadDir);
-
-      try {
-        await stat(uploadDir);
-      } catch (e: any) {
-        if (e.code === "ENOENT") {
-          await mkdir(uploadDir, { recursive: true });
-        } else {
-          console.error("Error while creating directory for file upload", e);
-          return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-          );
-        }
-      }
-
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const filename = `${image.name.replace(/\s/g, "-")}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
-      await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
-      fileUrl = `${relativeUploadDir}/${filename}`;
+    if (!Object.values(Status).includes(statusString as Status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // Check if the item exists
-    const existingItem = await prisma.item.findFirst({
+    const existingSupplier = await prisma.supplier.findUnique({
       where: {
-        name,
-        type,
-        unitofmeasurement,
-        itemdeleted: true, // Check if the item is marked as deleted
+        suppliername_contactnumber: {
+          suppliername,
+          contactnumber,
+        },
       },
     });
 
-    if (existingItem) {
-      // Update the existing item
-      const updatedItem = await prisma.item.update({
-        where: { itemid: existingItem.itemid },
-        data: {
-          stock,
-          unitprice,
-          reorderlevel,
-          criticallevel,
-          itemimage: fileUrl
-          ? {
-            deleteMany: {}, // delete all existing images
-            create: {
-              imagepath: fileUrl,
-            },
-          }
-        : undefined,
-          itemdeleted: false, // Mark as not deleted
-        },
-        include: {
-          itemimage: true,
-        },
-      });
-      return NextResponse.json(updatedItem, { status: 200 });
+    let supplierId;
+    if (existingSupplier) {
+      supplierId = existingSupplier.supplierid;
     } else {
-      // Create a new item
-      const newItem = await prisma.item.create({
+      const newSupplier = await prisma.supplier.create({
         data: {
-          name,
-          type,
-          stock,
-          unitofmeasurement,
-          unitprice,
-          reorderlevel,
-          criticallevel,
-          itemimage: fileUrl
-            ? {
-                create: {
-                  imagepath: fileUrl,
-                },
-              }
-            : undefined,
-        },
-        include: {
-          itemimage: true,
+          suppliername,
+          contactnumber,
         },
       });
-      return NextResponse.json(newItem, { status: 201 });
+      supplierId = newSupplier.supplierid;
     }
+
+        // Check if item exists
+        const existingItem = await prisma.item.findFirst({
+          where: { name, type, unitofmeasurement },
+        });
+    
+        let itemId;
+        if (existingItem) {
+          itemId = existingItem.itemid;
+          // Handle possible null value for stock
+          const currentStock = existingItem.stock ?? 0;
+          const newStock = currentStock + noofsack;
+    
+          // Update item with new stock
+          await prisma.item.update({
+            where: { itemid: itemId },
+            data: { stock: newStock },
+          });
+        } else {
+          // Create new item if it doesn't exist
+          const newItem = await prisma.item.create({
+            data: { name, type, unitofmeasurement, stock: noofsack },
+          });
+          itemId = newItem.itemid;
+        }
+
+
+    const newPurchase = await prisma.purchase.create({
+      data: {
+        userid,
+        supplierid: supplierId,
+        status,
+        totalamount,
+      },
+    });
+
+    const newPurchaseItem = await prisma.purchaseItem.create({
+      data: {
+        purchaseid: newPurchase.purchaseid,
+        itemid: itemId,
+        noofsack,
+        unitofmeasurement,
+        totalweight,
+        priceperunit,
+      },
+    });
+
+    return NextResponse.json(newPurchaseItem, { status: 201 });
   } catch (error) {
-    console.error("Error processing request:", error);
+    console.error("Error creating purchase:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -348,38 +180,77 @@ export const POST = async (req: NextRequest) => {
 
 export async function GET(req: NextRequest) {
   try {
-    const items = await prisma.item.findMany({
-      where: {
-        itemdeleted: false, // Filter out items where itemdeleted is true
-      },
+    // Fetch the data from the database
+    const purchases = await prisma.purchase.findMany({
       select: {
-        itemid: true,
-        name: true,
-        type: true,
-        stock: true,
-        unitofmeasurement: true,
-        unitprice: true,
-        reorderlevel: true,
-        criticallevel: true,
-        itemimage: {
+        PurchaseItems: {
           select: {
-            imagepath: true,
+            Item: {
+              select: {
+                name: true,
+                type: true,
+                unitofmeasurement: true,
+              },
+            },
+            noofsack: true,
+            priceperunit: true,
+            totalweight: true,
           },
         },
-        createdat: true,
+        Supplier: {
+          select: {
+            suppliername: true,
+            contactnumber: true,
+          },
+        },
+        User: {
+          select: {
+            firstname: true,
+            lastname: true,
+          },
+        },
+        status: true,
+        totalamount: true,
+        date: true,
         updatedat: true,
       },
     });
 
-    return NextResponse.json(items, { status: 200 });
+    // Convert BigInt values to strings
+// Function to convert BigInt values to strings
+const convertBigIntToString = (value: any): any => {
+  if (typeof value === 'bigint') {
+    return value.toString();
+  }
+  if (Array.isArray(value)) {
+    return value.map(convertBigIntToString);
+  }
+  if (value !== null && typeof value === 'object') {
+    const shouldSkipConversion = ['date', 'updatedat'];
+    return Object.fromEntries(
+      Object.entries(value).map(([key, val]) => [
+        key,
+        shouldSkipConversion.includes(key) ? val : convertBigIntToString(val)])
+    );
+  }
+  return value;
+};
+
+// Sanitize the purchases data
+const sanitizedPurchases = convertBigIntToString(purchases);
+
+console.log("Sanitized purchases:", sanitizedPurchases);
+
+    return NextResponse.json(sanitizedPurchases, { status: 200 });
   } catch (error) {
-    console.error("Error fetching items:", error);
+    console.error("Error fetching purchases:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
+
 
 // export const PUT = async (req: NextRequest) => {
 //   try {

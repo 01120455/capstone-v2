@@ -17,6 +17,7 @@ model User {
   status          Status    
   username    String      @unique @db.VarChar(50)
   password    String
+  userdeleted Boolean   @default(false)
   sales           Sales[]
   purchases       Purchase[]
 }
@@ -38,6 +39,7 @@ model Sales {
   date            DateTime
   status          TransactionStatus
   frommilling    Boolean
+  onepercenttax   Float
   totalamount     Float
   user        User  @relation(fields: [salesid], references: [userid])
   customer    Customer  @relation(fields: [customerid], references: [customerid])
@@ -59,18 +61,20 @@ model SalesItem {
 model Supplier {
   supplierid      Int       @id @default(autoincrement())
   suppliername            String    @db.VarChar(150)
-  contactnumber   Int
+  contactnumber   BigInt
   Purchase       Purchase[]
+  @@unique([suppliername, contactnumber])
 }
 
 model Purchase {
-  purchaseid          Int       @id @default(autoincrement())
-  userid          Int
-  supplierid          Int
-  date                DateTime
+  purchaseid         Int       @id @default(autoincrement())
+  userid             Int
+  supplierid         Int
+  date               DateTime @default(now())
   status             TransactionStatus
   totalamount         Float
-  User            User  @relation(fields: [purchaseid], references: [userid])
+  updatedat          DateTime? @updatedAt
+  User            User  @relation(fields: [userid], references: [userid])
   Supplier        Supplier  @relation(fields: [supplierid], references: [supplierid])
   PurchaseItems       PurchaseItem[]
 }
@@ -79,11 +83,11 @@ model PurchaseItem {
   purchaseitemid  Int     @id @default(autoincrement())
   purchaseid      Int
   itemid          Int
-  quantity        Int?
+  noofsack        Int?
+  unitofmeasurement String?
   priceperunit    Float?
-  weight          Float?
-  priceperkg      Float?
-  Purchase        Purchase    @relation(fields: [purchaseitemid], references: [purchaseid])
+  totalweight          Float?
+  Purchase        Purchase    @relation(fields: [purchaseid], references: [purchaseid])
   Item            Item        @relation(fields: [itemid], references: [itemid])
 }
 
@@ -91,13 +95,14 @@ model Item {
   itemid        Int      @id @default(autoincrement())
   name          String?  @db.VarChar(50)
   type          ItemType
-  stock      Int
+  stock      Int?
   unitofmeasurement String? @db.VarChar(50)
-  unitprice    Float
+  unitprice    Float?
   reorderlevel  Int? 
   criticallevel Int?
   createdat    DateTime  @default(now())
   updatedat    DateTime? @updatedAt
+  itemdeleted Boolean   @default(false)
   salesitem    SalesItem[]
   purchaseitem PurchaseItem[]
   itemimage    ItemImage[]
