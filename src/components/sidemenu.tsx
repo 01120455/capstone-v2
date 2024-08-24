@@ -201,6 +201,22 @@ export default function SideMenu() {
                     </Link>
                     <Link
                       className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      href="/purchase"
+                      prefetch={false}
+                    >
+                      <PurchaseIcon className="inline-block w-6 h-6 mr-3" />
+                      <span>Purchase</span>
+                    </Link>
+                    <Link
+                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      href="/purchasehistory"
+                      prefetch={false}
+                    >
+                      <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                      <span>Purchase History</span>
+                    </Link>
+                    <Link
+                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
                       href="/customer"
                       prefetch={false}
                     >
@@ -260,16 +276,12 @@ export default function SideMenu() {
               </nav>
             </ScrollArea>
           </div>
-
-          {/* Footer */}
           <div className="bg-white border-t border-gray-200 flex items-center justify-between p-4 mt-auto">
-      {/* Avatar and User Info */}
       <div className="flex items-center space-x-3">
         <Avatar>
           <AvatarImage src="/placeholder-user.jpg" />
           <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
         </Avatar>
-        {/* User Info (Visible only when isMenuOpen is true on mobile) */}
         <div className={`flex flex-col lg:flex ${isMenuOpen ? "block" : "hidden"} lg:block`}>
           <span className="text-sm font-medium text-gray-800">
             {user?.firstname && user?.lastname
@@ -281,7 +293,6 @@ export default function SideMenu() {
           </span>
         </div>
       </div>
-      {/* Dropdown Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
