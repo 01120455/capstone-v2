@@ -19,7 +19,8 @@ model User {
   password    String
   userdeleted Boolean   @default(false)
   sales           Sales[]
-  purchases       Purchase[]
+  purchases       Purchase[]    @relation("CreatedPurchases")
+  ModifiedPurchases Purchase[]  @relation("LastModifiedPurchases")
 }
 
 model Customer {
@@ -38,7 +39,6 @@ model Sales {
   invoiceno       Int
   date            DateTime
   status          TransactionStatus
-  frommilling    Boolean
   onepercenttax   Float
   totalamount     Float
   user        User  @relation(fields: [salesid], references: [userid])
@@ -71,11 +71,14 @@ model Purchase {
   userid             Int
   supplierid         Int
   date               DateTime @default(now())
+  frommilling    Boolean @default(false)
   status             TransactionStatus
   totalamount         Float
+  updatedby      Int?
   updatedat          DateTime? @updatedAt
-  User            User  @relation(fields: [userid], references: [userid])
+  User            User  @relation("CreatedPurchases",fields: [userid], references: [userid])
   Supplier        Supplier  @relation(fields: [supplierid], references: [supplierid])
+  LastModifier     User?      @relation("LastModifiedPurchases", fields: [updatedby], references: [userid])
   PurchaseItems       PurchaseItem[]
 }
 

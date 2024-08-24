@@ -122,7 +122,7 @@ export const POST = async (req: NextRequest) => {
       supplierId = newSupplier.supplierid;
     }
 
-        // Check if item exists
+        
         const existingItem = await prisma.item.findFirst({
           where: { name, type, unitofmeasurement },
         });
@@ -130,17 +130,17 @@ export const POST = async (req: NextRequest) => {
         let itemId;
         if (existingItem) {
           itemId = existingItem.itemid;
-          // Handle possible null value for stock
+          
           const currentStock = existingItem.stock ?? 0;
           const newStock = currentStock + noofsack;
     
-          // Update item with new stock
+          
           await prisma.item.update({
             where: { itemid: itemId },
             data: { stock: newStock },
           });
         } else {
-          // Create new item if it doesn't exist
+          
           const newItem = await prisma.item.create({
             data: { name, type, unitofmeasurement, stock: noofsack },
           });
@@ -209,6 +209,14 @@ export async function GET(req: NextRequest) {
             lastname: true,
           },
         },
+        LastModifier: { 
+          select: {
+            firstname: true,
+            lastname: true,
+          },
+        },
+        purchaseid: true,
+        frommilling: true,
         status: true,
         totalamount: true,
         date: true,
@@ -390,155 +398,139 @@ console.log("Sanitized purchases:", sanitizedPurchases);
 
 export const PUT = async (req: NextRequest) => {
   try {
+    const session = await getIronSession(req, NextResponse.next(), sessionOptions);
+    const userid = session.user.userid;
     const formData = await req.formData();
 
-    const itemId = parseInt(formData.get("itemid") as string, 10);
+    const purchaseid = parseInt(formData.get("purchaseid") as string, 10);
+
     const name = formData.get("name") as string;
     const typeString = formData.get("type") as string;
-    const stock = parseInt(formData.get("stock") as string, 10);
+    const noofsack = parseInt(formData.get("noofsack") as string, 10);
+    const priceperunit = parseFloat(formData.get("priceperunit") as string);
+    const totalweight = parseFloat(formData.get("totalweight") as string);
     const unitofmeasurement = formData.get("unitofmeasurement") as string;
-    const unitprice = parseFloat(formData.get("unitprice") as string);
-    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
-    const image = formData.get("image") as File | null;
+    const suppliername = formData.get("suppliername") as string;
+    const contactnumber = BigInt(formData.get("contactnumber") as string);
+    const statusString = formData.get("status") as string;
 
-    if (isNaN(stock) || isNaN(unitprice)) {
+    if (!Object.values(ItemType).includes(typeString as ItemType)) {
+      return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
+    }
+    const type = typeString as ItemType;
+
+    if (isNaN(noofsack) || isNaN(priceperunit) || isNaN(totalweight)) {
       return NextResponse.json(
-        {
-          error:
-            "Stock and unit price must be valid numbers and not negative values",
-        },
+        { error: "Number fields must be valid numbers" },
         { status: 400 }
       );
     }
 
     if (!unitofmeasurement) {
+      return NextResponse.json({ error: "Unit of measurement is required" }, { status: 400 });
+    }
+
+    if (!name || !type || isNaN(noofsack) || isNaN(totalweight)) {
       return NextResponse.json(
-        { error: "Unit of measurement is required" },
+        { error: "All fields are required and must be valid" },
         { status: 400 }
       );
     }
 
-    if (isNaN(reorderlevel) || isNaN(criticallevel)) {
+    if (!suppliername || !contactnumber) {
       return NextResponse.json(
-        {
-          error:
-            "Reorder level and critical level must be valid numbers and not negative values",
-        },
+        { error: "Supplier name and contact number are required" },
         { status: 400 }
       );
     }
 
-    if (!Object.values(ItemType).includes(typeString as ItemType)) {
-      return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
+    if (!Object.values(Status).includes(statusString as Status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
+    const status = statusString as Status;
 
-    const type = typeString as ItemType;
+    const totalamount = totalweight * priceperunit;
 
-    if (!name || !type || isNaN(stock) || isNaN(unitprice) || isNaN(itemId)) {
-      return NextResponse.json(
-        { error: "All fields are required and must be valid to be updated" },
-        { status: 400 }
-      );
-    }
-
-    const existingItem = await prisma.item.findUnique({
-      where: { itemid: itemId },
-      include: { itemimage: true },
+    // Find existing purchase and item
+    const existingPurchase = await prisma.purchase.findUnique({
+      where: { purchaseid },
     });
 
-    if (!existingItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    if (!existingPurchase) {
+      return NextResponse.json({ error: "Purchase not found" }, { status: 404 });
     }
 
-    let fileUrl = null;
+    const existingPurchaseItem = await prisma.purchaseItem.findFirst({
+      where: { purchaseid },
+    });
 
-    if (image) {
-      if (image.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          { error: "File is too large" },
-          { status: 400 }
-        );
-      }
-
-      if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
-        return NextResponse.json(
-          { error: "Invalid file type" },
-          { status: 400 }
-        );
-      }
-
-      const buffer = await image.arrayBuffer();
-
-      // Sanitize the name to create a valid folder name
-      const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
-      const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
-      const uploadDir = join(process.cwd(), "public", relativeUploadDir);
-
-      try {
-        await stat(uploadDir);
-      } catch (e: any) {
-        if (e.code === "ENOENT") {
-          await mkdir(uploadDir, { recursive: true });
-        } else {
-          console.error(
-            "Error while trying to create directory when uploading a file\n",
-            e
-          );
-          return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-          );
-        }
-      }
-
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const filename = `${image.name.replace(
-        /\s/g,
-        "-"
-      )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
-      await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
-      fileUrl = `${relativeUploadDir}/${filename}`;
-
-      if (existingItem.itemimage.length > 0) {
-        const oldImagePath = join(
-          process.cwd(),
-          "public",
-          existingItem.itemimage[0].imagepath
-        );
-        try {
-          await unlink(oldImagePath);
-        } catch (e: any) {
-          console.error("Error deleting old image file\n", e);
-        }
-      }
+    if (!existingPurchaseItem) {
+      return NextResponse.json({ error: "Purchase item not found" }, { status: 404 });
     }
 
-    const updatedItem = await prisma.item.update({
-      where: { itemid: itemId },
+    // Find or create supplier
+    let supplierId;
+    const existingSupplier = await prisma.supplier.findUnique({
+      where: { suppliername_contactnumber: { suppliername, contactnumber } },
+    });
+
+    if (existingSupplier) {
+      supplierId = existingSupplier.supplierid;
+    } else {
+      const newSupplier = await prisma.supplier.create({
+        data: { suppliername, contactnumber },
+      });
+      supplierId = newSupplier.supplierid;
+    }
+
+    // Find or create item
+    const existingItem = await prisma.item.findFirst({
+      where: { name, type, unitofmeasurement },
+    });
+
+    let itemId = existingPurchaseItem.itemid;
+    if (existingItem) {
+      itemId = existingItem.itemid;
+
+      const currentStock = existingItem.stock ?? 0;
+      const pastNoOfSack = existingPurchaseItem.noofsack ?? 0;
+      const editedNoOfSack = noofsack - pastNoOfSack;
+      const newStock = currentStock + editedNoOfSack;
+
+      await prisma.item.update({
+        where: { itemid: itemId },
+        data: { stock: newStock },
+      });
+    } else {
+      const newItem = await prisma.item.create({
+        data: { name, type, unitofmeasurement, stock: noofsack },
+      });
+      itemId = newItem.itemid;
+    }
+
+    // Update purchase and purchase item
+    const updatedPurchase = await prisma.purchase.update({
+      where: { purchaseid },
       data: {
-        name,
-        type,
-        stock,
-        unitofmeasurement,
-        unitprice,
-        reorderlevel,
-        criticallevel,
-        itemimage: fileUrl
-          ? {
-              deleteMany: {}, // delete all existing images
-              create: {
-                imagepath: fileUrl,
-              },
-            }
-          : undefined,
-      },
-      include: {
-        itemimage: true,
+        updatedby: userid,
+        supplierid: supplierId,
+        status,
+        totalamount,
       },
     });
 
-    return NextResponse.json(updatedItem, { status: 200 });
+    const updatedPurchaseItem = await prisma.purchaseItem.update({
+      where: { purchaseid, purchaseitemid: existingPurchaseItem.purchaseitemid },
+      data: {
+        itemid: itemId,
+        noofsack,
+        unitofmeasurement,
+        totalweight,
+        priceperunit,
+      },
+    });
+
+    return NextResponse.json(updatedPurchaseItem, { status: 200 });
   } catch (error) {
     console.error("Error updating item:", error);
     return NextResponse.json(

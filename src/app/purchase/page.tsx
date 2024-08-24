@@ -244,9 +244,6 @@ export default function Component() {
     }
   };
 
-
-  
-
   const handleDeletePurchase = (purchase: AddPurchase) => {
     setPurchaseToDelete(purchase);
     setShowAlert(true);
@@ -282,9 +279,7 @@ export default function Component() {
       <div className="flex-1 overflow-y-auto p-5">
         <div className="p-6 md:p-8">
           <div className="flex  items-center justify-between mb-6 -mr-6">
-            <h1 className="text-2xl font-bold ">
-              Company Purchase Management
-            </h1>
+            <h1 className="text-2xl font-bold ">Company Purchase Management</h1>
             <Button onClick={handleAddPurchase}>
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
@@ -299,12 +294,13 @@ export default function Component() {
                   <TableHead>Unit of Measurement</TableHead>
                   <TableHead>Price Per Kilogram</TableHead>
                   <TableHead>Total Weight</TableHead>
-                  <TableHead>Created by</TableHead>
                   <TableHead>Supplier Name</TableHead>
                   <TableHead>Contact No.</TableHead>
                   <TableHead>Payment Status</TableHead>
                   <TableHead>Total Amount</TableHead>
+                  <TableHead>Created by</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Updated By</TableHead>
                   <TableHead>Updated At</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -325,44 +321,47 @@ export default function Component() {
                             <TableCell>{item.totalweight}</TableCell>
                           </React.Fragment>
                         ))}
-                        {/* Rendering user details */}
-                        <TableCell>
-                          {purchase.User.firstname} {purchase.User.lastname}
-                        </TableCell>
                         {/* Rendering supplier details */}
                         <TableCell>{purchase.Supplier.suppliername}</TableCell>
                         <TableCell>{purchase.Supplier.contactnumber}</TableCell>
                         {/* Rendering status, total amount, and date */}
                         <TableCell>{purchase.status}</TableCell>
                         <TableCell>{purchase.totalamount}</TableCell>
+                        {/* Rendering user details */}
                         <TableCell>
-                        {purchase.date
-                          ? new Date(purchase.date).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {purchase.updatedat
-                          ? new Date(purchase.updatedat).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )
-                          : "N/A"}
-                      </TableCell>
+                          {purchase.User.firstname} {purchase.User.lastname}
+                        </TableCell>
+                        <TableCell>
+                          {purchase.date
+                            ? new Date(purchase.date).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                        {purchase.LastModifier ? `${purchase.LastModifier.firstname} ${purchase.LastModifier.lastname}` : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {purchase.updatedat
+                            ? new Date(purchase.updatedat).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : "N/A"}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Button

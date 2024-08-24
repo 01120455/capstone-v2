@@ -8,6 +8,7 @@ export const purchase = z.object({
     invalid_type_error: "Invalid Status Received",
   }),
   totalamount: z.coerce.number(),
+  purchaseitemid: z.coerce.number().optional(),
   noofsack: z.coerce.number().min(0, "No of Sack cannot be negative"),
   totalweight: z.coerce.number().min(0, "Total weight cannot be negative"),
   priceperunit: z.coerce.number().min(0, "Price per unit cannot be negative"),
@@ -80,14 +81,15 @@ export const userSchema = z.object({
 });
 
 export const tablePurchase = z.object({
-  PurchaseItems: z.array(purchaseItemSchema),
-  Supplier: supplierSchema,
-  User: userSchema,
-  purchaseid: z.number().optional(),
+  purchaseid: z.number(),
   status: z.enum(["pending", "paid", "cancelled"]),
   totalamount: z.number(),
   date: z.string().optional(),
   updatedat: z.string().optional(),
+  PurchaseItems: z.array(purchaseItemSchema),
+  Supplier: supplierSchema,
+  User: userSchema,
+
 });
 
 export type AddPurchase = z.infer<typeof purchase>;
