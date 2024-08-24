@@ -283,7 +283,7 @@ export default function Component() {
         <div className="p-6 md:p-8">
           <div className="flex  items-center justify-between mb-6 -mr-6">
             <h1 className="text-2xl font-bold ">
-              Material Procurement Management
+              Company Purchase Management
             </h1>
             <Button onClick={handleAddPurchase}>
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
