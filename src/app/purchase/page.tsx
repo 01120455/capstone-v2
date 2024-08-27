@@ -55,6 +55,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TablePurchase[] | null>(null);
@@ -77,6 +78,7 @@ export default function Component() {
       unitofmeasurement: "",
       status: "pending",
       totalamount: 0,
+      frommilling: false,
       noofsack: 0,
       totalweight: 0,
       priceperunit: 0,
@@ -132,6 +134,7 @@ export default function Component() {
       unitofmeasurement: "",
       status: "pending",
       totalamount: 0,
+      frommilling: false,
       noofsack: 0,
       totalweight: 0,
       priceperunit: 0,
@@ -152,6 +155,7 @@ export default function Component() {
       unitofmeasurement: purchase.PurchaseItems[0].Item.unitofmeasurement,
       status: purchase.status,
       totalamount: purchase.totalamount,
+      frommilling: purchase.frommilling,
       noofsack: purchase.PurchaseItems[0].noofsack,
       totalweight: purchase.PurchaseItems[0].totalweight,
       priceperunit: purchase.PurchaseItems[0].priceperunit,
@@ -244,7 +248,7 @@ export default function Component() {
     }
   };
 
-  const handleDeletePurchase = (purchase: AddPurchase) => {
+  const handleDeletePurchase = (purchase: TablePurchase) => {
     setPurchaseToDelete(purchase);
     setShowAlert(true);
   };
@@ -285,108 +289,121 @@ export default function Component() {
             </Button>
           </div>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead>Item Type</TableHead>
-                  <TableHead>No of Sacks</TableHead>
-                  <TableHead>Unit of Measurement</TableHead>
-                  <TableHead>Price Per Kilogram</TableHead>
-                  <TableHead>Total Weight</TableHead>
-                  <TableHead>Supplier Name</TableHead>
-                  <TableHead>Contact No.</TableHead>
-                  <TableHead>Payment Status</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Created by</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Updated By</TableHead>
-                  <TableHead>Updated At</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <>
-                  {purchases &&
-                    purchases.map((purchase, index: number) => (
-                      <TableRow key={index}>
-                        {/* Assuming `purchase` is of type `ViewPurchase` */}
-                        {purchase.PurchaseItems.map((item, itemIndex) => (
-                          <React.Fragment key={itemIndex}>
-                            <TableCell>{item.Item.name}</TableCell>
-                            <TableCell>{item.Item.type}</TableCell>
-                            <TableCell>{item.noofsack}</TableCell>
-                            <TableCell>{item.Item.unitofmeasurement}</TableCell>
-                            <TableCell>{item.priceperunit}</TableCell>
-                            <TableCell>{item.totalweight}</TableCell>
-                          </React.Fragment>
+            <div className="table-container relative ">
+              <ScrollArea >
+                <Table
+                  style={{ width: "100%"}}
+                  className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                  divClassname="min-h-[400px] overflow-y-scroll"
+                >
+                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                    <TableRow>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead>Item Type</TableHead>
+                      <TableHead>No of Sacks</TableHead>
+                      <TableHead>Unit of Measurement</TableHead>
+                      <TableHead>Price Per Kilogram</TableHead>
+                      <TableHead>Total Weight</TableHead>
+                      <TableHead>From Milling</TableHead>
+                      <TableHead>Supplier Name</TableHead>
+                      <TableHead>Payment Status</TableHead>
+                      <TableHead>Total Amount</TableHead>
+                      <TableHead>Created by</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Updated By</TableHead>
+                      <TableHead>Updated At</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <>
+                      {purchases &&
+                        purchases.map((purchase, index: number) => (
+                          <TableRow key={index}>
+                            {purchase.PurchaseItems.map((item, itemIndex) => (
+                              <React.Fragment key={itemIndex}>
+                                <TableCell>{item.Item.name}</TableCell>
+                                <TableCell>{item.Item.type}</TableCell>
+                                <TableCell>{item.noofsack}</TableCell>
+                                <TableCell>
+                                  {item.Item.unitofmeasurement}
+                                </TableCell>
+                                <TableCell>{item.priceperunit}</TableCell>
+                                <TableCell>{item.totalweight}</TableCell>
+                              </React.Fragment>
+                            ))}
+                            <TableCell>
+                              {purchase.frommilling ? "True" : "False"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.Supplier.suppliername}
+                            </TableCell>
+
+                            <TableCell>{purchase.status}</TableCell>
+                            <TableCell>{purchase.totalamount}</TableCell>
+                            <TableCell>
+                              {purchase.User.firstname} {purchase.User.lastname}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.date
+                                ? new Date(purchase.date).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.LastModifier
+                                ? `${purchase.LastModifier.firstname} ${purchase.LastModifier.lastname}`
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.updatedat
+                                ? new Date(
+                                    purchase.updatedat
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(purchase)}
+                                >
+                                  <FilePenIcon className="w-4 h-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeletePurchase(purchase)}
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                        {/* Rendering supplier details */}
-                        <TableCell>{purchase.Supplier.suppliername}</TableCell>
-                        <TableCell>{purchase.Supplier.contactnumber}</TableCell>
-                        {/* Rendering status, total amount, and date */}
-                        <TableCell>{purchase.status}</TableCell>
-                        <TableCell>{purchase.totalamount}</TableCell>
-                        {/* Rendering user details */}
-                        <TableCell>
-                          {purchase.User.firstname} {purchase.User.lastname}
-                        </TableCell>
-                        <TableCell>
-                          {purchase.date
-                            ? new Date(purchase.date).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                        {purchase.LastModifier ? `${purchase.LastModifier.firstname} ${purchase.LastModifier.lastname}` : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          {purchase.updatedat
-                            ? new Date(purchase.updatedat).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(purchase)}
-                            >
-                              <FilePenIcon className="w-4 h-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeletePurchase(purchase)}
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </>
-              </TableBody>
-            </Table>
+                    </>
+                  </TableBody>
+                </Table>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </div>
           </div>
           {purchaseToDelete && (
             <AlertDialog open={showAlert}>

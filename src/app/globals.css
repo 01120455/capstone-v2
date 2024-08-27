@@ -132,3 +132,21 @@
     font-size: 14px; /* Reduce font size for better fit on small screens */
   }
 }
+
+.table-container {
+  position: relative;
+}
+
+.table-container .fixed {
+  position: sticky;
+  top: 0;
+  background: white; /* Ensure the header is visible over other content */
+  z-index: 10;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff; /* Set background color to ensure readability */
+  z-index: 10; /* Make sure it stays above other content */
+}

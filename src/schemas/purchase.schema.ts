@@ -12,6 +12,7 @@ export const purchase = z.object({
   noofsack: z.coerce.number().min(0, "No of Sack cannot be negative"),
   totalweight: z.coerce.number().min(0, "Total weight cannot be negative"),
   priceperunit: z.coerce.number().min(0, "Price per unit cannot be negative"),
+  frommilling: z.boolean(),
   supplierid: z.coerce.number().optional(),
   suppliername: z
     .string()
@@ -40,6 +41,7 @@ export const viewPurchase = z.object({
   purchaseid: z.number(),
   status: z.enum(["pending", "paid", "cancelled"]),
   totalamount: z.number(),
+  frommilling: z.boolean(),
   noofsack: z.number(),
   totalweight: z.number(),
   priceperunit: z.number(),
@@ -84,12 +86,13 @@ export const tablePurchase = z.object({
   purchaseid: z.number(),
   status: z.enum(["pending", "paid", "cancelled"]),
   totalamount: z.number(),
+  frommilling: z.boolean(),
   date: z.string().optional(),
   updatedat: z.string().optional(),
   PurchaseItems: z.array(purchaseItemSchema),
   Supplier: supplierSchema,
   User: userSchema,
-
+  LastModifier: userSchema.optional(),
 });
 
 export type AddPurchase = z.infer<typeof purchase>;
@@ -99,4 +102,3 @@ export type ViewPurchase = z.infer<typeof viewPurchase>;
 export type TablePurchase = z.infer<typeof tablePurchase>;
 
 export default purchase;
-
