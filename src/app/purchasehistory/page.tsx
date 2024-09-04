@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,89 +20,77 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import SideMenu from "@/components/sidemenu";
+import { tablePurchase, TablePurchase } from "@/schemas/transaction.schema";
 
 export default function Component() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [purchases, setPurchases] = useState<TablePurchase[]>([]);
   const [filters, setFilters] = useState({
-    customer: "",
-    dateRange: {
-      start: "",
-      end: "",
-    },
-    paymentMethod: "",
+    supplier: "",
+    dateRange: { start: "", end: "" },
+    paymentMethod: "", // This field is not in your schema, consider removing if not used
   });
-  const transactions = [
-    {
-      id: "TX001",
-      customer: "John Doe",
-      items: [
-        { name: "Product A", quantity: 2, price: 9.99 },
-        { name: "Product B", quantity: 1, price: 19.99 },
-      ],
-      subtotal: 39.97,
-      tax: 3.2,
-      total: 43.17,
-      paymentMethod: "Credit Card",
-      date: "2023-05-15",
-    },
-    {
-      id: "TX002",
-      customer: "Jane Smith",
-      items: [
-        { name: "Product C", quantity: 1, price: 14.99 },
-        { name: "Product D", quantity: 3, price: 7.99 },
-      ],
-      subtotal: 37.96,
-      tax: 3.04,
-      total: 41.0,
-      paymentMethod: "Cash",
-      date: "2023-05-20",
-    },
-    {
-      id: "TX003",
-      customer: "Bob Johnson",
-      items: [{ name: "Product E", quantity: 1, price: 24.99 }],
-      subtotal: 24.99,
-      tax: 2.0,
-      total: 26.99,
-      paymentMethod: "Debit Card",
-      date: "2023-05-25",
-    },
-    {
-      id: "TX004",
-      customer: "Sarah Lee",
-      items: [
-        { name: "Product F", quantity: 2, price: 12.99 },
-        { name: "Product G", quantity: 1, price: 9.99 },
-      ],
-      subtotal: 35.97,
-      tax: 2.88,
-      total: 38.85,
-      paymentMethod: "Credit Card",
-      date: "2023-05-30",
-    },
-  ];
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TablePurchase | null>(null);
+
+  useEffect(() => {
+    const getPurchases = async () => {
+      try {
+        const response = await fetch("/api/purchase");
+        const text = await response.text();
+        console.log("Raw Response Text:", text);
+
+        const data = JSON.parse(text);
+        console.log("Parsed Data:", data);
+
+        const validatedPurchases = data
+          .map((item: any) => {
+            const result = tablePurchase.safeParse(item);
+            if (result.success) {
+              return result.data;
+            } else {
+              console.error("Error parsing purchase:", result.error);
+              return null;
+            }
+          })
+          .filter((item: any): item is TablePurchase => item !== null);
+
+        console.log("Validated Purchases:", validatedPurchases);
+        setPurchases(validatedPurchases);
+      } catch (error) {
+        console.error("Error in getPurchases:", error);
+      }
+    };
+
+    getPurchases();
+  }, []);
+
   const filteredTransactions = useMemo(() => {
-    return transactions
-      .filter((transaction) => {
-        const { customer, dateRange, paymentMethod } = filters;
+    return purchases
+      .filter((purchase) => {
+        const { supplier, dateRange } = filters;
         const { start, end } = dateRange;
+
         return (
-          transaction.customer.toLowerCase().includes(customer.toLowerCase()) &&
-          (!start || new Date(transaction.date) >= new Date(start)) &&
-          (!end || new Date(transaction.date) <= new Date(end)) &&
-          (paymentMethod === "" || transaction.paymentMethod === paymentMethod)
+          purchase.Supplier.suppliername
+            .toLowerCase()
+            .includes(supplier.toLowerCase()) &&
+          (!start || new Date(purchase.date ?? "") >= new Date(start)) &&
+          (!end || new Date(purchase.date ?? "") <= new Date(end))
         );
       })
-      .filter((transaction) => {
+      .filter((purchase) => {
         return (
-          transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          transaction.customer.toLowerCase().includes(searchTerm.toLowerCase())
+          purchase.PurchaseItems[0].Item.name
+            .toString()
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          purchase.Supplier.suppliername
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
         );
       });
-  }, [filters, searchTerm]);
-
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  }, [filters, searchTerm, purchases]);
 
   return (
     <div className="flex h-screen">
@@ -166,32 +154,32 @@ export default function Component() {
                         <TableRow>
                           <TableHead>Item Name</TableHead>
                           <TableHead>Item Type</TableHead>
-                          <TableHead>Unit of Measurement</TableHead>   
+                          <TableHead>Unit of Measurement</TableHead>
                           <TableHead>No. of Sacks</TableHead>
                           <TableHead>Price Per Unit</TableHead>
                           <TableHead>Total Weight</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {selectedTransaction.items.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell>Denorado</TableCell>
-                            <TableCell>Rice</TableCell>
-                            <TableCell>25kg</TableCell>
-                            <TableCell>100</TableCell>
-                            <TableCell>1200</TableCell>
-                            <TableCell>2500</TableCell>
-                          </TableRow>
-                        ))}
+                        {selectedTransaction.PurchaseItems.map(
+                          (item, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{item.Item.name}</TableCell>
+                              <TableCell>{item.Item.type}</TableCell>
+                              <TableCell>
+                                {item.Item.unitofmeasurement}
+                              </TableCell>
+                              <TableCell>{item.noofsack}</TableCell>
+                              <TableCell>{item.priceperunit}</TableCell>
+                              <TableCell>{item.totalweight}</TableCell>
+                            </TableRow>
+                          )
+                        )}
                       </TableBody>
                     </Table>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="font-medium">Subtotal:</div>
-                      <div>${selectedTransaction.subtotal.toFixed(2)}</div>
-                      <div className="font-medium">Tax:</div>
-                      <div>${selectedTransaction.tax.toFixed(2)}</div>
                       <div className="font-medium">Total:</div>
-                      <div>${selectedTransaction.total.toFixed(2)}</div>
+                      <div>${selectedTransaction.totalamount}</div>
                     </div>
                     <div className="flex justify-end space-x-2">
                       <Button variant={"secondary"}>
@@ -209,26 +197,32 @@ export default function Component() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Customer</TableHead>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead>Number of Sacks</TableHead>
+                      <TableHead>Supplier</TableHead>
+                      <TableHead>Total Amount</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Payment</TableHead>
                       <TableHead />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTransactions.map((transaction) => (
+                    {filteredTransactions.map((transaction, index: number) => (
                       <TableRow
-                        key={transaction.id}
+                        key={index}
                         onClick={() => setSelectedTransaction(transaction)}
                         className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                       >
-                        <TableCell>{transaction.id}</TableCell>
-                        <TableCell>{transaction.customer}</TableCell>
+                        <TableCell>
+                          {transaction.PurchaseItems[0].Item.name}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.PurchaseItems[0].noofsack}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.Supplier.suppliername}
+                        </TableCell>
+                        <TableCell>${transaction.totalamount}</TableCell>
                         <TableCell>{transaction.date}</TableCell>
-                        <TableCell>${transaction.total.toFixed(2)}</TableCell>
-                        <TableCell>{transaction.paymentMethod}</TableCell>
                         <TableCell>
                           <Button variant="outline" size="icon">
                             <ArrowRightIcon className="h-4 w-4" />
@@ -245,12 +239,27 @@ export default function Component() {
               <h2 className="text-lg font-bold mb-4">Filters</h2>
               <div className="grid gap-4">
                 <div className="grid gap-2">
+                  <Label htmlFor="customer">Item Name</Label>
+                  <Input
+                    id="customer"
+                    type="text"
+                    placeholder="Enter Item name"
+                    value={filters.name}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        customer: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="customer">Customer</Label>
                   <Input
                     id="customer"
                     type="text"
                     placeholder="Enter customer name"
-                    value={filters.customer}
+                    value={filters.supplier}
                     onChange={(e) =>
                       setFilters((prev) => ({
                         ...prev,
@@ -297,29 +306,6 @@ export default function Component() {
                       />
                     </div>
                   </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="payment-method">Payment Method</Label>
-                  <Select
-                    id="payment-method"
-                    value={filters.paymentMethod}
-                    onValueChange={(value) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        paymentMethod: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="Credit Card">Credit Card</SelectItem>
-                      <SelectItem value="Debit Card">Debit Card</SelectItem>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             </div>

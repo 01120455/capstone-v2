@@ -51,6 +51,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
 import { set } from "lodash";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
@@ -60,15 +62,53 @@ export default function Component() {
   const [selectedFile, setSelectedFile] = useState<File>();
   const [showImage, setShowImage] = useState<ViewItem | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [alertItem, setAlertItem] = useState<ViewItem | null>(null);
+  const [showAlertItem, setShowAlertItem] = useState(false);
+  const [alertType, setAlertType] = useState<'reorder' | 'critical' | null>(null);
 
-  
+  const checkItemLevels = (items: ViewItem[]) => {
+    items.forEach((item) => {
+      if (item.measurementvalue <= item.reorderlevel) {
+        setAlertItem(item);
+        setAlertType('reorder');
+        setShowAlertItem(true);
+      } else if (item.measurementvalue <= item.criticallevel) {
+        setAlertItem(item);
+        setAlertType('critical');
+        setShowAlertItem(true);
+      }
+    });
+  };
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await fetch("/api/product");
+        const data = await response.json();
+        setItems(data);
+        checkItemLevels(data);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    };
+
+    fetchItems();
+
+    const intervalId = setInterval(() => {
+      fetchItems();
+    }, 60000); 
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const form = useForm<AddItem>({
     resolver: zodResolver(item),
     defaultValues: {
       name: "",
       type: "palay",
-      stock: 0,
-      unitofmeasurement: "",
+      sackweight: "bag25kg",
+      unitofmeasurement: "quantity",
+      measurementvalue: 0,
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -119,8 +159,9 @@ export default function Component() {
     form.reset({
       name: "",
       type: "palay",
-      stock: 0,
-      unitofmeasurement: "",
+      sackweight: "bag25kg",
+      unitofmeasurement: "quantity",
+      measurementvalue: 0,
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -135,8 +176,9 @@ export default function Component() {
       itemid: item.itemid,
       name: item.name,
       type: item.type,
-      stock: item.stock,
+      sackweight: item.sackweight,
       unitofmeasurement: item.unitofmeasurement,
+      measurementvalue: item.measurementvalue,
       unitprice: item.unitprice,
       reorderlevel: item.reorderlevel,
       criticallevel: item.criticallevel,
@@ -151,8 +193,9 @@ export default function Component() {
     form.reset({
       name: "",
       type: "palay",
-      stock: 0,
-      unitofmeasurement: "",
+      sackweight: "bag25kg",
+      unitofmeasurement: "quantity",
+      measurementvalue: 0,
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -162,65 +205,15 @@ export default function Component() {
 
   const fileRef = form.register("image");
 
-  // const handleSubmit = async (values: AddItem, isEdit: boolean = false) => {
-  //   console.log("Form Values:", values);
-  //   const formData = new FormData();
-
-  //   formData.append("name", values.name);
-  //   formData.append("type", values.type);
-  //   formData.append("stock", values.stock.toString());
-  //   formData.append("unitprice", values.unitprice.toString());
-
-  //   if (selectedFile) {
-  //     formData.append("image", selectedFile);
-  //   }
-
-  //   try {
-  //     let method = "POST";
-  //     let endpoint = "/api/product";
-
-  //     if (isEdit && values.itemid) {
-  //       method = "PUT";
-  //       endpoint = `/api/product/`;
-  //       formData.append("itemid", values.itemid.toString());
-  //     }
-
-  //     const uploadRes = await fetch(endpoint, {
-  //       method: method,
-  //       body: formData,
-  //     });
-
-  //     if (uploadRes.ok) {
-  //       const uploadResult = await uploadRes.json();
-  //       if (isEdit) {
-  //         console.log("Item updated successfully");
-  //       } else {
-  //         console.log("Item added successfully");
-  //       }
-
-  //       if (uploadResult.itemimage && uploadResult.itemimage[0]) {
-  //         console.log("Image uploaded:", uploadResult.itemimage[0].imagepath);
-  //       }
-
-  //       setShowModal(false);
-  //       refreshItems();
-  //       form.reset();
-  //     } else {
-  //       console.error("Upload failed", await uploadRes.text());
-  //     }
-  //   } catch (error) {
-  //     console.error("Error adding/updating item:", error);
-  //   }
-  // };
-
   const handleSubmit = async (values: AddItem) => {
     console.log("Form Values:", values);
     const formData = new FormData();
 
     formData.append("name", values.name);
     formData.append("type", values.type);
-    formData.append("stock", values.stock.toString());
+    formData.append("sackweight", values.sackweight);
     formData.append("unitofmeasurement", values.unitofmeasurement);
+    formData.append("measurementvalue", values.measurementvalue.toString());
     formData.append("unitprice", values.unitprice.toString());
     formData.append("reorderlevel", values.reorderlevel.toString());
     formData.append("criticallevel", values.criticallevel.toString());
@@ -305,8 +298,6 @@ export default function Component() {
     }
   };
 
-
-  
   const handleDeleteItem = (item: AddItem) => {
     setItemToDelete(item);
     setShowAlert(true);
@@ -332,10 +323,10 @@ export default function Component() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768); // Adjust 768 as per your design's breakpoint
+      setIsSmallScreen(window.innerWidth < 768); 
     };
 
-    handleResize(); // Initial check
+    handleResize(); 
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -357,6 +348,21 @@ export default function Component() {
     <div className="flex h-screen">
       <SideMenu />
       <div className="flex-1 overflow-y-auto p-5">
+        {showAlertItem && (
+          <Alert
+            className="alert-center"
+            variant="destructive"
+          >
+            <AlertTitle>
+            {alertType === 'reorder' ? 'Reorder Level Reached' : 'Critical Level Reached'}
+            </AlertTitle>
+            <AlertDescription>
+              The stock level Item {alertItem?.name} Type {alertItem?.type} {""}{" "}
+              {alertItem?.unitofmeasurement} has reached the {alertType === 'reorder' ? 'reorder' : 'critical'} level. 
+               Please take necessary action.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="p-6 md:p-8">
           <div className="flex  items-center justify-between mb-6 -mr-6">
             <h1 className="text-2xl font-bold ">Product Management</h1>
@@ -365,27 +371,33 @@ export default function Component() {
             </Button>
           </div>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Unit of Measurement</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead>Reorder Level</TableHead>
-                  <TableHead>Critical Level</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead>Updated At</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items &&
-                  items.map((item, index: number) => (
-                    <TableRow key={index}>
-                      {/* <TableCell>
+            <div className="table-container relative ">
+              <ScrollArea>
+                <Table
+                  style={{ width: "100%" }}
+                  className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                  divClassname="min-h-[400px] overflow-y-scroll"
+                >
+                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                    <TableRow>
+                      <TableHead>Image</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Sack Weight</TableHead>
+                      <TableHead>Unit of Measurement</TableHead>
+                      <TableHead>Measurement Value</TableHead>
+                      <TableHead>Unit Price</TableHead>
+                      <TableHead>Reorder Level</TableHead>
+                      <TableHead>Critical Level</TableHead>
+                      <TableHead>Last Modified at</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items &&
+                      items.map((item, index: number) => (
+                        <TableRow key={index}>
+                          {/* <TableCell>
                         <Image
                           src={item.itemimage[0]?.imagepath ?? ""}
                           alt="Product Image"
@@ -394,110 +406,101 @@ export default function Component() {
                           className="rounded"
                         />
                       </TableCell> */}
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleShowImage(item)}
-                        >
-                          View Image
-                        </Button>
-                      </TableCell>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.type}</TableCell>
-                      <TableCell>{item.stock}</TableCell>
-                      <TableCell>{item.unitofmeasurement}</TableCell>
-                      <TableCell>{item.unitprice}</TableCell>
-                      <TableCell>{item.reorderlevel}</TableCell>
-                      <TableCell>{item.criticallevel}</TableCell>
-                      <TableCell>
-                        {item.createdat
-                          ? new Date(item.createdat).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {item.updatedat
-                          ? new Date(item.updatedat).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <FilePenIcon className="w-4 h-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteItem(item)}
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleShowImage(item)}
+                            >
+                              View Image
+                            </Button>
+                          </TableCell>
+                          <TableCell>{item.name}</TableCell>
+                          <TableCell>{item.type}</TableCell>
+                          <TableCell>{item.sackweight}</TableCell>
+                          <TableCell>{item.unitofmeasurement}</TableCell>
+                          <TableCell>{item.measurementvalue}</TableCell>
+                          <TableCell>{item.unitprice}</TableCell>
+                          <TableCell>{item.reorderlevel}</TableCell>
+                          <TableCell>{item.criticallevel}</TableCell>
+                          <TableCell>
+                            {item.lastmodifeiedat
+                              ? new Date(item.lastmodifeiedat).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(item)}
+                              >
+                                <FilePenIcon className="w-4 h-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteItem(item)}
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </div>
           </div>
           <>
-          {showImageModal && showImage && (
-  <Dialog open={showImageModal} onOpenChange={closeImage}>
-    <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
-      <div className="flex flex-col">
-        <DialogHeader className="mb-2 flex items-start">
-          <DialogTitle className="text-left flex-grow">Product Image</DialogTitle>
-        </DialogHeader>
-        <DialogDescription className="mb-4 text-left">
-          <p>You can click outside to close</p>
-        </DialogDescription>
-        <div className="flex-grow flex items-center justify-center overflow-hidden">
-          <div className="relative w-full h-[400px]">
-            { showImage.itemimage[0]?.imagepath ? (
-              <Image
-                src={showImage.itemimage[0].imagepath}
-                alt="Product Image"
-                fill
-                sizes="(max-width: 600px) 100vw, 50vw"
-                style={{ objectFit: "contain" }}
-                className="absolute"
-              />
-            ) : (
-              <p className="text-center">No image available</p>
+            {showImageModal && showImage && (
+              <Dialog open={showImageModal} onOpenChange={closeImage}>
+                <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
+                  <div className="flex flex-col">
+                    <DialogHeader className="mb-2 flex items-start">
+                      <DialogTitle className="text-left flex-grow">
+                        Product Image
+                      </DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="mb-4 text-left">
+                      <p>You can click outside to close</p>
+                    </DialogDescription>
+                    <div className="flex-grow flex items-center justify-center overflow-hidden">
+                      <div className="relative w-full h-[400px]">
+                        {showImage.itemimage[0]?.imagepath ? (
+                          <Image
+                            src={showImage.itemimage[0].imagepath}
+                            alt="Product Image"
+                            fill
+                            sizes="(max-width: 600px) 100vw, 50vw"
+                            style={{ objectFit: "contain" }}
+                            className="absolute"
+                          />
+                        ) : (
+                          <p className="text-center">No image available</p>
+                        )}
+                      </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                      <Button onClick={closeImage}>Close</Button>
+                    </DialogFooter>
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
-          </div>
-        </div>
-        <DialogFooter className="mt-4">
-          <Button onClick={closeImage}>Close</Button>
-        </DialogFooter>
-      </div>
-    </DialogContent>
-  </Dialog>
-)}
-
           </>
           {itemToDelete && (
             <AlertDialog open={showAlert}>
@@ -506,9 +509,9 @@ export default function Component() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the item name {itemToDelete?.name} {""} which consists of{" "}
+                    the item name {itemToDelete?.name} {""} which consists of{itemToDelete?.unitofmeasurement}
                     {""}
-                    {itemToDelete?.stock} stocks and remove their data from our
+                    {itemToDelete?.measurementvalue} stocks and remove their data from our
                     database.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -613,12 +616,26 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="stock"
+                          name="sackweight"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="stock">stock</FormLabel>
+                              <FormLabel htmlFor="sackweight">Sack Weight</FormLabel>
                               <FormControl>
-                                <Input {...field} id="stock" type="number" />
+                              <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select Sack Weight">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="bag25kg">Bag25kg</SelectItem>
+                                    <SelectItem value="cavan50kg">Cavan50kg</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </FormControl>
                             </FormItem>
                           )}
@@ -634,10 +651,40 @@ export default function Component() {
                                 Unit of Measurement
                               </FormLabel>
                               <FormControl>
+                              <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select Unit of Measurement">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="quantity">Quantity</SelectItem>
+                                    <SelectItem value="weight">Weight</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="measurementvalue"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="measurementvalue">
+                                Measurement Value
+                              </FormLabel>
+                              <FormControl>
                                 <Input
                                   {...field}
-                                  id="unitofmeasurement"
-                                  type="text"
+                                  id="measurementvalue"
+                                  type="number"
                                 />
                               </FormControl>
                             </FormItem>

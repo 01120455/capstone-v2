@@ -67,6 +67,9 @@ export default function SideMenu() {
     return false;
   };
 
+  const imageSrc = user?.imagepath ? `${user.imagepath[0]}` : '/path/to/default/image.png';
+
+
   return (
     <div className="relative h-screen flex flex-col lg:flex-row">
  <div className={`flex flex-col h-full ${isMenuOpen ? 'w-64' : 'w-20'} lg:w-44 bg-white shadow-lg transition-all duration-300 ease-in-out`}>
@@ -279,7 +282,7 @@ export default function SideMenu() {
           <div className="bg-white border-t border-gray-200 flex items-center justify-between p-4 mt-auto">
       <div className="flex items-center space-x-3">
         <Avatar>
-          <AvatarImage src="/placeholder-user.jpg" />
+          <AvatarImage src={user?.imagepath} />
           <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
         </Avatar>
         <div className={`flex flex-col lg:flex ${isMenuOpen ? "block" : "hidden"} lg:block`}>

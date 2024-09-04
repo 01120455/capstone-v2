@@ -6,38 +6,6 @@ import { sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
-// export async function POST(req: NextRequest) {
-//   const { username, password } = await req.json();
-
-//   const user = await prisma.user.findUnique({ where: { username } });
-
-//   if (!user || !(await bcrypt.compare(password, user.password))) {
-//     return NextResponse.json(
-//       { message: "Invalid username or password" },
-//       { status: 401 }
-//     );
-//   }
-
-//   const res = NextResponse.json({ 
-//     message: "Logged in",
-//     role: user.role, 
-//   });
-
-//   const session = await getIronSession(req, res, sessionOptions);
-//   (session).user = {
-//     userid: user.userid,
-//     firstname: user.firstname,
-//     middlename: user.middlename ?? undefined,
-//     lastname: user.lastname,
-//     role: user.role,
-//     username: user.username,
-//     status: user.status,
-//     isLoggedIn: true,
-//   };
-//   await session.save();
-//   return res;
-// }
-
 export async function POST(req: NextRequest) {
   try {
     // Parse the request body
@@ -56,7 +24,7 @@ export async function POST(req: NextRequest) {
 
 
     // Check if the user is marked as deleted
-    if (user.userdeleted) {
+    if (user.deleted) {
       return NextResponse.json(
         { message: "invalid account" },
         { status: 403 }
@@ -75,6 +43,7 @@ export async function POST(req: NextRequest) {
     const session = await getIronSession(req, res, sessionOptions);
     (session).user = {
       userid: user.userid,
+      imagepath: user.imagepath,
       firstname: user.firstname,
       middlename: user.middlename ?? undefined,
       lastname: user.lastname,

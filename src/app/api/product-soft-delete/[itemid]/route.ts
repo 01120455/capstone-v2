@@ -23,7 +23,7 @@ export const PUT = async (req: NextRequest) => {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    if (existingItem.itemdeleted) {
+    if (existingItem.deleted) {
       return NextResponse.json(
         { error: "Item is already marked as deleted" },
         { status: 400 }
@@ -33,7 +33,7 @@ export const PUT = async (req: NextRequest) => {
     // Update the item to mark it as deleted
     const updatedItem = await prisma.item.update({
       where: { itemid: itemId },
-      data: { itemdeleted: true },
+      data: { deleted: true },
     });
 
     return NextResponse.json(updatedItem, { status: 200 });

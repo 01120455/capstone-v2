@@ -57,6 +57,8 @@ export default function Component() {
   const [users, setUsers] = useState<AddUser[] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [showImage, setShowImage] = useState<AddUser | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
 
@@ -281,6 +283,16 @@ export default function Component() {
     };
   }, []);
 
+  const handleShowImage = async (item: AddUser) => {
+    setShowImage(item);
+    setShowImageModal(true);
+  };
+
+  const closeImage = () => {
+    setShowImageModal(false);
+    setShowImage(null);
+  };
+
   return (
     <div className="flex h-screen">
       <SideMenu />
@@ -309,13 +321,20 @@ export default function Component() {
                   users.map((user: AddUser, index: number) => (
                     <TableRow key={index}>
                       <TableCell>
-                        <Image
+                        {/* <Image
                           src={user.imagepath ?? ""}
                           alt="User Image"
                           width={250}
                           height={250}
                           className="rounded"
-                        />
+                        /> */}
+                        <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleShowImage(user)}
+                            >
+                              View Image
+                            </Button>
                       </TableCell>
                       <TableCell>
                         {user.firstname} {user.middlename} {user.lastname}
@@ -354,6 +373,43 @@ export default function Component() {
               </TableBody>
             </Table>
           </div>
+          <>
+            {showImageModal && showImage && (
+              <Dialog open={showImageModal} onOpenChange={closeImage}>
+                <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
+                  <div className="flex flex-col">
+                    <DialogHeader className="mb-2 flex items-start">
+                      <DialogTitle className="text-left flex-grow">
+                        User Image
+                      </DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="mb-4 text-left">
+                      <p>You can click outside to close</p>
+                    </DialogDescription>
+                    <div className="flex-grow flex items-center justify-center overflow-hidden">
+                      <div className="relative w-full h-[400px]">
+                        {showImage?.imagepath ? (
+                          <Image
+                            src={showImage.imagepath}
+                            alt="Product Image"
+                            fill
+                            sizes="(max-width: 600px) 100vw, 50vw"
+                            style={{ objectFit: "contain" }}
+                            className="absolute"
+                          />
+                        ) : (
+                          <p className="text-center">No image available</p>
+                        )}
+                      </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                      <Button onClick={closeImage}>Close</Button>
+                    </DialogFooter>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </>
           {userToDelete && (
             <AlertDialog open={showAlert}>
               <AlertDialogContent>
@@ -593,7 +649,7 @@ export default function Component() {
                         />
                       </div>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="pt-2">
                       <Button type="submit">Save</Button>
                       <Button variant="outline" onClick={handleCancel}>
                         Cancel

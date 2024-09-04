@@ -12,6 +12,7 @@ export const sessionOptions: SessionOptions = {
 
 export interface SessionData {
   userid?: number;
+  imagepath?: string;
   firstname?: string;
   middlename?: string;
   lastname?: string;

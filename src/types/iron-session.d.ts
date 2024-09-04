@@ -4,6 +4,7 @@ declare module "iron-session" {
   interface IronSessionData {
     user?: {
       userid: number;
+      imagepath: string;
       firstname: string;
       middlename?: string;
       lastname: string;

@@ -150,3 +150,22 @@
   background-color: #ffffff; /* Set background color to ensure readability */
   z-index: 10; /* Make sure it stays above other content */
 }
+
+.alert-center {
+  width: 500px; /* Default width for larger screens */
+  text-align: center; /* Optional: Centers the text inside the alert */
+  position: fixed;
+  left: 40%;
+}
+
+@media (max-width: 768px) {
+  .alert-center {
+    width: 90%; /* Adjust width for smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .alert-center {
+    width: 100%; /* Full width for very small screens */
+  }
+}

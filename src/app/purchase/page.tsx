@@ -46,43 +46,68 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Image from "next/image";
-import {
-  purchase,
-  AddPurchase,
-  ViewPurchase,
-  TablePurchase,
-} from "@/schemas/purchase.schema";
-import { useForm } from "react-hook-form";
+import transactionSchema, {
+  Transaction,
+  TransactionItem,
+  TransactionTable,
+} from "@/schemas/transaction.schema";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function Component() {
-  const [purchases, setPurchases] = useState<TablePurchase[] | null>(null);
+  const [purchases, setPurchases] = useState<TransactionTable[] | null>(null);
+  const [purchaseItems, setPurchaseItems] = useState<TransactionItem[] | null>(
+    null
+  );
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [purchaseToDelete, setPurchaseToDelete] = useState<AddPurchase | null>(
+  const [purchaseToDelete, setPurchaseToDelete] = useState<Transaction | null>(
     null
   );
 
-  const form = useForm<AddPurchase>({
-    resolver: zodResolver(purchase),
+  const form = useForm<Transaction>({
+    resolver: zodResolver(transactionSchema),
     defaultValues: {
-      purchaseid: 0,
-      supplierid: 0,
-      suppliername: "",
-      contactnumber: "",
-      itemid: 0,
-      name: "",
-      type: "palay",
-      unitofmeasurement: "",
+      transactionid: 0,
+      type: "purchase",
       status: "pending",
-      totalamount: 0,
+      walkin: false,
       frommilling: false,
-      noofsack: 0,
-      totalweight: 0,
-      priceperunit: 0,
+      taxpercentage: 0,
+      // totalamount: 0,
+      entity: {
+        entityid: 0,
+        firstname: "",
+        middlename: "",
+        lastname: "",
+        contactnumber: "",
+      },
+      invoicenumber: {
+        invoicenumberid: 0,
+        invoicenumber: "",
+      },
+      transactionitem: [
+        {
+          transactionitemid: 0,
+          item: {
+            itemid: 0,
+            name: "",
+            type: "palay",
+            sackweight: "bag25kg",
+          },
+          unitofmeasurement: "",
+          measurementvalue: 0,
+          unitprice: 0,
+        },
+      ],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "transactionitem",
   });
 
   useEffect(() => {
@@ -124,41 +149,75 @@ export default function Component() {
     setShowModal(true);
 
     form.reset({
-      purchaseid: 0,
-      supplierid: 0,
-      suppliername: "",
-      contactnumber: "",
-      itemid: 0,
-      name: "",
-      type: "palay",
-      unitofmeasurement: "",
+      transactionid: 0,
+      type: "purchase",
       status: "pending",
-      totalamount: 0,
+      walkin: false,
       frommilling: false,
-      noofsack: 0,
-      totalweight: 0,
-      priceperunit: 0,
+      taxpercentage: 0,
+      // totalamount: 0,
+      entity: {
+        entityid: 0,
+        firstname: "",
+        middlename: "",
+        lastname: "",
+        contactnumber: "",
+      },
+      invoicenumber: {
+        invoicenumberid: 0,
+        invoicenumber: "",
+      },
+      transactionitem: [
+        {
+          transactionitemid: 0,
+          item: {
+            itemid: 0,
+            name: "",
+            type: "palay",
+            sackweight: "bag25kg",
+          },
+          unitofmeasurement: "",
+          measurementvalue: 0,
+          unitprice: 0,
+        },
+      ],
     });
   };
 
-  const handleEdit = (purchase: TablePurchase) => {
+  const handleEdit = (purchase: Transaction) => {
     setShowModal(true);
 
     form.reset({
-      purchaseid: purchase.purchaseid,
-      supplierid: purchase.Supplier.supplierid,
-      suppliername: purchase.Supplier.suppliername,
-      contactnumber: purchase.Supplier.contactnumber,
-      itemid: purchase.PurchaseItems[0].itemid,
-      name: purchase.PurchaseItems[0].Item.name,
-      type: purchase.PurchaseItems[0].Item.type,
-      unitofmeasurement: purchase.PurchaseItems[0].Item.unitofmeasurement,
+      transactionid: purchase.transactionid,
+      type: purchase.type,
       status: purchase.status,
-      totalamount: purchase.totalamount,
+      walkin: purchase.walkin,
       frommilling: purchase.frommilling,
-      noofsack: purchase.PurchaseItems[0].noofsack,
-      totalweight: purchase.PurchaseItems[0].totalweight,
-      priceperunit: purchase.PurchaseItems[0].priceperunit,
+      taxpercentage: purchase.taxpercentage,
+      // totalamount: purchase.totalamount,
+      entity: {
+        entityid: purchase.entity.entityid,
+        firstname: purchase.entity.firstname,
+        middlename: purchase.entity.middlename,
+        lastname: purchase.entity.lastname,
+        contactnumber: purchase.entity.contactnumber,
+      },
+      invoicenumber: {
+        invoicenumberid: purchase.invoicenumber.invoicenumberid,
+        invoicenumber: purchase.invoicenumber.invoicenumber,
+      },
+      transactionitem: purchase.transactionitem.map((item) => ({
+        transactionitemid: item.transactionitemid,
+        item: {
+          itemid: item.item.itemid,
+          name: item.item.name,
+          type: item.item.type,
+          sackweight: item.item.sackweight,
+        },
+        unitofmeasurement: item.unitofmeasurement,
+        measurementvalue: item.measurementvalue,
+        unitprice: item.unitprice,
+      })),
     });
   };
 
@@ -166,44 +225,163 @@ export default function Component() {
     setShowModal(false);
 
     form.reset({
-      purchaseid: 0,
-      supplierid: 0,
-      suppliername: "",
-      contactnumber: "",
-      itemid: 0,
-      name: "",
-      type: "palay",
-      unitofmeasurement: "",
+      transactionid: 0,
+      type: "purchase",
       status: "pending",
-      totalamount: 0,
-      noofsack: 0,
-      totalweight: 0,
-      priceperunit: 0,
+      walkin: false,
+      frommilling: false,
+      taxpercentage: 0,
+      // totalamount: 0,
+      entity: {
+        entityid: 0,
+        firstname: "",
+        middlename: "",
+        lastname: "",
+        contactnumber: "",
+      },
+      invoicenumber: {
+        invoicenumberid: 0,
+        invoicenumber: "",
+      },
+      transactionitem: [
+        {
+          transactionitemid: 0,
+          item: {
+            itemid: 0,
+            name: "",
+            type: "palay",
+            sackweight: "bag25kg",
+          },
+          unitofmeasurement: "",
+          measurementvalue: 0,
+          unitprice: 0,
+        },
+      ],
     });
   };
 
-  const handleSubmit = async (values: AddPurchase) => {
+  // const handleSubmit = async (values: Purchase) => {
+  //   console.log("Form Values:", values);
+  //   const formData = new FormData();
+
+  //   formData.append("name", values.purchaseitems[0].item.name);
+  //   formData.append("type", values.purchaseitems[0].item.type);
+  //   formData.append("noofsack", values.purchaseitems[0].noofsack.toString());
+  //   formData.append(
+  //     "totalweight",
+  //     values.purchaseitems[0].totalweight.toString()
+  //   );
+  //   formData.append(
+  //     "priceperunit",
+  //     values.purchaseitems[0].priceperunit.toString()
+  //   );
+  //   formData.append(
+  //     "unitofmeasurement",
+  //     values.purchaseitems[0].unitofmeasurement
+  //   );
+  //   formData.append("frommilling", values.frommilling ? "true" : "false");
+  //   formData.append("suppliername", values.supplier.suppliername);
+  //   formData.append("contactnumber", values.supplier.contactnumber);
+  //   formData.append("status", values.status);
+
+  //   try {
+  //     let method = "POST";
+  //     let endpoint = "/api/purchase";
+
+  //     if (values.purchaseid) {
+  //       method = "PUT";
+  //       endpoint = `/api/purchase/`;
+  //       formData.append("purchaseid", values.purchaseid.toString());
+  //     }
+
+  //     const uploadRes = await fetch(endpoint, {
+  //       method: method,
+  //       body: formData,
+  //     });
+
+  //     if (uploadRes.ok) {
+  //       if (values.purchaseid) {
+  //         console.log("Purchase updated successfully");
+  //       } else {
+  //         console.log("Purchase added successfully");
+  //       }
+
+  //       setShowModal(false);
+  //       refreshPurchases();
+  //       form.reset();
+  //     } else {
+  //       console.error("Upload failed", await uploadRes.text());
+  //     }
+  //   } catch (error) {
+  //     console.error("Error adding/updating purchase:", error);
+  //   }
+  // };
+
+  // const handleDelete = async (purchaseid: number | undefined) => {
+  //   try {
+  //     const response = await fetch(`/api/purchase-delete/${purchaseid}`, {
+  //       method: "DELETE",
+  //     });
+
+  //     if (response.ok) {
+  //       console.log("Purchased product deleted successfully");
+  //       setShowAlert(false);
+  //       setPurchaseToDelete(null);
+  //       refreshPurchases();
+  //     } else {
+  //       console.error("Error deleting purchase:", response.status);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting purchase:", error);
+  //   }
+  // };
+
+  const handleSubmit = async (values: Transaction) => {
     console.log("Form Values:", values);
     const formData = new FormData();
 
-    formData.append("name", values.name);
+    // Append general purchase data
     formData.append("type", values.type);
-    formData.append("noofsack", values.noofsack.toString());
-    formData.append("totalweight", values.totalweight.toString());
-    formData.append("priceperunit", values.priceperunit.toString());
-    formData.append("unitofmeasurement", values.unitofmeasurement.toString());
-    formData.append("suppliername", values.suppliername);
-    formData.append("contactnumber", values.contactnumber);
     formData.append("status", values.status);
+    formData.append("walkin", values.walkin.toString());
+    formData.append("frommilling", values.frommilling.toString());
+    formData.append("taxpercentage", values.taxpercentage !== undefined ? values.taxpercentage.toString() : '');
+    formData.append("Entity[firstname]", values.entity.firstname);
+    formData.append("Entity[middlename]", values.entity.middlename);
+    formData.append("Entity[lastname]", values.entity.lastname);
+    formData.append("Entity[contactnumber]", values.entity.contactnumber.toString());
+    formData.append(
+      "invoicenumber",
+      values.invoicenumber.invoicenumber || ''
+    );
+
+    // Loop through each Transaction item and append its data
+    values.transactionitem.forEach((item, index) => {
+      formData.append(`TransactionItem[${index}][item][name]`, item.item.name);
+      formData.append(`TransactionItem[${index}][item][type]`, item.item.type);
+      formData.append(`TransactionItem[${index}][item][sackweight]`, item.item.sackweight);
+      formData.append(
+        `TransactionItem[${index}][unitofmeasurement]`,
+        item.unitofmeasurement
+      );
+      formData.append(
+        `TransactionItem[${index}][measurementvalue]`,
+        item.measurementvalue.toString()
+      );
+      formData.append(
+        `TransactionItem[${index}][unitprice]`,
+        item.unitprice.toString()
+      );
+    });
 
     try {
       let method = "POST";
       let endpoint = "/api/purchase";
 
-      if (values.purchaseid) {
+      if (values.transactionid) {
         method = "PUT";
         endpoint = `/api/purchase/`;
-        formData.append("purchaseid", values.purchaseid.toString());
+        formData.append("transactionid", values.transactionid.toString());
       }
 
       const uploadRes = await fetch(endpoint, {
@@ -212,7 +390,7 @@ export default function Component() {
       });
 
       if (uploadRes.ok) {
-        if (values.purchaseid) {
+        if (values.transactionid) {
           console.log("Purchase updated successfully");
         } else {
           console.log("Purchase added successfully");
@@ -229,26 +407,29 @@ export default function Component() {
     }
   };
 
-  const handleDelete = async (purchaseid: number | undefined) => {
+  const handleDelete = async (transactionid: number | undefined) => {
     try {
-      const response = await fetch(`/api/purchase-delete/${purchaseid}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/purchase-soft-delete/${transactionid}`,
+        {
+          method: "PUT",
+        }
+      );
 
       if (response.ok) {
-        console.log("Purchased product deleted successfully");
+        console.log("Purchase deleted successfully");
         setShowAlert(false);
         setPurchaseToDelete(null);
         refreshPurchases();
       } else {
-        console.error("Error deleting purchase:", response.status);
+        console.error("Error deleting Purchase:", response.status);
       }
     } catch (error) {
-      console.error("Error deleting purchase:", error);
+      console.error("Error deleting Purchase:", error);
     }
   };
 
-  const handleDeletePurchase = (purchase: TablePurchase) => {
+  const handleDeletePurchase = (purchase: Transaction) => {
     setPurchaseToDelete(purchase);
     setShowAlert(true);
   };
@@ -277,6 +458,28 @@ export default function Component() {
     };
   }, []);
 
+  // const handleAddPurchaseItem = (index: number) => {
+  //   const updatedPurchasteItems = purchaseItems;
+  //   updatedPurchasteItems?.splice(index + 1, 0, {
+  //     Item: {
+  //       itemid: 0,
+  //       name: "",
+  //       type: "palay",
+  //       unitofmeasurement: "",
+  //     },
+  //     noofsack: 0,
+  //     priceperunit: 0,
+  //     totalweight: 0,
+  //   });
+  //   setPurchaseItems(updatedPurchasteItems);
+  // }
+
+  // const handleRemovePurchaseItem = (index: number) => {
+  //   const updatedPurchasteItems = purchaseItems;
+  //   updatedPurchasteItems?.splice(index, 1);
+  //   setPurchaseItems(updatedPurchasteItems);
+  // }
+
   return (
     <div className="flex h-screen">
       <SideMenu />
@@ -290,33 +493,93 @@ export default function Component() {
           </div>
           <div className="overflow-x-auto">
             <div className="table-container relative ">
-              <ScrollArea >
+              <ScrollArea>
                 <Table
-                  style={{ width: "100%"}}
+                  style={{ width: "100%" }}
                   className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
                   divClassname="min-h-[400px] overflow-y-scroll"
                 >
                   <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                     <TableRow>
-                      <TableHead>Item Name</TableHead>
-                      <TableHead>Item Type</TableHead>
-                      <TableHead>No of Sacks</TableHead>
-                      <TableHead>Unit of Measurement</TableHead>
-                      <TableHead>Price Per Kilogram</TableHead>
-                      <TableHead>Total Weight</TableHead>
+                      <TableHead>Invoice No.</TableHead>
+                      <TableHead>Supplier name</TableHead>
+                      <TableHead>Contact no.</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Walkin</TableHead>
                       <TableHead>From Milling</TableHead>
-                      <TableHead>Supplier Name</TableHead>
-                      <TableHead>Payment Status</TableHead>
+                      <TableHead>Tax %</TableHead>
                       <TableHead>Total Amount</TableHead>
-                      <TableHead>Created by</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Updated By</TableHead>
-                      <TableHead>Updated At</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>Last Modify by</TableHead>
+                      <TableHead>Last Modified at</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <>
+                      {purchases &&
+                        purchases.map((purchase, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              {purchase.Invoicenumber.invoicenumber}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.Entity.firstname} {""} 
+                              {purchase.Entity?.middlename || ""} {""} 
+                              {purchase.Entity.lastname}
+                              </TableCell>
+                            <TableCell>
+                              {purchase.Entity?.contactnumber || "N/A"}
+                            </TableCell>
+                            <TableCell>{purchase.status}</TableCell>
+                            <TableCell>
+                              {purchase.walkin ? "True" : "False"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.frommilling ? "True" : "False"}
+                            </TableCell>
+                            <TableCell>{purchase.taxpercentage}</TableCell>
+                            <TableCell>{purchase.totalamount}</TableCell>
+                            <TableCell>
+                              {purchase.user
+                                ? `${purchase.user.firstname} ${purchase.user.lastname}`
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.lastmodifiedat
+                                ? new Date(
+                                    purchase.lastmodifiedat
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(purchase)}
+                                >
+                                  <FilePenIcon className="w-4 h-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeletePurchase(purchase)}
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </>
+                    {/* <>
                       {purchases &&
                         purchases.map((purchase, index: number) => (
                           <TableRow key={index}>
@@ -325,9 +588,7 @@ export default function Component() {
                                 <TableCell>{item.Item.name}</TableCell>
                                 <TableCell>{item.Item.type}</TableCell>
                                 <TableCell>{item.noofsack}</TableCell>
-                                <TableCell>
-                                  {item.Item.unitofmeasurement}
-                                </TableCell>
+                                <TableCell>{item.unitofmeasurement}</TableCell>
                                 <TableCell>{item.priceperunit}</TableCell>
                                 <TableCell>{item.totalweight}</TableCell>
                               </React.Fragment>
@@ -398,7 +659,7 @@ export default function Component() {
                             </TableCell>
                           </TableRow>
                         ))}
-                    </>
+                    </> */}
                   </TableBody>
                 </Table>
                 <ScrollBar orientation="horizontal" />
@@ -412,9 +673,9 @@ export default function Component() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the item name {purchaseToDelete?.name} {""} type{" "}
-                    {purchaseToDelete.type} {""}
-                    from supplier {purchaseToDelete?.suppliername}.
+                    Invoice No.{" "} {purchaseToDelete.invoicenumber.invoicenumber}{" "}
+                    and all of its contents from the database. Please confirm you want to
+                    proceed with this action.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -422,7 +683,7 @@ export default function Component() {
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleDelete(purchaseToDelete.purchaseid)}
+                    onClick={() => handleDelete(purchaseToDelete.transactionid)}
                   >
                     Continue
                   </AlertDialogAction>
@@ -432,99 +693,54 @@ export default function Component() {
           )}
           {showModal && (
             <Dialog open={showModal} onOpenChange={handleCancel}>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
                 <DialogHeader>
                   <DialogTitle>
-                    {form.getValues("purchaseid")
+                    {form.getValues("transactionid")
                       ? "Edit Purchase of Product"
                       : "Add New Purchase of Product"}
                   </DialogTitle>
                   <DialogDescription>
                     Fill out the form to{" "}
-                    {form.getValues("purchaseid") ? "edit a" : "add a new"}{" "}
-                    purchase product to your inventory.
+                    {form.getValues("transactionid") ? "edit a" : "add a new"}{" "}
+                    purchased product to your inventory.
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
                   <form
-                    className="w-full max-w-4xl mx-auto p-6"
+                    className="w-full max-w-full  mx-auto p-4 sm:p-6"
                     onSubmit={form.handleSubmit(handleSubmit)}
                   >
-                    <div className="grid grid-cols-2 gap-4 py-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
                       <div className="space-y-2">
                         <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="name">Item Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} id="name" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                        control={form.control}
+                        name="invoicenumber.invoicenumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="invoicenumber">
+                              Invoice Number
+                            </FormLabel>
+                            <FormControl>
+                              <Input {...field} id="invoicenumber" type="text" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
                       </div>
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="type"
+                          name="entity.firstname"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="type">Item Type</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select type">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="bigas">Bigas</SelectItem>
-                                    <SelectItem value="palay">Palay</SelectItem>
-                                    <SelectItem value="resico">
-                                      Resico
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="noofsack"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="noofsack">
-                                No. of sacks
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="noofsack" type="number" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="unitofmeasurement"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="unitofmeasurement">
-                                Unit of Measurement
+                              <FormLabel htmlFor="firstname">
+                                First Name
                               </FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="unitofmeasurement"
+                                  id="firstname"
                                   type="text"
                                 />
                               </FormControl>
@@ -535,56 +751,16 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="totalweight"
+                          name="entity.middlename"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="totalweight">
-                                Total weight
+                              <FormLabel htmlFor="middlename">
+                                Middle Name
                               </FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="totalweight"
-                                  type="number"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="priceperunit"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="priceperunit">
-                                Price per unit
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="priceperunit"
-                                  type="number"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="suppliername"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="suppliername">
-                                Supplier Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="suppliername"
+                                  id="middlename"
                                   type="text"
                                 />
                               </FormControl>
@@ -595,7 +771,21 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="contactnumber"
+                          name="entity.lastname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="lastname">Last Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} id="lastname" type="text" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="entity.contactnumber"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel htmlFor="contactnumber">
@@ -647,8 +837,233 @@ export default function Component() {
                           )}
                         />
                       </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="frommilling"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="frommilling">
+                                From Milling
+                              </FormLabel>
+                              <FormControl>
+                                <Select
+                                  value={field.value ? "true" : "false"}
+                                  onValueChange={(value) => {
+                                    field.onChange(value === "true");
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select Value">
+                                      {field.value ? "true" : "false"}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="true">True</SelectItem>
+                                    <SelectItem value="false">False</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="taxpercentage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="taxpercentage">
+                                Tax Percentage
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="taxpercentage"
+                                  type="number"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
-                    <DialogFooter>
+                    {fields.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="grid grid-cols-2 lg:grid-cols-3 grid-rows-4 lg:grid-rows-2 gap-2 py-2"
+                      >
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name={`transactionitem.${index}.item.name`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="name">Item Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} id="name" type="text" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name={`transactionitem.${index}.item.type`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="type">Item Type</FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Type">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="bigas">
+                                        Bigas
+                                      </SelectItem>
+                                      <SelectItem value="palay">
+                                        Palay
+                                      </SelectItem>
+                                      <SelectItem value="resico">
+                                        Resico
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name={`transactionitem.${index}.item.sackweight`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="sackweight">
+                                  Sack Weight
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Sack Weight">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="bag25kg">
+                                        Bag 25kg
+                                      </SelectItem>
+                                      <SelectItem value="cavan50kg">
+                                        Cavan 50kg
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name={`transactionitem.${index}.unitofmeasurement`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="unitofmeasurement">
+                                  Unit of Measurement
+                                </FormLabel>
+                                <FormControl>
+                                <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Unit of Measurement">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="quantity">
+                                        Quantity
+                                      </SelectItem>
+                                      <SelectItem value="weight">
+                                        Weight
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                          control={form.control}
+                          name={`transactionitem.${index}.measurementvalue`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="measurementvalue">
+                                Measurement Value
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} id="measurementvalue" type="number" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name={`transactionitem.${index}.unitprice`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="unitprice">
+                                  Unit Price
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="unitprice"
+                                    type="number"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="pt-2">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => remove(index)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <Button onClick={() => append({})} className="mt-4">
+                      Add Item
+                    </Button>
+                    <DialogFooter className="mt-4">
                       <Button type="submit">Save</Button>
                       <Button variant="outline" onClick={handleCancel}>
                         Cancel
