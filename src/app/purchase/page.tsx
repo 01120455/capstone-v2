@@ -66,7 +66,10 @@ export default function Component() {
   const [showModalEditPurchase, setShowModalEditPurchase] = useState(false);
   const [showModalPurchaseItem, setShowModalPurchaseItem] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [showAlertPurchaseItem, setShowAlertPurchaseItem] = useState(false);
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
+  const [purchaseItemToDelete, setPurchaseItemToDelete] =
+    useState<TransactionItem | null>(null);
   const [purchaseToDelete, setPurchaseToDelete] =
     useState<TransactionTable | null>(null);
 
@@ -157,6 +160,10 @@ export default function Component() {
   }, [form.formState.errors]);
 
   useEffect(() => {
+    console.log(formPurchaseOnly.formState.errors);
+  }, [formPurchaseOnly.formState.errors]);
+
+  useEffect(() => {
     async function getPurchase() {
       try {
         const response = await fetch("/api/purchase");
@@ -228,22 +235,44 @@ export default function Component() {
 
   const handleEditPurchaseItem = (purchaseItem: TransactionItem) => {
     setShowModalPurchaseItem(true);
+    console.log("Editing purchase item:", purchaseItem);
 
     formPurchaseItem.reset({
-      transactionitemid: purchaseItem.transactionitemid,
+      transactionitemid: purchaseItem?.transactionitemid,
+      transactionid: purchaseItem?.transactionid,
       Item: {
-        itemid: purchaseItem.Item.itemid,
-        name: purchaseItem.Item.name,
-        type: purchaseItem.Item.type,
-        sackweight: purchaseItem.Item.sackweight,
+        itemid: purchaseItem.Item?.itemid,
+        name: purchaseItem.Item?.name,
+        type: purchaseItem.Item?.type,
+        sackweight: purchaseItem.Item?.sackweight,
       },
-      unitofmeasurement: purchaseItem.unitofmeasurement,
-      measurementvalue: purchaseItem.measurementvalue,
-      unitprice: purchaseItem.unitprice,
+      unitofmeasurement: purchaseItem?.unitofmeasurement,
+      measurementvalue: purchaseItem?.measurementvalue,
+      unitprice: purchaseItem?.unitprice,
+    });
+  };
+
+  const handleAddPurchaseItem = (transactionid: number) => {
+    setShowModalPurchaseItem(true);
+    console.log("Adding purchase item:", transactionid);
+
+    formPurchaseItem.reset({
+      transactionitemid: 0,
+      transactionid: transactionid,
+      Item: {
+        itemid: 0,
+        name: "",
+        type: "palay",
+        sackweight: "bag25kg",
+      },
+      unitofmeasurement: "",
+      measurementvalue: 0,
+      unitprice: 0,
     });
   };
 
   const handleEdit = (purchase: TransactionOnly) => {
+    console.log("Editing purchase:", purchase);
     setShowModalEditPurchase(true);
 
     formPurchaseOnly.reset({
@@ -369,89 +398,7 @@ export default function Component() {
     setShowTablePurchaseItem(false);
   };
 
-  // const handleSubmit = async (values: Transaction) => {
-  //   console.log("Form Values:", values);
-  //   const formData = new FormData();
-
-  //   // Append general purchase data
-  //   formData.append("type", values.type);
-  //   formData.append("status", values.status);
-  //   formData.append("walkin", values.walkin.toString());
-  //   formData.append("frommilling", values.frommilling.toString());
-  //   formData.append(
-  //     "taxpercentage",
-  //     values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
-  //   );
-  //   formData.append("Entity[firstname]", values.Entity.firstname);
-  //   formData.append("Entity[middlename]", values.Entity.middlename);
-  //   formData.append("Entity[lastname]", values.Entity.lastname);
-  //   formData.append(
-  //     "Entity[contactnumber]",
-  //     values.Entity.contactnumber.toString()
-  //   );
-  //   formData.append("invoicenumber", values.InvoiceNumber.invoicenumber || "");
-
-  //   // Loop through each Transaction item and append its data
-  //   values.TransactionItem.forEach((item, index) => {
-  //     formData.append(`TransactionItem[${index}][item][name]`, item.Item.name);
-  //     formData.append(`TransactionItem[${index}][item][type]`, item.Item.type);
-  //     formData.append(
-  //       `TransactionItem[${index}][item][sackweight]`,
-  //       item.Item.sackweight
-  //     );
-  //     formData.append(
-  //       `TransactionItem[${index}][unitofmeasurement]`,
-  //       item.unitofmeasurement
-  //     );
-  //     formData.append(
-  //       `TransactionItem[${index}][measurementvalue]`,
-  //       item.measurementvalue.toString()
-  //     );
-  //     formData.append(
-  //       `TransactionItem[${index}][unitprice]`,
-  //       item.unitprice.toString()
-  //     );
-  //   });
-
-  //   try {
-  //     let method = "POST";
-  //     let endpoint = "/api/purchase";
-
-  //     if (values.transactionid) {
-  //       method = "PUT";
-  //       endpoint = `/api/purchase/`;
-  //       formData.append("transactionid", values.transactionid.toString());
-  //     }
-
-  //     const uploadRes = await fetch(endpoint, {
-  //       method: method,
-  //       body: formData,
-  //     });
-
-  //     if (uploadRes.ok) {
-  //       if (values.transactionid) {
-  //         console.log("Purchase updated successfully");
-  //       } else {
-  //         console.log("Purchase added successfully");
-  //       }
-
-  //       setShowModal(false);
-  //       refreshPurchases();
-  //       form.reset();
-  //     } else {
-  //       console.error("Upload failed", await uploadRes.text());
-  //     }
-  //   } catch (error) {
-  //     console.error("Error adding/updating purchase:", error);
-  //   }
-  // };
-
-  
-  const handlePurchaseSubmit = async (
-    values: Transaction | TransactionOnly,
-    isEdit: boolean
-  ) => {
-    const transactionId = formPurchaseOnly.getValues('transactionid');
+  const handleSubmit = async (values: Transaction) => {
     console.log("Form Values:", values);
     const formData = new FormData();
 
@@ -465,50 +412,52 @@ export default function Component() {
       values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
     );
     formData.append("Entity[firstname]", values.Entity.firstname);
-    formData.append("Entity[middlename]", values.Entity.middlename ?? "");
+    formData.append("Entity[middlename]", values.Entity.middlename || "");
     formData.append("Entity[lastname]", values.Entity.lastname);
     formData.append(
       "Entity[contactnumber]",
-      (values.Entity.contactnumber ?? "").toString()
+      values.Entity.contactnumber.toString()
     );
     formData.append("invoicenumber", values.InvoiceNumber.invoicenumber || "");
 
-    // If adding a new purchase, loop through and append each item
-    if (!isEdit && "TransactionItem" in values && values.TransactionItem) {
-      values.TransactionItem.forEach((item, index) => {
-        formData.append(
-          `TransactionItem[${index}][item][name]`,
-          item.Item.name
-        );
-        formData.append(
-          `TransactionItem[${index}][item][type]`,
-          item.Item.type
-        );
-        formData.append(
-          `TransactionItem[${index}][item][sackweight]`,
-          item.Item.sackweight
-        );
-        formData.append(
-          `TransactionItem[${index}][unitofmeasurement]`,
-          item.unitofmeasurement
-        );
-        formData.append(
-          `TransactionItem[${index}][measurementvalue]`,
-          item.measurementvalue.toString()
-        );
-        formData.append(
-          `TransactionItem[${index}][unitprice]`,
-          item.unitprice.toString()
-        );
-      });
-    }
+    // Loop through each Transaction item and append its data
+    values.TransactionItem !== undefined
+      ? values.TransactionItem.forEach((item, index) => {
+          formData.append(
+            `TransactionItem[${index}][item][name]`,
+            item.Item.name
+          );
+          formData.append(
+            `TransactionItem[${index}][item][type]`,
+            item.Item.type
+          );
+          formData.append(
+            `TransactionItem[${index}][item][sackweight]`,
+            item.Item.sackweight
+          );
+          formData.append(
+            `TransactionItem[${index}][unitofmeasurement]`,
+            item.unitofmeasurement
+          );
+          formData.append(
+            `TransactionItem[${index}][measurementvalue]`,
+            item.measurementvalue.toString()
+          );
+          formData.append(
+            `TransactionItem[${index}][unitprice]`,
+            item.unitprice.toString()
+          );
+        })
+      : null;
 
     try {
-      let method = isEdit ? "PUT" : "POST";
+      let method = "POST";
       let endpoint = "/api/purchase";
 
-      if (isEdit && transactionId) {
-        formData.append("transactionid", transactionId.toString());
+      if (values.transactionid) {
+        method = "PUT";
+        endpoint = `/api/purchase/purchaseedit/${values.transactionid}`;
+        formData.append("transactionid", values.transactionid.toString());
       }
 
       const uploadRes = await fetch(endpoint, {
@@ -516,83 +465,113 @@ export default function Component() {
         body: formData,
       });
 
-      console.log("Upload response:", uploadRes);
-
       if (uploadRes.ok) {
-        console.log(
-          isEdit
-            ? "Purchase updated successfully"
-            : "Purchase added successfully"
-        );
-
-        // Reset and close modal accordingly
-        if (isEdit) {
-          setShowModalEditPurchase(false);
-          formPurchaseOnly.reset();
+        if (values.transactionid) {
+          console.log("Purchase updated successfully");
         } else {
-          setShowModal(false);
-          form.reset();
+          console.log("Purchase added successfully");
         }
 
-        refreshPurchases(); // Refresh data after success
+        setShowModalEditPurchase(false);
+        refreshPurchases();
+        form.reset();
       } else {
-        console.error("Request failed", await uploadRes.text());
+        console.error("Upload failed", await uploadRes.text());
       }
-    } catch (error: any) {
-      console.error("Error in submission:", error.message);
+    } catch (error) {
+      console.error("Error adding/updating purchase:", error);
     }
   };
 
-  // Separate handlers for clarity
-  const handleSubmit = (values: Transaction) =>
-    handlePurchaseSubmit(values, false);
-  const handleSubmitEditPurchase = (values: TransactionOnly) => {
-    console.log("Editing purchase with values:", values);
-    handlePurchaseSubmit(values, true);
-  };
-
-  // const handleSubmitEditPurchaseItem = async (values: TransactionItem) => {
-  //   if (!values.transactionitemid) {
-  //     console.error("Transaction item ID is required for updating.");
-  //     return;
-  //   }
-
+  // const handleSubmitEditPurchase = async (values: TransactionOnly) => {
   //   console.log("Form Values:", values);
+
   //   const formData = new FormData();
 
-  //   // Append general purchase data
-  //   formData.append("Item[name]", values.Item.name);
-  //   formData.append("Item[type]", values.Item.type);
-  //   formData.append("Item[sackweight]", values.Item.sackweight);
-  //   formData.append("unitofmeasurement", values.unitofmeasurement);
-  //   formData.append("measurementvalue", values.measurementvalue.toString());
-  //   formData.append("unitprice", values.unitprice.toString());
+  //   // Append all necessary fields to formData
+  //   formData.append("transactionid", values.transactionid.toString());
+  //   formData.append("type", values.type);
+  //   formData.append("status", values.status);
+  //   formData.append("walkin", values.walkin.toString());
+  //   formData.append("frommilling", values.frommilling.toString());
+  //   formData.append(
+  //     "taxpercentage",
+  //     values.taxpercentage ? values.taxpercentage.toString() : "0"
+  //   );
+  //   formData.append("Entity[firstname]", values.Entity.firstname);
+  //   formData.append("Entity[middlename]", values.Entity.middlename ?? "");
+  //   formData.append("Entity[lastname]", values.Entity.lastname);
+  //   formData.append("Entity[contactnumber]", values.Entity.contactnumber ?? "");
+  //   formData.append("invoicenumber", values.InvoiceNumber.invoicenumber ?? "");
 
   //   try {
-  //     const endpoint = `/api/purchase-item/${values.transactionitemid}`;
+  //     const endpoint = `/api/purchase/${values.transactionid}`;
 
+  //     // Make the fetch call to update the purchase
   //     const uploadRes = await fetch(endpoint, {
   //       method: "PUT",
   //       body: formData,
   //     });
 
   //     if (uploadRes.ok) {
-  //       console.log("Purchase Item updated successfully");
-  //       setShowModalPurchaseItem(false);
-  //       refreshPurchases();
-  //       formPurchaseItem.reset();
+  //       console.log("Purchase updated successfully");
+  //       setShowModalEditPurchase(false);
+  //       refreshPurchases(); // Refresh purchases data to reflect changes
+  //       formPurchaseOnly.reset(); // Reset the form to initial state
   //     } else {
-  //       console.error("Update failed", await uploadRes.text());
+  //       const errorText = await uploadRes.text();
+  //       console.error("Upload failed", errorText);
   //     }
   //   } catch (error) {
   //     console.error("Error updating purchase:", error);
   //   }
   // };
 
-  const handleDeletePurchaseItem = async (purchaseItem: TransactionItem) => {
+
+  const handleSubmitEditPurchaseItem = async (values: TransactionItem) => {
+    if (!values.transactionitemid) {
+      console.error("Transaction item ID is required for updating.");
+      return;
+    }
+
+    console.log("Form Values:", values);
+    const formData = new FormData();
+
+    // Append general purchase data
+    formData.append("Item[name]", values.Item.name);
+    formData.append("Item[type]", values.Item.type);
+    formData.append("Item[sackweight]", values.Item.sackweight);
+    formData.append("unitofmeasurement", values.unitofmeasurement);
+    formData.append("measurementvalue", values.measurementvalue.toString());
+    formData.append("unitprice", values.unitprice.toString());
+
+    try {
+      const endpoint = `/api/purchase-item/${values.transactionitemid}`;
+
+      const uploadRes = await fetch(endpoint, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (uploadRes.ok) {
+        console.log("Purchase Item updated successfully");
+        setShowModalPurchaseItem(false);
+        refreshPurchases();
+        formPurchaseItem.reset();
+      } else {
+        console.error("Update failed", await uploadRes.text());
+      }
+    } catch (error) {
+      console.error("Error updating purchase:", error);
+    }
+  };
+
+  const handleDeletePurchaseItemConfirm = async (
+    purchaseItem: TransactionItem
+  ) => {
     try {
       const response = await fetch(
-        `/api/purchase-item-soft-delete/${purchaseItem.transactionitemid}`,
+        `/api/purchaseitem/purchaseitem-soft-delete/${purchaseItem.transactionitemid}`,
         {
           method: "PUT",
         }
@@ -600,7 +579,7 @@ export default function Component() {
 
       if (response.ok) {
         console.log("Purchase Item deleted successfully");
-        setShowModalPurchaseItem(false);
+        setShowAlertPurchaseItem(false);
         refreshPurchases();
       } else {
         console.error("Error deleting Purchase Item:", response.status);
@@ -610,10 +589,25 @@ export default function Component() {
     }
   };
 
+  const handleDeletePurchaseItem = (purchaseItem: TransactionItem) => {
+    setPurchaseItemToDelete(purchaseItem);
+    setShowAlertPurchaseItem(true);
+    console.log("Deleting purchase item:", purchaseItem);
+  };
+
+  const handlePurchaseItemDeleteCancel = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    setShowAlertPurchaseItem(false);
+    setPurchaseItemToDelete(null);
+    formPurchaseItem.reset();
+  };
+
   const handleDelete = async (transactionid: number | undefined) => {
     try {
       const response = await fetch(
-        `/api/purchase-soft-delete/${transactionid}`,
+        `/api/purchase/purchase-soft-delete/${transactionid}`,
         {
           method: "PUT",
         }
@@ -793,7 +787,7 @@ export default function Component() {
               </ScrollArea>
             </div>
           </div>
-          {showTablePurchaseItem && (
+          {showTablePurchaseItem && purchaseItems && (
             <Dialog
               open={showTablePurchaseItem}
               onOpenChange={closeViewPurchaseItem}
@@ -801,15 +795,33 @@ export default function Component() {
               <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
                 <DialogHeader>
                   <DialogTitle>Items Purchased</DialogTitle>
-                  <DialogClose onClick={closeViewPurchaseItem} />
+                  <div className="flex  items-center justify-between mb-6 mr-12">
+                    <DialogDescription>
+                      List of items purchased
+                    </DialogDescription>
+                    <DialogClose onClick={closeViewPurchaseItem} />
+                    <Button
+                      onClick={() => {
+                        const transactionid = purchaseItems[0]?.transactionid; // Or select the specific purchase item by index
+                        handleAddPurchaseItem(transactionid);
+                      }}
+                    >
+                      {isSmallScreen ? (
+                        <PlusIcon className="w-6 h-6" />
+                      ) : (
+                        "Add Purchased Item"
+                      )}
+                    </Button>
+                  </div>
                 </DialogHeader>
                 <Table
                   style={{ width: "100%" }}
-                  className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                  className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
                   divClassname="min-h-[400px] overflow-y-scroll"
                 >
                   <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                     <TableRow>
+                      {/* <TableHead>Purchased ID</TableHead> */}
                       <TableHead>Item Name</TableHead>
                       <TableHead>Item Type</TableHead>
                       <TableHead>Sack Weight</TableHead>
@@ -825,6 +837,9 @@ export default function Component() {
                       {purchaseItems &&
                         purchaseItems.map((purchaseItem, index: number) => (
                           <TableRow key={index}>
+                            {/* <TableCell>
+                              {purchaseItem.transactionitemid}
+                            </TableCell> */}
                             <TableCell>{purchaseItem.Item.name}</TableCell>
                             <TableCell>{purchaseItem.Item.type}</TableCell>
                             <TableCell>
@@ -1045,6 +1060,32 @@ export default function Component() {
                 </Form>
               </DialogContent>
             </Dialog>
+          )}
+          {purchaseItemToDelete && (
+            <AlertDialog open={showAlertPurchaseItem}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will delete the purchased
+                    item {purchaseItemToDelete.Item.name} from the Supplier.
+                    Please confirm you want to proceed with this action.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handlePurchaseItemDeleteCancel}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() =>
+                      handleDeletePurchaseItemConfirm(purchaseItemToDelete)
+                    }
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
           {purchaseToDelete && (
             <AlertDialog open={showAlert}>
@@ -1484,9 +1525,7 @@ export default function Component() {
                 <Form {...formPurchaseOnly}>
                   <form
                     className="w-full max-w-full  mx-auto p-4 sm:p-6"
-                    onSubmit={formPurchaseOnly.handleSubmit(
-                      handleSubmitEditPurchase
-                    )}
+                    onSubmit={formPurchaseOnly.handleSubmit(handleSubmit)}
                   >
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
                       <div className="space-y-2">

@@ -14,6 +14,9 @@ enum Status {
 
 export const PUT = async (req: NextRequest) => {
   try {
+    const { pathname } = new URL(req.url);
+    const transactionId = parseInt(pathname.split("/").pop() as string, 10);
+
     const session = await getIronSession(
       req,
       NextResponse.next(),
@@ -21,7 +24,7 @@ export const PUT = async (req: NextRequest) => {
     );
     const userid = session.user.userid;
     const formData = await req.formData();
-    const transactionid = parseInt(formData.get("transactionid") as string, 10);
+
     const invoicenumber = formData.get("invoicenumber") as string;
     const frommilling = formData.get("frommilling") === "true";
     const firstname = formData.get("Entity[firstname]") as string;
@@ -34,7 +37,7 @@ export const PUT = async (req: NextRequest) => {
     const taxpercentage =
       parseFloat(formData.get("taxpercentage") as string) || 0; // Set default to 0 if NaN
 
-    if (isNaN(transactionid)) {
+    if (isNaN(transactionId)) {
       return NextResponse.json(
         { error: "Invalid transaction ID" },
         { status: 400 }
@@ -66,7 +69,7 @@ export const PUT = async (req: NextRequest) => {
 
     // Find existing purchase and item
     const existingPurchase = await prisma.transaction.findUnique({
-      where: { transactionid: transactionid },
+      where: { transactionid: transactionId },
     });
 
     if (!existingPurchase) {
@@ -99,14 +102,14 @@ export const PUT = async (req: NextRequest) => {
 
     // Update purchase and purchase item
     const updatedPurchase = await prisma.transaction.update({
-      where: { transactionid: transactionid },
+      where: { transactionid: transactionId },
       data: {
         lastmodifiedby: userid,
         entityid: supplierId,
-        status,
-        walkin,
-        frommilling,
-        taxpercentage,
+        status: status,
+        walkin: walkin,
+        frommilling: frommilling,
+        taxpercentage: taxpercentage,
       },
     });
 

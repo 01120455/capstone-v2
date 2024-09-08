@@ -75,7 +75,7 @@ const transactionSchema = z.object({
         .min(0, "Total amount cannot be negative")
         .optional(),
     })
-  ),
+  ).optional(),
 });
 
 const TransactionItem = z.object({
@@ -162,12 +162,6 @@ const transactionOnlySchema = z.object({
   taxpercentage: z.coerce.number().optional(),
   taxamount: z.number().multipleOf(0.01).optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
-  User: z.object({
-    userid: z.number().optional(),
-    firstname: z.string(),
-    middlename: z.string().optional(),
-    lastname: z.string(),
-  }),
   lastmodifiedat: date().optional(),
   InvoiceNumber: z.object({
     invoicenumberid: z.number().optional(),
@@ -182,5 +176,6 @@ export type TransactionItem = z.infer<typeof TransactionItem>;
 export type TransactionTable = z.infer<typeof transactionTableSchema>;
 
 export type TransactionOnly = z.infer<typeof transactionOnlySchema>;
+
 
 export default transactionSchema;

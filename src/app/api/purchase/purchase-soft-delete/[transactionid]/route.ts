@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { getIronSession } from "iron-session";
+import { sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
@@ -8,6 +10,13 @@ export const PUT = async (req: NextRequest) => {
     // Parse the itemId from the request URL
     const { pathname } = new URL(req.url);
     const purchaseId = parseInt(pathname.split("/").pop() as string, 10);
+
+    const session = await getIronSession(
+      req,
+      NextResponse.next(),
+      sessionOptions
+    );
+    const userid = session.user.userid;
 
     if (isNaN(purchaseId)) {
       return NextResponse.json(
@@ -36,7 +45,10 @@ export const PUT = async (req: NextRequest) => {
 
     const updatedPurchaseItem = await prisma.transactionItem.update({
       where: { transactionitemid: existingPurchaseItem.transactionitemid },
-      data: { deleted: true },
+      data: {
+        lastmodifiedby: userid,
+        deleted: true,
+      },
     });
 
     const existingPurchase = await prisma.transaction.findFirst({
@@ -59,7 +71,10 @@ export const PUT = async (req: NextRequest) => {
 
     const updatedPurchase = await prisma.transaction.update({
       where: { transactionid: existingPurchase.transactionid },
-      data: { deleted: true },
+      data: {
+        lastmodifiedby: userid,
+        deleted: true,
+      },
     });
 
     return NextResponse.json(updatedPurchase, { status: 200 });
