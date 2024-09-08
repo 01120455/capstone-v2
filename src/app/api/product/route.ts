@@ -5,6 +5,8 @@ import { stat, mkdir, writeFile, unlink } from "fs/promises";
 import { join } from "path";
 import mime from "mime";
 import _ from "lodash";
+import { getIronSession } from "iron-session";
+import { sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
@@ -34,6 +36,13 @@ enum UnitOfMeasurement {
 
 export const POST = async (req: NextRequest) => {
   try {
+    const session = await getIronSession(
+      req,
+      NextResponse.next(),
+      sessionOptions
+    );
+    const userid = session.user.userid;
+
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
@@ -55,7 +64,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     const sackweight = sackweightString as SackWeight;
-    
+
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
 
     if (
@@ -71,21 +80,15 @@ export const POST = async (req: NextRequest) => {
 
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
 
-    
-    const measurementvalue = parseFloat(
-      formData.get("measurementvalue") as string
-    );
+    const stock = parseFloat(formData.get("measurementvalue") as string);
 
     const unitprice = parseFloat(formData.get("unitprice") as string);
     const image = formData.get("image") as File | null;
     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
 
-    if (!measurementvalue) {
-      return NextResponse.json(
-        { error: "Measurement value is required" },
-        { status: 400 }
-      );
+    if (!stock) {
+      return NextResponse.json({ error: "stock is required" }, { status: 400 });
     }
 
     if (
@@ -173,7 +176,7 @@ export const POST = async (req: NextRequest) => {
         data: {
           sackweight,
           unitofmeasurement,
-          measurementvalue,
+          stock,
           unitprice,
           reorderlevel,
           criticallevel,
@@ -200,10 +203,11 @@ export const POST = async (req: NextRequest) => {
           type,
           sackweight,
           unitofmeasurement,
-          measurementvalue,
+          stock,
           unitprice,
           reorderlevel,
           criticallevel,
+          lastmodifiedby: userid,
           itemimage: fileUrl
             ? {
                 create: {
@@ -239,7 +243,7 @@ export async function GET(req: NextRequest) {
         type: true,
         sackweight: true,
         unitofmeasurement: true,
-        measurementvalue: true,
+        stock: true,
         unitprice: true,
         reorderlevel: true,
         criticallevel: true,
@@ -248,14 +252,45 @@ export async function GET(req: NextRequest) {
             imagepath: true,
           },
         },
+        User: {
+          select: {
+            userid: true,
+            firstname: true,
+            middlename: true,
+            lastname: true,
+          },
+        },
         lastmodifiedat: true,
         lastmodifiedby: true,
       },
     });
 
-    return NextResponse.json(items, { status: 200 });
+    const convertBigIntToString = (value: any): any => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      if (typeof value === "bigint") {
+        return value.toString();
+      }
+      if (Array.isArray(value)) {
+        return value.map(convertBigIntToString);
+      }
+      if (value !== null && typeof value === "object") {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [
+            key,
+            convertBigIntToString(val),
+          ])
+        );
+      }
+      return value;
+    };
+
+    const convertedItems = convertBigIntToString(items);
+
+    return NextResponse.json(convertedItems, { status: 200 });
   } catch (error) {
-    console.error("Error fetching items:", error);
+    console.error("Error getting purchases:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -265,6 +300,13 @@ export async function GET(req: NextRequest) {
 
 export const PUT = async (req: NextRequest) => {
   try {
+    const session = await getIronSession(
+      req,
+      NextResponse.next(),
+      sessionOptions
+    );
+    const userid = session.user.userid;
+
     const formData = await req.formData();
 
     const itemId = parseInt(formData.get("itemid") as string, 10);
@@ -297,9 +339,7 @@ export const PUT = async (req: NextRequest) => {
 
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
 
-    const measurementvalue = parseFloat(
-      formData.get("measurementvalue") as string
-    );
+    const stock = parseFloat(formData.get("stock") as string);
     const unitprice = parseFloat(formData.get("unitprice") as string);
     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
@@ -312,11 +352,11 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    if (isNaN(measurementvalue) || isNaN(unitprice)) {
+    if (isNaN(stock) || isNaN(unitprice)) {
       return NextResponse.json(
         {
           error:
-            "Measurement Value and unit price must be valid numbers and not negative values",
+            "stock and unit price must be valid numbers and not negative values",
         },
         { status: 400 }
       );
@@ -431,10 +471,11 @@ export const PUT = async (req: NextRequest) => {
         type,
         sackweight,
         unitofmeasurement,
-        measurementvalue,
+        stock,
         unitprice,
         reorderlevel,
         criticallevel,
+        lastmodifiedby: userid,
         itemimage: fileUrl
           ? {
               deleteMany: {}, // delete all existing images
@@ -458,7 +499,6 @@ export const PUT = async (req: NextRequest) => {
     );
   }
 };
-
 
 export const DELETE = async (req: NextRequest) => {
   try {

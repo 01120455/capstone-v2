@@ -52,6 +52,20 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    async function createDummyUser() {
+      try {
+        const res = await fetch("/api/auth/cdu", { method: "POST" });
+        const data = await res.json();
+        console.log(data);
+      } catch (error) {
+        console.error("Error creating dummy user:", error);
+      }
+    }
+
+    createDummyUser();
+  }, []);
+
+  useEffect(() => {
     if (alert) {
       const timer = setTimeout(() => handleAlertDismiss(), 10000);
 

@@ -10,47 +10,56 @@ export const PUT = async (req: NextRequest) => {
     const purchaseId = parseInt(pathname.split("/").pop() as string, 10);
 
     if (isNaN(purchaseId)) {
-      return NextResponse.json({ error: "Invalid purchase ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid purchase ID" },
+        { status: 400 }
+      );
     }
 
-    const existingPurchaseItem = await prisma.purchaseItem.findFirst({
-      where: { purchaseid: purchaseId },
+    const existingPurchaseItem = await prisma.transactionItem.findFirst({
+      where: { transactionid: purchaseId },
     });
 
     if (!existingPurchaseItem) {
-      return NextResponse.json({ error: "Purchase Item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Purchase Item not found" },
+        { status: 404 }
+      );
     }
 
-    if (existingPurchaseItem.purchaseitemdeleted) {
+    if (existingPurchaseItem.deleted) {
       return NextResponse.json(
         { error: "Purchase Item is already marked as deleted" },
         { status: 400 }
       );
     }
 
-    const updatedPurchaseItem = await prisma.purchaseItem.update({
-      where: { purchaseitemid: existingPurchaseItem.purchaseitemid },
-      data: { purchaseitemdeleted: true },
+    const updatedPurchaseItem = await prisma.transactionItem.update({
+      where: { transactionitemid: existingPurchaseItem.transactionitemid },
+      data: { deleted: true },
     });
 
-    const existingPurchase = await prisma.purchase.findFirst({
-      where: { purchaseid: purchaseId },
+    const existingPurchase = await prisma.transaction.findFirst({
+      where: { transactionid: purchaseId },
     });
 
     if (!existingPurchase) {
-      return NextResponse.json({ error: "Purchase not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Purchase not found" },
+        { status: 404 }
+      );
     }
 
-    if (existingPurchase.purchasedeleted) {
+    if (existingPurchase.deleted) {
       return NextResponse.json(
         { error: "Purchase is already marked as deleted" },
         { status: 400 }
       );
     }
 
-    const updatedPurchase = await prisma.purchase.update({
-      where: { purchaseid: existingPurchase.purchaseid },
-      data: { purchasedeleted: true },
+    const updatedPurchase = await prisma.transaction.update({
+      where: { transactionid: existingPurchase.transactionid },
+      data: { deleted: true },
     });
 
     return NextResponse.json(updatedPurchase, { status: 200 });

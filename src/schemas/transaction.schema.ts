@@ -5,7 +5,7 @@ const is11Digits = (val: string) => /^\d{10}$/.test(val);
 
 const transactionSchema = z.object({
   transactionid: z.number().optional(),
-  entity: z.object({
+  Entity: z.object({
     entityid: z.number().optional(),
     firstname: z
       .string()
@@ -26,7 +26,7 @@ const transactionSchema = z.object({
         message: "Contact number must be exactly 11 digits",
       }),
   }),
-  date: date().optional(),
+  createdat: date().optional(),
   type: z.enum(["purchase", "sale"], {
     invalid_type_error: "Invalid Type Received",
   }),
@@ -38,14 +38,14 @@ const transactionSchema = z.object({
   taxpercentage: z.coerce.number().optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
   lastmodifiedat: date().optional(),
-  invoicenumber: z.object({
+  InvoiceNumber: z.object({
     invoicenumberid: z.number().optional(),
     invoicenumber: z.string().optional(),
   }),
-  transactionitem: z.array(
+  TransactionItem: z.array(
     z.object({
       transactionitemid: z.number().optional(),
-      item: z.object({
+      Item: z.object({
         itemid: z.number().optional(),
         name: z
           .string()
@@ -69,7 +69,7 @@ const transactionSchema = z.object({
       measurementvalue: z.coerce
         .number()
         .min(0, "Measurement value cannot be negative"),
-      unitprice: z.coerce.number().min(0, "Price per unit cannot be negative"),
+      unitprice: z.coerce.number().multipleOf(0.01).min(0, "Price per unit cannot be negative"),
       totalamount: z.coerce
         .number()
         .min(0, "Total amount cannot be negative")
@@ -79,8 +79,9 @@ const transactionSchema = z.object({
 });
 
 const TransactionItem = z.object({
-  transactionitemid: z.number().optional(),
-  item: z.object({
+  transactionitemid: z.number(),
+  transactionid: z.number(),
+  Item: z.object({
     itemid: z.number().optional(),
     name: z.string().min(1, "Name is required").max(100, "Name is too long"),
     type: z
@@ -101,12 +102,12 @@ const TransactionItem = z.object({
   measurementvalue: z.coerce
     .number()
     .min(0, "Measurement value cannot be negative"),
-  unitprice: z.coerce.number().min(0, "Price per unit cannot be negative"),
+  unitprice: z.coerce.number().multipleOf(0.01).min(0, "Price per unit cannot be negative"),
   totalamount: z.coerce.number().min(0, "Total amount cannot be negative"),
 });
 
 const transactionTableSchema = z.object({
-  transactionid: z.number().optional(),
+  transactionid: z.number(),
   Entity: z.object({
     entityid: z.number(),
     firstname: z.string(),
@@ -114,7 +115,7 @@ const transactionTableSchema = z.object({
     lastname: z.string(),
     contactnumber: z.string().optional(),
   }),
-  date: date(),
+  createdat: date(),
   type: z.enum(["purchase", "sale"], {
     invalid_type_error: "Invalid Type Received",
   }),
@@ -124,15 +125,51 @@ const transactionTableSchema = z.object({
   walkin: z.boolean(),
   frommilling: z.boolean(),
   taxpercentage: z.coerce.number().optional(),
+  taxamount: z.number().multipleOf(0.01).optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
-  user: z.object({
+  User: z.object({
     userid: z.number().optional(),
     firstname: z.string(),
     middlename: z.string().optional(),
     lastname: z.string(),
   }),
   lastmodifiedat: date().optional(),
-  Invoicenumber: z.object({
+  InvoiceNumber: z.object({
+    invoicenumberid: z.number().optional(),
+    invoicenumber: z.string().optional(),
+  }),
+  TransactionItem: z.array(TransactionItem),
+});
+
+const transactionOnlySchema = z.object({
+  transactionid: z.number(),
+  Entity: z.object({
+    entityid: z.number(),
+    firstname: z.string(),
+    middlename: z.string().optional(),
+    lastname: z.string(),
+    contactnumber: z.string().optional(),
+  }),
+  createdat: date(),
+  type: z.enum(["purchase", "sale"], {
+    invalid_type_error: "Invalid Type Received",
+  }),
+  status: z.enum(["pending", "paid", "cancelled"], {
+    invalid_type_error: "Invalid Status Received",
+  }),
+  walkin: z.boolean(),
+  frommilling: z.boolean(),
+  taxpercentage: z.coerce.number().optional(),
+  taxamount: z.number().multipleOf(0.01).optional(),
+  totalamount: z.number().multipleOf(0.01).optional(),
+  User: z.object({
+    userid: z.number().optional(),
+    firstname: z.string(),
+    middlename: z.string().optional(),
+    lastname: z.string(),
+  }),
+  lastmodifiedat: date().optional(),
+  InvoiceNumber: z.object({
     invoicenumberid: z.number().optional(),
     invoicenumber: z.string().optional(),
   }),
@@ -143,5 +180,7 @@ export type Transaction = z.infer<typeof transactionSchema>;
 export type TransactionItem = z.infer<typeof TransactionItem>;
 
 export type TransactionTable = z.infer<typeof transactionTableSchema>;
+
+export type TransactionOnly = z.infer<typeof transactionOnlySchema>;
 
 export default transactionSchema;

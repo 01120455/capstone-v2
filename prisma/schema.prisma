@@ -12,7 +12,7 @@ model User {
   firstname         String    @db.VarChar(25)
   middlename        String?   @db.VarChar(25)
   lastname          String    @db.VarChar(25)
-  role              String    @db.VarChar(30)
+  role              Role
   status            Status
   username          String    @unique @db.VarChar(50)
   password          String
@@ -22,8 +22,6 @@ model User {
   Entity            Entity[]
   Transaction       Transaction[]
 }
-
-
 
 model Entity {
   entityid      Int       @id @default(autoincrement())
@@ -39,7 +37,7 @@ model Entity {
   transaction     Transaction[]
 }
 
-model Invoicenumber {
+model InvoiceNumber {
   invoicenumberid      Int       @id @default(autoincrement())
   invoicenumber        String   @unique @db.VarChar(30)
   deleted              Boolean   @default(false)
@@ -54,6 +52,7 @@ model Transaction {
   walkin            Boolean @default(false)
   frommilling      Boolean @default(false)
   taxpercentage        Int?
+  taxamount            Float?
   totalamount Float?
   createdat          DateTime  @default(now())
   lastmodifiedby     Int?
@@ -61,7 +60,7 @@ model Transaction {
   invoicenumberid          Int?
   deleted            Boolean   @default(false)
   Entity             Entity    @relation(fields: [entityid], references: [entityid])
-  Invoicenumber      Invoicenumber? @relation(fields: [invoicenumberid], references: [invoicenumberid])
+  InvoiceNumber      InvoiceNumber? @relation(fields: [invoicenumberid], references: [invoicenumberid])
   User User? @relation(fields: [lastmodifiedby], references: [userid])
   TransactionItem    TransactionItem[]
 }
@@ -143,4 +142,11 @@ enum ItemType {
   bigas
   palay
   resico
+}
+
+enum Role {
+  admin
+  manager
+  sales
+  inventory
 }

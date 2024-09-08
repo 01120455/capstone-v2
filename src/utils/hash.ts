@@ -1,4 +1,3 @@
-// utils/hash.ts
 import bcrypt from 'bcrypt';
 
 const saltRounds = 10;

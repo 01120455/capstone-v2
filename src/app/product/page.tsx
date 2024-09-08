@@ -64,17 +64,19 @@ export default function Component() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [alertItem, setAlertItem] = useState<ViewItem | null>(null);
   const [showAlertItem, setShowAlertItem] = useState(false);
-  const [alertType, setAlertType] = useState<'reorder' | 'critical' | null>(null);
+  const [alertType, setAlertType] = useState<"reorder" | "critical" | null>(
+    null
+  );
 
   const checkItemLevels = (items: ViewItem[]) => {
     items.forEach((item) => {
-      if (item.measurementvalue <= item.reorderlevel) {
+      if (item.stock <= item.reorderlevel) {
         setAlertItem(item);
-        setAlertType('reorder');
+        setAlertType("reorder");
         setShowAlertItem(true);
-      } else if (item.measurementvalue <= item.criticallevel) {
+      } else if (item.stock <= item.criticallevel) {
         setAlertItem(item);
-        setAlertType('critical');
+        setAlertType("critical");
         setShowAlertItem(true);
       }
     });
@@ -96,7 +98,7 @@ export default function Component() {
 
     const intervalId = setInterval(() => {
       fetchItems();
-    }, 60000); 
+    }, 60000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -108,7 +110,7 @@ export default function Component() {
       type: "palay",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
-      measurementvalue: 0,
+      stock: 0,
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -161,7 +163,7 @@ export default function Component() {
       type: "palay",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
-      measurementvalue: 0,
+      stock: 0,
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -178,7 +180,7 @@ export default function Component() {
       type: item.type,
       sackweight: item.sackweight,
       unitofmeasurement: item.unitofmeasurement,
-      measurementvalue: item.measurementvalue,
+      stock: item.stock,
       unitprice: item.unitprice,
       reorderlevel: item.reorderlevel,
       criticallevel: item.criticallevel,
@@ -195,7 +197,7 @@ export default function Component() {
       type: "palay",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
-      measurementvalue: 0,
+      stock: 0,
       unitprice: 0,
       reorderlevel: 0,
       criticallevel: 0,
@@ -213,7 +215,7 @@ export default function Component() {
     formData.append("type", values.type);
     formData.append("sackweight", values.sackweight);
     formData.append("unitofmeasurement", values.unitofmeasurement);
-    formData.append("measurementvalue", values.measurementvalue.toString());
+    formData.append("stock", values.stock.toString());
     formData.append("unitprice", values.unitprice.toString());
     formData.append("reorderlevel", values.reorderlevel.toString());
     formData.append("criticallevel", values.criticallevel.toString());
@@ -281,9 +283,12 @@ export default function Component() {
 
   const handleDelete = async (itemid: number | undefined) => {
     try {
-      const response = await fetch(`/api/product-soft-delete/${itemid}`, {
-        method: "PUT",
-      });
+      const response = await fetch(
+        `/api/product/product-soft-delete/${itemid}`,
+        {
+          method: "PUT",
+        }
+      );
 
       if (response.ok) {
         console.log("Item deleted successfully");
@@ -323,10 +328,10 @@ export default function Component() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768); 
+      setIsSmallScreen(window.innerWidth < 768);
     };
 
-    handleResize(); 
+    handleResize();
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -349,17 +354,17 @@ export default function Component() {
       <SideMenu />
       <div className="flex-1 overflow-y-auto p-5">
         {showAlertItem && (
-          <Alert
-            className="alert-center"
-            variant="destructive"
-          >
+          <Alert className="alert-center" variant="destructive">
             <AlertTitle>
-            {alertType === 'reorder' ? 'Reorder Level Reached' : 'Critical Level Reached'}
+              {alertType === "reorder"
+                ? "Reorder Level Reached"
+                : "Critical Level Reached"}
             </AlertTitle>
             <AlertDescription>
               The stock level Item {alertItem?.name} Type {alertItem?.type} {""}{" "}
-              {alertItem?.unitofmeasurement} has reached the {alertType === 'reorder' ? 'reorder' : 'critical'} level. 
-               Please take necessary action.
+              {alertItem?.unitofmeasurement} has reached the{" "}
+              {alertType === "reorder" ? "reorder" : "critical"} level. Please
+              take necessary action.
             </AlertDescription>
           </Alert>
         )}
@@ -385,10 +390,11 @@ export default function Component() {
                       <TableHead>Type</TableHead>
                       <TableHead>Sack Weight</TableHead>
                       <TableHead>Unit of Measurement</TableHead>
-                      <TableHead>Measurement Value</TableHead>
+                      <TableHead>Available Stocks</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Reorder Level</TableHead>
                       <TableHead>Critical Level</TableHead>
+                      <TableHead>Last Modified by</TableHead>
                       <TableHead>Last Modified at</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -419,22 +425,24 @@ export default function Component() {
                           <TableCell>{item.type}</TableCell>
                           <TableCell>{item.sackweight}</TableCell>
                           <TableCell>{item.unitofmeasurement}</TableCell>
-                          <TableCell>{item.measurementvalue}</TableCell>
+                          <TableCell>{item.stock}</TableCell>
                           <TableCell>{item.unitprice}</TableCell>
                           <TableCell>{item.reorderlevel}</TableCell>
                           <TableCell>{item.criticallevel}</TableCell>
                           <TableCell>
-                            {item.lastmodifeiedat
-                              ? new Date(item.lastmodifeiedat).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )
+                            {item.User.firstname} {item.User.lastname}
+                          </TableCell>
+                          <TableCell>
+                            {item.lastmodifiedat
+                              ? new Date(
+                                  item.lastmodifiedat
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
                               : "N/A"}
                           </TableCell>
                           <TableCell>
@@ -509,9 +517,10 @@ export default function Component() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the item name {itemToDelete?.name} {""} which consists of{itemToDelete?.unitofmeasurement}
+                    the item name {itemToDelete?.name} {""} which consists of
+                    {itemToDelete?.unitofmeasurement}
                     {""}
-                    {itemToDelete?.measurementvalue} stocks and remove their data from our
+                    {itemToDelete?.stock} stocks and remove their data from our
                     database.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -619,9 +628,11 @@ export default function Component() {
                           name="sackweight"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="sackweight">Sack Weight</FormLabel>
+                              <FormLabel htmlFor="sackweight">
+                                Sack Weight
+                              </FormLabel>
                               <FormControl>
-                              <Select
+                                <Select
                                   onValueChange={field.onChange}
                                   defaultValue={field.value}
                                   {...field}
@@ -632,8 +643,12 @@ export default function Component() {
                                     </SelectValue>
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="bag25kg">Bag25kg</SelectItem>
-                                    <SelectItem value="cavan50kg">Cavan50kg</SelectItem>
+                                    <SelectItem value="bag25kg">
+                                      Bag25kg
+                                    </SelectItem>
+                                    <SelectItem value="cavan50kg">
+                                      Cavan50kg
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </FormControl>
@@ -651,7 +666,7 @@ export default function Component() {
                                 Unit of Measurement
                               </FormLabel>
                               <FormControl>
-                              <Select
+                                <Select
                                   onValueChange={field.onChange}
                                   defaultValue={field.value}
                                   {...field}
@@ -662,8 +677,12 @@ export default function Component() {
                                     </SelectValue>
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="quantity">Quantity</SelectItem>
-                                    <SelectItem value="weight">Weight</SelectItem>
+                                    <SelectItem value="quantity">
+                                      Quantity
+                                    </SelectItem>
+                                    <SelectItem value="weight">
+                                      Weight
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </FormControl>
@@ -674,18 +693,14 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="measurementvalue"
+                          name="stock"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="measurementvalue">
+                              <FormLabel htmlFor="stock">
                                 Measurement Value
                               </FormLabel>
                               <FormControl>
-                                <Input
-                                  {...field}
-                                  id="measurementvalue"
-                                  type="number"
-                                />
+                                <Input {...field} id="stock" type="number" />
                               </FormControl>
                             </FormItem>
                           )}

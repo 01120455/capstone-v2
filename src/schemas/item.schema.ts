@@ -15,12 +15,10 @@ export const item = z.object({
   unitofmeasurement: z.enum(["quantity", "weight"], {
     invalid_type_error: "Invalid Type Received",
   }),
-  measurementvalue: z.coerce.number().multipleOf(0.01).min(0, "Quantity cannot be negative"),
+  stock: z.coerce.number().multipleOf(0.01).min(0, "Quantity cannot be negative"),
   unitprice: z.coerce.number().multipleOf(0.01).min(0, "Quantity cannot be negative"),
   reorderlevel: z.coerce.number().min(0, "Reorder level cannot be negative"),
   criticallevel: z.coerce.number().min(0, "Critical level cannot be negative"),
-  lastmodifiedby: z.coerce.number().optional(),
-  lastmodifeiedat: date().optional(),
   imagepath: z.string().optional(),
   image: z.any().optional(),
 });
@@ -31,12 +29,17 @@ export const viewItem = z.object({
   type: z.enum(["bigas", "palay", "resico"],),
   sackweight: z.enum(["bag25kg", "cavan50kg"]),
   unitofmeasurement: z.enum(["quantity", "weight"]),
-  measurementvalue: z.number().multipleOf(0.01),
+  stock: z.number().multipleOf(0.01),
   unitprice: z.number().multipleOf(0.01),
   reorderlevel: z.number(),
   criticallevel: z.number(),
-  lastmodifiedby: z.number().optional(),
-  lastmodifeiedat: z.date().optional(),
+  User : z.object({
+    userid: z.number(),
+    firstname: z.string(),
+    middlename: z.string().optional(),
+    lastname: z.string(),
+  }),
+  lastmodifiedat: z.date().optional(),
   itemimage: z.array(
     z.object({
       imagepath: z.string().optional(),
