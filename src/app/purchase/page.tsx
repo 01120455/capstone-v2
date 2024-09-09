@@ -651,7 +651,7 @@ export default function Component() {
       if (uploadRes.ok) {
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
-        refreshPurchaseItems();
+        refreshPurchases();
         formPurchaseItemOnly.reset();
       } else {
         console.error("Operation failed", await uploadRes.text());
@@ -910,80 +910,94 @@ export default function Component() {
                   </div>
                 </DialogHeader>
                 <div className="overflow-y-auto">
-            <div className="table-container relative ">
-              <ScrollArea>
-                <Table
-                  style={{ width: "100%" }}
-                  className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                  divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                >
-                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                    <TableRow>
-                      {/* <TableHead>Purchased ID</TableHead> */}
-                      <TableHead>Item Name</TableHead>
-                      <TableHead>Item Type</TableHead>
-                      <TableHead>Sack Weight</TableHead>
-                      <TableHead>Unit of Measurement</TableHead>
-                      <TableHead>Measurement Value</TableHead>
-                      <TableHead>Unit Price</TableHead>
-                      <TableHead>Total Amount</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <>
-                      {purchaseItems &&
-                        purchaseItems.map((purchaseItem, index: number) => (
-                          <TableRow key={index}>
-                            {/* <TableCell>
+                  <div className="table-container relative ">
+                    <ScrollArea>
+                      <Table
+                        style={{ width: "100%" }}
+                        className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                        divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                      >
+                        <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                          <TableRow>
+                            {/* <TableHead>Purchased ID</TableHead> */}
+                            <TableHead>Item Name</TableHead>
+                            <TableHead>Item Type</TableHead>
+                            <TableHead>Sack Weight</TableHead>
+                            <TableHead>Unit of Measurement</TableHead>
+                            <TableHead>Measurement Value</TableHead>
+                            <TableHead>Unit Price</TableHead>
+                            <TableHead>Total Amount</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <>
+                            {purchaseItems &&
+                              purchaseItems.map(
+                                (purchaseItem, index: number) => (
+                                  <TableRow key={index}>
+                                    {/* <TableCell>
                               {purchaseItem.transactionitemid}
                             </TableCell> */}
-                            <TableCell>{purchaseItem.Item.name}</TableCell>
-                            <TableCell>{purchaseItem.Item.type}</TableCell>
-                            <TableCell>
-                              {purchaseItem.Item.sackweight}
-                            </TableCell>
-                            <TableCell>
-                              {purchaseItem.unitofmeasurement}
-                            </TableCell>
-                            <TableCell>
-                              {purchaseItem.measurementvalue}
-                            </TableCell>
-                            <TableCell>{purchaseItem.unitprice}</TableCell>
-                            <TableCell>{purchaseItem.totalamount}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleEditPurchaseItem(purchaseItem)
-                                  }
-                                >
-                                  <FilePenIcon className="w-4 h-4" />
-                                  <span className="sr-only">Edit</span>
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDeletePurchaseItem(purchaseItem)
-                                  }
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  <span className="sr-only">Delete</span>
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </>
-                  </TableBody>
-                </Table>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            </div>
-          </div>
+                                    <TableCell>
+                                      {purchaseItem.Item.name}
+                                    </TableCell>
+                                    <TableCell>
+                                      {purchaseItem.Item.type}
+                                    </TableCell>
+                                    <TableCell>
+                                      {purchaseItem.Item.sackweight}
+                                    </TableCell>
+                                    <TableCell>
+                                      {purchaseItem.unitofmeasurement}
+                                    </TableCell>
+                                    <TableCell>
+                                      {purchaseItem.measurementvalue}
+                                    </TableCell>
+                                    <TableCell>
+                                      {purchaseItem.unitprice}
+                                    </TableCell>
+                                    <TableCell>
+                                      {purchaseItem.totalamount}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleEditPurchaseItem(purchaseItem)
+                                          }
+                                        >
+                                          <FilePenIcon className="w-4 h-4" />
+                                          <span className="sr-only">Edit</span>
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleDeletePurchaseItem(
+                                              purchaseItem
+                                            )
+                                          }
+                                        >
+                                          <TrashIcon className="w-4 h-4" />
+                                          <span className="sr-only">
+                                            Delete
+                                          </span>
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              )}
+                          </>
+                        </TableBody>
+                      </Table>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  </div>
+                </div>
               </DialogContent>
             </Dialog>
           )}
