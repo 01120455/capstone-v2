@@ -52,6 +52,7 @@ import transactionSchema, {
   TransactionOnly,
   TransactionTable,
 } from "@/schemas/transaction.schema";
+import transactionItemSchema, { TransactionItemOnly } from "@/schemas/transactionitem.schema";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
@@ -111,10 +112,11 @@ export default function Component() {
     },
   });
 
-  const formPurchaseItem = useForm<TransactionItem>({
-    resolver: zodResolver(transactionSchema),
+  const formPurchaseItemOnly = useForm<TransactionItemOnly>({
+    resolver: zodResolver(transactionItemSchema),
     defaultValues: {
       transactionitemid: 0,
+      transactionid: 0,
       Item: {
         itemid: 0,
         name: "",
@@ -162,6 +164,10 @@ export default function Component() {
   useEffect(() => {
     console.log(formPurchaseOnly.formState.errors);
   }, [formPurchaseOnly.formState.errors]);
+
+  useEffect(() => {
+    console.log(formPurchaseItemOnly.formState.errors);
+  }, [formPurchaseItemOnly.formState.errors]);
 
   useEffect(() => {
     async function getPurchase() {
@@ -233,13 +239,13 @@ export default function Component() {
     });
   };
 
-  const handleEditPurchaseItem = (purchaseItem: TransactionItem) => {
+  const handleEditPurchaseItem = (purchaseItem: TransactionItemOnly) => {
     setShowModalPurchaseItem(true);
     console.log("Editing purchase item:", purchaseItem);
 
-    formPurchaseItem.reset({
+    formPurchaseItemOnly.reset({
       transactionitemid: purchaseItem?.transactionitemid,
-      transactionid: purchaseItem?.transactionid,
+      transactionid: purchaseItem.transactionid,
       Item: {
         itemid: purchaseItem.Item?.itemid,
         name: purchaseItem.Item?.name,
@@ -256,7 +262,7 @@ export default function Component() {
     setShowModalPurchaseItem(true);
     console.log("Adding purchase item:", transactionid);
 
-    formPurchaseItem.reset({
+    formPurchaseItemOnly.reset({
       transactionitemid: 0,
       transactionid: transactionid,
       Item: {
@@ -285,7 +291,7 @@ export default function Component() {
       Entity: {
         entityid: purchase.Entity.entityid,
         firstname: purchase.Entity.firstname,
-        middlename: purchase.Entity.middlename,
+        middlename: purchase.Entity?.middlename || "",
         lastname: purchase.Entity.lastname,
         contactnumber: purchase.Entity.contactnumber,
       },
@@ -336,7 +342,7 @@ export default function Component() {
       ],
     });
 
-    formPurchaseItem.reset({
+    formPurchaseItemOnly.reset({
       transactionitemid: 0,
       Item: {
         itemid: 0,
@@ -412,11 +418,11 @@ export default function Component() {
       values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
     );
     formData.append("Entity[firstname]", values.Entity.firstname);
-    formData.append("Entity[middlename]", values.Entity.middlename || "");
+    formData.append("Entity[middlename]", values.Entity.middlename ?? "");
     formData.append("Entity[lastname]", values.Entity.lastname);
     formData.append(
       "Entity[contactnumber]",
-      values.Entity.contactnumber.toString()
+      values.Entity.contactnumber.toString() ?? ""
     );
     formData.append("invoicenumber", values.InvoiceNumber.invoicenumber || "");
 
@@ -527,42 +533,83 @@ export default function Component() {
   //   }
   // };
 
+  // const handleSubmitEditPurchaseItem = async (values: TransactionItem) => {
+  //   if (!values.transactionitemid) {
+  //     console.error("Transaction item ID is required for updating.");
+  //     return;
+  //   }
 
-  const handleSubmitEditPurchaseItem = async (values: TransactionItem) => {
-    if (!values.transactionitemid) {
-      console.error("Transaction item ID is required for updating.");
+  //   console.log("Form Values:", values);
+  //   const formData = new FormData();
+
+  //   // Append general purchase data
+  //   formData.append("Item[name]", values.Item.name);
+  //   formData.append("Item[type]", values.Item.type);
+  //   formData.append("Item[sackweight]", values.Item.sackweight);
+  //   formData.append("unitofmeasurement", values.unitofmeasurement);
+  //   formData.append("measurementvalue", values.measurementvalue.toString());
+  //   formData.append("unitprice", values.unitprice.toString());
+
+  //   try {
+  //     const endpoint = `/api/purchase-item/${values.transactionitemid}`;
+
+  //     const uploadRes = await fetch(endpoint, {
+  //       method: "PUT",
+  //       body: formData,
+  //     });
+
+  //     if (uploadRes.ok) {
+  //       console.log("Purchase Item updated successfully");
+  //       setShowModalPurchaseItem(false);
+  //       refreshPurchases();
+  //       formPurchaseItem.reset();
+  //     } else {
+  //       console.error("Update failed", await uploadRes.text());
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating purchase:", error);
+  //   }
+  // };
+
+  const handleSubmitEditPurchaseItem = async (values: TransactionItemOnly) => {
+    // Validate required fields
+    if (!values.transactionid) {
+      console.error("Transaction ID is required.");
       return;
     }
 
-    console.log("Form Values:", values);
-    const formData = new FormData();
+    // Check if it's an update or create operation
+    const isUpdate = !!values.transactionitemid; // True if transactionitemid exists
+    const endpoint = isUpdate
+      ? `/api/purchase-item/${values.transactionitemid}` // PUT endpoint for update
+      : `/api/purchasteitem/purchaseitem/${values.transactionid}`; // POST endpoint for creation
 
-    // Append general purchase data
+    // Prepare form data for submission
+    const formData = new FormData();
     formData.append("Item[name]", values.Item.name);
     formData.append("Item[type]", values.Item.type);
     formData.append("Item[sackweight]", values.Item.sackweight);
     formData.append("unitofmeasurement", values.unitofmeasurement);
     formData.append("measurementvalue", values.measurementvalue.toString());
     formData.append("unitprice", values.unitprice.toString());
+    formData.append("transactionid", values.transactionid.toString()); // Convert to string
 
     try {
-      const endpoint = `/api/purchase-item/${values.transactionitemid}`;
-
       const uploadRes = await fetch(endpoint, {
-        method: "PUT",
+        method: isUpdate ? "PUT" : "POST", // Determine HTTP method based on the operation
         body: formData,
       });
 
       if (uploadRes.ok) {
-        console.log("Purchase Item updated successfully");
+        console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
         refreshPurchases();
-        formPurchaseItem.reset();
+        formPurchaseItemOnly.reset();
       } else {
-        console.error("Update failed", await uploadRes.text());
+        console.error("Operation failed", await uploadRes.text());
       }
     } catch (error) {
-      console.error("Error updating purchase:", error);
+      console.error("Error processing purchase item:", error);
     }
   };
 
@@ -601,7 +648,7 @@ export default function Component() {
     event.preventDefault();
     setShowAlertPurchaseItem(false);
     setPurchaseItemToDelete(null);
-    formPurchaseItem.reset();
+    formPurchaseItemOnly.reset();
   };
 
   const handleDelete = async (transactionid: number | undefined) => {
@@ -890,29 +937,29 @@ export default function Component() {
               <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
                 <DialogHeader>
                   <DialogTitle>
-                    {formPurchaseItem.getValues("transactionitemid")
+                    {formPurchaseItemOnly.getValues("transactionitemid")
                       ? "Edit Purchase Item"
                       : "Add New Purchase Item"}
                   </DialogTitle>
                   <DialogDescription>
                     Fill out the form to{" "}
-                    {formPurchaseItem.getValues("transactionitemid")
+                    {formPurchaseItemOnly.getValues("transactionitemid")
                       ? "edit a"
                       : "add a new"}{" "}
                     purchased product to your inventory.
                   </DialogDescription>
                 </DialogHeader>
-                <Form {...formPurchaseItem}>
+                <Form {...formPurchaseItemOnly}>
                   <form
                     className="w-full max-w-full  mx-auto p-4 sm:p-6"
-                    onSubmit={formPurchaseItem.handleSubmit(
+                    onSubmit={formPurchaseItemOnly.handleSubmit(
                       handleSubmitEditPurchaseItem
                     )}
                   >
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
                       <div className="space-y-2">
                         <FormField
-                          control={formPurchaseItem.control}
+                          control={formPurchaseItemOnly.control}
                           name="Item.name"
                           render={({ field }) => (
                             <FormItem>
@@ -926,7 +973,7 @@ export default function Component() {
                       </div>
                       <div className="space-y-2">
                         <FormField
-                          control={formPurchaseItem.control}
+                          control={formPurchaseItemOnly.control}
                           name="Item.type"
                           render={({ field }) => (
                             <FormItem>
@@ -957,7 +1004,7 @@ export default function Component() {
                       </div>
                       <div className="space-y-2">
                         <FormField
-                          control={formPurchaseItem.control}
+                          control={formPurchaseItemOnly.control}
                           name="Item.sackweight"
                           render={({ field }) => (
                             <FormItem>
@@ -990,28 +1037,42 @@ export default function Component() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseItem.control}
-                          name="unitofmeasurement"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="unitofmeasurement">
-                                Unit of Measurement
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="unitofmeasurement"
-                                  type="text"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                              <FormField
+                                control={formPurchaseItemOnly.control}
+                                name={`unitofmeasurement`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel htmlFor="unitofmeasurement">
+                                      Unit of Measurement
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                        {...field}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select Unit of Measurement">
+                                            {field.value}
+                                          </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="quantity">
+                                            Quantity
+                                          </SelectItem>
+                                          <SelectItem value="weight">
+                                            Weight
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                       <div className="space-y-2">
                         <FormField
-                          control={formPurchaseItem.control}
+                          control={formPurchaseItemOnly.control}
                           name="measurementvalue"
                           render={({ field }) => (
                             <FormItem>
@@ -1031,7 +1092,7 @@ export default function Component() {
                       </div>
                       <div className="space-y-2">
                         <FormField
-                          control={formPurchaseItem.control}
+                          control={formPurchaseItemOnly.control}
                           name="unitprice"
                           render={({ field }) => (
                             <FormItem>

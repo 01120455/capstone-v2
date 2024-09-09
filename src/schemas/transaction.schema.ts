@@ -14,7 +14,7 @@ const transactionSchema = z.object({
     middlename: z
       .string()
       .min(1, "Entity name is required")
-      .max(100, "Entity name is too long"),
+      .max(100, "Entity name is too long").optional(),
     lastname: z
       .string()
       .min(1, "Entity name is required")
