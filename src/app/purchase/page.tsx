@@ -52,7 +52,9 @@ import transactionSchema, {
   TransactionOnly,
   TransactionTable,
 } from "@/schemas/transaction.schema";
-import transactionItemSchema, { TransactionItemOnly } from "@/schemas/transactionitem.schema";
+import transactionItemSchema, {
+  TransactionItemOnly,
+} from "@/schemas/transactionitem.schema";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
@@ -186,17 +188,63 @@ export default function Component() {
     getPurchase();
   }, []);
 
+  // useEffect(() => {
+  //   async function getPurchaseItem() {
+  //     try {
+  //       const response = await fetch("/api/purchaseitem");
+  //       if (response.ok) {
+  //         const purchaseItems = await response.json();
+  //         setPurchases(purchaseItems);
+  //       } else {
+  //         console.error("Error fetching purchase items:", response.status);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching items:", error);
+  //     }
+  //   }
+  //   getPurchaseItem();
+  // }, []);
+
+  // const refreshPurchaseItems = async () => {
+  //   try {
+  //     const response = await fetch("/api/purchaseitem");
+  //     if (response.ok) {
+  //       const purchaseItems = await response.json();
+  //       setPurchaseItems(purchaseItems);
+  //     } else {
+  //       console.error("Error fetching purchase items:", response.status);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching purchase items:", error);
+  //   }
+  // }
+
   const refreshPurchases = async () => {
     try {
       const response = await fetch("/api/purchase");
       if (response.ok) {
         const purchases = await response.json();
         setPurchases(purchases);
+        setPurchaseItems(purchases.TransactionItem);
       } else {
         console.error("Error fetching purchases:", response.status);
       }
     } catch (error) {
       console.error("Error fetching purchases:", error);
+    }
+  };
+
+  const refreshPurchaseItems = async () => {
+    try {
+      const response = await fetch("/api/purchase");
+      if (response.ok) {
+        const purchases = await response.json();
+        setPurchaseItems(purchases.TransactionItem);
+      } else {
+        console.error("Error fetching purchase items:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching purchase items:", error);
     }
   };
 
@@ -581,8 +629,8 @@ export default function Component() {
     // Check if it's an update or create operation
     const isUpdate = !!values.transactionitemid; // True if transactionitemid exists
     const endpoint = isUpdate
-      ? `/api/purchase-item/${values.transactionitemid}` // PUT endpoint for update
-      : `/api/purchasteitem/purchaseitem/${values.transactionid}`; // POST endpoint for creation
+      ? `/api/purchaseitem/purchaseitem/${values.transactionitemid}` // PUT endpoint for update
+      : `/api/purchaseitem/purchaseitem/${values.transactionid}`; // POST endpoint for creation
 
     // Prepare form data for submission
     const formData = new FormData();
@@ -603,7 +651,7 @@ export default function Component() {
       if (uploadRes.ok) {
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
-        refreshPurchases();
+        refreshPurchaseItems();
         formPurchaseItemOnly.reset();
       } else {
         console.error("Operation failed", await uploadRes.text());
@@ -618,7 +666,7 @@ export default function Component() {
   ) => {
     try {
       const response = await fetch(
-        `/api/purchaseitem/purchaseitem-soft-delete/${purchaseItem.transactionitemid}`,
+        `/api/purchaseitem/purchaseitemSD/purchaseitem-soft-delete/${purchaseItem.transactionitemid}`,
         {
           method: "PUT",
         }
@@ -705,7 +753,7 @@ export default function Component() {
   return (
     <div className="flex h-screen">
       <SideMenu />
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-hidden p-5">
         <div className="p-6 md:p-8">
           <div className="flex  items-center justify-between mb-6 -mr-6">
             <h1 className="text-2xl font-bold ">Company Purchase Management</h1>
@@ -719,7 +767,7 @@ export default function Component() {
                 <Table
                   style={{ width: "100%" }}
                   className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                  divClassname="min-h-[400px] overflow-y-scroll"
+                  divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                 >
                   <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                     <TableRow>
@@ -861,10 +909,13 @@ export default function Component() {
                     </Button>
                   </div>
                 </DialogHeader>
+                <div className="overflow-y-auto">
+            <div className="table-container relative ">
+              <ScrollArea>
                 <Table
                   style={{ width: "100%" }}
                   className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                  divClassname="min-h-[400px] overflow-y-scroll"
+                  divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                 >
                   <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                     <TableRow>
@@ -929,6 +980,10 @@ export default function Component() {
                     </>
                   </TableBody>
                 </Table>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </div>
+          </div>
               </DialogContent>
             </Dialog>
           )}
@@ -1037,39 +1092,39 @@ export default function Component() {
                         />
                       </div>
                       <div className="space-y-2">
-                              <FormField
-                                control={formPurchaseItemOnly.control}
-                                name={`unitofmeasurement`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="unitofmeasurement">
-                                      Unit of Measurement
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        {...field}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select Unit of Measurement">
-                                            {field.value}
-                                          </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="quantity">
-                                            Quantity
-                                          </SelectItem>
-                                          <SelectItem value="weight">
-                                            Weight
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
+                        <FormField
+                          control={formPurchaseItemOnly.control}
+                          name={`unitofmeasurement`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="unitofmeasurement">
+                                Unit of Measurement
+                              </FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select Unit of Measurement">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="quantity">
+                                      Quantity
+                                    </SelectItem>
+                                    <SelectItem value="weight">
+                                      Weight
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <div className="space-y-2">
                         <FormField
                           control={formPurchaseItemOnly.control}

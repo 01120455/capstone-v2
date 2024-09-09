@@ -352,7 +352,7 @@ export default function Component() {
   return (
     <div className="flex h-screen">
       <SideMenu />
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-hidden p-5">
         {showAlertItem && (
           <Alert className="alert-center" variant="destructive">
             <AlertTitle>
@@ -381,7 +381,7 @@ export default function Component() {
                 <Table
                   style={{ width: "100%" }}
                   className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                  divClassname="min-h-[400px] overflow-y-scroll"
+                  divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                 >
                   <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                     <TableRow>
@@ -539,7 +539,7 @@ export default function Component() {
           )}
           {showModal && (
             <Dialog open={showModal} onOpenChange={handleCancel}>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                   <DialogTitle>
                     {form.getValues("itemid")
@@ -551,13 +551,14 @@ export default function Component() {
                     {form.getValues("itemid") ? "edit a" : "add a new"} product
                     to your inventory.
                   </DialogDescription>
+                  <DialogClose onClick={handleCancel} />
                 </DialogHeader>
                 <Form {...form}>
                   <form
-                    className="w-full max-w-4xl mx-auto p-6"
+                    className="w-full max-w-4xl mx-auto -mt-8 p-6"
                     onSubmit={form.handleSubmit(handleSubmit)}
                   >
-                    <div className="grid grid-cols-2 gap-4 py-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 py-4">
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
@@ -725,6 +726,8 @@ export default function Component() {
                             </FormItem>
                           )}
                         />
+                      </div>
+                      <div className="space-y-2">
                         <FormField
                           control={form.control}
                           name="reorderlevel"
@@ -743,6 +746,8 @@ export default function Component() {
                             </FormItem>
                           )}
                         />
+                      </div>
+                      <div className="space-y-2">
                         <FormField
                           control={form.control}
                           name="criticallevel"
