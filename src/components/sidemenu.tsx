@@ -72,7 +72,7 @@ export default function SideMenu() {
 
   return (
     <div className="relative h-screen flex flex-col lg:flex-row">
- <div className={`flex flex-col h-full ${isMenuOpen ? 'w-64' : 'w-20'} lg:w-44 bg-white shadow-lg transition-all duration-300 ease-in-out`}>
+ <div className={`flex flex-col h-full ${isMenuOpen ? 'w-48' : 'w-14'} lg:w-44 bg-white shadow-lg transition-all duration-300 ease-in-out`}>
         {/* Header Section */}
         <div className="flex items-center justify-between p-4 border-b">
           <button className="lg:hidden text-gray-500" onClick={toggleMenu}>
@@ -279,7 +279,7 @@ export default function SideMenu() {
               </nav>
             </ScrollArea>
           </div>
-          <div className="bg-white border-t border-gray-200 flex items-center justify-between p-4 mt-auto">
+          <div className={`bg-white border-t border-gray-200 flex items-center justify-between ${isMenuOpen ? "p-4" : "p-2"}  mt-auto`}>
       <div className="flex items-center space-x-3">
         <Avatar>
           <AvatarImage src={user?.imagepath} />

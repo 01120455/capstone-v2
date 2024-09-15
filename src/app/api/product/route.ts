@@ -34,6 +34,203 @@ enum UnitOfMeasurement {
   weight = "weight",
 }
 
+// export const POST = async (req: NextRequest) => {
+//   try {
+//     const session = await getIronSession(
+//       req,
+//       NextResponse.next(),
+//       sessionOptions
+//     );
+//     const userid = session.user.userid;
+
+//     const formData = await req.formData();
+
+//     const name = formData.get("name") as string;
+//     const typeString = formData.get("type") as string;
+
+//     if (!Object.values(ItemType).includes(typeString as ItemType)) {
+//       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
+//     }
+
+//     const type = typeString as ItemType;
+
+//     const sackweightString = formData.get("sackweight") as string;
+
+//     if (!Object.values(SackWeight).includes(sackweightString as SackWeight)) {
+//       return NextResponse.json(
+//         { error: "Invalid sack weight" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const sackweight = sackweightString as SackWeight;
+
+//     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
+
+//     if (
+//       !Object.values(UnitOfMeasurement).includes(
+//         unitofmeasurementString as UnitOfMeasurement
+//       )
+//     ) {
+//       return NextResponse.json(
+//         { error: "Invalid unit of measurement" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
+
+//     const stock = parseFloat(formData.get("measurementvalue") as string);
+
+//     const unitprice = parseFloat(formData.get("unitprice") as string);
+//     const image = formData.get("image") as File | null;
+//     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
+//     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
+
+//     if (!stock) {
+//       return NextResponse.json({ error: "stock is required" }, { status: 400 });
+//     }
+
+//     if (
+//       !sackweight ||
+//       isNaN(unitprice) ||
+//       isNaN(reorderlevel) ||
+//       isNaN(criticallevel)
+//     ) {
+//       return NextResponse.json(
+//         {
+//           error:
+//             "Stock, unit price, reorder level, and critical level must be valid numbers and not negative values",
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     if (!name || !type) {
+//       return NextResponse.json(
+//         { error: "Name and type are required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Handle file upload
+//     let fileUrl = null;
+
+//     if (image) {
+//       if (image.size > MAX_FILE_SIZE) {
+//         return NextResponse.json(
+//           { error: "File is too large" },
+//           { status: 400 }
+//         );
+//       }
+
+//       if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
+//         return NextResponse.json(
+//           { error: "Invalid file type" },
+//           { status: 400 }
+//         );
+//       }
+
+//       const buffer = await image.arrayBuffer();
+//       const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
+//       const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
+//       const uploadDir = join(process.cwd(), "public", relativeUploadDir);
+
+//       try {
+//         await stat(uploadDir);
+//       } catch (e: any) {
+//         if (e.code === "ENOENT") {
+//           await mkdir(uploadDir, { recursive: true });
+//         } else {
+//           console.error("Error while creating directory for file upload", e);
+//           return NextResponse.json(
+//             { error: "Internal server error" },
+//             { status: 500 }
+//           );
+//         }
+//       }
+
+//       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+//       const filename = `${image.name.replace(
+//         /\s/g,
+//         "-"
+//       )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
+//       await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
+//       fileUrl = `${relativeUploadDir}/${filename}`;
+//     }
+
+//     // Check if the item exists
+//     const existingItem = await prisma.item.findFirst({
+//       where: {
+//         name,
+//         type,
+//         unitofmeasurement,
+//         deleted: true, // Check if the item is marked as deleted
+//       },
+//     });
+
+//     if (existingItem) {
+//       // Update the existing item
+//       const updatedItem = await prisma.item.update({
+//         where: { itemid: existingItem.itemid },
+//         data: {
+//           sackweight,
+//           unitofmeasurement,
+//           stock,
+//           unitprice,
+//           reorderlevel,
+//           criticallevel,
+//           itemimage: fileUrl
+//             ? {
+//                 deleteMany: {}, // delete all existing images
+//                 create: {
+//                   imagepath: fileUrl,
+//                 },
+//               }
+//             : undefined,
+//           deleted: false, // Mark as not deleted
+//         },
+//         include: {
+//           itemimage: true,
+//         },
+//       });
+//       return NextResponse.json(updatedItem, { status: 200 });
+//     } else {
+//       // Create a new item
+//       const newItem = await prisma.item.create({
+//         data: {
+//           name,
+//           type,
+//           sackweight,
+//           unitofmeasurement,
+//           stock,
+//           unitprice,
+//           reorderlevel,
+//           criticallevel,
+//           lastmodifiedby: userid,
+//           itemimage: fileUrl
+//             ? {
+//                 create: {
+//                   imagepath: fileUrl,
+//                 },
+//               }
+//             : undefined,
+//         },
+//         include: {
+//           itemimage: true,
+//         },
+//       });
+//       return NextResponse.json(newItem, { status: 201 });
+//     }
+//   } catch (error) {
+//     console.error("Error processing request:", error);
+//     return NextResponse.json(
+//       { error: "Internal server error" },
+//       { status: 500 }
+//     );
+//   }
+// };
+
 export const POST = async (req: NextRequest) => {
   try {
     const session = await getIronSession(
@@ -44,17 +241,21 @@ export const POST = async (req: NextRequest) => {
     const userid = session.user.userid;
 
     const formData = await req.formData();
-
     const name = formData.get("name") as string;
     const typeString = formData.get("type") as string;
+    const sackweightString = formData.get("sackweight") as string;
+    const unitofmeasurementString = formData.get("unitofmeasurement") as string;
+    const stock = parseFloat(formData.get("stock") as string);
+    const unitprice = parseFloat(formData.get("unitprice") as string);
+    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
+    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
+    const image = formData.get("image") as File | null;
 
     if (!Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
 
     const type = typeString as ItemType;
-
-    const sackweightString = formData.get("sackweight") as string;
 
     if (!Object.values(SackWeight).includes(sackweightString as SackWeight)) {
       return NextResponse.json(
@@ -64,8 +265,6 @@ export const POST = async (req: NextRequest) => {
     }
 
     const sackweight = sackweightString as SackWeight;
-
-    const unitofmeasurementString = formData.get("unitofmeasurement") as string;
 
     if (
       !Object.values(UnitOfMeasurement).includes(
@@ -80,19 +279,8 @@ export const POST = async (req: NextRequest) => {
 
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
 
-    const stock = parseFloat(formData.get("measurementvalue") as string);
-
-    const unitprice = parseFloat(formData.get("unitprice") as string);
-    const image = formData.get("image") as File | null;
-    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
-
-    if (!stock) {
-      return NextResponse.json({ error: "stock is required" }, { status: 400 });
-    }
-
     if (
-      !sackweight ||
+      isNaN(stock) ||
       isNaN(unitprice) ||
       isNaN(reorderlevel) ||
       isNaN(criticallevel)
@@ -159,68 +347,78 @@ export const POST = async (req: NextRequest) => {
       fileUrl = `${relativeUploadDir}/${filename}`;
     }
 
-    // Check if the item exists
-    const existingItem = await prisma.item.findFirst({
-      where: {
-        name,
-        type,
-        unitofmeasurement,
-        deleted: true, // Check if the item is marked as deleted
-      },
-    });
-
-    if (existingItem) {
-      // Update the existing item
-      const updatedItem = await prisma.item.update({
-        where: { itemid: existingItem.itemid },
-        data: {
-          sackweight,
-          unitofmeasurement,
-          stock,
-          unitprice,
-          reorderlevel,
-          criticallevel,
-          itemimage: fileUrl
-            ? {
-                deleteMany: {}, // delete all existing images
-                create: {
-                  imagepath: fileUrl,
-                },
-              }
-            : undefined,
-          deleted: false, // Mark as not deleted
-        },
-        include: {
-          itemimage: true,
-        },
-      });
-      return NextResponse.json(updatedItem, { status: 200 });
-    } else {
-      // Create a new item
-      const newItem = await prisma.item.create({
-        data: {
+    // Start transaction
+    const [existingItem, result] = await prisma.$transaction(async (tx) => {
+      // Check if the item exists
+      const existingItem = await tx.item.findFirst({
+        where: {
           name,
           type,
-          sackweight,
           unitofmeasurement,
-          stock,
-          unitprice,
-          reorderlevel,
-          criticallevel,
-          lastmodifiedby: userid,
-          itemimage: fileUrl
-            ? {
-                create: {
-                  imagepath: fileUrl,
-                },
-              }
-            : undefined,
-        },
-        include: {
-          itemimage: true,
+          deleted: true, // Check if the item is marked as deleted
         },
       });
-      return NextResponse.json(newItem, { status: 201 });
+
+      if (existingItem) {
+        // Update the existing item
+        const updatedItem = await tx.item.update({
+          where: { itemid: existingItem.itemid },
+          data: {
+            sackweight,
+            unitofmeasurement,
+            stock,
+            unitprice,
+            reorderlevel,
+            criticallevel,
+            itemimage: fileUrl
+              ? {
+                  deleteMany: {}, // delete all existing images
+                  create: {
+                    imagepath: fileUrl,
+                  },
+                }
+              : undefined,
+            deleted: false, // Mark as not deleted
+          },
+          include: {
+            itemimage: true,
+          },
+        });
+        return [existingItem, updatedItem];
+      } else {
+        // Create a new item
+        const newItem = await tx.item.create({
+          data: {
+            name,
+            type,
+            sackweight,
+            unitofmeasurement,
+            stock,
+            unitprice,
+            reorderlevel,
+            criticallevel,
+            lastmodifiedby: userid,
+            itemimage: fileUrl
+              ? {
+                  create: {
+                    imagepath: fileUrl,
+                  },
+                }
+              : undefined,
+          },
+          include: {
+            itemimage: true,
+          },
+        });
+        return [null, newItem];
+      }
+    });
+
+    // Return the result based on whether an item was updated or created
+    if (existingItem) {
+      return NextResponse.json(result, { status: 200 });
+    } else {
+      return NextResponse.json(result, { status: 201 });
     }
   } catch (error) {
     console.error("Error processing request:", error);
@@ -235,7 +433,7 @@ export async function GET(req: NextRequest) {
   try {
     const items = await prisma.item.findMany({
       where: {
-        deleted: false, // Filter out items where itemdeleted is true
+        deleted: false,
       },
       select: {
         itemid: true,
@@ -262,6 +460,9 @@ export async function GET(req: NextRequest) {
         },
         lastmodifiedat: true,
         lastmodifiedby: true,
+      },
+      orderBy: {
+        lastmodifiedat: "desc",
       },
     });
 
@@ -298,6 +499,208 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// export const PUT = async (req: NextRequest) => {
+//   try {
+//     const session = await getIronSession(
+//       req,
+//       NextResponse.next(),
+//       sessionOptions
+//     );
+//     const userid = session.user.userid;
+
+//     const formData = await req.formData();
+
+//     const itemId = parseInt(formData.get("itemid") as string, 10);
+//     const name = formData.get("name") as string;
+//     const typeString = formData.get("type") as string;
+
+//     const sackweightString = formData.get("sackweight") as string;
+
+//     if (!Object.values(SackWeight).includes(sackweightString as SackWeight)) {
+//       return NextResponse.json(
+//         { error: "Invalid sack weight" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const sackweight = sackweightString as SackWeight;
+
+//     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
+
+//     if (
+//       !Object.values(UnitOfMeasurement).includes(
+//         unitofmeasurementString as UnitOfMeasurement
+//       )
+//     ) {
+//       return NextResponse.json(
+//         { error: "Invalid unit of measurement" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
+
+//     const stock = parseFloat(formData.get("stock") as string);
+//     const unitprice = parseFloat(formData.get("unitprice") as string);
+//     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
+//     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
+//     const image = formData.get("image") as File | null;
+
+//     if (!sackweight) {
+//       return NextResponse.json(
+//         { error: "Sack weight is required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     if (isNaN(stock) || isNaN(unitprice)) {
+//       return NextResponse.json(
+//         {
+//           error:
+//             "stock and unit price must be valid numbers and not negative values",
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     if (!unitofmeasurement) {
+//       return NextResponse.json(
+//         { error: "Unit of measurement is required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     if (isNaN(reorderlevel) || isNaN(criticallevel)) {
+//       return NextResponse.json(
+//         {
+//           error:
+//             "Reorder level and critical level must be valid numbers and not negative values",
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     if (!Object.values(ItemType).includes(typeString as ItemType)) {
+//       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
+//     }
+
+//     const type = typeString as ItemType;
+
+//     if (!name || !type || !sackweight || isNaN(unitprice) || isNaN(itemId)) {
+//       return NextResponse.json(
+//         { error: "All fields are required and must be valid to be updated" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const existingItem = await prisma.item.findUnique({
+//       where: { itemid: itemId },
+//       include: { itemimage: true },
+//     });
+
+//     if (!existingItem) {
+//       return NextResponse.json({ error: "Item not found" }, { status: 404 });
+//     }
+
+//     let fileUrl = null;
+
+//     if (image) {
+//       if (image.size > MAX_FILE_SIZE) {
+//         return NextResponse.json(
+//           { error: "File is too large" },
+//           { status: 400 }
+//         );
+//       }
+
+//       if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
+//         return NextResponse.json(
+//           { error: "Invalid file type" },
+//           { status: 400 }
+//         );
+//       }
+
+//       const buffer = await image.arrayBuffer();
+
+//       // Sanitize the name to create a valid folder name
+//       const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
+//       const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
+//       const uploadDir = join(process.cwd(), "public", relativeUploadDir);
+
+//       try {
+//         await stat(uploadDir);
+//       } catch (e: any) {
+//         if (e.code === "ENOENT") {
+//           await mkdir(uploadDir, { recursive: true });
+//         } else {
+//           console.error(
+//             "Error while trying to create directory when uploading a file\n",
+//             e
+//           );
+//           return NextResponse.json(
+//             { error: "Internal server error" },
+//             { status: 500 }
+//           );
+//         }
+//       }
+
+//       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+//       const filename = `${image.name.replace(
+//         /\s/g,
+//         "-"
+//       )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
+//       await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
+//       fileUrl = `${relativeUploadDir}/${filename}`;
+
+//       if (existingItem.itemimage.length > 0) {
+//         const oldImagePath = join(
+//           process.cwd(),
+//           "public",
+//           existingItem.itemimage[0].imagepath
+//         );
+//         try {
+//           await unlink(oldImagePath);
+//         } catch (e: any) {
+//           console.error("Error deleting old image file\n", e);
+//         }
+//       }
+//     }
+
+//     const updatedItem = await prisma.item.update({
+//       where: { itemid: itemId },
+//       data: {
+//         name,
+//         type,
+//         sackweight,
+//         unitofmeasurement,
+//         stock,
+//         unitprice,
+//         reorderlevel,
+//         criticallevel,
+//         lastmodifiedby: userid,
+//         itemimage: fileUrl
+//           ? {
+//               deleteMany: {}, // delete all existing images
+//               create: {
+//                 imagepath: fileUrl,
+//               },
+//             }
+//           : undefined,
+//       },
+//       include: {
+//         itemimage: true,
+//       },
+//     });
+
+//     return NextResponse.json(updatedItem, { status: 200 });
+//   } catch (error) {
+//     console.error("Error updating item:", error);
+//     return NextResponse.json(
+//       { error: "Internal server error" },
+//       { status: 500 }
+//     );
+//   }
+// };
+
 export const PUT = async (req: NextRequest) => {
   try {
     const session = await getIronSession(
@@ -308,12 +711,16 @@ export const PUT = async (req: NextRequest) => {
     const userid = session.user.userid;
 
     const formData = await req.formData();
-
     const itemId = parseInt(formData.get("itemid") as string, 10);
     const name = formData.get("name") as string;
     const typeString = formData.get("type") as string;
-
     const sackweightString = formData.get("sackweight") as string;
+    const unitofmeasurementString = formData.get("unitofmeasurement") as string;
+    const stock = parseFloat(formData.get("stock") as string);
+    const unitprice = parseFloat(formData.get("unitprice") as string);
+    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
+    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
+    const image = formData.get("image") as File | null;
 
     if (!Object.values(SackWeight).includes(sackweightString as SackWeight)) {
       return NextResponse.json(
@@ -323,8 +730,6 @@ export const PUT = async (req: NextRequest) => {
     }
 
     const sackweight = sackweightString as SackWeight;
-
-    const unitofmeasurementString = formData.get("unitofmeasurement") as string;
 
     if (
       !Object.values(UnitOfMeasurement).includes(
@@ -339,32 +744,12 @@ export const PUT = async (req: NextRequest) => {
 
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
 
-    const stock = parseFloat(formData.get("stock") as string);
-    const unitprice = parseFloat(formData.get("unitprice") as string);
-    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
-    const image = formData.get("image") as File | null;
-
-    if (!sackweight) {
-      return NextResponse.json(
-        { error: "Sack weight is required" },
-        { status: 400 }
-      );
-    }
-
     if (isNaN(stock) || isNaN(unitprice)) {
       return NextResponse.json(
         {
           error:
-            "stock and unit price must be valid numbers and not negative values",
+            "Stock and unit price must be valid numbers and not negative values",
         },
-        { status: 400 }
-      );
-    }
-
-    if (!unitofmeasurement) {
-      return NextResponse.json(
-        { error: "Unit of measurement is required" },
         { status: 400 }
       );
     }
@@ -392,103 +777,97 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    const existingItem = await prisma.item.findUnique({
-      where: { itemid: itemId },
-      include: { itemimage: true },
-    });
+    // Start transaction
+    const [existingItem, updatedItem] = await prisma.$transaction(
+      async (tx) => {
+        const existingItem = await tx.item.findUnique({
+          where: { itemid: itemId },
+          include: { itemimage: true },
+        });
 
-    if (!existingItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
-    }
-
-    let fileUrl = null;
-
-    if (image) {
-      if (image.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          { error: "File is too large" },
-          { status: 400 }
-        );
-      }
-
-      if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
-        return NextResponse.json(
-          { error: "Invalid file type" },
-          { status: 400 }
-        );
-      }
-
-      const buffer = await image.arrayBuffer();
-
-      // Sanitize the name to create a valid folder name
-      const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
-      const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
-      const uploadDir = join(process.cwd(), "public", relativeUploadDir);
-
-      try {
-        await stat(uploadDir);
-      } catch (e: any) {
-        if (e.code === "ENOENT") {
-          await mkdir(uploadDir, { recursive: true });
-        } else {
-          console.error(
-            "Error while trying to create directory when uploading a file\n",
-            e
-          );
-          return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-          );
+        if (!existingItem) {
+          throw new Error("Item not found");
         }
-      }
 
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const filename = `${image.name.replace(
-        /\s/g,
-        "-"
-      )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
-      await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
-      fileUrl = `${relativeUploadDir}/${filename}`;
+        let fileUrl = null;
 
-      if (existingItem.itemimage.length > 0) {
-        const oldImagePath = join(
-          process.cwd(),
-          "public",
-          existingItem.itemimage[0].imagepath
-        );
-        try {
-          await unlink(oldImagePath);
-        } catch (e: any) {
-          console.error("Error deleting old image file\n", e);
-        }
-      }
-    }
+        if (image) {
+          if (image.size > MAX_FILE_SIZE) {
+            throw new Error("File is too large");
+          }
 
-    const updatedItem = await prisma.item.update({
-      where: { itemid: itemId },
-      data: {
-        name,
-        type,
-        sackweight,
-        unitofmeasurement,
-        stock,
-        unitprice,
-        reorderlevel,
-        criticallevel,
-        lastmodifiedby: userid,
-        itemimage: fileUrl
-          ? {
-              deleteMany: {}, // delete all existing images
-              create: {
-                imagepath: fileUrl,
-              },
+          if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
+            throw new Error("Invalid file type");
+          }
+
+          const buffer = await image.arrayBuffer();
+          const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
+          const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
+          const uploadDir = join(process.cwd(), "public", relativeUploadDir);
+
+          try {
+            await stat(uploadDir);
+          } catch (e: any) {
+            if (e.code === "ENOENT") {
+              await mkdir(uploadDir, { recursive: true });
+            } else {
+              throw e;
             }
-          : undefined,
-      },
-      include: {
-        itemimage: true,
-      },
-    });
+          }
+
+          const uniqueSuffix = `${Date.now()}-${Math.round(
+            Math.random() * 1e9
+          )}`;
+          const filename = `${image.name.replace(
+            /\s/g,
+            "-"
+          )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
+          await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
+          fileUrl = `${relativeUploadDir}/${filename}`;
+
+          if (existingItem.itemimage.length > 0) {
+            const oldImagePath = join(
+              process.cwd(),
+              "public",
+              existingItem.itemimage[0].imagepath
+            );
+            try {
+              await unlink(oldImagePath);
+            } catch (e: any) {
+              console.error("Error deleting old image file\n", e);
+            }
+          }
+        }
+
+        const updatedItem = await tx.item.update({
+          where: { itemid: itemId },
+          data: {
+            name,
+            type,
+            sackweight,
+            unitofmeasurement,
+            stock,
+            unitprice,
+            reorderlevel,
+            criticallevel,
+            lastmodifiedby: userid,
+            itemimage: fileUrl
+              ? {
+                  deleteMany: {}, // delete all existing images
+                  create: {
+                    imagepath: fileUrl,
+                  },
+                }
+              : undefined,
+          },
+          include: {
+            itemimage: true,
+          },
+        });
+
+        return [existingItem, updatedItem];
+      }
+    );
 
     return NextResponse.json(updatedItem, { status: 200 });
   } catch (error) {

@@ -234,20 +234,6 @@ export default function Component() {
     }
   };
 
-  const refreshPurchaseItems = async () => {
-    try {
-      const response = await fetch("/api/purchase");
-      if (response.ok) {
-        const purchases = await response.json();
-        setPurchaseItems(purchases.TransactionItem);
-      } else {
-        console.error("Error fetching purchase items:", response.status);
-      }
-    } catch (error) {
-      console.error("Error fetching purchase items:", error);
-    }
-  };
-
   const handleAddPurchase = () => {
     setShowModal(true);
 
@@ -526,7 +512,7 @@ export default function Component() {
           console.log("Purchase added successfully");
         }
 
-        setShowModalEditPurchase(false);
+        setShowModal(false);
         refreshPurchases();
         form.reset();
       } else {
@@ -810,7 +796,7 @@ export default function Component() {
                               {purchase.frommilling ? "True" : "False"}
                             </TableCell>
                             <TableCell>{purchase.taxpercentage}</TableCell>
-                            <TableCell>{purchase.taxamount}</TableCell>
+                            <TableCell>{purchase.taxamount?.toFixed(2)}</TableCell>
                             <TableCell>{purchase.totalamount}</TableCell>
                             <TableCell>
                               {purchase.createdat
@@ -1290,7 +1276,7 @@ export default function Component() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel htmlFor="firstname">
-                                First Name
+                                Supplier First Name
                               </FormLabel>
                               <FormControl>
                                 <Input {...field} id="firstname" type="text" />
@@ -1306,7 +1292,7 @@ export default function Component() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel htmlFor="middlename">
-                                Middle Name
+                                Supplier Middle Name
                               </FormLabel>
                               <FormControl>
                                 <Input {...field} id="middlename" type="text" />
@@ -1322,7 +1308,7 @@ export default function Component() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel htmlFor="lastname">
-                                Last Name
+                                Supplier Last Name
                               </FormLabel>
                               <FormControl>
                                 <Input {...field} id="lastname" type="text" />
@@ -1417,6 +1403,38 @@ export default function Component() {
                           )}
                         />
                       </div>
+                      {/* <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="frommilling"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="frommilling">
+                                From Milling
+                              </FormLabel>
+                              <FormControl>
+                                <div className="flex items-center">
+                                  <Input
+                                    id="frommilling"
+                                    type="checkbox"
+                                    checked={field.value}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.checked)
+                                    }
+                                    className="mr-2"
+                                  />
+                                  <FormLabel
+                                    htmlFor="frommilling"
+                                    className="mb-0"
+                                  >
+                                    {field.value ? "True" : "False"}
+                                  </FormLabel>
+                                </div>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div> */}
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
@@ -1440,188 +1458,194 @@ export default function Component() {
                     </div>
                     {!form.getValues("transactionid") && (
                       <>
-                        {fields.map((item, index) => (
-                          <div
-                            key={item.id}
-                            className="grid grid-cols-2 lg:grid-cols-3 grid-rows-4 lg:grid-rows-2 gap-2 py-2"
-                          >
-                            <div className="space-y-2">
-                              <FormField
-                                control={form.control}
-                                name={`TransactionItem.${index}.Item.name`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="name">
-                                      Item Name
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input {...field} id="name" type="text" />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <FormField
-                                control={form.control}
-                                name={`TransactionItem.${index}.Item.type`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="type">
-                                      Item Type
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        {...field}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select Type">
-                                            {field.value}
-                                          </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="bigas">
-                                            Bigas
-                                          </SelectItem>
-                                          <SelectItem value="palay">
-                                            Palay
-                                          </SelectItem>
-                                          <SelectItem value="resico">
-                                            Resico
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <FormField
-                                control={form.control}
-                                name={`TransactionItem.${index}.Item.sackweight`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="sackweight">
-                                      Sack Weight
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        {...field}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select Sack Weight">
-                                            {field.value}
-                                          </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="bag25kg">
-                                            Bag 25kg
-                                          </SelectItem>
-                                          <SelectItem value="cavan50kg">
-                                            Cavan 50kg
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <FormField
-                                control={form.control}
-                                name={`TransactionItem.${index}.unitofmeasurement`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="unitofmeasurement">
-                                      Unit of Measurement
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        {...field}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select Unit of Measurement">
-                                            {field.value}
-                                          </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="quantity">
-                                            Quantity
-                                          </SelectItem>
-                                          <SelectItem value="weight">
-                                            Weight
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <FormField
-                                control={form.control}
-                                name={`TransactionItem.${index}.measurementvalue`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="measurementvalue">
-                                      Measurement Value
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        id="measurementvalue"
-                                        type="number"
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <FormField
-                                control={form.control}
-                                name={`TransactionItem.${index}.unitprice`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="unitprice">
-                                      Unit Price
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        id="unitprice"
-                                        type="number"
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="pt-2">
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => remove(index)}
-                                >
-                                  Remove
-                                </Button>
+                        <div className="overflow-y-auto h-[300px] border rounded-lg p-2">
+                          {fields.map((item, index) => (
+                            <div
+                              key={item.id}
+                              className="grid grid-cols-2 lg:grid-cols-3 grid-rows-4 lg:grid-rows-2 gap-2 py-2"
+                            >
+                              <div className="space-y-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`TransactionItem.${index}.Item.name`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel htmlFor="name">
+                                        Item Name
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          id="name"
+                                          type="text"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`TransactionItem.${index}.Item.type`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel htmlFor="type">
+                                        Item Type
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Select
+                                          onValueChange={field.onChange}
+                                          defaultValue={field.value}
+                                          {...field}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select Type">
+                                              {field.value}
+                                            </SelectValue>
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="bigas">
+                                              Bigas
+                                            </SelectItem>
+                                            <SelectItem value="palay">
+                                              Palay
+                                            </SelectItem>
+                                            <SelectItem value="resico">
+                                              Resico
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`TransactionItem.${index}.Item.sackweight`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel htmlFor="sackweight">
+                                        Sack Weight
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Select
+                                          onValueChange={field.onChange}
+                                          defaultValue={field.value}
+                                          {...field}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select Sack Weight">
+                                              {field.value}
+                                            </SelectValue>
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="bag25kg">
+                                              Bag 25kg
+                                            </SelectItem>
+                                            <SelectItem value="cavan50kg">
+                                              Cavan 50kg
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`TransactionItem.${index}.unitofmeasurement`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel htmlFor="unitofmeasurement">
+                                        Unit of Measurement
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Select
+                                          onValueChange={field.onChange}
+                                          defaultValue={field.value}
+                                          {...field}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select Unit of Measurement">
+                                              {field.value}
+                                            </SelectValue>
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="quantity">
+                                              Quantity
+                                            </SelectItem>
+                                            <SelectItem value="weight">
+                                              Weight
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`TransactionItem.${index}.measurementvalue`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel htmlFor="measurementvalue">
+                                        Measurement Value
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          id="measurementvalue"
+                                          type="number"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`TransactionItem.${index}.unitprice`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel htmlFor="unitprice">
+                                        Unit Price
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          id="unitprice"
+                                          type="number"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="pt-2">
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => remove(index)}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                        <Button onClick={() => append({})} className="mt-4">
-                          Add Item
-                        </Button>
+                          ))}
+                          <Button onClick={() => append({})} className="mt-4">
+                            Add Item
+                          </Button>
+                        </div>
                       </>
                     )}
                     <DialogFooter className="mt-4">

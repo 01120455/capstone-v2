@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DELETE as deleteItemHandler } from "../../product/route"; 
+import { DELETE as deleteItemHandler } from "../../route"; 
 
 export async function DELETE(
   req: NextRequest,
