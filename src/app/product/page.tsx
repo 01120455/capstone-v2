@@ -55,7 +55,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Component() {
-  const [items, setItems] = useState<ViewItem[] | null>(null);
+  const [items, setItems] = useState<ViewItem[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
@@ -67,6 +67,34 @@ export default function Component() {
   const [alertType, setAlertType] = useState<"reorder" | "critical" | null>(
     null
   );
+  const [searchTerm, setSearchTerm] = useState("");
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+    // Filter items based on the search term
+    // const filteredItems = items.filter((item) =>
+    //   item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    // );
+
+    const filteredItems = items.filter((item) => {
+      // Convert searchTerm to lower case for case-insensitive comparison
+      const searchTermLower = searchTerm.toLowerCase();
+    
+      // Check if item name contains the searchTerm
+      const nameMatches = item.name.toLowerCase().includes(searchTermLower);
+    
+      // Check if item type matches the searchTerm
+      const typeMatches = item.type.toLowerCase().includes(searchTermLower);
+    
+      // Check if sackweight and unit of measurement match the searchTerm
+      const sackweightMatches = item.sackweight.toString().includes(searchTermLower);
+      const unitMatches = item.unitofmeasurement.toLowerCase().includes(searchTermLower);
+    
+      // Return true if any of the criteria match
+      return nameMatches || typeMatches || sackweightMatches || unitMatches;
+    });
+    
 
   const checkItemLevels = (items: ViewItem[]) => {
     items.forEach((item) => {
@@ -375,6 +403,15 @@ export default function Component() {
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
           </div>
+          <div>
+            <Input
+              type="text"
+              placeholder="Search item name..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="w-full md:w-auto mb-4"
+            />
+          </div>
           <div className="overflow-x-auto">
             <div className="table-container relative ">
               <ScrollArea>
@@ -400,9 +437,8 @@ export default function Component() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {items &&
-                      items.map((item, index: number) => (
-                        <TableRow key={index}>
+                  {filteredItems.map((item) => (
+                        <TableRow key={item.itemid}>
                           {/* <TableCell>
                         <Image
                           src={item.itemimage[0]?.imagepath ?? ""}

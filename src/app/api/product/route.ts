@@ -231,6 +231,204 @@ enum UnitOfMeasurement {
 //   }
 // };
 
+// export const POST = async (req: NextRequest) => {
+//   try {
+//     const session = await getIronSession(
+//       req,
+//       NextResponse.next(),
+//       sessionOptions
+//     );
+//     const userid = session.user.userid;
+
+//     const formData = await req.formData();
+//     const name = formData.get("name") as string;
+//     const typeString = formData.get("type") as string;
+//     const sackweightString = formData.get("sackweight") as string;
+//     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
+//     const stock = parseFloat(formData.get("stock") as string);
+//     const unitprice = parseFloat(formData.get("unitprice") as string);
+//     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
+//     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
+//     const image = formData.get("image") as File | null;
+
+//     if (!Object.values(ItemType).includes(typeString as ItemType)) {
+//       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
+//     }
+
+//     const type = typeString as ItemType;
+
+//     if (!Object.values(SackWeight).includes(sackweightString as SackWeight)) {
+//       return NextResponse.json(
+//         { error: "Invalid sack weight" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const sackweight = sackweightString as SackWeight;
+
+//     if (
+//       !Object.values(UnitOfMeasurement).includes(
+//         unitofmeasurementString as UnitOfMeasurement
+//       )
+//     ) {
+//       return NextResponse.json(
+//         { error: "Invalid unit of measurement" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
+
+//     if (
+//       isNaN(stock) ||
+//       isNaN(unitprice) ||
+//       isNaN(reorderlevel) ||
+//       isNaN(criticallevel)
+//     ) {
+//       return NextResponse.json(
+//         {
+//           error:
+//             "Stock, unit price, reorder level, and critical level must be valid numbers and not negative values",
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     if (!name || !type) {
+//       return NextResponse.json(
+//         { error: "Name and type are required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Handle file upload
+//     let fileUrl = null;
+
+//     if (image) {
+//       if (image.size > MAX_FILE_SIZE) {
+//         return NextResponse.json(
+//           { error: "File is too large" },
+//           { status: 400 }
+//         );
+//       }
+
+//       if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
+//         return NextResponse.json(
+//           { error: "Invalid file type" },
+//           { status: 400 }
+//         );
+//       }
+
+//       const buffer = await image.arrayBuffer();
+//       const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
+//       const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
+//       const uploadDir = join(process.cwd(), "public", relativeUploadDir);
+
+//       try {
+//         await stat(uploadDir);
+//       } catch (e: any) {
+//         if (e.code === "ENOENT") {
+//           await mkdir(uploadDir, { recursive: true });
+//         } else {
+//           console.error("Error while creating directory for file upload", e);
+//           return NextResponse.json(
+//             { error: "Internal server error" },
+//             { status: 500 }
+//           );
+//         }
+//       }
+
+//       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+//       const filename = `${image.name.replace(
+//         /\s/g,
+//         "-"
+//       )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
+//       await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
+//       fileUrl = `${relativeUploadDir}/${filename}`;
+//     }
+
+//     // Start transaction
+//     const [existingItem, result] = await prisma.$transaction(async (tx) => {
+//       // Check if the item exists
+//       const existingItem = await tx.item.findFirst({
+//         where: {
+//           name,
+//           type,
+//           unitofmeasurement,
+//           deleted: true, // Check if the item is marked as deleted
+//         },
+//       });
+
+//       if (existingItem) {
+//         // Update the existing item
+//         const updatedItem = await tx.item.update({
+//           where: { itemid: existingItem.itemid },
+//           data: {
+//             sackweight,
+//             unitofmeasurement,
+//             stock,
+//             unitprice,
+//             reorderlevel,
+//             criticallevel,
+//             itemimage: fileUrl
+//               ? {
+//                   deleteMany: {}, // delete all existing images
+//                   create: {
+//                     imagepath: fileUrl,
+//                   },
+//                 }
+//               : undefined,
+//             deleted: false, // Mark as not deleted
+//           },
+//           include: {
+//             itemimage: true,
+//           },
+//         });
+//         return [existingItem, updatedItem];
+//       } else {
+//         // Create a new item
+//         const newItem = await tx.item.create({
+//           data: {
+//             name,
+//             type,
+//             sackweight,
+//             unitofmeasurement,
+//             stock,
+//             unitprice,
+//             reorderlevel,
+//             criticallevel,
+//             lastmodifiedby: userid,
+//             itemimage: fileUrl
+//               ? {
+//                   create: {
+//                     imagepath: fileUrl,
+//                   },
+//                 }
+//               : undefined,
+//           },
+//           include: {
+//             itemimage: true,
+//           },
+//         });
+//         return [null, newItem];
+//       }
+//     });
+
+//     // Return the result based on whether an item was updated or created
+//     if (existingItem) {
+//       return NextResponse.json(result, { status: 200 });
+//     } else {
+//       return NextResponse.json(result, { status: 201 });
+//     }
+//   } catch (error) {
+//     console.error("Error processing request:", error);
+//     return NextResponse.json(
+//       { error: "Internal server error" },
+//       { status: 500 }
+//     );
+//   }
+// };
+
 export const POST = async (req: NextRequest) => {
   try {
     const session = await getIronSession(
@@ -349,27 +547,29 @@ export const POST = async (req: NextRequest) => {
 
     // Start transaction
     const [existingItem, result] = await prisma.$transaction(async (tx) => {
-      // Check if the item exists
+      // Check if the item exists by matching name, type, and unit of measurement
       const existingItem = await tx.item.findFirst({
         where: {
           name,
           type,
           unitofmeasurement,
-          deleted: true, // Check if the item is marked as deleted
         },
       });
 
       if (existingItem) {
         // Update the existing item
+        const existingItemStock = existingItem.stock ?? 0;
+        const newStock = existingItemStock + stock;
         const updatedItem = await tx.item.update({
           where: { itemid: existingItem.itemid },
           data: {
             sackweight,
-            unitofmeasurement,
-            stock,
+            stock: newStock,
             unitprice,
             reorderlevel,
             criticallevel,
+            lastmodifiedby: userid,
+            deleted: false, // Ensure the item is marked as not deleted
             itemimage: fileUrl
               ? {
                   deleteMany: {}, // delete all existing images
@@ -378,7 +578,6 @@ export const POST = async (req: NextRequest) => {
                   },
                 }
               : undefined,
-            deleted: false, // Mark as not deleted
           },
           include: {
             itemimage: true,
@@ -386,7 +585,7 @@ export const POST = async (req: NextRequest) => {
         });
         return [existingItem, updatedItem];
       } else {
-        // Create a new item
+        // Create a new item if not found
         const newItem = await tx.item.create({
           data: {
             name,

@@ -61,7 +61,7 @@ import SideMenu from "@/components/sidemenu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function Component() {
-  const [purchases, setPurchases] = useState<TransactionTable[] | null>(null);
+  const [purchases, setPurchases] = useState<TransactionTable[]>([]);
   const [purchaseItems, setPurchaseItems] = useState<TransactionItem[] | null>(
     null
   );
@@ -75,6 +75,22 @@ export default function Component() {
     useState<TransactionItem | null>(null);
   const [purchaseToDelete, setPurchaseToDelete] =
     useState<TransactionTable | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Filter items based on the search term
+  const filteredPurchases = purchases.filter((Transaction) => {
+    const search = searchTerm.toLowerCase();
+
+    const invoiceNumber =
+      Transaction.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
+    const supplierName =
+      `${Transaction.Entity.firstname} ${Transaction.Entity.lastname}`.toLowerCase();
+
+    return invoiceNumber.includes(search) || supplierName.includes(search);
+  });
 
   const form = useForm<Transaction>({
     resolver: zodResolver(transactionSchema),
@@ -747,6 +763,15 @@ export default function Component() {
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
           </div>
+          <div>
+            <Input
+              type="text"
+              placeholder="Search invoice no. or supplier name..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="w-full md:w-auto mb-4"
+            />
+          </div>
           <div className="overflow-x-auto">
             <div className="table-container relative ">
               <ScrollArea>
@@ -774,93 +799,93 @@ export default function Component() {
                   </TableHeader>
                   <TableBody>
                     <>
-                      {purchases &&
-                        purchases.map((purchase, index: number) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              {purchase.InvoiceNumber.invoicenumber}
-                            </TableCell>
-                            <TableCell>
-                              {purchase.Entity.firstname} {""}
-                              {purchase.Entity?.middlename || ""} {""}
-                              {purchase.Entity.lastname}
-                            </TableCell>
-                            <TableCell>
-                              {purchase.Entity?.contactnumber || "N/A"}
-                            </TableCell>
-                            <TableCell>{purchase.status}</TableCell>
-                            <TableCell>
-                              {purchase.walkin ? "True" : "False"}
-                            </TableCell>
-                            <TableCell>
-                              {purchase.frommilling ? "True" : "False"}
-                            </TableCell>
-                            <TableCell>{purchase.taxpercentage}</TableCell>
-                            <TableCell>{purchase.taxamount?.toFixed(2)}</TableCell>
-                            <TableCell>{purchase.totalamount}</TableCell>
-                            <TableCell>
-                              {purchase.createdat
-                                ? new Date(
-                                    purchase.createdat
-                                  ).toLocaleDateString("en-US", {
+                      {filteredPurchases.map((purchase) => (
+                        <TableRow key={purchase.transactionid}>
+                          <TableCell>
+                            {purchase.InvoiceNumber.invoicenumber}
+                          </TableCell>
+                          <TableCell>
+                            {purchase.Entity.firstname} {""}
+                            {purchase.Entity?.middlename || ""} {""}
+                            {purchase.Entity.lastname}
+                          </TableCell>
+                          <TableCell>
+                            {purchase.Entity?.contactnumber || "N/A"}
+                          </TableCell>
+                          <TableCell>{purchase.status}</TableCell>
+                          <TableCell>
+                            {purchase.walkin ? "True" : "False"}
+                          </TableCell>
+                          <TableCell>
+                            {purchase.frommilling ? "True" : "False"}
+                          </TableCell>
+                          <TableCell>{purchase.taxpercentage}</TableCell>
+                          <TableCell>
+                            {purchase.taxamount?.toFixed(2)}
+                          </TableCell>
+                          <TableCell>{purchase.totalamount}</TableCell>
+                          <TableCell>
+                            {purchase.createdat
+                              ? new Date(purchase.createdat).toLocaleDateString(
+                                  "en-US",
+                                  {
                                     year: "numeric",
                                     month: "long",
                                     day: "numeric",
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                  })
-                                : "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {purchase.User
-                                ? `${purchase.User.firstname} ${purchase.User.lastname}`
-                                : "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {purchase.lastmodifiedat
-                                ? new Date(
-                                    purchase.lastmodifiedat
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                : "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleViewPurchaseItem(purchase)
                                   }
-                                >
-                                  <ViewIcon className="w-4 h-4" />
-                                  <span className="sr-only">View</span>
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(purchase)}
-                                >
-                                  <FilePenIcon className="w-4 h-4" />
-                                  <span className="sr-only">Edit</span>
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDeletePurchase(purchase)}
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  <span className="sr-only">Delete</span>
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                                )
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {purchase.User
+                              ? `${purchase.User.firstname} ${purchase.User.lastname}`
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {purchase.lastmodifiedat
+                              ? new Date(
+                                  purchase.lastmodifiedat
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewPurchaseItem(purchase)}
+                              >
+                                <ViewIcon className="w-4 h-4" />
+                                <span className="sr-only">View</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(purchase)}
+                              >
+                                <FilePenIcon className="w-4 h-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeletePurchase(purchase)}
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </>
                   </TableBody>
                 </Table>

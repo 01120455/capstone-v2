@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DELETE as deleteUserHandler } from "../../user/route"; // Adjust the path if necessary
+import { DELETE as deleteUserHandler } from "../../route"; 
 
 export async function DELETE(
   req: NextRequest,

@@ -226,15 +226,20 @@ export default function Component() {
       setSelectedFile(file);
     }
   };
-  
 
   const handleDelete = async (userid: number | undefined) => {
     try {
-      const response = await axios.delete(`/api/user-delete/${userid}`);
-      console.log("User deleted successfully:", response.data);
-      refreshUsers();
-      setShowAlert(false);
-      setUserToDelete(null);
+      const response = await fetch(`/api/user/userSD/${userid}`, {
+        method: "PUT",
+      });
+      if (response.ok) {
+        console.log("User deleted successfully");
+        refreshUsers();
+        setShowAlert(false);
+        setUserToDelete(null);
+      } else {
+        console.error("Error deleting user:", response.status);
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
     }
@@ -329,12 +334,12 @@ export default function Component() {
                           className="rounded"
                         /> */}
                         <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleShowImage(user)}
-                            >
-                              View Image
-                            </Button>
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleShowImage(user)}
+                        >
+                          View Image
+                        </Button>
                       </TableCell>
                       <TableCell>
                         {user.firstname} {user.middlename} {user.lastname}

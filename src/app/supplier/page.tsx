@@ -40,10 +40,9 @@ export default function Component() {
   const [searchTerm, setSearchTerm] = useState("");
   // const [currentPage, setCurrentPage] = useState(1);
 
-  // const handleSearch = (e) => {
-  //   setSearchTerm(e.target.value);
-  //   setCurrentPage(1);
-  // };
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
   useEffect(() => {
     const getPurchases = async () => {
@@ -127,8 +126,8 @@ export default function Component() {
             <Input
               type="text"
               placeholder="Search suppliers..."
-              // value={searchTerm}
-              // onChange={handleSearch}
+              value={searchTerm}
+              onChange={handleSearch}
               className="w-full md:w-auto"
             />
           </div>

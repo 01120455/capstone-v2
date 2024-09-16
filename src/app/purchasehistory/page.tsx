@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
   const [filters, setFilters] = useState({
+    invoiceno: "",
     name: "",
     supplier: "",
     dateRange: { start: "", end: "" },
@@ -54,12 +55,11 @@ export default function Component() {
             lastmodifiedat: item.lastmodifiedat
               ? new Date(item.lastmodifiedat)
               : null,
-              taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
           };
         });
 
         console.log("Parsed Data with Date Conversion:", parsedData);
-
 
         console.log("Parsed Data:", parsedData);
         setPurchases(parsedData);
@@ -72,21 +72,34 @@ export default function Component() {
   }, []);
 
   const filteredTransactions = useMemo(() => {
+    console.log("Filters:", filters);
+    console.log("Search Term:", searchTerm);
+
     if (
+      !filters.invoiceno &&
       !filters.name &&
       !filters.supplier &&
       !filters.dateRange.start &&
       !filters.dateRange.end &&
       !searchTerm
     ) {
-      return purchases; 
+      return purchases;
     }
 
     return purchases.filter((purchase) => {
+      const invoiceNo =
+        purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
       const supplierName =
         `${purchase.Entity.firstname} ${purchase.Entity.lastname}`.toLowerCase();
-      const itemName = purchase.TransactionItem[0].Item.name.toLowerCase();
       const searchLower = searchTerm.toLowerCase();
+
+      console.log("Invoice Number:", invoiceNo);
+      console.log("Filter Invoice Number:", filters.invoiceno.toLowerCase());
+
+      const itemNameMatches = purchase.TransactionItem.some((item) => {
+        const itemName = item?.Item?.name?.toLowerCase() || "";
+        return itemName.includes(filters.name.toLowerCase());
+      });
 
       const createdAt = purchase.createdat
         ? new Date(purchase.createdat)
@@ -111,11 +124,13 @@ export default function Component() {
       };
 
       return (
+        (!filters.invoiceno ||
+          invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
         (!filters.supplier ||
           supplierName.includes(filters.supplier.toLowerCase())) &&
-        (!filters.name || itemName.includes(filters.name.toLowerCase())) &&
+        itemNameMatches &&
         isWithinDateRange(createdAt, start, end) &&
-        (itemName.includes(searchLower) || supplierName.includes(searchLower))
+        (itemNameMatches || supplierName.includes(searchLower))
       );
     });
   }, [filters, searchTerm, purchases]);
@@ -129,13 +144,13 @@ export default function Component() {
           <div className="grid gap-6 md:grid-cols-[1fr_380px]">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4">
-                <Input
+                {/* <Input
                   type="text"
                   placeholder="Search Item name or Supplier Name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1"
-                />
+                /> */}
               </div>
               {selectedTransaction ? (
                 <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
@@ -252,9 +267,7 @@ export default function Component() {
                       <div className="font-medium">
                         Tax Amount {""} ${selectedTransaction.taxpercentage}%:
                       </div>
-                      <div>
-                        ${selectedTransaction.taxamount}
-                      </div>
+                      <div>${selectedTransaction.taxamount}</div>
                       <div className="font-medium">Total:</div>
                       <div>${selectedTransaction.totalamount}</div>
                     </div>
@@ -387,6 +400,21 @@ export default function Component() {
               <div className="grid gap-4">
                 {/* Item Name Filter */}
                 <div className="grid gap-2">
+                  <Label htmlFor="item-name">Invoice Number</Label>
+                  <Input
+                    id="invoice-number"
+                    type="text"
+                    placeholder="Enter Invoice Number"
+                    value={filters.invoiceno}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        invoiceno: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="item-name">Item Name</Label>
                   <Input
                     id="item-name"
@@ -421,7 +449,7 @@ export default function Component() {
 
                 {/* Date Range Filter */}
                 <div className="grid gap-2">
-                  <Label className="my-1.5">Date Range</Label>
+                  <Label className="my-1.5 mt-3">Date Range</Label>
                   <div className="grid grid-cols-2 gap-4">
                     {/* Start Date Filter */}
                     <div className="grid gap-2">
