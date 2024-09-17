@@ -166,7 +166,7 @@ export default function Component() {
                     </Button>
                   </div>
                   <div className="grid gap-1">
-                    <div className="grid grid-cols-4 gap-1 p-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-1 p-2">
                       <div className="font-medium text-muted-foreground">
                         Supplier Name:
                       </div>
@@ -224,7 +224,7 @@ export default function Component() {
                             className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
                             divClassname="min-h-[200px] overflow-y-scroll max-h-[200px] overflow-y-auto"
                           >
-                            <TableHeader>
+                            <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                               <TableRow>
                                 <TableHead>Item Name</TableHead>
                                 <TableHead>Item Type</TableHead>
@@ -257,7 +257,7 @@ export default function Component() {
                               )}
                             </TableBody>
                           </Table>
-                          <ScrollBar orientation="vertical" />
+                          <ScrollBar orientation="horizontal" />
                         </ScrollArea>
                       </div>
                     </div>

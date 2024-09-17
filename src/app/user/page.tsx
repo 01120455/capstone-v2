@@ -30,7 +30,6 @@ import {
 import { useForm } from "react-hook-form";
 import { user, AddUser } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +50,6 @@ import {
 } from "@/components/ui/dialog";
 import SideMenu from "@/components/sidemenu";
 import Image from "next/image";
-import { get } from "lodash";
 
 export default function Component() {
   const [users, setUsers] = useState<AddUser[] | null>(null);

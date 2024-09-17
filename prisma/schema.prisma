@@ -29,7 +29,7 @@ model Entity {
   firstname            String    @db.VarChar(25)
   middlename            String?    @db.VarChar(25)
   lastname            String    @db.VarChar(25)
-  contactnumber   String  @unique @db.VarChar(15)
+  contactnumber   String? @db.VarChar(15)
   lastmodifiedby  Int?
   lastmodifiedat DateTime? @updatedAt
   deleted         Boolean   @default(false)

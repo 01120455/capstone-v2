@@ -78,7 +78,7 @@ export default function Component() {
   return (
     <div className="flex h-screen">
       <SideMenu />
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col h-screen">
           <header className="bg-white shadow-sm p-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold">Point of Sale</h1>
@@ -96,7 +96,7 @@ export default function Component() {
                       alt="Product Image"
                       width={250}
                       height={250}
-                      className="rounded-lg mb-4 object-cover"
+                      className="rounded-lg mb-4 object-cover h-52 w-52"
                     />
                     <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
                     <p className="text-gray-500 mb-4">₱{item.unitprice}</p>
@@ -127,7 +127,7 @@ export default function Component() {
                       alt={item.name}
                       width={160}
                       height={160}
-                      className="rounded-lg object-cover"
+                      className="rounded-lg object-cover h-32 lg:w-32"
                     />
                     <div>
                       <h3 className="text-lg font-semibold">{item.name}</h3>

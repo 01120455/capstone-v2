@@ -21,7 +21,7 @@ export async function POST() {
         where: { username: "admin" },
       });
 
-      console.log("Admin user deleted because other users exist.");
+      // console.log("Admin user deleted because other users exist.");
       return NextResponse.json({
         message: "Admin user deleted because other users exist.",
       });
@@ -48,14 +48,14 @@ export async function POST() {
         },
       });
 
-      console.log("Static user created successfully!", user);
+      // console.log("Static user created successfully!", user);
       return NextResponse.json({ message: "Dummy user created" });
     } else {
-      console.log("Static user already exists.");
+      // console.log("Static user already exists.");
       return NextResponse.json({ message: "Dummy user already exists" });
     }
   } catch (error) {
-    console.error("Error creating dummy user:", error);
+    // console.error("Error creating dummy user:", error);
     return NextResponse.json({ error: "Error creating dummy user" });
   } finally {
     await prisma.$disconnect();
