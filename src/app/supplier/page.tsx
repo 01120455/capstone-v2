@@ -3,8 +3,13 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/ui/pagination";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -29,6 +34,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { FilePenIcon } from "@/components/icons/Icons";
+import { useAuth } from "../../utils/hooks/auth";
+import { useRouter } from "next/navigation";
+import { AlertCircle } from "@/components/icons/Icons";
+import Link from "next/link";
 
 export default function Component() {
   const [suppliers, setSuppliers] = useState<Entity[]>([]);
@@ -38,7 +48,8 @@ export default function Component() {
   );
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  // const [currentPage, setCurrentPage] = useState(1);
+  const { isAuthenticated, userRole } = useAuth();
+  const router = useRouter();
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -116,8 +127,19 @@ export default function Component() {
     setShowTablePurchaseItem(false);
   };
 
-  return (
-    <div className="flex h-screen">
+  if (isAuthenticated === null) {
+    // Show a loading state while checking authentication
+    return <p>Loading...</p>;
+  }
+
+  // if (isAuthenticated === false) {
+  //   return null; // Prevent showing the page while redirecting
+  // }
+
+  // Role-based access control
+  if (userRole === "admin" || userRole === "manager" || userRole === "inventory") {
+    return (
+      <div className="flex h-screen">
       <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <div className="container mx-auto px-4 md:px-6 py-8">
@@ -178,14 +200,6 @@ export default function Component() {
               </TableBody>
             </Table>
           </div>
-
-          {/* <div className="flex justify-end mt-6">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div> */}
           {showTablePurchaseItem && purchaseItems && (
             <Dialog
               open={showTablePurchaseItem}
@@ -380,145 +394,32 @@ export default function Component() {
               })}
             </div>
           </div>
-
-          {/* <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Order History</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {suppliers.map((supplier) => {
-          const supplierTransactions = transactions.filter(
-            (transaction) =>
-              transaction.Entity?.entityid === supplier.entityid
-          );
-
-          return (
-            <Card key={supplier.entityid}>
-              <CardHeader>
-                <CardTitle>
-                  {supplier.firstname} {supplier.middlename ?? ""}{" "}
-                  {supplier.lastname}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table className="w-full table-auto">
-                  <TableHeader>
-                    <TableRow className="bg-gray-100 dark:bg-gray-800">
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Invoice
-                      </TableHead>
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Status
-                      </TableHead>
-                      <TableHead className="px-4 py-2 text-left font-medium">
-                        Total Amount
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {supplierTransactions.length > 0 ? (
-                      supplierTransactions.map((transaction) => (
-                        <TableRow
-                          key={transaction.transactionid}
-                          className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                        >
-                          <TableCell className="px-4 py-2">
-                            {transaction.InvoiceNumber?.invoicenumber || "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={`px-2 py-1 rounded-full ${
-                                transaction.status === "paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                  : transaction.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                  : transaction.status === "cancelled"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
-                              }`}
-                            >
-                              {transaction.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-2">
-                            {transaction.totalamount}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center px-4 py-2">
-                          No transactions found
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div> */}
         </div>
       </div>
     </div>
-  );
-}
+    );
+  }
 
-function CheckIcon(props) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-function FilePenIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m12 20h9" />
-      <path d="m16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-    </svg>
-  );
-}
-
-function XIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="18" x2="6" y1="6" y2="18" />
-      <line x1="6" x2="18" y1="6" y2="18" />
-    </svg>
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-[380px]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            Access Denied
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            You do not have permission to view this page.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button asChild className="w-full">
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

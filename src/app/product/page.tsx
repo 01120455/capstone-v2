@@ -53,8 +53,29 @@ import SideMenu from "@/components/sidemenu";
 import { set } from "lodash";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { User } from "@/interfaces/user";
+import { FilePenIcon, PlusIcon, TrashIcon,  } from "@/components/icons/Icons";
+import { useAuth } from "../../utils/hooks/auth";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertCircle } from "@/components/icons/Icons";
+import Link from "next/link";
+
+const ROLES = {
+  SALES: "sales",
+  INVENTORY: "inventory",
+  MANAGER: "manager",
+  ADMIN: "admin",
+};
 
 export default function Component() {
+  const [user, setUser] = useState<User | null>(null);
   const [items, setItems] = useState<ViewItem[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -71,30 +92,35 @@ export default function Component() {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
+  const { isAuthenticated, userRole } = useAuth();
+  const router = useRouter();
 
-    // Filter items based on the search term
-    // const filteredItems = items.filter((item) =>
-    //   item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    // );
+  // Filter items based on the search term
+  // const filteredItems = items.filter((item) =>
+  //   item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
-    const filteredItems = items.filter((item) => {
-      // Convert searchTerm to lower case for case-insensitive comparison
-      const searchTermLower = searchTerm.toLowerCase();
-    
-      // Check if item name contains the searchTerm
-      const nameMatches = item.name.toLowerCase().includes(searchTermLower);
-    
-      // Check if item type matches the searchTerm
-      const typeMatches = item.type.toLowerCase().includes(searchTermLower);
-    
-      // Check if sackweight and unit of measurement match the searchTerm
-      const sackweightMatches = item.sackweight.toString().includes(searchTermLower);
-      const unitMatches = item.unitofmeasurement.toLowerCase().includes(searchTermLower);
-    
-      // Return true if any of the criteria match
-      return nameMatches || typeMatches || sackweightMatches || unitMatches;
-    });
-    
+  const filteredItems = items.filter((item) => {
+    // Convert searchTerm to lower case for case-insensitive comparison
+    const searchTermLower = searchTerm.toLowerCase();
+
+    // Check if item name contains the searchTerm
+    const nameMatches = item.name.toLowerCase().includes(searchTermLower);
+
+    // Check if item type matches the searchTerm
+    const typeMatches = item.type.toLowerCase().includes(searchTermLower);
+
+    // Check if sackweight and unit of measurement match the searchTerm
+    const sackweightMatches = item.sackweight
+      .toString()
+      .includes(searchTermLower);
+    const unitMatches = item.unitofmeasurement
+      .toLowerCase()
+      .includes(searchTermLower);
+
+    // Return true if any of the criteria match
+    return nameMatches || typeMatches || sackweightMatches || unitMatches;
+  });
 
   const checkItemLevels = (items: ViewItem[]) => {
     items.forEach((item) => {
@@ -109,6 +135,24 @@ export default function Component() {
       }
     });
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/session", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const session = await response.json();
+        setUser(session || null);
+      } catch (error) {
+        console.error("Failed to fetch session", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -377,8 +421,27 @@ export default function Component() {
     setShowImage(null);
   };
 
-  return (
-    <div className="flex h-screen">
+  const canAccessButton = (role: String) => {
+    if (user?.role === ROLES.ADMIN) return true;
+    if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+    return false;
+  };
+
+  if (isAuthenticated === null) {
+    // Show a loading state while checking authentication
+    return <p>Loading...</p>;
+  }
+
+  // if (isAuthenticated === false) {
+  //   return null; // Prevent showing the page while redirecting
+  // }
+
+  // Role-based access control
+  if (userRole === "admin" || userRole === "manager" || userRole === "inventory") {
+    return (
+      <div className="flex h-screen">
       <SideMenu />
       <div className="flex-1 overflow-y-hidden p-5">
         {showAlertItem && (
@@ -437,9 +500,9 @@ export default function Component() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                  {filteredItems.map((item) => (
-                        <TableRow key={item.itemid}>
-                          {/* <TableCell>
+                    {filteredItems.map((item) => (
+                      <TableRow key={item.itemid}>
+                        {/* <TableCell>
                         <Image
                           src={item.itemimage[0]?.imagepath ?? ""}
                           alt="Product Image"
@@ -448,61 +511,78 @@ export default function Component() {
                           className="rounded"
                         />
                       </TableCell> */}
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleShowImage(item)}
-                            >
-                              View Image
-                            </Button>
-                          </TableCell>
-                          <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.type}</TableCell>
-                          <TableCell>{item.sackweight}</TableCell>
-                          <TableCell>{item.unitofmeasurement}</TableCell>
-                          <TableCell>{item.stock}</TableCell>
-                          <TableCell>{item.unitprice}</TableCell>
-                          <TableCell>{item.reorderlevel}</TableCell>
-                          <TableCell>{item.criticallevel}</TableCell>
-                          <TableCell>
-                            {item.User.firstname} {item.User.lastname}
-                          </TableCell>
-                          <TableCell>
-                            {item.lastmodifiedat
-                              ? new Date(
-                                  item.lastmodifiedat
-                                ).toLocaleDateString("en-US", {
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleShowImage(item)}
+                          >
+                            View Image
+                          </Button>
+                        </TableCell>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{item.type}</TableCell>
+                        <TableCell>{item.sackweight}</TableCell>
+                        <TableCell>{item.unitofmeasurement}</TableCell>
+                        <TableCell>{item.stock}</TableCell>
+                        <TableCell>{item.unitprice}</TableCell>
+                        <TableCell>{item.reorderlevel}</TableCell>
+                        <TableCell>{item.criticallevel}</TableCell>
+                        <TableCell>
+                          {item.User.firstname} {item.User.lastname}
+                        </TableCell>
+                        <TableCell>
+                          {item.lastmodifiedat
+                            ? new Date(item.lastmodifiedat).toLocaleDateString(
+                                "en-US",
+                                {
                                   year: "numeric",
                                   month: "long",
                                   day: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                })
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(item)}
-                              >
-                                <FilePenIcon className="w-4 h-4" />
-                                <span className="sr-only">Edit</span>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteItem(item)}
-                              >
-                                <TrashIcon className="w-4 h-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                                }
+                              )
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <FilePenIcon className="w-4 h-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            {canAccessButton(ROLES.ADMIN) && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteItem(item)}
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </>
+                            )}
+                            {user?.role === ROLES.MANAGER && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteItem(item)}
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
                 <ScrollBar orientation="horizontal" />
@@ -818,66 +898,31 @@ export default function Component() {
         </div>
       </div>
     </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-[380px]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            Access Denied
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            You do not have permission to view this page.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button asChild className="w-full">
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
 
-function PlusIcon(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
 
-function FilePenIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v10" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M10.4 12.6a2 2 0 1 1 3 3L8 21l-4 1 1-4Z" />
-    </svg>
-  );
-}
-
-function TrashIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
-}

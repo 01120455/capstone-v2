@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardContent,
   Card,
+  CardFooter,
 } from "@/components/ui/card";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
@@ -20,6 +21,10 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import SideMenu from "@/components/sidemenu";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../utils/hooks/auth";
+import { AlertCircle } from "@/components/icons/Icons";
+import Link from "next/link";
 
 export default function Dashboard({
   className,
@@ -28,109 +33,152 @@ export default function Dashboard({
     from: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
     to: new Date(), // Set "to" date to current date
   });
-  return (
-    <div className="flex h-screen">
-      <SideMenu />
-      <div className="flex-1 overflow-y-auto p-8">
-        
-        <div className="flex items-center space-x-4 mb-4 sm:mb-0 sm:mb-4">
-          <h1 className="text-xl font-bold">Dashboard</h1>
-          <div className={cn("grid gap-2", className)}>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, "LLL dd, y")} -{" "}
-                        {format(date.to, "LLL dd, y")}
-                      </>
+  const { isAuthenticated, userRole } = useAuth();
+  const router = useRouter();
+
+  if (isAuthenticated === null) {
+    // Show a loading state while checking authentication
+    return <p>Loading...</p>;
+  }
+
+  // if (isAuthenticated === false) {
+  //   return null; // Prevent showing the page while redirecting
+  // }
+
+  // Role-based access control
+  if (userRole === "admin" || userRole === "manager") {
+    return (
+      <div className="flex h-screen">
+        <SideMenu />
+        <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex items-center space-x-4 mb-4 sm:mb-0 sm:mb-4">
+            <h1 className="text-xl font-bold">Dashboard</h1>
+            <div className={cn("grid gap-2", className)}>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, "LLL dd, y")} -{" "}
+                          {format(date.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(date.from, "LLL dd, y")
+                      )
                     ) : (
-                      format(date.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full sm:w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={setDate}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full sm:w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <Card className="bg-[#57ab5a] text-white">
+              <CardHeader>
+                <CardTitle>Gross Revenue</CardTitle>
+                <CardDescription className="text-white">
+                  ₱100,000
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>Last Month: ₱100,000</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#57a0ab] text-white">
+              <CardHeader>
+                <CardTitle>Gross Sale</CardTitle>
+                <CardDescription className="text-white">
+                  ₱100,000
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>Last Month: ₱100,000</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#ab5757] text-white">
+              <CardHeader>
+                <CardTitle>Items Sold</CardTitle>
+                <CardDescription className="text-white">
+                  ₱100,000
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>Last Month: ₱100,000</p>
+              </CardContent>
+            </Card>
+          </div>
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Sales</h2>
+            <p className="text-sm mb-4">
+              Analysis of different rice varieties based on their selling
+              performance
+            </p>
+            <LineChart className="w-full h-[300px]" />
+          </section>
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">
+              Revenue and Profit per product
+            </h2>
+            <p className="text-sm mb-4">
+              Analysis of Revenue and profit per product
+            </p>
+            <BarChart className="w-full h-[300px]" />
+          </section>
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">
+              White Rice Varieties Sales Performance
+            </h2>
+            <p className="text-sm mb-4">
+              Analysis of different rice varieties based on their selling
+              performance
+            </p>
+            <BarChart className="w-full h-[300px]" />
+          </section>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="bg-[#57ab5a] text-white">
-            <CardHeader>
-              <CardTitle>Gross Revenue</CardTitle>
-              <CardDescription className="text-white">₱100,000</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Last Month: ₱100,000</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-[#57a0ab] text-white">
-            <CardHeader>
-              <CardTitle>Gross Sale</CardTitle>
-              <CardDescription className="text-white">₱100,000</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Last Month: ₱100,000</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-[#ab5757] text-white">
-            <CardHeader>
-              <CardTitle>Items Sold</CardTitle>
-              <CardDescription className="text-white">₱100,000</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Last Month: ₱100,000</p>
-            </CardContent>
-          </Card>
-        </div>
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Sales</h2>
-          <p className="text-sm mb-4">
-            Analysis of different rice varieties based on their selling
-            performance
-          </p>
-          <LineChart className="w-full h-[300px]" />
-        </section>
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">
-            Revenue and Profit per product
-          </h2>
-          <p className="text-sm mb-4">
-            Analysis of Revenue and profit per product
-          </p>
-          <BarChart className="w-full h-[300px]" />
-        </section>
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">
-            White Rice Varieties Sales Performance
-          </h2>
-          <p className="text-sm mb-4">
-            Analysis of different rice varieties based on their selling
-            performance
-          </p>
-          <BarChart className="w-full h-[300px]" />
-        </section>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-[380px]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            Access Denied
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            You do not have permission to view this page.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button asChild className="w-full">
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

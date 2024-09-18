@@ -25,7 +25,6 @@ model User {
 
 model Entity {
   entityid      Int       @id @default(autoincrement())
-  type EntityType
   firstname            String    @db.VarChar(25)
   middlename            String?    @db.VarChar(25)
   lastname            String    @db.VarChar(25)
@@ -34,8 +33,17 @@ model Entity {
   lastmodifiedat DateTime? @updatedAt
   deleted         Boolean   @default(false)
   User User? @relation(fields: [lastmodifiedby], references: [userid])
+  roles EntityRole[]
   transaction     Transaction[]
 }
+
+model EntityRole {
+  roleid   Int       @id @default(autoincrement())
+  entityid Int
+  role     RoleType
+  Entity   Entity    @relation(fields: [entityid], references: [entityid])
+}
+
 
 model InvoiceNumber {
   invoicenumberid      Int       @id @default(autoincrement())
@@ -106,7 +114,7 @@ model ItemImage {
   Item         Item      @relation(fields: [itemid], references: [itemid])
 }
 
-enum EntityType {
+enum RoleType {
   customer
   supplier
 }

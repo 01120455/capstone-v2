@@ -67,64 +67,63 @@ enum Status {
 //     // Normalize middlename if it is null
 //     const normalizedMiddlename = middlename || "";
 
-//     // Find existing purchase and item
-//     const existingPurchase = await prisma.transaction.findUnique({
-//       where: { transactionid: transactionId },
-//     });
+//     // Execute Prisma transaction
+//     const updatedPurchase = await prisma.$transaction(async (tx) => {
+//       // Find existing purchase
+//       const existingPurchase = await tx.transaction.findUnique({
+//         where: { transactionid: transactionId },
+//       });
 
-//     if (!existingPurchase) {
-//       return NextResponse.json(
-//         { error: "Purchase not found" },
-//         { status: 404 }
-//       );
-//     }
+//       if (!existingPurchase) {
+//         throw new Error("Purchase not found");
+//       }
 
-//     const totalAmount = existingPurchase.totalamount ?? 0;
-//     const taxAmount = totalAmount * (taxpercentage / 100);
-//     const totalAmountMinusTax = totalAmount - taxAmount;
-    
+//       const totalAmount = existingPurchase.totalamount ?? 0;
+//       const taxAmount = totalAmount * (taxpercentage / 100);
+//       const totalAmountMinusTax = totalAmount - taxAmount;
 
-//     // Find or create supplier
-//     let supplierId;
-//     const existingSupplier = await prisma.entity.findUnique({
-//       where: { entityid: existingPurchase.entityid },
-//     });
+//       // Find or create supplier
+//       let supplierId;
+//       const existingSupplier = await tx.entity.findUnique({
+//         where: { entityid: existingPurchase.entityid },
+//       });
 
-//     if (existingSupplier) {
-//       supplierId = existingSupplier.entityid;
-//     } else {
-//       const newSupplier = await prisma.entity.create({
+//       if (existingSupplier) {
+//         supplierId = existingSupplier.entityid;
+//       } else {
+//         const newSupplier = await tx.entity.create({
+//           data: {
+//             type: "supplier",
+//             firstname,
+//             middlename: normalizedMiddlename,
+//             lastname,
+//             contactnumber,
+//           },
+//         });
+//         supplierId = newSupplier.entityid;
+//       }
+
+//       // Update purchase
+//       const updatedPurchase = await tx.transaction.update({
+//         where: { transactionid: transactionId },
 //         data: {
-//           type: "supplier",
-//           firstname,
-//           middlename: normalizedMiddlename,
-//           lastname,
-//           contactnumber,
+//           lastmodifiedby: userid,
+//           entityid: supplierId,
+//           status: status,
+//           walkin: walkin,
+//           frommilling: frommilling,
+//           taxpercentage: taxpercentage,
+//           taxamount: taxAmount,
+//           totalamount: totalAmountMinusTax,
 //         },
 //       });
-//       supplierId = newSupplier.entityid;
-//     }
 
-    
-
-//     // Update purchase and purchase item
-//     const updatedPurchase = await prisma.transaction.update({
-//       where: { transactionid: transactionId },
-//       data: {
-//         lastmodifiedby: userid,
-//         entityid: supplierId,
-//         status: status,
-//         walkin: walkin,
-//         frommilling: frommilling,
-//         taxpercentage: taxpercentage,
-//         taxamount: taxAmount,
-//         totalamount: totalAmountMinusTax,
-//       },
+//       return updatedPurchase;
 //     });
 
 //     return NextResponse.json(updatedPurchase, { status: 200 });
 //   } catch (error) {
-//     console.error("Error updating item:", error);
+//     console.error("Error updating purchase:", error);
 //     return NextResponse.json(
 //       { error: "Internal server error" },
 //       { status: 500 }
@@ -155,7 +154,7 @@ export const PUT = async (req: NextRequest) => {
     const status = statusString as Status;
     const walkin = formData.get("walkin") === "true";
     const taxpercentage =
-      parseFloat(formData.get("taxpercentage") as string) || 0; // Set default to 0 if NaN
+      parseFloat(formData.get("taxpercentage") as string) || 0;
 
     if (isNaN(transactionId)) {
       return NextResponse.json(
@@ -165,9 +164,9 @@ export const PUT = async (req: NextRequest) => {
     }
 
     // Validate Supplier Information
-    if (!firstname || !lastname || !contactnumber) {
+    if (!firstname || !lastname) {
       return NextResponse.json(
-        { error: "Supplier name and contact number are required" },
+        { error: "Supplier name are required" },
         { status: 400 }
       );
     }
@@ -202,25 +201,65 @@ export const PUT = async (req: NextRequest) => {
       const taxAmount = totalAmount * (taxpercentage / 100);
       const totalAmountMinusTax = totalAmount - taxAmount;
 
-      // Find or create supplier
-      let supplierId;
-      const existingSupplier = await tx.entity.findUnique({
-        where: { entityid: existingPurchase.entityid },
+      // Find or create supplier entity with the appropriate role
+      let entityId;
+      const existingEntity = await tx.entity.findFirst({
+        where: {
+          firstname: firstname,
+          lastname: lastname,
+        },
+        include: { roles: true },
       });
 
-      if (existingSupplier) {
-        supplierId = existingSupplier.entityid;
+      if (existingEntity) {
+        entityId = existingEntity.entityid;
+
+        // Check if the entity has the correct role
+        const hasRole = existingEntity.roles.some((r) => r.role === "supplier");
+        if (!hasRole) {
+          // Add the role if it doesn't exist
+          await tx.entityRole.create({
+            data: {
+              entityid: entityId,
+              role: "supplier",
+            },
+          });
+        }
       } else {
-        const newSupplier = await tx.entity.create({
+        // If the entity does not exist, create a new entity and role
+        const newEntity = await tx.entity.create({
           data: {
-            type: "supplier",
             firstname,
             middlename: normalizedMiddlename,
             lastname,
             contactnumber,
+            roles: {
+              create: [
+                {
+                  role: "supplier",
+                },
+              ], // Create the role along with the entity
+            },
           },
         });
-        supplierId = newSupplier.entityid;
+        entityId = newEntity.entityid;
+      }
+
+      let invoiceNumberId;
+      const existingInvoiceNumber = await tx.invoiceNumber.findFirst({
+        where: { invoicenumber: invoicenumber },
+      });
+
+      if (existingInvoiceNumber) {
+        invoiceNumberId = existingInvoiceNumber.invoicenumberid;
+      } else {
+        const newInvoiceNumber = await tx.invoiceNumber.update({
+          where: { invoicenumberid: existingPurchase.invoicenumberid || 0 },
+          data: {
+            invoicenumber: invoicenumber,
+          },
+        });
+        invoiceNumberId = newInvoiceNumber.invoicenumberid;
       }
 
       // Update purchase
@@ -228,7 +267,8 @@ export const PUT = async (req: NextRequest) => {
         where: { transactionid: transactionId },
         data: {
           lastmodifiedby: userid,
-          entityid: supplierId,
+          entityid: entityId,
+          invoicenumberid: invoiceNumberId,
           status: status,
           walkin: walkin,
           frommilling: frommilling,

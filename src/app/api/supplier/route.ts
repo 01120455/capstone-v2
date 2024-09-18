@@ -6,8 +6,15 @@ const prisma = new PrismaClient();
 export async function GET(req: NextRequest) {
   const suppliers = await prisma.entity.findMany({
     where: {
-      type: "supplier",
       deleted: false,
+      roles: {
+        some: {
+          role: "supplier", // Only fetch entities with the "supplier" role
+        },
+      },
+    },
+    include: {
+      roles: true, // Include the related roles
     },
   });
   return NextResponse.json(suppliers);

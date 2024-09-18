@@ -50,8 +50,18 @@ import {
 } from "@/components/ui/dialog";
 import SideMenu from "@/components/sidemenu";
 import Image from "next/image";
+import { FilePenIcon, TrashIcon, PlusIcon } from "@/components/icons/Icons";
+import { User } from "@/interfaces/user";
+
+const ROLES = {
+  SALES: "sales",
+  INVENTORY: "inventory",
+  MANAGER: "manager",
+  ADMIN: "admin",
+};
 
 export default function Component() {
+  const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<AddUser[] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -79,6 +89,24 @@ export default function Component() {
   useEffect(() => {
     console.log(form.formState.errors);
   }, [form.formState.errors]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/session", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const session = await response.json();
+        setUser(session || null);
+      } catch (error) {
+        console.error("Failed to fetch session", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     async function getUsers() {
@@ -296,6 +324,14 @@ export default function Component() {
     setShowImage(null);
   };
 
+  const canAccessButton = (role: String) => {
+    if (user?.role === ROLES.ADMIN) return true;
+    if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+    return false;
+  };
+
   return (
     <div className="flex h-screen">
       <SideMenu />
@@ -363,13 +399,17 @@ export default function Component() {
                         >
                           <FilePenIcon className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDeleteUser(user)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
+                        {canAccessButton(ROLES.ADMIN) && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDeleteUser(user)}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -666,66 +706,5 @@ export default function Component() {
         </div>
       </div>
     </div>
-  );
-}
-
-function PlusIcon(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
-
-function FilePenIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v10" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M10.4 12.6a2 2 0 1 1 3 3L8 21l-4 1 1-4Z" />
-    </svg>
-  );
-}
-
-function TrashIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
   );
 }

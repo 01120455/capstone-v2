@@ -67,213 +67,178 @@ enum UnitOfMeasurement {
 //     // Normalize middlename if it is null
 //     const normalizedMiddlename = middlename || "";
 
-//     // Check or Create Supplier
-//     const existingSupplier = await prisma.entity.findFirst({
-//       where: {
-//         type: "supplier",
-//         firstname,
-//         lastname,
-//         contactnumber,
-//       },
-//     });
-
-//     let supplierId;
-//     if (existingSupplier) {
-//       supplierId = existingSupplier.entityid;
-//     } else {
-//       const newSupplier = await prisma.entity.create({
-//         data: {
+//     const [newPurchase, newInvoice] = await prisma.$transaction(async (tx) => {
+//       // Check or Create Supplier
+//       let supplierId;
+//       const existingSupplier = await tx.entity.findFirst({
+//         where: {
 //           type: "supplier",
 //           firstname,
-//           middlename: normalizedMiddlename,
 //           lastname,
 //           contactnumber,
 //         },
 //       });
-//       supplierId = newSupplier.entityid;
-//     }
 
-//     // Initialize total amount for purchase
-//     let totalAmount = 0;
-
-//     // Process Items
-//     const items: any[] = [];
-//     let index = 0;
-
-//     // Corrected loop to check formData keys properly
-//     while (formData.has(`TransactionItem[${index}][item][name]`)) {
-//       const name = formData.get(
-//         `TransactionItem[${index}][item][name]`
-//       ) as string;
-//       const typeString = formData.get(
-//         `TransactionItem[${index}][item][type]`
-//       ) as string;
-//       const sackweightString = formData.get(
-//         `TransactionItem[${index}][item][sackweight]`
-//       ) as string;
-//       const unitpriceString = formData.get(
-//         `TransactionItem[${index}][unitprice]`
-//       ) as string;
-//       const unitofmeasurementstring = formData.get(
-//         `TransactionItem[${index}][unitofmeasurement]`
-//       ) as string;
-//       const unitofmeasurement = unitofmeasurementstring as UnitOfMeasurement;
-//       const measurementvalueString = formData.get(
-//         `TransactionItem[${index}][measurementvalue]`
-//       ) as string;
-//       const measurementvalue = parseFloat(measurementvalueString);
-//       const unitprice = parseFloat(unitpriceString);
-
-//       console.log(`Processing item ${index}:`, {
-//         name,
-//         typeString,
-//         unitprice,
-//         unitofmeasurement,
-//         measurementvalue,
-//       });
-
-//       // Validate Item Information
-//       if (!name || !Object.values(ItemType).includes(typeString as ItemType)) {
-//         return NextResponse.json(
-//           { error: "Invalid item details" },
-//           { status: 400 }
-//         );
-//       }
-
-//       if (isNaN(unitprice) || isNaN(measurementvalue)) {
-//         console.error("Invalid number fields", { unitprice, measurementvalue });
-//         return NextResponse.json(
-//           { error: "Number fields must be valid numbers" },
-//           { status: 400 }
-//         );
-//       }
-
-//       if (!unitofmeasurement) {
-//         return NextResponse.json(
-//           { error: "Unit of measurement is required" },
-//           { status: 400 }
-//         );
-//       }
-
-//       const type = typeString as ItemType;
-//       const sackweight = sackweightString as SackWeight;
-
-//       // Check or Create Item
-//       let itemId;
-//       const existingItem = await prisma.item.findFirst({
-//         where: { name, type, unitofmeasurement },
-//       });
-
-//       if (existingItem) {
-//         itemId = existingItem.itemid;
-
-//         const currentStock = existingItem.stock ?? 0;
-//         const newStock = currentStock + measurementvalue;
-
-//         await prisma.item.update({
-//           where: { itemid: itemId },
-//           data: { stock: newStock },
-//         });
+//       if (existingSupplier) {
+//         supplierId = existingSupplier.entityid;
 //       } else {
-//         const newItem = await prisma.item.create({
+//         const newSupplier = await tx.entity.create({
 //           data: {
-//             name,
-//             type,
-//             sackweight,
-//             unitofmeasurement,
-//             stock: measurementvalue,
-//             lastmodifiedby: userid,
+//             type: "supplier",
+//             firstname,
+//             middlename: normalizedMiddlename,
+//             lastname,
+//             contactnumber,
 //           },
 //         });
-//         itemId = newItem.itemid;
+//         supplierId = newSupplier.entityid;
 //       }
 
-//       // Calculate total amount for each purchase item
-//       const amount = measurementvalue * unitprice;
-//       if (isNaN(amount)) {
-//         console.error("Calculated amount is NaN", {
-//           measurementvalue,
-//           unitprice,
+//       // Initialize total amount for purchase
+//       let totalAmount = 0;
+
+//       // Process Items
+//       const items: any[] = [];
+//       let index = 0;
+
+//       while (formData.has(`TransactionItem[${index}][item][name]`)) {
+//         const name = formData.get(
+//           `TransactionItem[${index}][item][name]`
+//         ) as string;
+//         const typeString = formData.get(
+//           `TransactionItem[${index}][item][type]`
+//         ) as string;
+//         const sackweightString = formData.get(
+//           `TransactionItem[${index}][item][sackweight]`
+//         ) as string;
+//         const unitpriceString = formData.get(
+//           `TransactionItem[${index}][unitprice]`
+//         ) as string;
+//         const unitofmeasurementstring = formData.get(
+//           `TransactionItem[${index}][unitofmeasurement]`
+//         ) as string;
+//         const unitofmeasurement = unitofmeasurementstring as UnitOfMeasurement;
+//         const measurementvalueString = formData.get(
+//           `TransactionItem[${index}][measurementvalue]`
+//         ) as string;
+//         const measurementvalue = parseFloat(measurementvalueString);
+//         const unitprice = parseFloat(unitpriceString);
+
+//         // Validate Item Information
+//         if (
+//           !name ||
+//           !Object.values(ItemType).includes(typeString as ItemType)
+//         ) {
+//           throw new Error("Invalid item details");
+//         }
+
+//         if (isNaN(unitprice) || isNaN(measurementvalue)) {
+//           throw new Error("Number fields must be valid numbers");
+//         }
+
+//         if (!unitofmeasurement) {
+//           throw new Error("Unit of measurement is required");
+//         }
+
+//         const type = typeString as ItemType;
+//         const sackweight = sackweightString as SackWeight;
+
+
+//         // Check or Create Item
+//         let itemId;
+//         const existingItem = await tx.item.findFirst({
+//           where: { name, type, unitofmeasurement },
 //         });
-//         return NextResponse.json(
-//           { error: "Calculated amount is invalid" },
-//           { status: 400 }
-//         );
+
+//         if (existingItem) {
+//           itemId = existingItem.itemid;
+
+//           const currentStock = existingItem.stock ?? 0;
+//           const newStock = currentStock + measurementvalue;
+
+//           await tx.item.update({
+//             where: { itemid: itemId },
+//             data: { stock: newStock },
+//           });
+//         } else {
+//           const newItem = await tx.item.create({
+//             data: {
+//               name,
+//               type,
+//               sackweight,
+//               unitofmeasurement,
+//               stock: measurementvalue,
+//               lastmodifiedby: userid,
+//             },
+//           });
+//           itemId = newItem.itemid;
+//         }
+
+//         // Calculate total amount for each purchase item
+//         const amount = measurementvalue * unitprice;
+//         if (isNaN(amount)) {
+//           throw new Error("Calculated amount is invalid");
+//         }
+
+//         totalAmount += amount;
+
+//         items.push({
+//           itemid: itemId,
+//           unitofmeasurement: unitofmeasurement,
+//           measurementvalue: measurementvalue,
+//           unitprice: unitprice,
+//           lastmodifiedby: userid,
+//           totalamount: amount,
+//         });
+
+//         index++;
 //       }
 
-//       totalAmount += amount;
-//       console.log(`Item ${index} processed. Current totalAmount:`, totalAmount);
-
-//       items.push({
-//         itemid: itemId,
-//         unitofmeasurement: unitofmeasurement,
-//         measurementvalue: measurementvalue,
-//         unitprice: unitprice,
-//         lastmodifiedby: userid,
-//         totalamount: amount,
+//       // Create Invoice
+//       const newInvoice = await tx.invoiceNumber.create({
+//         data: {
+//           invoicenumber,
+//         },
 //       });
 
-//       index++;
-//     }
+//       const taxAmount = totalAmount * (taxpercentage / 100);
+//       const totalAmountAfterTax = totalAmount - taxAmount;
 
-//     console.log("Final items array:", items);
+//       // Create Purchase
+//       const newPurchase = await tx.transaction.create({
+//         data: {
+//           lastmodifiedby: userid,
+//           type: "purchase",
+//           entityid: supplierId,
+//           invoicenumberid: newInvoice.invoicenumberid,
+//           status,
+//           walkin,
+//           frommilling,
+//           taxpercentage,
+//           taxamount: taxAmount,
+//         },
+//       });
 
-//     // Create Invoice
-//     const newInvoice = await prisma.invoiceNumber.create({
-//       data: {
-//         invoicenumber,
-//       },
-//     });
+//       // Add transactionid to each item
+//       const purchaseItemsData = items.map((item) => ({
+//         ...item,
+//         transactionid: newPurchase.transactionid,
+//       }));
 
-//     const taxAmount = totalAmount * (taxpercentage / 100);
-
-//     const totalAmountAfterTax = totalAmount - taxAmount;
-
-//     // Create Purchase
-//     const newPurchase = await prisma.transaction.create({
-//       data: {
-//         lastmodifiedby: userid,
-//         type: "purchase",
-//         entityid: supplierId,
-//         invoicenumberid: newInvoice.invoicenumberid,
-//         status,
-//         walkin,
-//         frommilling,
-//         taxpercentage,
-//         taxamount: taxAmount,
-//       },
-//     });
-
-//     // Use the transactionid obtained from the newly created purchase
-//     const transactionId = newPurchase.transactionid;
-
-//     // Add transactionid to each item
-//     const purchaseItemsData = items.map((item) => ({
-//       ...item,
-//       transactionid: transactionId,
-//     }));
-
-//     // Create Purchase Items
-//     if (purchaseItemsData.length > 0) {
-//       try {
-//         await prisma.transactionItem.createMany({
+//       // Create Purchase Items
+//       if (purchaseItemsData.length > 0) {
+//         await tx.transactionItem.createMany({
 //           data: purchaseItemsData,
 //         });
-//       } catch (error) {
-//         console.error("Error creating transaction items:", error);
-//         return NextResponse.json(
-//           { error: "Error creating transaction items" },
-//           { status: 500 }
-//         );
 //       }
-//     } else {
-//       console.warn("No items to create");
-//     }
 
-//     // Update total amount of the purchase transaction
-//     await prisma.transaction.update({
-//       where: { transactionid: transactionId },
-//       data: { totalamount: totalAmountAfterTax },
+//       // Update total amount of the purchase transaction
+//       await tx.transaction.update({
+//         where: { transactionid: newPurchase.transactionid },
+//         data: { totalamount: totalAmountAfterTax },
+//       });
+
+//       return [newPurchase, newInvoice];
 //     });
 
 //     return NextResponse.json(
@@ -309,13 +274,12 @@ export const POST = async (req: NextRequest) => {
     const statusString = formData.get("status") as string;
     const status = statusString as Status;
     const walkin = formData.get("walkin") === "true";
-    const taxpercentage =
-      parseFloat(formData.get("taxpercentage") as string) || 0; // Set default to 0 if NaN
+    const taxpercentage = parseFloat(formData.get("taxpercentage") as string) || 0;
 
     // Validate Supplier Information
-    if (!firstname || !lastname || !contactnumber) {
+    if (!firstname || !lastname ) {
       return NextResponse.json(
-        { error: "Supplier name and contact number are required" },
+        { error: "Entity name are required" },
         { status: 400 }
       );
     }
@@ -327,32 +291,52 @@ export const POST = async (req: NextRequest) => {
 
     // Normalize middlename if it is null
     const normalizedMiddlename = middlename || "";
+    const contactNumberIfNull = contactnumber || "";
 
     const [newPurchase, newInvoice] = await prisma.$transaction(async (tx) => {
-      // Check or Create Supplier
-      let supplierId;
-      const existingSupplier = await tx.entity.findFirst({
+      // Check or Create Entity with the appropriate role
+      let entityId;
+      const existingEntity = await tx.entity.findFirst({
         where: {
-          type: "supplier",
           firstname,
           lastname,
-          contactnumber,
+        },
+        include: {
+          roles: true, // Assuming you have a relation with roles
         },
       });
 
-      if (existingSupplier) {
-        supplierId = existingSupplier.entityid;
+      if (existingEntity) {
+        entityId = existingEntity.entityid;
+        // Check if the entity has the correct role
+        const hasRole = existingEntity.roles.some(
+          (r) => r.role === "supplier"
+        );
+
+        if (!hasRole) {
+          // Add the role if it doesn't exist
+          await tx.entityRole.create({
+            data: {
+              entityid: entityId,
+              role: "supplier", // Add the new role
+            },
+          });
+        }
       } else {
-        const newSupplier = await tx.entity.create({
+        const newEntity = await tx.entity.create({
           data: {
-            type: "supplier",
             firstname,
             middlename: normalizedMiddlename,
             lastname,
             contactnumber,
+            roles: {
+              create: [{ 
+                role: "supplier"
+               }], // Create the role along with the entity
+            },
           },
         });
-        supplierId = newSupplier.entityid;
+        entityId = newEntity.entityid;
       }
 
       // Initialize total amount for purchase
@@ -403,7 +387,6 @@ export const POST = async (req: NextRequest) => {
 
         const type = typeString as ItemType;
         const sackweight = sackweightString as SackWeight;
-
 
         // Check or Create Item
         let itemId;
@@ -470,7 +453,7 @@ export const POST = async (req: NextRequest) => {
         data: {
           lastmodifiedby: userid,
           type: "purchase",
-          entityid: supplierId,
+          entityid: entityId,
           invoicenumberid: newInvoice.invoicenumberid,
           status,
           walkin,
@@ -514,6 +497,7 @@ export const POST = async (req: NextRequest) => {
     );
   }
 };
+
 
 export async function GET(req: NextRequest) {
   try {

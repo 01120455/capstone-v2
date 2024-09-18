@@ -94,7 +94,7 @@ export default function Component() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const session = await response.json();
-        setUserSession(session || null);
+        setUserSession(session);
 
         if (session && user) {
           // Assuming session.user contains the user data.
@@ -181,6 +181,13 @@ export default function Component() {
     }
   };
 
+  const fullName =
+    userSession?.firstname && userSession?.lastname
+      ? `${userSession.firstname} ${
+          userSession.middlename ? userSession.middlename + " " : ""
+        }${userSession.lastname}`
+      : "Guest";
+
   return (
     <div className="flex h-screen">
       <SideMenu />
@@ -196,13 +203,7 @@ export default function Component() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1">
-                  <h2 className="text-4xl font-bold">
-                    {userSession?.firstname &&
-                    userSession?.middlename &&
-                    userSession?.lastname
-                      ? `${userSession.firstname} ${userSession.middlename} ${userSession.lastname}`
-                      : "Guest"}
-                  </h2>
+                  <h2 className="text-4xl font-bold">{fullName || "Guest"}</h2>
                   <p className="text-xl text-muted-foreground">
                     {userSession?.role}
                   </p>

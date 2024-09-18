@@ -59,6 +59,23 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SideMenu from "@/components/sidemenu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  PlusIcon,
+  TrashIcon,
+  ViewIcon,
+  FilePenIcon,
+} from "@/components/icons/Icons";
+import { useAuth } from "../../utils/hooks/auth";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertCircle } from "@/components/icons/Icons";
+import Link from "next/link";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -79,6 +96,8 @@ export default function Component() {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
+  const { isAuthenticated, userRole } = useAuth();
+  const router = useRouter();
 
   // Filter items based on the search term
   const filteredPurchases = purchases.filter((Transaction) => {
@@ -472,7 +491,7 @@ export default function Component() {
     formData.append("Entity[lastname]", values.Entity.lastname);
     formData.append(
       "Entity[contactnumber]",
-      values.Entity.contactnumber.toString() ?? ""
+      values.Entity?.contactnumber?.toString() ?? ""
     );
     formData.append("invoicenumber", values.InvoiceNumber.invoicenumber || "");
 
@@ -752,683 +771,755 @@ export default function Component() {
     };
   }, []);
 
-  return (
-    <div className="flex h-screen">
-      <SideMenu />
-      <div className="flex-1 overflow-y-hidden p-5">
-        <div className="p-6 md:p-8">
-          <div className="flex  items-center justify-between mb-6 -mr-6">
-            <h1 className="text-2xl font-bold ">Company Purchase Management</h1>
-            <Button onClick={handleAddPurchase}>
-              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
-            </Button>
-          </div>
-          <div>
-            <Input
-              type="text"
-              placeholder="Search invoice no. or supplier name..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="w-full md:w-auto mb-4"
-            />
-          </div>
-          <div className="overflow-x-auto">
-            <div className="table-container relative ">
-              <ScrollArea>
-                <Table
-                  style={{ width: "100%" }}
-                  className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                  divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                >
-                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                    <TableRow>
-                      <TableHead>Invoice No.</TableHead>
-                      <TableHead>Supplier name</TableHead>
-                      <TableHead>Contact no.</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Walkin</TableHead>
-                      <TableHead>From Milling</TableHead>
-                      <TableHead>Tax %</TableHead>
-                      <TableHead>Tax Amount</TableHead>
-                      <TableHead>Total Amount</TableHead>
-                      <TableHead>Created at</TableHead>
-                      <TableHead>Last Modify by</TableHead>
-                      <TableHead>Last Modified at</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <>
-                      {filteredPurchases.map((purchase) => (
-                        <TableRow key={purchase.transactionid}>
-                          <TableCell>
-                            {purchase.InvoiceNumber.invoicenumber}
-                          </TableCell>
-                          <TableCell>
-                            {purchase.Entity.firstname} {""}
-                            {purchase.Entity?.middlename || ""} {""}
-                            {purchase.Entity.lastname}
-                          </TableCell>
-                          <TableCell>
-                            {purchase.Entity?.contactnumber || "N/A"}
-                          </TableCell>
-                          <TableCell>{purchase.status}</TableCell>
-                          <TableCell>
-                            {purchase.walkin ? "True" : "False"}
-                          </TableCell>
-                          <TableCell>
-                            {purchase.frommilling ? "True" : "False"}
-                          </TableCell>
-                          <TableCell>{purchase.taxpercentage}</TableCell>
-                          <TableCell>
-                            {purchase.taxamount?.toFixed(2)}
-                          </TableCell>
-                          <TableCell>{purchase.totalamount}</TableCell>
-                          <TableCell>
-                            {purchase.createdat
-                              ? new Date(purchase.createdat).toLocaleDateString(
-                                  "en-US",
-                                  {
+  if (isAuthenticated === null) {
+    // Show a loading state while checking authentication
+    return <p>Loading...</p>;
+  }
+
+  // if (isAuthenticated === false) {
+  //   return null; // Prevent showing the page while redirecting
+  // }
+
+  // Role-based access control
+  if (userRole === "admin" || userRole === "manager") {
+    return (
+      <div className="flex h-screen">
+        <SideMenu />
+        <div className="flex-1 overflow-y-hidden p-5">
+          <div className="p-6 md:p-8">
+            <div className="flex  items-center justify-between mb-6 -mr-6">
+              <h1 className="text-2xl font-bold ">
+                Company Purchase Management
+              </h1>
+              <Button onClick={handleAddPurchase}>
+                {isSmallScreen ? (
+                  <PlusIcon className="w-6 h-6" />
+                ) : (
+                  "Add Product"
+                )}
+              </Button>
+            </div>
+            <div>
+              <Input
+                type="text"
+                placeholder="Search invoice no. or supplier name..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full md:w-auto mb-4"
+              />
+            </div>
+            <div className="overflow-x-auto">
+              <div className="table-container relative ">
+                <ScrollArea>
+                  <Table
+                    style={{ width: "100%" }}
+                    className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                    divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                  >
+                    <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                      <TableRow>
+                        <TableHead>Invoice No.</TableHead>
+                        <TableHead>Supplier name</TableHead>
+                        <TableHead>Contact no.</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Walkin</TableHead>
+                        <TableHead>From Milling</TableHead>
+                        <TableHead>Tax %</TableHead>
+                        <TableHead>Tax Amount</TableHead>
+                        <TableHead>Total Amount</TableHead>
+                        <TableHead>Created at</TableHead>
+                        <TableHead>Last Modify by</TableHead>
+                        <TableHead>Last Modified at</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <>
+                        {filteredPurchases.map((purchase) => (
+                          <TableRow key={purchase.transactionid}>
+                            <TableCell>
+                              {purchase.InvoiceNumber.invoicenumber}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.Entity.firstname} {""}
+                              {purchase.Entity?.middlename || ""} {""}
+                              {purchase.Entity.lastname}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.Entity?.contactnumber || "N/A"}
+                            </TableCell>
+                            <TableCell>{purchase.status}</TableCell>
+                            <TableCell>
+                              {purchase.walkin ? "Yes" : "No"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.frommilling ? "Yes" : "No"}
+                            </TableCell>
+                            <TableCell>{purchase.taxpercentage}</TableCell>
+                            <TableCell>
+                              {purchase.taxamount?.toFixed(2)}
+                            </TableCell>
+                            <TableCell>{purchase.totalamount}</TableCell>
+                            <TableCell>
+                              {purchase.createdat
+                                ? new Date(
+                                    purchase.createdat
+                                  ).toLocaleDateString("en-US", {
                                     year: "numeric",
                                     month: "long",
                                     day: "numeric",
                                     hour: "2-digit",
                                     minute: "2-digit",
+                                  })
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.User
+                                ? `${purchase.User.firstname} ${purchase.User.lastname}`
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {purchase.lastmodifiedat
+                                ? new Date(
+                                    purchase.lastmodifiedat
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleViewPurchaseItem(purchase)
                                   }
-                                )
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            {purchase.User
-                              ? `${purchase.User.firstname} ${purchase.User.lastname}`
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            {purchase.lastmodifiedat
-                              ? new Date(
-                                  purchase.lastmodifiedat
-                                ).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewPurchaseItem(purchase)}
-                              >
-                                <ViewIcon className="w-4 h-4" />
-                                <span className="sr-only">View</span>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(purchase)}
-                              >
-                                <FilePenIcon className="w-4 h-4" />
-                                <span className="sr-only">Edit</span>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeletePurchase(purchase)}
-                              >
-                                <TrashIcon className="w-4 h-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </>
-                  </TableBody>
-                </Table>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            </div>
-          </div>
-          {showTablePurchaseItem && purchaseItems && (
-            <Dialog
-              open={showTablePurchaseItem}
-              onOpenChange={closeViewPurchaseItem}
-            >
-              <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
-                <DialogHeader>
-                  <DialogTitle>Items Purchased</DialogTitle>
-                  <div className="flex  items-center justify-between mb-6 mr-12">
-                    <DialogDescription>
-                      List of items purchased
-                    </DialogDescription>
-                    <DialogClose onClick={closeViewPurchaseItem} />
-                    <Button
-                      onClick={() => {
-                        const transactionid = purchaseItems[0]?.transactionid; // Or select the specific purchase item by index
-                        handleAddPurchaseItem(transactionid);
-                      }}
-                    >
-                      {isSmallScreen ? (
-                        <PlusIcon className="w-6 h-6" />
-                      ) : (
-                        "Add Purchased Item"
-                      )}
-                    </Button>
-                  </div>
-                </DialogHeader>
-                <div className="overflow-y-auto">
-                  <div className="table-container relative ">
-                    <ScrollArea>
-                      <Table
-                        style={{ width: "100%" }}
-                        className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                        divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                      >
-                        <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow>
-                            {/* <TableHead>Purchased ID</TableHead> */}
-                            <TableHead>Item Name</TableHead>
-                            <TableHead>Item Type</TableHead>
-                            <TableHead>Sack Weight</TableHead>
-                            <TableHead>Unit of Measurement</TableHead>
-                            <TableHead>Measurement Value</TableHead>
-                            <TableHead>Unit Price</TableHead>
-                            <TableHead>Total Amount</TableHead>
-                            <TableHead>Actions</TableHead>
+                                >
+                                  <ViewIcon className="w-4 h-4" />
+                                  <span className="sr-only">View</span>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(purchase)}
+                                >
+                                  <FilePenIcon className="w-4 h-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeletePurchase(purchase)}
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <>
-                            {purchaseItems &&
-                              purchaseItems.map(
-                                (purchaseItem, index: number) => (
-                                  <TableRow key={index}>
-                                    {/* <TableCell>
+                        ))}
+                      </>
+                    </TableBody>
+                  </Table>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+              </div>
+            </div>
+            {showTablePurchaseItem && purchaseItems && (
+              <Dialog
+                open={showTablePurchaseItem}
+                onOpenChange={closeViewPurchaseItem}
+              >
+                <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
+                  <DialogHeader>
+                    <DialogTitle>Items Purchased</DialogTitle>
+                    <div className="flex  items-center justify-between mb-6 mr-12">
+                      <DialogDescription>
+                        List of items purchased
+                      </DialogDescription>
+                      <DialogClose onClick={closeViewPurchaseItem} />
+                      <Button
+                        onClick={() => {
+                          const transactionid = purchaseItems[0]?.transactionid; // Or select the specific purchase item by index
+                          handleAddPurchaseItem(transactionid);
+                        }}
+                      >
+                        {isSmallScreen ? (
+                          <PlusIcon className="w-6 h-6" />
+                        ) : (
+                          "Add Purchased Item"
+                        )}
+                      </Button>
+                    </div>
+                  </DialogHeader>
+                  <div className="overflow-y-auto">
+                    <div className="table-container relative ">
+                      <ScrollArea>
+                        <Table
+                          style={{ width: "100%" }}
+                          className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                          divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                        >
+                          <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                            <TableRow>
+                              {/* <TableHead>Purchased ID</TableHead> */}
+                              <TableHead>Item Name</TableHead>
+                              <TableHead>Item Type</TableHead>
+                              <TableHead>Sack Weight</TableHead>
+                              <TableHead>Unit of Measurement</TableHead>
+                              <TableHead>Measurement Value</TableHead>
+                              <TableHead>Unit Price</TableHead>
+                              <TableHead>Total Amount</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <>
+                              {purchaseItems &&
+                                purchaseItems.map(
+                                  (purchaseItem, index: number) => (
+                                    <TableRow key={index}>
+                                      {/* <TableCell>
                               {purchaseItem.transactionitemid}
                             </TableCell> */}
-                                    <TableCell>
-                                      {purchaseItem.Item.name}
-                                    </TableCell>
-                                    <TableCell>
-                                      {purchaseItem.Item.type}
-                                    </TableCell>
-                                    <TableCell>
-                                      {purchaseItem.Item.sackweight}
-                                    </TableCell>
-                                    <TableCell>
-                                      {purchaseItem.unitofmeasurement}
-                                    </TableCell>
-                                    <TableCell>
-                                      {purchaseItem.measurementvalue}
-                                    </TableCell>
-                                    <TableCell>
-                                      {purchaseItem.unitprice}
-                                    </TableCell>
-                                    <TableCell>
-                                      {purchaseItem.totalamount}
-                                    </TableCell>
-                                    <TableCell>
-                                      <div className="flex items-center gap-2">
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleEditPurchaseItem(purchaseItem)
-                                          }
-                                        >
-                                          <FilePenIcon className="w-4 h-4" />
-                                          <span className="sr-only">Edit</span>
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleDeletePurchaseItem(
-                                              purchaseItem
-                                            )
-                                          }
-                                        >
-                                          <TrashIcon className="w-4 h-4" />
-                                          <span className="sr-only">
-                                            Delete
-                                          </span>
-                                        </Button>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                )
-                              )}
-                          </>
-                        </TableBody>
-                      </Table>
-                      <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
+                                      <TableCell>
+                                        {purchaseItem.Item.name}
+                                      </TableCell>
+                                      <TableCell>
+                                        {purchaseItem.Item.type}
+                                      </TableCell>
+                                      <TableCell>
+                                        {purchaseItem.Item.sackweight}
+                                      </TableCell>
+                                      <TableCell>
+                                        {purchaseItem.unitofmeasurement}
+                                      </TableCell>
+                                      <TableCell>
+                                        {purchaseItem.measurementvalue}
+                                      </TableCell>
+                                      <TableCell>
+                                        {purchaseItem.unitprice}
+                                      </TableCell>
+                                      <TableCell>
+                                        {purchaseItem.totalamount}
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleEditPurchaseItem(
+                                                purchaseItem
+                                              )
+                                            }
+                                          >
+                                            <FilePenIcon className="w-4 h-4" />
+                                            <span className="sr-only">
+                                              Edit
+                                            </span>
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleDeletePurchaseItem(
+                                                purchaseItem
+                                              )
+                                            }
+                                          >
+                                            <TrashIcon className="w-4 h-4" />
+                                            <span className="sr-only">
+                                              Delete
+                                            </span>
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                )}
+                            </>
+                          </TableBody>
+                        </Table>
+                        <ScrollBar orientation="horizontal" />
+                      </ScrollArea>
+                    </div>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-          {showModalPurchaseItem && (
-            <Dialog open={showModalPurchaseItem} onOpenChange={handleCancel}>
-              <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
-                <DialogHeader>
-                  <DialogTitle>
-                    {formPurchaseItemOnly.getValues("transactionitemid")
-                      ? "Edit Purchase Item"
-                      : "Add New Purchase Item"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Fill out the form to{" "}
-                    {formPurchaseItemOnly.getValues("transactionitemid")
-                      ? "edit a"
-                      : "add a new"}{" "}
-                    purchased product to your inventory.
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...formPurchaseItemOnly}>
-                  <form
-                    className="w-full max-w-full  mx-auto p-4 sm:p-6"
-                    onSubmit={formPurchaseItemOnly.handleSubmit(
-                      handleSubmitEditPurchaseItem
-                    )}
-                  >
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseItemOnly.control}
-                          name="Item.name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="name">Item Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} id="name" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                </DialogContent>
+              </Dialog>
+            )}
+            {showModalPurchaseItem && (
+              <Dialog open={showModalPurchaseItem} onOpenChange={handleCancel}>
+                <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {formPurchaseItemOnly.getValues("transactionitemid")
+                        ? "Edit Purchase Item"
+                        : "Add New Purchase Item"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Fill out the form to{" "}
+                      {formPurchaseItemOnly.getValues("transactionitemid")
+                        ? "edit a"
+                        : "add a new"}{" "}
+                      purchased product to your inventory.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...formPurchaseItemOnly}>
+                    <form
+                      className="w-full max-w-full  mx-auto p-4 sm:p-6"
+                      onSubmit={formPurchaseItemOnly.handleSubmit(
+                        handleSubmitEditPurchaseItem
+                      )}
+                    >
+                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseItemOnly.control}
+                            name="Item.name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="name">Item Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} id="name" type="text" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseItemOnly.control}
+                            name="Item.type"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="type">Item Type</FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Type">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="bigas">
+                                        Bigas
+                                      </SelectItem>
+                                      <SelectItem value="palay">
+                                        Palay
+                                      </SelectItem>
+                                      <SelectItem value="resico">
+                                        Resico
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseItemOnly.control}
+                            name="Item.sackweight"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="sackweight">
+                                  Sack Weight
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Sack Weight">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="bag25kg">
+                                        Bag 25kg
+                                      </SelectItem>
+                                      <SelectItem value="cavan50kg">
+                                        Cavan 50kg
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseItemOnly.control}
+                            name={`unitofmeasurement`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="unitofmeasurement">
+                                  Unit of Measurement
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Unit of Measurement">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="quantity">
+                                        Quantity
+                                      </SelectItem>
+                                      <SelectItem value="weight">
+                                        Weight
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseItemOnly.control}
+                            name="measurementvalue"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="measurementvalue">
+                                  Measurement Value
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="measurementvalue"
+                                    type="number"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseItemOnly.control}
+                            name="unitprice"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="unitprice">
+                                  Unit Price
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="unitprice"
+                                    type="number"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseItemOnly.control}
-                          name="Item.type"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="type">Item Type</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select Type">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="bigas">Bigas</SelectItem>
-                                    <SelectItem value="palay">Palay</SelectItem>
-                                    <SelectItem value="resico">
-                                      Resico
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                      <div className="flex justify-end gap-4 mt-4">
+                        <Button variant="outline" onClick={handleCancel}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">Save</Button>
                       </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseItemOnly.control}
-                          name="Item.sackweight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="sackweight">
-                                Sack Weight
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select Sack Weight">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="bag25kg">
-                                      Bag 25kg
-                                    </SelectItem>
-                                    <SelectItem value="cavan50kg">
-                                      Cavan 50kg
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseItemOnly.control}
-                          name={`unitofmeasurement`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="unitofmeasurement">
-                                Unit of Measurement
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select Unit of Measurement">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="quantity">
-                                      Quantity
-                                    </SelectItem>
-                                    <SelectItem value="weight">
-                                      Weight
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseItemOnly.control}
-                          name="measurementvalue"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="measurementvalue">
-                                Measurement Value
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="measurementvalue"
-                                  type="number"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseItemOnly.control}
-                          name="unitprice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="unitprice">
-                                Unit Price
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="unitprice"
-                                  type="number"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-4 mt-4">
-                      <Button variant="outline" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                      <Button type="submit">Save</Button>
-                    </div>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          )}
-          {purchaseItemToDelete && (
-            <AlertDialog open={showAlertPurchaseItem}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will delete the purchased
-                    item {purchaseItemToDelete.Item.name} from the Supplier.
-                    Please confirm you want to proceed with this action.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={handlePurchaseItemDeleteCancel}>
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() =>
-                      handleDeletePurchaseItemConfirm(purchaseItemToDelete)
-                    }
-                  >
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          {purchaseToDelete && (
-            <AlertDialog open={showAlert}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    Invoice No. {purchaseToDelete.InvoiceNumber.invoicenumber}{" "}
-                    and all of its contents from the database. Please confirm
-                    you want to proceed with this action.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={handleDeleteCancel}>
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => handleDelete(purchaseToDelete.transactionid)}
-                  >
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          {showModal && (
-            <Dialog open={showModal} onOpenChange={handleCancel}>
-              <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
-                <DialogHeader>
-                  <DialogTitle>
-                    {form.getValues("transactionid")
-                      ? "Edit Purchase of Product"
-                      : "Add New Purchase of Product"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Fill out the form to{" "}
-                    {form.getValues("transactionid") ? "edit a" : "add a new"}{" "}
-                    purchased product to your inventory.
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                  <form
-                    className="w-full max-w-full  mx-auto p-4 sm:p-6"
-                    onSubmit={form.handleSubmit(handleSubmit)}
-                  >
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="InvoiceNumber.invoicenumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="invoicenumber">
-                                Invoice Number
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="invoicenumber"
-                                  type="text"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Entity.firstname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="firstname">
-                                Supplier First Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="firstname" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Entity.middlename"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="middlename">
-                                Supplier Middle Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="middlename" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Entity.lastname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="lastname">
-                                Supplier Last Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="lastname" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Entity.contactnumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="contactnumber">
-                                Contact Number
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="contactnumber"
-                                  type="text"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="status">
-                                Payment Status
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select status">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pending">
-                                      Pending
-                                    </SelectItem>
-                                    <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="cancelled">
-                                      Cancelled
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="frommilling"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="frommilling">
-                                From Milling
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  value={field.value ? "true" : "false"}
-                                  onValueChange={(value) => {
-                                    field.onChange(value === "true");
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select Value">
-                                      {field.value ? "true" : "false"}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="true">True</SelectItem>
-                                    <SelectItem value="false">False</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      {/* <div className="space-y-2">
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            )}
+            {purchaseItemToDelete && (
+              <AlertDialog open={showAlertPurchaseItem}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will delete the
+                      purchased item {purchaseItemToDelete.Item.name} from the
+                      Supplier. Please confirm you want to proceed with this
+                      action.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={handlePurchaseItemDeleteCancel}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() =>
+                        handleDeletePurchaseItemConfirm(purchaseItemToDelete)
+                      }
+                    >
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            {purchaseToDelete && (
+              <AlertDialog open={showAlert}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      Invoice No. {purchaseToDelete.InvoiceNumber.invoicenumber}{" "}
+                      and all of its contents from the database. Please confirm
+                      you want to proceed with this action.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={handleDeleteCancel}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() =>
+                        handleDelete(purchaseToDelete.transactionid)
+                      }
+                    >
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            {showModal && (
+              <Dialog open={showModal} onOpenChange={handleCancel}>
+                <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {form.getValues("transactionid")
+                        ? "Edit Purchase of Product"
+                        : "Add New Purchase of Product"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Fill out the form to{" "}
+                      {form.getValues("transactionid") ? "edit a" : "add a new"}{" "}
+                      purchased product to your inventory.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form
+                      className="w-full max-w-full  mx-auto p-4 sm:p-6"
+                      onSubmit={form.handleSubmit(handleSubmit)}
+                    >
+                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2">
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="InvoiceNumber.invoicenumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="invoicenumber">
+                                  Invoice Number
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="invoicenumber"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="Entity.firstname"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="firstname">
+                                  Supplier First Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="firstname"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="Entity.middlename"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="middlename">
+                                  Supplier Middle Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="middlename"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="Entity.lastname"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="lastname">
+                                  Supplier Last Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input {...field} id="lastname" type="text" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="Entity.contactnumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="contactnumber">
+                                  Contact Number
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="contactnumber"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="status"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="status">
+                                  Payment Status
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select status">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pending">
+                                        Pending
+                                      </SelectItem>
+                                      <SelectItem value="paid">Paid</SelectItem>
+                                      <SelectItem value="cancelled">
+                                        Cancelled
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="walkin"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="walkin">
+                                  Walk in Purchase
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    value={field.value ? "true" : "false"}
+                                    onValueChange={(value) => {
+                                      field.onChange(value === "true");
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Value">
+                                        {field.value ? "Yes" : "No"}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="true">Yes</SelectItem>
+                                      <SelectItem value="false">No</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="frommilling"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="frommilling">
+                                  From Milling
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    value={field.value ? "true" : "false"}
+                                    onValueChange={(value) => {
+                                      field.onChange(value === "true");
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Value">
+                                        {field.value ? "Yes" : "No"}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="true">Yes</SelectItem>
+                                      <SelectItem value="false">No</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        {/* <div className="space-y-2">
                         <FormField
                           control={form.control}
                           name="frommilling"
@@ -1460,525 +1551,504 @@ export default function Component() {
                           )}
                         />
                       </div> */}
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="taxpercentage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="taxpercentage">
-                                Tax Percentage
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="taxpercentage"
-                                  type="number"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="taxpercentage"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="taxpercentage">
+                                  Tax Percentage
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="taxpercentage"
+                                    type="number"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    {!form.getValues("transactionid") && (
-                      <>
-                        <div className="overflow-y-auto h-[300px] border rounded-lg p-2">
-                          {fields.map((item, index) => (
-                            <div
-                              key={item.id}
-                              className="grid grid-cols-2 lg:grid-cols-3 grid-rows-4 lg:grid-rows-2 gap-2 py-2"
-                            >
-                              <div className="space-y-2">
-                                <FormField
-                                  control={form.control}
-                                  name={`TransactionItem.${index}.Item.name`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel htmlFor="name">
-                                        Item Name
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          id="name"
-                                          type="text"
-                                        />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <FormField
-                                  control={form.control}
-                                  name={`TransactionItem.${index}.Item.type`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel htmlFor="type">
-                                        Item Type
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Select
-                                          onValueChange={field.onChange}
-                                          defaultValue={field.value}
-                                          {...field}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select Type">
-                                              {field.value}
-                                            </SelectValue>
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="bigas">
-                                              Bigas
-                                            </SelectItem>
-                                            <SelectItem value="palay">
-                                              Palay
-                                            </SelectItem>
-                                            <SelectItem value="resico">
-                                              Resico
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <FormField
-                                  control={form.control}
-                                  name={`TransactionItem.${index}.Item.sackweight`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel htmlFor="sackweight">
-                                        Sack Weight
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Select
-                                          onValueChange={field.onChange}
-                                          defaultValue={field.value}
-                                          {...field}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select Sack Weight">
-                                              {field.value}
-                                            </SelectValue>
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="bag25kg">
-                                              Bag 25kg
-                                            </SelectItem>
-                                            <SelectItem value="cavan50kg">
-                                              Cavan 50kg
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <FormField
-                                  control={form.control}
-                                  name={`TransactionItem.${index}.unitofmeasurement`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel htmlFor="unitofmeasurement">
-                                        Unit of Measurement
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Select
-                                          onValueChange={field.onChange}
-                                          defaultValue={field.value}
-                                          {...field}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select Unit of Measurement">
-                                              {field.value}
-                                            </SelectValue>
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="quantity">
-                                              Quantity
-                                            </SelectItem>
-                                            <SelectItem value="weight">
-                                              Weight
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <FormField
-                                  control={form.control}
-                                  name={`TransactionItem.${index}.measurementvalue`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel htmlFor="measurementvalue">
-                                        Measurement Value
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          id="measurementvalue"
-                                          type="number"
-                                        />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <FormField
-                                  control={form.control}
-                                  name={`TransactionItem.${index}.unitprice`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel htmlFor="unitprice">
-                                        Unit Price
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          id="unitprice"
-                                          type="number"
-                                        />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <div className="pt-2">
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => remove(index)}
-                                  >
-                                    Remove
-                                  </Button>
+                      {!form.getValues("transactionid") && (
+                        <>
+                          <div className="overflow-y-auto h-[300px] border rounded-lg p-2">
+                            {fields.map((item, index) => (
+                              <div
+                                key={item.id}
+                                className="grid grid-cols-2 lg:grid-cols-3 grid-rows-4 lg:grid-rows-2 gap-2 py-2"
+                              >
+                                <div className="space-y-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`TransactionItem.${index}.Item.name`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel htmlFor="name">
+                                          Item Name
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            {...field}
+                                            id="name"
+                                            type="text"
+                                          />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`TransactionItem.${index}.Item.type`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel htmlFor="type">
+                                          Item Type
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Select
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value}
+                                            {...field}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Select Type">
+                                                {field.value}
+                                              </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="bigas">
+                                                Bigas
+                                              </SelectItem>
+                                              <SelectItem value="palay">
+                                                Palay
+                                              </SelectItem>
+                                              <SelectItem value="resico">
+                                                Resico
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`TransactionItem.${index}.Item.sackweight`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel htmlFor="sackweight">
+                                          Sack Weight
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Select
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value}
+                                            {...field}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Select Sack Weight">
+                                                {field.value}
+                                              </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="bag25kg">
+                                                Bag 25kg
+                                              </SelectItem>
+                                              <SelectItem value="cavan50kg">
+                                                Cavan 50kg
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`TransactionItem.${index}.unitofmeasurement`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel htmlFor="unitofmeasurement">
+                                          Unit of Measurement
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Select
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value}
+                                            {...field}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Select Unit of Measurement">
+                                                {field.value}
+                                              </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="quantity">
+                                                Quantity
+                                              </SelectItem>
+                                              <SelectItem value="weight">
+                                                Weight
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`TransactionItem.${index}.measurementvalue`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel htmlFor="measurementvalue">
+                                          Measurement Value
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            {...field}
+                                            id="measurementvalue"
+                                            type="number"
+                                          />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`TransactionItem.${index}.unitprice`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel htmlFor="unitprice">
+                                          Unit Price
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            {...field}
+                                            id="unitprice"
+                                            type="number"
+                                          />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <div className="pt-2">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => remove(index)}
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                          <Button onClick={() => append({})} className="mt-4">
-                            Add Item
-                          </Button>
+                            ))}
+                            <Button onClick={() => append({})} className="mt-4">
+                              Add Item
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                      <DialogFooter className="mt-4">
+                        <Button type="submit">Save</Button>
+                        <Button variant="outline" onClick={handleCancel}>
+                          Cancel
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            )}
+            {showModalEditPurchase && (
+              <Dialog open={showModalEditPurchase} onOpenChange={handleCancel}>
+                <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {formPurchaseOnly.getValues("transactionid")
+                        ? "Edit Purchase of Product"
+                        : "Add New Purchase of Product"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Fill out the form to{" "}
+                      {formPurchaseOnly.getValues("transactionid")
+                        ? "edit a"
+                        : "add a new"}{" "}
+                      purchased product to your inventory.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...formPurchaseOnly}>
+                    <form
+                      className="w-full max-w-full  mx-auto p-4 sm:p-6"
+                      onSubmit={formPurchaseOnly.handleSubmit(handleSubmit)}
+                    >
+                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2">
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="InvoiceNumber.invoicenumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="invoicenumber">
+                                  Invoice Number
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="invoicenumber"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
                         </div>
-                      </>
-                    )}
-                    <DialogFooter className="mt-4">
-                      <Button type="submit">Save</Button>
-                      <Button variant="outline" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          )}
-          {showModalEditPurchase && (
-            <Dialog open={showModalEditPurchase} onOpenChange={handleCancel}>
-              <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
-                <DialogHeader>
-                  <DialogTitle>
-                    {formPurchaseOnly.getValues("transactionid")
-                      ? "Edit Purchase of Product"
-                      : "Add New Purchase of Product"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Fill out the form to{" "}
-                    {formPurchaseOnly.getValues("transactionid")
-                      ? "edit a"
-                      : "add a new"}{" "}
-                    purchased product to your inventory.
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...formPurchaseOnly}>
-                  <form
-                    className="w-full max-w-full  mx-auto p-4 sm:p-6"
-                    onSubmit={formPurchaseOnly.handleSubmit(handleSubmit)}
-                  >
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="InvoiceNumber.invoicenumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="invoicenumber">
-                                Invoice Number
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="invoicenumber"
-                                  type="text"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="Entity.firstname"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="firstname">
+                                  First Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="firstname"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="Entity.middlename"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="middlename">
+                                  Middle Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="middlename"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="Entity.lastname"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="lastname">
+                                  Last Name
+                                </FormLabel>
+                                <FormControl>
+                                  <Input {...field} id="lastname" type="text" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="Entity.contactnumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="contactnumber">
+                                  Contact Number
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="contactnumber"
+                                    type="text"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="status"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="status">
+                                  Payment Status
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select status">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pending">
+                                        Pending
+                                      </SelectItem>
+                                      <SelectItem value="paid">Paid</SelectItem>
+                                      <SelectItem value="cancelled">
+                                        Cancelled
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="walkin"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="walkin">
+                                  Walk in Purchase
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    value={field.value ? "true" : "false"}
+                                    onValueChange={(value) => {
+                                      field.onChange(value === "true");
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Value">
+                                        {field.value ? "Yes" : "No"}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="true">Yes</SelectItem>
+                                      <SelectItem value="false">No</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="frommilling"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="frommilling">
+                                  From Milling
+                                </FormLabel>
+                                <FormControl>
+                                  <Select
+                                    value={field.value ? "true" : "false"}
+                                    onValueChange={(value) => {
+                                      field.onChange(value === "true");
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Value">
+                                        {field.value ? "Yes" : "No"}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="true">Yes</SelectItem>
+                                      <SelectItem value="false">No</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormField
+                            control={formPurchaseOnly.control}
+                            name="taxpercentage"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="taxpercentage">
+                                  Tax Percentage
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="taxpercentage"
+                                    type="number"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="Entity.firstname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="firstname">
-                                First Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="firstname" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="Entity.middlename"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="middlename">
-                                Middle Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="middlename" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="Entity.lastname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="lastname">
-                                Last Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="lastname" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="Entity.contactnumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="contactnumber">
-                                Contact Number
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="contactnumber"
-                                  type="text"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="status">
-                                Payment Status
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select status">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pending">
-                                      Pending
-                                    </SelectItem>
-                                    <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="cancelled">
-                                      Cancelled
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="frommilling"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="frommilling">
-                                From Milling
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  value={field.value ? "true" : "false"}
-                                  onValueChange={(value) => {
-                                    field.onChange(value === "true");
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select Value">
-                                      {field.value ? "true" : "false"}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="true">True</SelectItem>
-                                    <SelectItem value="false">False</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={formPurchaseOnly.control}
-                          name="taxpercentage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="taxpercentage">
-                                Tax Percentage
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="taxpercentage"
-                                  type="number"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter className="items-end mt-4">
-                      <Button type="submit">Save</Button>
-                      <Button variant="outline" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          )}
+                      <DialogFooter className="items-end mt-4">
+                        <Button type="submit">Save</Button>
+                        <Button variant="outline" onClick={handleCancel}>
+                          Cancel
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-[380px]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            Access Denied
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            You do not have permission to view this page.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button asChild className="w-full">
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
-  );
-}
-
-function ViewIcon(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-      <circle cx="12" cy="12" r="1" />
-      <path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0" />
-    </svg>
-  );
-}
-
-function PlusIcon(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
-
-function FilePenIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v10" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M10.4 12.6a2 2 0 1 1 3 3L8 21l-4 1 1-4Z" />
-    </svg>
-  );
-}
-
-function TrashIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
   );
 }
