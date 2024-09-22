@@ -14,7 +14,8 @@ const salesTransactionSchema = z.object({
       .string()
       .min(1, "Entity name is required")
       .max(100, "Entity name is too long")
-      .optional(),
+      .optional()
+      .or(z.literal("")),
     lastname: z
       .string()
       .min(1, "Entity name is required")

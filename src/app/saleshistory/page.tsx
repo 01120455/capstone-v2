@@ -140,6 +140,15 @@ export default function Component() {
     });
   }, [filters, searchTerm, purchases]);
 
+  const formatPrice = (price: number): string => {
+    return new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(price);
+  };
+
   if (isAuthenticated === null) {
     // Show a loading state while checking authentication
     return <p>Loading...</p>;
@@ -266,8 +275,12 @@ export default function Component() {
                                       <TableCell>
                                         {item.measurementvalue}
                                       </TableCell>
-                                      <TableCell>{item.unitprice}</TableCell>
-                                      <TableCell>{item.totalamount}</TableCell>
+                                      <TableCell>
+                                        {formatPrice(item.unitprice)}
+                                      </TableCell>
+                                      <TableCell>
+                                        {formatPrice(item.totalamount)}
+                                      </TableCell>
                                     </TableRow>
                                   )
                                 )}
@@ -281,11 +294,15 @@ export default function Component() {
                         <div className="font-medium">Total Items:</div>
                         <div>{selectedTransaction.TransactionItem.length}</div>
                         <div className="font-medium">
-                          Tax Amount {""} ${selectedTransaction.taxpercentage}%:
+                          Tax Amount {""} {selectedTransaction.taxpercentage}%:
                         </div>
-                        <div>${selectedTransaction.taxamount}</div>
+                        <div>
+                          {formatPrice(selectedTransaction.taxamount ?? 0)}
+                        </div>
                         <div className="font-medium">Total:</div>
-                        <div>${selectedTransaction.totalamount}</div>
+                        <div>
+                          {formatPrice(selectedTransaction.totalamount ?? 0)}
+                        </div>
                       </div>
                       {/* <div className="flex justify-end space-x-2">
                       <Button variant={"secondary"}>
@@ -312,7 +329,7 @@ export default function Component() {
                             <TableRow>
                               <TableHead>Invoice No.</TableHead>
                               <TableHead>Customer</TableHead>
-                              <TableHead>Walkin</TableHead>
+                              <TableHead>Walk-in</TableHead>
                               <TableHead>From Milling</TableHead>
                               <TableHead>Status</TableHead>
                               <TableHead>Total Amount</TableHead>
@@ -372,7 +389,9 @@ export default function Component() {
                                       </Badge>
                                     </TableCell>
                                     <TableCell>
-                                      ${transaction.totalamount}
+                                      {formatPrice(
+                                        transaction.totalamount ?? 0
+                                      )}
                                     </TableCell>
                                     <TableCell>
                                       {transaction.createdat

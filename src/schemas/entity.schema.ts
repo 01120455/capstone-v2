@@ -7,12 +7,14 @@ export const entitySchema = z.object({
   lastname: z.string(),
   contactnumber: z.string().optional(),
   lastmodifiedat: z.date().optional(),
-  user: z.object({
-    userid: z.number(),
-    firstname: z.string(),
-    middlename: z.string().optional(),
-    lastname: z.string(),
-  }),
+  user: z
+    .object({
+      userid: z.number(),
+      firstname: z.string(),
+      middlename: z.string().optional(),
+      lastname: z.string(),
+    })
+    .optional(),
 });
 
 const transactionTableSchema = z.object({

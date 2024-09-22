@@ -11,40 +11,43 @@ export async function POST() {
     // Check if there are any users other than the admin
     const otherUsers = await prisma.user.findMany({
       where: {
-        NOT: { username: "admin" },
+        NOT: { username: "F0X9011" },
       },
     });
 
     if (otherUsers.length > 0) {
       // Delete the admin user if other users exist
       await prisma.user.deleteMany({
-        where: { username: "admin" },
+        where: { username: "F0X9011" },
       });
 
       // console.log("Admin user deleted because other users exist.");
       return NextResponse.json({
-        message: "Admin user deleted because other users exist.",
+        message: "F0X9011 user deleted because other users exist.",
       });
     }
 
     // Check if the admin user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { username: "admin" },
+      where: { username: "F0X9011" },
     });
 
     if (!existingUser) {
       // Create the user if not found
-      const hashedPassword = await bcrypt.hash("admin", 10); // Change to a secure password
+      const hashedPassword = await bcrypt.hash("MorganFreeman", 10); // Change to a secure password
 
       const user = await prisma.user.create({
         data: {
-          username: "admin",
-          firstname: "Shane Raylene",
-          middlename: "Repato",
-          lastname: "Velarde",
+          username: "F0X9011",
+          firstname: "Lucius",
+          middlename: "Kadeem",
+          lastname: "Fox",
           password: hashedPassword,
           role: "admin",
           status: "active",
+          imagepath:
+            "/uploads/user_image/Lucius_Fox/luciusfox_jpg-1727014234081-541908937.jpeg",
+          deleted: false,
         },
       });
 

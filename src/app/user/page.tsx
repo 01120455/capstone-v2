@@ -28,7 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { user, AddUser } from "@/schemas/User.schema";
+import { user as UserSchema, AddUser } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertDialog,
@@ -71,7 +71,7 @@ export default function Component() {
   const [selectedFile, setSelectedFile] = useState<File>();
 
   const form = useForm<AddUser>({
-    resolver: zodResolver(user),
+    resolver: zodResolver(UserSchema),
     defaultValues: {
       imagepath: "",
       firstname: "",
@@ -148,7 +148,7 @@ export default function Component() {
       userid: user.userid,
       imagepath: user.imagepath ?? "",
       firstname: user.firstname,
-      middlename: user.middlename,
+      middlename: user.middlename ?? "",
       lastname: user.lastname,
       role: user.role,
       status: user.status,
@@ -194,7 +194,7 @@ export default function Component() {
     const formData = new FormData();
 
     formData.append("firstname", values.firstname);
-    formData.append("middlename", values.middlename);
+    formData.append("middlename", values.middlename ?? "");
     formData.append("lastname", values.lastname);
     formData.append("role", values.role);
     formData.append("status", values.status);
@@ -392,15 +392,15 @@ export default function Component() {
                       </TableCell>
                       <TableCell>{user.username}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          <FilePenIcon className="h-4 w-4" />
-                        </Button>
                         {canAccessButton(ROLES.ADMIN) && (
                           <>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditUser(user)}
+                            >
+                              <FilePenIcon className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="outline"
                               size="icon"

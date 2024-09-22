@@ -76,6 +76,7 @@ import {
 } from "@/components/ui/card";
 import { AlertCircle } from "@/components/icons/Icons";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -548,6 +549,7 @@ export default function Component() {
         }
 
         setShowModal(false);
+        setShowModalEditPurchase(false);
         refreshPurchases();
         form.reset();
       } else {
@@ -771,6 +773,15 @@ export default function Component() {
     };
   }, []);
 
+  const formatPrice = (price: number): string => {
+    return new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(price);
+  };
+
   if (isAuthenticated === null) {
     // Show a loading state while checking authentication
     return <p>Loading...</p>;
@@ -789,7 +800,7 @@ export default function Component() {
           <div className="p-6 md:p-8">
             <div className="flex  items-center justify-between mb-6 -mr-6">
               <h1 className="text-2xl font-bold ">
-                Company Purchase Management
+                Company Purchase Order Management
               </h1>
               <Button onClick={handleAddPurchase}>
                 {isSmallScreen ? (
@@ -819,10 +830,10 @@ export default function Component() {
                     <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                       <TableRow>
                         <TableHead>Invoice No.</TableHead>
-                        <TableHead>Supplier name</TableHead>
-                        <TableHead>Contact no.</TableHead>
+                        <TableHead>Supplier Name</TableHead>
+                        <TableHead>Contact No.</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Walkin</TableHead>
+                        <TableHead>Walk-in</TableHead>
                         <TableHead>From Milling</TableHead>
                         <TableHead>Tax %</TableHead>
                         <TableHead>Tax Amount</TableHead>
@@ -848,7 +859,21 @@ export default function Component() {
                             <TableCell>
                               {purchase.Entity?.contactnumber || "N/A"}
                             </TableCell>
-                            <TableCell>{purchase.status}</TableCell>
+                            <TableCell>
+                              <Badge
+                                className={`px-2 py-1 rounded-full ${
+                                  purchase.status === "paid"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                    : purchase.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                    : purchase.status === "cancelled"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                                }`}
+                              >
+                                {purchase.status}
+                              </Badge>
+                            </TableCell>
                             <TableCell>
                               {purchase.walkin ? "Yes" : "No"}
                             </TableCell>
@@ -857,9 +882,11 @@ export default function Component() {
                             </TableCell>
                             <TableCell>{purchase.taxpercentage}</TableCell>
                             <TableCell>
-                              {purchase.taxamount?.toFixed(2)}
+                              {formatPrice(purchase.taxamount ?? 0)}
                             </TableCell>
-                            <TableCell>{purchase.totalamount}</TableCell>
+                            <TableCell>
+                              {formatPrice(purchase.totalamount ?? 0)}
+                            </TableCell>
                             <TableCell>
                               {purchase.createdat
                                 ? new Date(

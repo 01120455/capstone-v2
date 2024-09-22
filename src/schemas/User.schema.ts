@@ -4,7 +4,7 @@ export const user = z.object({
   userid: z.coerce.number().optional(),
   imagepath: z.string().optional(),
   firstname: z.string(),
-  middlename: z.string(),
+  middlename: z.string().optional(),
   lastname: z.string(),
   role: z.string(),
   status: z
@@ -22,9 +22,5 @@ export const loginSchema = z.object({
   password: z.string(),
 });
 
-
-
 export type AddUser = z.infer<typeof user>;
 export type Login = z.infer<typeof loginSchema>;
-
-
