@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,152 +12,249 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ResponsivePie } from "@nivo/pie";
 import { Label } from "@/components/ui/label";
-
-// import { Label } from "@/components/ui/label";
-// import {
-//   Popover,
-//   PopoverContent,
-//   PopoverTrigger,
-// } from "@/components/ui/popover";
-// import { Calendar } from "@/components/ui/calendar";
 import SideMenu from "@/components/sidemenu";
+import { Entity } from "@/schemas/entity.schema";
+import {
+  TransactionItem,
+  TransactionTable,
+} from "@/schemas/transaction.schema";
+import { CheckIcon, FilePenIcon } from "@/components/icons/Icons";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Cell, LabelList, Pie, PieChart } from "recharts";
 
-export default function Component() {
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      purchases: [
-        {
-          id: 1,
-          date: "2023-05-01",
-          items: ["Product A", "Product B"],
-          total: 50.99,
-        },
-        { id: 2, date: "2023-03-15", items: ["Product C"], total: 19.99 },
-        {
-          id: 3,
-          date: "2022-12-01",
-          items: ["Product D", "Product E"],
-          total: 75.5,
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      purchases: [
-        { id: 1, date: "2023-06-01", items: ["Product F"], total: 29.99 },
-        {
-          id: 2,
-          date: "2023-04-20",
-          items: ["Product G", "Product H"],
-          total: 45.75,
-        },
-        { id: 3, date: "2022-11-10", items: ["Product I"], total: 14.99 },
-        { id: 4, date: "2022-11-10", items: ["Product F"], total: 14.99 },
-      ],
-    },
-  ]);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
+type CategorySpend = {
+  [key: string]: number; 
+};
+
+export default function Component() { 
+  const [customers, setCustomers] = useState<Entity[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Entity | null>(null);
+  const [transactions, setTransactions] = useState<TransactionTable[]>([]);
+  const [salesItems, setSalesItems] = useState<TransactionItem[] | null>(null);
+  const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({
+    start: "",
+    end: "",
+  });
   const [categoryFilter, setCategoryFilter] = useState("");
-  const handleCustomerSelect = (customer) => {
-    setSelectedCustomer(customer);
+  const [editingRow, setEditingRow] = useState<number | null>(null);
+  const [editData, setEditData] = useState<{ [key: string]: any }>({});
+
+  const handleCustomerSelect = (customer: Entity) => {
+    // Assuming Entity includes entityid, firstname, etc.
+    const transactionForSelectedCustomer = transactions.find(
+      (transaction) => transaction.Entity.entityid === customer.entityid
+    );
+    if (transactionForSelectedCustomer) {
+      setSelectedCustomer(customer);
+    }
   };
-  const filteredPurchases = selectedCustomer
-    ? selectedCustomer.purchases.filter((purchase) => {
-        const purchaseDate = new Date(purchase.date);
-        return (
-          (!dateFilter.start || purchaseDate >= new Date(dateFilter.start)) &&
-          (!dateFilter.end || purchaseDate <= new Date(dateFilter.end)) &&
-          (!categoryFilter ||
-            purchase.items.some((item) =>
-              item.toLowerCase().includes(categoryFilter.toLowerCase())
-            ))
-        );
-      })
+
+  // useEffect(() => {
+  //   if (customers.length > 0) {
+  //     const testCustomer = customers.find(
+  //       (customer) => customer.entityid === 4
+  //     );
+  //     if (testCustomer) {
+  //       setSelectedCustomer(testCustomer);
+  //     }
+  //   }
+  // }, [customers]);
+
+  const filteredTransactions = selectedCustomer
+    ? transactions
+        .filter(
+          (transaction) =>
+            transaction.Entity.entityid === selectedCustomer.entityid
+        )
+        .filter((purchase) => {
+          const purchaseDate = new Date(purchase.createdat);
+          const itemNames = purchase.TransactionItem.map(
+            (item) => item.Item?.name
+          )
+            .filter(Boolean)
+            .join(", ")
+            .toLowerCase();
+          return (
+            (!dateFilter.start || purchaseDate >= new Date(dateFilter.start)) &&
+            (!dateFilter.end || purchaseDate <= new Date(dateFilter.end)) &&
+            (!categoryFilter ||
+              itemNames.includes(categoryFilter.toLowerCase()))
+            // (!categoryFilter ||
+            //   (purchase.TransactionItem[0]?.Item?.name &&
+            //     purchase.TransactionItem[0].Item.name
+            //       .toLowerCase()
+            //       .includes(categoryFilter.toLowerCase())))
+          );
+        })
     : [];
-  const totalSpend = filteredPurchases.reduce(
-    (total, purchase) => total + purchase.total,
+
+  console.log("filteredTransactions", filteredTransactions);
+
+  const totalSpend = filteredTransactions.reduce(
+    (total, purchase) => total + (purchase.totalamount || 0),
     0
   );
   const purchaseFrequency =
-    filteredPurchases.length / (selectedCustomer?.purchases.length || 1);
-  const categorySpend = filteredPurchases.reduce((categories, purchase) => {
-    purchase.items.forEach((item) => {
-      if (categories[item]) {
-        categories[item] += purchase.total;
-      } else {
-        categories[item] = purchase.total;
-      }
-    });
-    return categories;
-  }, {});
+    filteredTransactions.length / (transactions.length || 1);
+
+  const categorySpend = filteredTransactions.reduce<CategorySpend>(
+    (categories, purchase) => {
+      purchase.TransactionItem.forEach((transactionItem) => {
+        const itemType = transactionItem.Item?.type;
+        if (itemType) {
+          categories[itemType] =
+            (categories[itemType] || 0) + (purchase.totalamount || 0);
+        }
+      });
+      return categories;
+    },
+    {}
+  );
 
   const handleClearFilters = () => {
     setDateFilter({ start: "", end: "" });
     setCategoryFilter("");
   };
 
-  const [editingRow, setEditingRow] = useState(null);
-  const [editData, setEditData] = useState({});
-
-  const handleEdit = (row) => {
-    setEditingRow(row.id);
+  const handleEdit = (row: TransactionTable) => {
+    setEditingRow(row.transactionid);
     setEditData({ ...row });
   };
 
-  const handleInputChange = (key, value) => {
+  const handleInputChange = (key: string, value: any) => {
     setEditData((prevData) => ({
       ...prevData,
       [key]: value,
     }));
   };
 
-  const handleSave = () => {
-    setFilteredPurchases((prevData) =>
-      prevData.map((row) =>
-        row.id === editingRow ? { ...row, ...editData } : row
-      )
-    );
-    setEditingRow(null);
-    setEditData({});
-  };
+  // const handleSave = () => {
+  //   setFilteredPurchases((prevData) =>
+  //     prevData.map((row) =>
+  //       row.transactionid === editingRow ? { ...row, ...editData } : row
+  //     )
+  //   );
+  //   setEditingRow(null);
+  //   setEditData({});
+  // };
 
-  const handleCancel = () => {
-    setEditingRow(null);
-    setEditData({});
-  };
+  useEffect(() => {
+    const getSales = async () => {
+      try {
+        const response = await fetch("/api/customer");
+        const text = await response.text();
+        console.log("Raw Response Text:", text);
 
+        const data = JSON.parse(text);
+
+        // Convert date strings to Date objects
+        const parsedData = data.map((item: any) => {
+          return {
+            ...item,
+            createdat: item.createdat ? new Date(item.createdat) : null,
+            lastmodifiedat: item.lastmodifiedat
+              ? new Date(item.lastmodifiedat)
+              : null,
+            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+          };
+        });
+
+        console.log("Parsed Data with Date Conversion:", parsedData);
+
+        setCustomers(parsedData);
+      } catch (error) {
+        console.error("Error in getPurchases:", error);
+      }
+    };
+
+    getSales();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const customersResponse = await fetch("/api/customer");
+        const transactionsResponse = await fetch("/api/customertransaction");
+
+        if (!customersResponse.ok || !transactionsResponse.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const customersData = await customersResponse.json();
+        const transactionsData = await transactionsResponse.json();
+
+        console.log("Customers Data:", customersData);
+        console.log("Transactions Data:", transactionsData);
+
+        setCustomers(customersData);
+        setTransactions(transactionsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const itemCounts = filteredTransactions.reduce<Record<string, number>>(
+    (acc, purchase) => {
+      purchase.TransactionItem.forEach((item) => {
+        const itemName = item.Item?.name;
+        if (itemName) {
+          acc[itemName] = (acc[itemName] || 0) + 1; 
+        }
+      });
+      return acc;
+    },
+    {}
+  );
+
+  const pieData = Object.entries(itemCounts).map(([name, value]) => ({
+    item: name,
+    value,
+  }));
+
+  const chartConfig: ChartConfig = pieData.reduce((acc, { item }, index) => {
+    acc[item] = {
+      label: item,
+      color: `hsl(var(--chart-${index + 1}))`,
+    };
+    return acc;
+  }, {} as ChartConfig);
 
   return (
     <div className="flex h-screen">
       <SideMenu />
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col h-full">
-          <header className="bg-gray-100 dark:bg-gray-900 py-4 px-6 flex items-center justify-between">
+          <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold">Customer Management</h1>
           </header>
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
             <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
               <div className="p-4 border-b dark:border-gray-700">
                 <h2 className="text-lg font-bold">Customers</h2>
               </div>
               <div className="p-4 max-h-[calc(100vh-200px)]">
-                {customers.map((customer) => (
+                {customers.map((customer: Entity, index: number) => (
                   <div
-                    key={customer.id}
+                    key={index}
                     className={`px-4 py-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                      selectedCustomer?.id === customer.id
+                      selectedCustomer?.entityid === customer.entityid
                         ? "bg-gray-100 dark:bg-gray-700"
                         : ""
                     }`}
                     onClick={() => handleCustomerSelect(customer)}
                   >
-                    <h3 className="text-lg font-medium">{customer.name}</h3>
+                    <h3 className="text-lg font-medium">
+                      {customer.firstname}
+                    </h3>
                   </div>
                 ))}
               </div>
@@ -168,7 +265,7 @@ export default function Component() {
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b dark:border-gray-700 pb-4">
                     <div>
                       <h2 className="text-lg font-bold">
-                        {selectedCustomer.name}
+                        {selectedCustomer.firstname}
                       </h2>
                     </div>
                   </div>
@@ -239,7 +336,10 @@ export default function Component() {
                           onChange={(e) => setCategoryFilter(e.target.value)}
                         />
                       </div>
-                      <Button className="mt-9" onClick={handleClearFilters}>
+                      <Button
+                        className="mt-9"
+                        // onClick={handleClearFilters}
+                      >
                         Clear Filters
                       </Button>
                     </div>
@@ -252,63 +352,90 @@ export default function Component() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredPurchases.map((purchase) => (
-                          <TableRow key={purchase.id}>
-                            {editingRow === purchase.id ? (
-                              <>
-                                <TableCell>
-                                  <Input
-                                     type="date"
-                                     value={editData.date || ''}
-                                     onChange={(e) => handleInputChange('date', e.target.value)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    value={editData.items ? editData.items.join(", ") : ''}
-                                    onChange={(e) => handleInputChange('items', e.target.value.split(", "))}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    value={editData.total || ''}
-                                    onChange={(e) => handleInputChange('total', e.target.value)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={handleCancel}
-                                  >
-                                    <CheckIcon className="h-4 w-4" />
-                                    <span className="sr-only">Save</span>
-                                  </Button>
-                                </TableCell>
-                              </>
-                            ) : (
-                              <>
-                                <TableCell>{purchase.date}</TableCell>
-                                <TableCell>
-                                  {purchase.items.join(", ")}
-                                </TableCell>
-                                <TableCell>
-                                  ${purchase.total.toFixed(2)}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => handleEdit(purchase)}
-                                  >
-                                    <FilePenIcon className="h-4 w-4" />
-                                    <span className="sr-only">Edit</span>
-                                  </Button>
-                                </TableCell>
-                              </>
-                            )}
-                          </TableRow>
-                        ))}
+                        {filteredTransactions.map(
+                          (purchase: TransactionTable) => (
+                            <TableRow key={purchase.transactionid}>
+                              {editingRow === purchase.transactionid ? (
+                                <>
+                                  <TableCell>
+                                    <Input
+                                      type="date"
+                                      value={editData.date || ""}
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "date",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      value={
+                                        editData.items
+                                          ? editData.items.join(", ")
+                                          : ""
+                                      }
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "items",
+                                          e.target.value.split(", ")
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      value={editData.totalamount || ""}
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "totalamount",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  {/* <TableCell>
+                                    <Button onClick={handleSave}>Save</Button>
+                                  </TableCell> */}
+                                </>
+                              ) : (
+                                <>
+                                  <TableCell>
+                                    {purchase.createdat
+                                      ? new Date(
+                                          purchase.createdat
+                                        ).toLocaleDateString("en-US", {
+                                          year: "numeric",
+                                          month: "long",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })
+                                      : "N/A"}
+                                  </TableCell>
+                                  <TableCell>
+                                    {purchase.TransactionItem.map(
+                                      (item, index) => item.Item?.name
+                                    )
+                                      .filter(Boolean)
+                                      .join(", ")}
+                                  </TableCell>
+                                  <TableCell>
+                                    ${purchase.totalamount?.toFixed(2)}
+                                  </TableCell>
+                                  {/* <TableCell>
+                                    <Button
+                                      onClick={() => handleEdit(purchase)}
+                                    >
+                                      Edit
+                                    </Button>
+                                  </TableCell> */}
+                                </>
+                              )}
+                            </TableRow>
+                          )
+                        )}
 
                         {/* {filteredPurchases.map((purchase) => (
                       <TableRow key={purchase.id}>
@@ -344,7 +471,7 @@ export default function Component() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-4xl font-bold">
-                          ${totalSpend.toFixed(2)}
+                          ₱{totalSpend.toFixed(2)}
                         </div>
                       </CardContent>
                     </Card>
@@ -363,15 +490,50 @@ export default function Component() {
                         <CardTitle>Favorite Categories</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <PieChart className="aspect-square" />
+                        <ChartContainer
+                          config={chartConfig}
+                          className="mx-auto aspect-square max-h-[400px]"
+                        >
+                          <PieChart>
+                            <ChartTooltip
+                              content={
+                                <ChartTooltipContent nameKey="item" hideLabel />
+                              }
+                            />
+                            <Pie
+                              data={pieData}
+                              dataKey="value"
+                              nameKey="item"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius="80%"
+                            >
+                              <LabelList
+                                dataKey="item"
+                                className="fill-foreground"
+                                stroke="none"
+                                fontSize={13}
+                                formatter={(value: keyof typeof chartConfig) =>
+                                  chartConfig[value]?.label
+                                }
+                              />
+                              {pieData.map(({ item }) => (
+                                <Cell
+                                  key={item}
+                                  fill={chartConfig[item]?.color}
+                                />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ChartContainer>
                       </CardContent>
                     </Card>
                   </div>
                   <div className="mt-4">
                     <h3 className="text-lg font-bold">Insights</h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      Based on the customer's purchase history, we can see that
-                      they have a strong preference for certain product
+                      Based on the customer`&apos;`s purchase history, we can
+                      see that they have a strong preference for certain product
                       categories. To better serve this customer, we could
                       recommend similar products or offer personalized
                       promotions in their favorite categories.
@@ -383,99 +545,6 @@ export default function Component() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function CheckIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-function FilePenIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v10" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M10.4 12.6a2 2 0 1 1 3 3L8 21l-4 1 1-4Z" />
-    </svg>
-  );
-}
-
-function PieChart(props) {
-  return (
-    <div {...props}>
-      <ResponsivePie
-        data={[
-          { id: "Product A", value: 111 },
-          { id: "Product B", value: 157 },
-          { id: "Product C", value: 129 },
-          { id: "Product D", value: 150 },
-          { id: "Product E", value: 119 },
-          { id: "Product F", value: 72 },
-        ]}
-        sortByValue
-        margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-        cornerRadius={0}
-        padAngle={0}
-        borderWidth={1}
-        borderColor={"#ffffff"}
-        enableArcLinkLabels={false}
-        arcLabel={(d) => `${d.id}`}
-        arcLabelsTextColor={"#ffffff"}
-        arcLabelsRadiusOffset={0.65}
-        colors={[
-          "#2563eb",
-          "#3b82f6",
-          "#60a5fa",
-          "#93c5fd",
-          "#bfdbfe",
-          "#dbeafe",
-        ]}
-        theme={{
-          labels: {
-            text: {
-              fontSize: "14px",
-            },
-          },
-          tooltip: {
-            chip: {
-              borderRadius: "9999px",
-            },
-            container: {
-              fontSize: "12px",
-              textTransform: "capitalize",
-              borderRadius: "6px",
-            },
-          },
-        }}
-        role="application"
-      />
     </div>
   );
 }

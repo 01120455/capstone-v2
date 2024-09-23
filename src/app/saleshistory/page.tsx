@@ -52,7 +52,6 @@ export default function Component() {
 
         const data = JSON.parse(text);
 
-        // Convert date strings to Date objects
         const parsedData = data.map((item: any) => {
           return {
             ...item,
@@ -150,7 +149,6 @@ export default function Component() {
   };
 
   if (isAuthenticated === null) {
-    // Show a loading state while checking authentication
     return <p>Loading...</p>;
   }
 
@@ -158,7 +156,6 @@ export default function Component() {
   //   return null; // Prevent showing the page while redirecting
   // }
 
-  // Role-based access control
   if (userRole === "admin" || userRole === "manager" || userRole === "sales") {
     return (
       <div className="flex h-screen">
@@ -435,7 +432,6 @@ export default function Component() {
               <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
                 <h2 className="text-lg font-bold mb-4">Filters</h2>
                 <div className="grid gap-4">
-                  {/* Item Name Filter */}
                   <div className="grid gap-2">
                     <Label htmlFor="item-name">Invoice Number</Label>
                     <Input
@@ -466,8 +462,6 @@ export default function Component() {
                       }
                     />
                   </div>
-
-                  {/* Supplier Name Filter */}
                   <div className="grid gap-2">
                     <Label htmlFor="supplier">Customer</Label>
                     <Input
@@ -483,12 +477,9 @@ export default function Component() {
                       }
                     />
                   </div>
-
-                  {/* Date Range Filter */}
                   <div className="grid gap-2">
                     <Label className="my-1.5 mt-3">Date Range</Label>
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Start Date Filter */}
                       <div className="grid gap-2">
                         <Label htmlFor="start-date">Start Date</Label>
                         <Input
@@ -506,8 +497,6 @@ export default function Component() {
                           }
                         />
                       </div>
-
-                      {/* End Date Filter */}
                       <div className="grid gap-2">
                         <Label htmlFor="end-date">End Date</Label>
                         <Input

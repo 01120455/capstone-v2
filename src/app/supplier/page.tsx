@@ -153,7 +153,6 @@ export default function Component() {
 
         const data = JSON.parse(text);
 
-        // Convert date strings to Date objects
         const parsedData = data.map((item: any) => {
           return {
             ...item,
@@ -179,8 +178,8 @@ export default function Component() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const suppliersResponse = await fetch("/api/supplier"); // Adjust the endpoint as needed
-        const transactionsResponse = await fetch("/api/suppliertransaction"); // Adjust the endpoint as needed
+        const suppliersResponse = await fetch("/api/supplier"); 
+        const transactionsResponse = await fetch("/api/suppliertransaction"); 
 
         if (!suppliersResponse.ok || !transactionsResponse.ok) {
           throw new Error("Network response was not ok");
@@ -226,7 +225,6 @@ export default function Component() {
   };
 
   if (isAuthenticated === null) {
-    // Show a loading state while checking authentication
     return <p>Loading...</p>;
   }
 
@@ -234,7 +232,6 @@ export default function Component() {
   //   return null; // Prevent showing the page while redirecting
   // }
 
-  // Role-based access control
   if (
     userRole === "admin" ||
     userRole === "manager" ||

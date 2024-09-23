@@ -100,7 +100,6 @@ export default function Component() {
   const { isAuthenticated, userRole } = useAuth();
   const router = useRouter();
 
-  // Filter items based on the search term
   const filteredPurchases = purchases.filter((Transaction) => {
     const search = searchTerm.toLowerCase();
 
@@ -478,7 +477,6 @@ export default function Component() {
     console.log("Form Values:", values);
     const formData = new FormData();
 
-    // Append general purchase data
     formData.append("type", values.type);
     formData.append("status", values.status);
     formData.append("walkin", values.walkin.toString());
@@ -496,7 +494,6 @@ export default function Component() {
     );
     formData.append("invoicenumber", values.InvoiceNumber.invoicenumber || "");
 
-    // Loop through each Transaction item and append its data
     values.TransactionItem !== undefined
       ? values.TransactionItem.forEach((item, index) => {
           formData.append(
@@ -783,7 +780,6 @@ export default function Component() {
   };
 
   if (isAuthenticated === null) {
-    // Show a loading state while checking authentication
     return <p>Loading...</p>;
   }
 
@@ -791,7 +787,6 @@ export default function Component() {
   //   return null; // Prevent showing the page while redirecting
   // }
 
-  // Role-based access control
   if (userRole === "admin" || userRole === "manager") {
     return (
       <div className="flex h-screen">

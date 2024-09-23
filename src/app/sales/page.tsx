@@ -60,7 +60,6 @@ export default function Component() {
   const { isAuthenticated, userRole } = useAuth();
   const router = useRouter();
 
-  // Form setup with zodResolver
   const form = useForm<AddSales>({
     resolver: zodResolver(salesTransactionSchema),
     defaultValues: {
@@ -113,7 +112,6 @@ export default function Component() {
     getItems();
   }, []);
 
-  // Update form values when the cart updates
   useEffect(() => {
     form.setValue(
       "TransactionItem",
@@ -267,7 +265,6 @@ export default function Component() {
     console.log("Form Values:", values);
     const formData = new FormData();
 
-    // Append general purchase data
     formData.append("type", values.type);
     formData.append("status", values.status);
     formData.append("walkin", values.walkin.toString());
@@ -277,19 +274,16 @@ export default function Component() {
       values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
     );
 
-    // Append entity details
     formData.append("Entity[firstname]", values.Entity.firstname);
     formData.append("Entity[middlename]", values.Entity.middlename ?? "");
     formData.append("Entity[lastname]", values.Entity.lastname);
     formData.append("Entity[contactnumber]", values.Entity.contactnumber ?? "");
 
-    // Append invoice number
     formData.append(
       "InvoiceNumber[invoicenumber]",
       values.InvoiceNumber.invoicenumber || ""
     );
 
-    // Loop through each Transaction item and append its data
     values.TransactionItem?.forEach((item, index) => {
       formData.append(`TransactionItem[${index}][item][name]`, item.Item.name);
       formData.append(`TransactionItem[${index}][item][type]`, item.Item.type);
@@ -308,8 +302,8 @@ export default function Component() {
     });
 
     try {
-      const method = "POST"; // Always using POST for adding new purchases
-      const endpoint = "/api/sales"; // Endpoint for adding new sales
+      const method = "POST"; 
+      const endpoint = "/api/sales"; 
 
       const uploadRes = await fetch(endpoint, {
         method: method,
@@ -318,20 +312,18 @@ export default function Component() {
 
       if (uploadRes.ok) {
         console.log("Purchase added successfully");
-        form.reset(); // Reset the form after successful submission
+        form.reset(); 
+        setCart([]);
       } else {
         const errorText = await uploadRes.text();
         console.error("Upload failed:", errorText);
-        // Handle error state (e.g., display notification)
       }
     } catch (error) {
       console.error("Error adding purchase:", error);
-      // Handle error state (e.g., display notification)
     }
   };
 
   if (isAuthenticated === null) {
-    // Show a loading state while checking authentication
     return <p>Loading...</p>;
   }
 
@@ -339,7 +331,6 @@ export default function Component() {
   //   return null; // Prevent showing the page while redirecting
   // }
 
-  // Role-based access control
   if (userRole === "admin" || userRole === "manager" || userRole === "sales") {
     return (
       <div className="flex h-screen">

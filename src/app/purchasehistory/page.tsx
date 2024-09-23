@@ -152,7 +152,6 @@ export default function Component() {
   };
 
   if (isAuthenticated === null) {
-    // Show a loading state while checking authentication
     return <p>Loading...</p>;
   }
 

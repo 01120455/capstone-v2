@@ -97,7 +97,6 @@ export default function Component() {
         setUserSession(session);
 
         if (session && user) {
-          // Assuming session.user contains the user data.
           form.reset({
             imagepath: session.imagepath || "",
             firstname: session.firstname || "",
@@ -106,7 +105,7 @@ export default function Component() {
             role: session.role || "",
             status: "active",
             username: session.username || "",
-            password: "", // Do not pre-fill the password field
+            password: "", 
             userid: session.userid || 0,
           });
         }
@@ -125,30 +124,28 @@ export default function Component() {
     console.log("Form Values:", values);
     const formData = new FormData();
 
-    // Append necessary fields to FormData
+
     formData.append("firstname", values.firstname);
-    formData.append("middlename", values.middlename);
+    formData.append("middlename", values.middlename ?? "");
     formData.append("lastname", values.lastname);
     formData.append("role", values.role);
     formData.append("status", values.status);
     formData.append("username", values.username);
 
     if (selectedFile) {
-      formData.append("image", selectedFile); // Append image if selected
+      formData.append("image", selectedFile); 
     }
 
     if (values.password) {
-      formData.append("password", values.password); // Append password if it's provided
+      formData.append("password", values.password); 
     }
 
     try {
-      // Only allow PUT (no POST, only update)
       if (values.userid) {
-        const endpoint = `/api/user/`; // Use the user ID to target the correct user
+        const endpoint = `/api/user/`; 
 
-        formData.append("userid", values.userid.toString()); // Append userid to FormData if exists
+        formData.append("userid", values.userid.toString()); 
 
-        // Perform PUT request
         const uploadRes = await fetch(endpoint, {
           method: "PUT",
           body: formData,
@@ -162,7 +159,7 @@ export default function Component() {
             console.log("Image uploaded successfully:", uploadResult.imagepath);
           }
 
-          form.reset(); // Reset the form after successful update
+          form.reset(); 
         } else {
           console.error("Error updating user:", uploadRes.status);
         }

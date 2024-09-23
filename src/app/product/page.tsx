@@ -95,7 +95,6 @@ export default function Component() {
   const { isAuthenticated, userRole } = useAuth();
   const router = useRouter();
 
-  // Filter items based on the search term
   // const filteredItems = items.filter((item) =>
   //   item.name.toLowerCase().includes(searchTerm.toLowerCase())
   // );
@@ -455,7 +454,6 @@ export default function Component() {
   //   return null; // Prevent showing the page while redirecting
   // }
 
-  // Role-based access control
   if (
     userRole === "admin" ||
     userRole === "manager" ||
