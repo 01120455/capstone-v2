@@ -80,49 +80,67 @@ export default function Dashboard() {
     getPurchases();
   }, []);
 
-  const itemTypes = purchases.flatMap((purchase) =>
-    purchase.TransactionItem.map((item) => item.Item?.type)
-  );
-
   const salesData = purchases.reduce((acc, purchase) => {
-    const amount = purchase.totalamount || 0; 
-
     purchase.TransactionItem.forEach((item) => {
-      const itemType = item.Item?.type;
+      const itemName = item.Item?.name;
+      const quantitySold = item.measurementvalue || 1;
+      const amount = item.totalamount || 0;
 
-      if (itemType) {
-        acc[itemType] = acc[itemType] || { totalSales: 0, quantitySold: 0 };
-        acc[itemType].totalSales += amount;
-        acc[itemType].quantitySold += item.measurementvalue || 1; 
+      if (itemName) {
+        acc[itemName] = acc[itemName] || { quantitySold: 0, totalSales: 0 };
+        acc[itemName].quantitySold += quantitySold;
+        acc[itemName].totalSales += amount;
       }
     });
 
     return acc;
-  }, {} as Record<string, { totalSales: number; quantitySold: number }>);
+  }, {} as Record<string, { quantitySold: number; totalSales: number }>);
 
   const chartData = Object.entries(salesData).map(
-    ([type, { totalSales, quantitySold }]) => ({
-      type,
-      totalSales,
+    ([name, { quantitySold, totalSales }]) => ({
+      name,
       quantitySold,
+      totalSales,
     })
   );
 
   console.log("Sales Data:", chartData);
 
-  const chartConfig: ChartConfig = chartData.reduce((acc, { type }, index) => {
-    acc[type] = {
-      label: type,
-      color: `hsl(var(--chart-${index + 1}))`, 
+  // Assuming you still need to set up a chart config
+  const chartConfig: ChartConfig = chartData.reduce(
+    (acc, { name, quantitySold, totalSales }, index) => {
+      (acc[name] = {
+        label: name,
+        color: `hsl(var(--chart-${index + 1}))`,
+      }),
+        (acc["quantitySold"] = {
+          label: "Quantity Sold",
+          color: "hsl(var(--chart-1))",
+        }),
+        (acc["totalSales"] = {
+          label: "TotalSales",
+          color: "hsl(var(--chart-2))",
+        });
+      return acc;
+    },
+    {} as ChartConfig
+  );
+
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 640);
     };
-    return acc;
-  }, {} as ChartConfig);
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const { isAuthenticated, userRole } = useAuth();
   const router = useRouter();
 
   if (isAuthenticated === null) {
-    
     return <p>Loading...</p>;
   }
 
@@ -179,56 +197,62 @@ export default function Dashboard() {
               Analysis of different items based on their selling performance
             </p>
             {/* <LineChart className="w-full h-[300px]" /> */}
-            <ChartContainer config={chartConfig}>
+            <ChartContainer
+              config={chartConfig}
+              className="w-full h-[300px] md:h-[400px]"
+            >
               <LineChart
                 accessibilityLayer
                 data={chartData}
-                margin={{ left: 12, right: 12 }}
+                margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
               >
                 <CartesianGrid vertical={false} />
 
                 {/* Configure the XAxis */}
                 <XAxis
-                  dataKey="type"
+                  dataKey="name"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value) => value.slice(0, 3)}
+                  tickFormatter={(value) =>
+                    isSmallScreen && value.length > 3
+                      ? value.slice(0, 4)
+                      : value
+                  }
                 />
-                {/* Tooltip Configuration */}
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  className="text-caption-2 border border-cyan-900"
+                  stroke="var(--gray-60)"
+                />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent />}
                 />
                 <ChartLegend content={<ChartLegendContent />} />
-
-                {/* Line for Total Sales */}
-                <Line
-                  dataKey="totalSales"
-                  type="monotone"
-                  stroke="var(--color-sales)"
-                  strokeWidth={12}
-                  dot={false}
-                />
-
-                {/* Line for Quantity Sold */}
                 <Line
                   dataKey="quantitySold"
+                  data={chartData}
                   type="monotone"
-                  stroke="var(--color-quantity)"
+                  stroke="var(--color-quantitySold)"
                   strokeWidth={2}
                   dot={false}
                 />
+                {/* <Line
+                  dataKey="totalSales"
+                  type="monotone"
+                  stroke="var(--color-totalSales)"
+                  strokeWidth={2}
+                  dot={false}
+                /> */}
               </LineChart>
             </ChartContainer>
           </section>
           <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">
-              Revenue and Profit per product
-            </h2>
-            <p className="text-sm mb-4">
-              Analysis of Revenue and profit per product
-            </p>
+            <h2 className="text-lg font-semibold mb-4">Sales per product</h2>
+            <p className="text-sm mb-4">Analysis of Sales per product</p>
             <BarChart className="w-full h-[300px]" />
           </section>
           <section className="mb-8">
