@@ -229,13 +229,25 @@ export default function Component() {
 
   useEffect(() => {
     if (showSuccess) {
+      setShowSuccessTI(false);
       const timer = setTimeout(() => {
         setShowSuccess(false); // Hide the alert after 5 seconds
-      }, 5000); // Adjust time as needed
+      }, 8000); // Adjust time as needed
 
       return () => clearTimeout(timer); // Cleanup the timer on unmount
     }
   }, [showSuccess]);
+
+  useEffect(() => {
+    if (showSuccessTI) {
+      setShowSuccess(false);
+      const timer = setTimeout(() => {
+        setShowSuccessTI(false); // Hide the alert after 5 seconds
+      }, 8000); // Adjust time as needed
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
+    }
+  }, [showSuccessTI]);
 
   // useEffect(() => {
   //   async function getPurchaseItem() {
