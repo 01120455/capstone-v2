@@ -34,6 +34,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
   AlertDialog,
@@ -64,6 +65,7 @@ import {
   TrashIcon,
   ViewIcon,
   FilePenIcon,
+  CheckCircle,
 } from "@/components/icons/Icons";
 import { useAuth } from "../../utils/hooks/auth";
 import { useRouter } from "next/navigation";
@@ -77,6 +79,7 @@ import {
 import { AlertCircle } from "@/components/icons/Icons";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -93,6 +96,12 @@ export default function Component() {
     useState<TransactionItem | null>(null);
   const [purchaseToDelete, setPurchaseToDelete] =
     useState<TransactionTable | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successItem, setSuccessItem] = useState<Transaction | null>(null);
+  const [successAction, setSuccessAction] = useState("");
+  const [showSuccessTI, setShowSuccessTI] = useState(false);
+  const [successTransactionItem, setSuccessTransactionItem] =
+    useState<TransactionItemOnly | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -105,8 +114,7 @@ export default function Component() {
 
     const invoiceNumber =
       Transaction.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-    const supplierName =
-      `${Transaction.Entity.firstname} ${Transaction.Entity.lastname}`.toLowerCase();
+    const supplierName = `${Transaction.Entity.name}`.toLowerCase();
 
     return invoiceNumber.includes(search) || supplierName.includes(search);
   });
@@ -123,9 +131,7 @@ export default function Component() {
       // totalamount: 0,
       Entity: {
         entityid: 0,
-        firstname: "",
-        middlename: "",
-        lastname: "",
+        name: "",
         contactnumber: "",
       },
       InvoiceNumber: {
@@ -177,9 +183,7 @@ export default function Component() {
       taxpercentage: 0,
       Entity: {
         entityid: 0,
-        firstname: "",
-        middlename: "",
-        lastname: "",
+        name: "",
         contactnumber: "",
       },
       InvoiceNumber: {
@@ -222,6 +226,16 @@ export default function Component() {
     }
     getPurchase();
   }, []);
+
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        setShowSuccess(false); // Hide the alert after 5 seconds
+      }, 5000); // Adjust time as needed
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
+    }
+  }, [showSuccess]);
 
   // useEffect(() => {
   //   async function getPurchaseItem() {
@@ -282,9 +296,7 @@ export default function Component() {
       // totalamount: 0,
       Entity: {
         entityid: 0,
-        firstname: "",
-        middlename: "",
-        lastname: "",
+        name: "",
         contactnumber: "",
       },
       InvoiceNumber: {
@@ -359,9 +371,7 @@ export default function Component() {
       taxpercentage: purchase.taxpercentage,
       Entity: {
         entityid: purchase.Entity.entityid,
-        firstname: purchase.Entity.firstname,
-        middlename: purchase.Entity?.middlename || "",
-        lastname: purchase.Entity.lastname,
+        name: purchase.Entity.name,
         contactnumber: purchase.Entity.contactnumber,
       },
       InvoiceNumber: {
@@ -386,9 +396,7 @@ export default function Component() {
       // totalamount: 0,
       Entity: {
         entityid: 0,
-        firstname: "",
-        middlename: "",
-        lastname: "",
+        name: "",
         contactnumber: "",
       },
       InvoiceNumber: {
@@ -434,9 +442,7 @@ export default function Component() {
       // totalamount: 0,
       Entity: {
         entityid: 0,
-        firstname: "",
-        middlename: "",
-        lastname: "",
+        name: "",
         contactnumber: "",
       },
       InvoiceNumber: {
@@ -485,9 +491,7 @@ export default function Component() {
       "taxpercentage",
       values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
     );
-    formData.append("Entity[firstname]", values.Entity.firstname);
-    formData.append("Entity[middlename]", values.Entity.middlename ?? "");
-    formData.append("Entity[lastname]", values.Entity.lastname);
+    formData.append("Entity[name]", values.Entity.name);
     formData.append(
       "Entity[contactnumber]",
       values.Entity?.contactnumber?.toString() ?? ""
@@ -539,15 +543,27 @@ export default function Component() {
       });
 
       if (uploadRes.ok) {
+        const uploadResult = await uploadRes.json();
         if (values.transactionid) {
           console.log("Purchase updated successfully");
         } else {
           console.log("Purchase added successfully");
         }
 
+        // Check if the result has the expected structure
+        if (uploadResult.Entity) {
+          setSuccessItem(uploadResult);
+        } else {
+          console.error("Unexpected structure:", uploadResult);
+        }
+
+        console.log("Upload Result:", uploadResult);
         setShowModal(false);
         setShowModalEditPurchase(false);
         refreshPurchases();
+        setSuccessAction(values.transactionid ? "edited" : "added");
+        setSuccessItem(values);
+        setShowSuccess(true);
         form.reset();
       } else {
         console.error("Upload failed", await uploadRes.text());
@@ -556,88 +572,6 @@ export default function Component() {
       console.error("Error adding/updating purchase:", error);
     }
   };
-
-  // const handleSubmitEditPurchase = async (values: TransactionOnly) => {
-  //   console.log("Form Values:", values);
-
-  //   const formData = new FormData();
-
-  //   // Append all necessary fields to formData
-  //   formData.append("transactionid", values.transactionid.toString());
-  //   formData.append("type", values.type);
-  //   formData.append("status", values.status);
-  //   formData.append("walkin", values.walkin.toString());
-  //   formData.append("frommilling", values.frommilling.toString());
-  //   formData.append(
-  //     "taxpercentage",
-  //     values.taxpercentage ? values.taxpercentage.toString() : "0"
-  //   );
-  //   formData.append("Entity[firstname]", values.Entity.firstname);
-  //   formData.append("Entity[middlename]", values.Entity.middlename ?? "");
-  //   formData.append("Entity[lastname]", values.Entity.lastname);
-  //   formData.append("Entity[contactnumber]", values.Entity.contactnumber ?? "");
-  //   formData.append("invoicenumber", values.InvoiceNumber.invoicenumber ?? "");
-
-  //   try {
-  //     const endpoint = `/api/purchase/${values.transactionid}`;
-
-  //     // Make the fetch call to update the purchase
-  //     const uploadRes = await fetch(endpoint, {
-  //       method: "PUT",
-  //       body: formData,
-  //     });
-
-  //     if (uploadRes.ok) {
-  //       console.log("Purchase updated successfully");
-  //       setShowModalEditPurchase(false);
-  //       refreshPurchases(); // Refresh purchases data to reflect changes
-  //       formPurchaseOnly.reset(); // Reset the form to initial state
-  //     } else {
-  //       const errorText = await uploadRes.text();
-  //       console.error("Upload failed", errorText);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating purchase:", error);
-  //   }
-  // };
-
-  // const handleSubmitEditPurchaseItem = async (values: TransactionItem) => {
-  //   if (!values.transactionitemid) {
-  //     console.error("Transaction item ID is required for updating.");
-  //     return;
-  //   }
-
-  //   console.log("Form Values:", values);
-  //   const formData = new FormData();
-
-  //   // Append general purchase data
-  //   formData.append("Item[name]", values.Item.name);
-  //   formData.append("Item[type]", values.Item.type);
-  //   formData.append("Item[sackweight]", values.Item.sackweight);
-  //   formData.append("unitofmeasurement", values.unitofmeasurement);
-  //   formData.append("measurementvalue", values.measurementvalue.toString());
-  //   formData.append("unitprice", values.unitprice.toString());
-
-  //   try {
-  //     const endpoint = `/api/purchase-item/${values.transactionitemid}`;
-
-  //     const uploadRes = await fetch(endpoint, {
-  //       method: "PUT",
-  //       body: formData,
-  //     });
-
-  //     if (uploadRes.ok) {
-  //       console.log("Purchase Item updated successfully");
-  //       setShowModalPurchaseItem(false);
-  //       refreshPurchases();
-  //       formPurchaseItem.reset();
-  //     } else {
-  //       console.error("Update failed", await uploadRes.text());
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating purchase:", error);
-  //   }
-  // };
 
   const handleSubmitEditPurchaseItem = async (values: TransactionItemOnly) => {
     // Validate required fields
@@ -672,6 +606,9 @@ export default function Component() {
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
         refreshPurchases();
+        setSuccessAction(values.transactionitemid ? "edited" : "added");
+        setSuccessTransactionItem(values);
+        setShowSuccessTI(true);
         formPurchaseItemOnly.reset();
       } else {
         console.error("Operation failed", await uploadRes.text());
@@ -792,6 +729,39 @@ export default function Component() {
       <div className="flex h-screen">
         <SideMenu />
         <div className="flex-1 overflow-y-hidden p-5">
+          {showSuccess && (
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-6 w-6" />
+                {successAction === "added"
+                  ? "Purchase Order Added Successfully"
+                  : "Purchase Order Edited Successfully"}
+              </AlertTitle>
+              <AlertDescription>
+                Purchase Order from supplier {""} {successItem?.Entity.name}{" "}
+                {""}
+                with Invoice number {""}
+                {successItem?.InvoiceNumber.invoicenumber} {""} successfully
+                added.
+              </AlertDescription>
+            </Alert>
+          )}
+          {showSuccessTI && (
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-6 w-6" />
+                {successAction === "added"
+                  ? "Item Added Successfully"
+                  : "Item Edited Successfully"}
+              </AlertTitle>
+              <AlertDescription>
+                Item {successTransactionItem?.Item.name} successfully{" "}
+                {successAction === "added"
+                  ? "added to the purchase order."
+                  : "edited successfully in the purchase order"}
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="p-6 md:p-8">
             <div className="flex  items-center justify-between mb-6 -mr-6">
               <h1 className="text-2xl font-bold ">
@@ -828,7 +798,7 @@ export default function Component() {
                         <TableHead>Supplier Name</TableHead>
                         <TableHead>Contact No.</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Walk-in</TableHead>
+                        {/* <TableHead>Walk-in</TableHead> */}
                         <TableHead>From Milling</TableHead>
                         <TableHead>Tax %</TableHead>
                         <TableHead>Tax Amount</TableHead>
@@ -846,11 +816,7 @@ export default function Component() {
                             <TableCell>
                               {purchase.InvoiceNumber.invoicenumber}
                             </TableCell>
-                            <TableCell>
-                              {purchase.Entity.firstname} {""}
-                              {purchase.Entity?.middlename || ""} {""}
-                              {purchase.Entity.lastname}
-                            </TableCell>
+                            <TableCell>{purchase.Entity.name}</TableCell>
                             <TableCell>
                               {purchase.Entity?.contactnumber || "N/A"}
                             </TableCell>
@@ -869,9 +835,9 @@ export default function Component() {
                                 {purchase.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                               {purchase.walkin ? "Yes" : "No"}
-                            </TableCell>
+                            </TableCell> */}
                             <TableCell>
                               {purchase.frommilling ? "Yes" : "No"}
                             </TableCell>
@@ -1110,6 +1076,7 @@ export default function Component() {
                                 <FormControl>
                                   <Input {...field} id="name" type="text" />
                                 </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -1213,6 +1180,7 @@ export default function Component() {
                                     </SelectContent>
                                   </Select>
                                 </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -1258,6 +1226,21 @@ export default function Component() {
                           />
                         </div>
                       </div>
+                      {/* {Object.keys(formPurchaseItemOnly.formState.errors)
+                        .length > 0 && (
+                        <Alert variant="destructive">
+                          <AlertDescription>
+                            The following fields shouldn&apos;t be empty:
+                            <ul>
+                              {Object.keys(
+                                formPurchaseItemOnly.formState.errors
+                              ).map((field) => (
+                                <li key={field}>{field}</li>
+                              ))}
+                            </ul>
+                          </AlertDescription>
+                        </Alert>
+                      )} */}
                       <div className="flex justify-end gap-4 mt-4">
                         <Button variant="outline" onClick={handleCancel}>
                           Cancel
@@ -1364,6 +1347,7 @@ export default function Component() {
                                     type="text"
                                   />
                                 </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -1371,55 +1355,16 @@ export default function Component() {
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
-                            name="Entity.firstname"
+                            name="Entity.name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="firstname">
-                                  Supplier First Name
+                                <FormLabel htmlFor="name">
+                                  Supplier Name
                                 </FormLabel>
                                 <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="firstname"
-                                    type="text"
-                                  />
+                                  <Input {...field} id="name" type="text" />
                                 </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="Entity.middlename"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="middlename">
-                                  Supplier Middle Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="middlename"
-                                    type="text"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="Entity.lastname"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="lastname">
-                                  Supplier Last Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input {...field} id="lastname" type="text" />
-                                </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -1479,7 +1424,7 @@ export default function Component() {
                             )}
                           />
                         </div>
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                           <FormField
                             control={form.control}
                             name="walkin"
@@ -1509,7 +1454,7 @@ export default function Component() {
                               </FormItem>
                             )}
                           />
-                        </div>
+                        </div> */}
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
@@ -1594,6 +1539,20 @@ export default function Component() {
                           />
                         </div>
                       </div>
+                      {/* {Object.keys(form.formState.errors).length > 0 && (
+                        <Alert variant="destructive">
+                          <AlertDescription>
+                            The following fields shouldn&apos;t be empty:
+                            <ul>
+                              {Object.keys(form.formState.errors).map(
+                                (field) => (
+                                  <li key={field}>{field}</li>
+                                )
+                              )}
+                            </ul>
+                          </AlertDescription>
+                        </Alert>
+                      )} */}
                       {!form.getValues("transactionid") && (
                         <>
                           <div className="overflow-y-auto h-[300px] border rounded-lg p-2">
@@ -1618,6 +1577,7 @@ export default function Component() {
                                             type="text"
                                           />
                                         </FormControl>
+                                        <FormMessage />
                                       </FormItem>
                                     )}
                                   />
@@ -1723,6 +1683,7 @@ export default function Component() {
                                             </SelectContent>
                                           </Select>
                                         </FormControl>
+                                        <FormMessage />
                                       </FormItem>
                                     )}
                                   />
@@ -1836,6 +1797,7 @@ export default function Component() {
                                     type="text"
                                   />
                                 </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -1843,55 +1805,14 @@ export default function Component() {
                         <div className="space-y-2">
                           <FormField
                             control={formPurchaseOnly.control}
-                            name="Entity.firstname"
+                            name="Entity.name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="firstname">
-                                  First Name
-                                </FormLabel>
+                                <FormLabel htmlFor="name">Name</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="firstname"
-                                    type="text"
-                                  />
+                                  <Input {...field} id="name" type="text" />
                                 </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="Entity.middlename"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="middlename">
-                                  Middle Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="middlename"
-                                    type="text"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="Entity.lastname"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="lastname">
-                                  Last Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input {...field} id="lastname" type="text" />
-                                </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -1951,7 +1872,7 @@ export default function Component() {
                             )}
                           />
                         </div>
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                           <FormField
                             control={formPurchaseOnly.control}
                             name="walkin"
@@ -1981,7 +1902,7 @@ export default function Component() {
                               </FormItem>
                             )}
                           />
-                        </div>
+                        </div> */}
                         <div className="space-y-2">
                           <FormField
                             control={formPurchaseOnly.control}

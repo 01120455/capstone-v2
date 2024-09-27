@@ -6,19 +6,9 @@ const transactionSchema = z.object({
   transactionid: z.number().optional(),
   Entity: z.object({
     entityid: z.number().optional(),
-    firstname: z
+    name: z
       .string()
-      .min(1, "Entity name is required")
-      .max(100, "Entity name is too long"),
-    middlename: z
-      .string()
-      .min(1, "Entity name is required")
-      .max(100, "Entity name is too long")
-      .optional()
-      .or(z.literal("")),
-    lastname: z
-      .string()
-      .min(1, "Entity name is required")
+      .min(1, "Supplier name is required")
       .max(100, "Entity name is too long"),
     contactnumber: z.coerce
       .number()
@@ -53,7 +43,7 @@ const transactionSchema = z.object({
           itemid: z.number().optional(),
           name: z
             .string()
-            .min(1, "Name is required")
+            .min(1, "Item Name is required")
             .max(100, "Name is too long"),
           type: z
             .enum(["bigas", "palay", "resico"], {
@@ -91,7 +81,7 @@ const TransactionItem = z.object({
   transactionid: z.number(),
   Item: z.object({
     itemid: z.number().optional(),
-    name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+    name: z.string().min(1, "Item Name is required").max(100, "Name is too long"),
     type: z
       .enum(["bigas", "palay", "resico"], {
         invalid_type_error: "Invalid Type Received",
@@ -121,9 +111,7 @@ const transactionTableSchema = z.object({
   transactionid: z.number(),
   Entity: z.object({
     entityid: z.number(),
-    firstname: z.string(),
-    middlename: z.string().optional(),
-    lastname: z.string(),
+    name: z.string(),
     contactnumber: z.string().optional(),
   }),
   createdat: date(),
@@ -156,9 +144,7 @@ const transactionOnlySchema = z.object({
   transactionid: z.number(),
   Entity: z.object({
     entityid: z.number(),
-    firstname: z.string(),
-    middlename: z.string().optional(),
-    lastname: z.string(),
+    name: z.string(),
     contactnumber: z.string().optional(),
   }),
   createdat: date(),

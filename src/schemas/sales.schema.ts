@@ -4,21 +4,11 @@ const is11Digits = (val: string) => /^\d{10}$/.test(val);
 
 const salesTransactionSchema = z.object({
   transactionid: z.number().optional(),
-  Entity: z.object({
-    entityid: z.number().optional(),
-    firstname: z
-      .string()
-      .min(1, "Entity name is required")
-      .max(100, "Entity name is too long"),
-    middlename: z
-      .string()
-      .min(1, "Entity name is required")
-      .max(100, "Entity name is too long")
-      .optional()
-      .or(z.literal("")),
-    lastname: z
-      .string()
-      .min(1, "Entity name is required")
+  Customer: z.object({
+    entityid: z.number(),
+    name: z
+      .string({ required_error: "Customer name is required" })
+      .min(1, "Customer name is required")
       .max(100, "Entity name is too long"),
     contactnumber: z.coerce
       .number()
@@ -42,8 +32,11 @@ const salesTransactionSchema = z.object({
   totalamount: z.number().multipleOf(0.01).optional(),
   lastmodifiedat: date().optional(),
   InvoiceNumber: z.object({
-    invoicenumberid: z.number().optional(),
-    invoicenumber: z.string().optional(),
+    invoicenumberid: z.number(),
+    invoicenumber: z
+      .string({ required_error: "Invoice Number is required" })
+      .min(1, "Invoice Number is required")
+      .max(100, "Invoice Number is too long"),
   }),
   TransactionItem: z
     .array(
@@ -69,9 +62,7 @@ const salesTransactionSchema = z.object({
         unitofmeasurement: z
           .string()
           .min(1, "Unit of Measurement is required")
-          .max(100, "Unit of Measurement is too long")
-          .optional()
-          .or(z.literal("")),
+          .max(100, "Unit of Measurement is too long"),
         measurementvalue: z.coerce
           .number()
           .min(0, "Measurement value cannot be negative"),

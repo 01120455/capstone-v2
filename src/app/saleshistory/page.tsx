@@ -93,8 +93,7 @@ export default function Component() {
     return purchases.filter((purchase) => {
       const invoiceNo =
         purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-      const supplierName =
-        `${purchase.Entity.firstname} ${purchase.Entity.lastname}`.toLowerCase();
+      const supplierName = `${purchase.Entity.name}`.toLowerCase();
       const searchLower = searchTerm.toLowerCase();
 
       console.log("Invoice Number:", invoiceNo);
@@ -192,11 +191,7 @@ export default function Component() {
                         <div className="font-medium text-muted-foreground">
                           Customer Name:
                         </div>
-                        <div>
-                          {selectedTransaction.Entity.firstname} {""}
-                          {selectedTransaction.Entity.middlename} {""}
-                          {selectedTransaction.Entity.lastname}
-                        </div>
+                        <div>{selectedTransaction.Entity.name}</div>
                         <div className="font-medium text-muted-foreground">
                           Purchase Date:
                         </div>
@@ -325,7 +320,7 @@ export default function Component() {
                           <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                             <TableRow>
                               <TableHead>Invoice No.</TableHead>
-                              <TableHead>Customer</TableHead>
+                              <TableHead>Customer Name</TableHead>
                               <TableHead>Walk-in</TableHead>
                               <TableHead>From Milling</TableHead>
                               <TableHead>Status</TableHead>
@@ -358,9 +353,7 @@ export default function Component() {
                                       {transaction.InvoiceNumber.invoicenumber}
                                     </TableCell>
                                     <TableCell>
-                                      {transaction.Entity.firstname}{" "}
-                                      {transaction.Entity.middlename}{" "}
-                                      {transaction.Entity.lastname}
+                                      {transaction.Entity.name}
                                     </TableCell>
                                     <TableCell>
                                       {transaction.walkin ? "True" : "False"}

@@ -158,13 +158,15 @@
 
 @media (max-width: 768px) {
   .alert-center {
-    width: 90%; /* Adjust width for smaller screens */
+    width: 80%; /* Adjust width for smaller screens */
+    left: 10%; /* Center horizontally */
   }
 }
 
 @media (max-width: 480px) {
   .alert-center {
-    width: 100%; /* Full width for very small screens */
+    width: 80%; /* Full width for very small screens */
+    left: 10%;
   }
 }
 
@@ -197,4 +199,3 @@
     --chart-10: 0 80% 40%; /* New color */
   }
 }
-

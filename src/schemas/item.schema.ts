@@ -3,7 +3,10 @@ import { date, z } from "zod";
 
 export const item = z.object({
   itemid: z.coerce.number().optional(),
-  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+  name: z
+    .string({ required_error: "Name is required" })
+    .min(1, { message: "Name is required" })
+    .max(100, { message: "Name is too long" }),
   type: z
     .enum(["bigas", "palay", "resico"], {
       invalid_type_error: "Invalid Type Received",
@@ -15,8 +18,14 @@ export const item = z.object({
   unitofmeasurement: z.enum(["quantity", "weight"], {
     invalid_type_error: "Invalid Type Received",
   }),
-  stock: z.coerce.number().multipleOf(0.01).min(0, "Quantity cannot be negative"),
-  unitprice: z.coerce.number().multipleOf(0.01).min(0, "Quantity cannot be negative"),
+  stock: z.coerce
+    .number()
+    .multipleOf(0.01)
+    .min(0, "Quantity cannot be negative"),
+  unitprice: z.coerce
+    .number()
+    .multipleOf(0.01)
+    .min(0, "Quantity cannot be negative"),
   reorderlevel: z.coerce.number().min(0, "Reorder level cannot be negative"),
   criticallevel: z.coerce.number().min(0, "Critical level cannot be negative"),
   imagepath: z.string().optional(),
@@ -26,14 +35,14 @@ export const item = z.object({
 export const viewItem = z.object({
   itemid: z.number(),
   name: z.string(),
-  type: z.enum(["bigas", "palay", "resico"],),
+  type: z.enum(["bigas", "palay", "resico"]),
   sackweight: z.enum(["bag25kg", "cavan50kg"]),
   unitofmeasurement: z.enum(["quantity", "weight"]),
   stock: z.number().multipleOf(0.01),
   unitprice: z.number().multipleOf(0.01),
   reorderlevel: z.number(),
   criticallevel: z.number(),
-  User : z.object({
+  User: z.object({
     userid: z.number(),
     firstname: z.string(),
     middlename: z.string().optional(),

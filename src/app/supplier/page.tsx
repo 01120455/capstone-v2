@@ -70,9 +70,7 @@ export default function Component() {
     resolver: zodResolver(entitySchema),
     defaultValues: {
       entityid: 0,
-      firstname: "",
-      middlename: "",
-      lastname: "",
+      name: "",
       contactnumber: "",
     },
   });
@@ -85,9 +83,7 @@ export default function Component() {
     setShowEditSupplier(true);
     form.reset({
       entityid: supplier.entityid,
-      firstname: supplier.firstname,
-      middlename: supplier.middlename ?? "",
-      lastname: supplier.lastname,
+      name: supplier.name,
       contactnumber: supplier.contactnumber ?? "",
     });
   };
@@ -105,9 +101,7 @@ export default function Component() {
       "entityid",
       values.entityid !== undefined ? values.entityid.toString() : ""
     );
-    formData.append("firstname", values.firstname);
-    formData.append("middlename", values.middlename ?? "");
-    formData.append("lastname", values.lastname);
+    formData.append("name", values.name);
     formData.append("contactnumber", values.contactnumber ?? "");
 
     try {
@@ -202,7 +196,7 @@ export default function Component() {
   }, []);
 
   const currentSuppliers = suppliers.filter((supplier) =>
-    supplier.firstname.toLowerCase().includes(searchTerm.toLowerCase())
+    supplier.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleViewPurchaseItem = (purchase: TransactionTable) => {
@@ -275,8 +269,7 @@ export default function Component() {
                     >
                       <>
                         <TableCell className="px-4 py-3">
-                          {supplier.firstname} {supplier.middlename}{" "}
-                          {supplier.lastname}
+                          {supplier.name}
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           {supplier.contactnumber}
@@ -399,16 +392,16 @@ export default function Component() {
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
-                            name="firstname"
+                            name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="firstname">
-                                  First Name
+                                <FormLabel htmlFor="name">
+                                  Name
                                 </FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
-                                    id="firstname"
+                                    id="name"
                                     type="text"
                                   />
                                 </FormControl>
@@ -502,8 +495,7 @@ export default function Component() {
                     <Card key={supplier.entityid}>
                       <CardHeader>
                         <CardTitle>
-                          {supplier.firstname} {supplier.middlename ?? ""}{" "}
-                          {supplier.lastname}
+                          {supplier.name}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>

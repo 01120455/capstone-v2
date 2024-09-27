@@ -34,6 +34,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
   AlertDialog,
@@ -64,7 +65,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle } from "@/components/icons/Icons";
+import { AlertCircle, CheckCircle } from "@/components/icons/Icons";
 import Link from "next/link";
 
 const ROLES = {
@@ -88,6 +89,9 @@ export default function Component() {
   const [alertType, setAlertType] = useState<"reorder" | "critical" | null>(
     null
   );
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
+  const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -134,6 +138,27 @@ export default function Component() {
       }
     });
   };
+
+  useEffect(() => {
+    if (showAlertItem) {
+      const timer = setTimeout(() => {
+        setShowAlertItem(false); // Hide the alert after 3 seconds
+      }, 5000); // Adjust time as needed
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
+    }
+  }, [showAlertItem]);
+
+  useEffect(() => {
+    if (showSuccess) {
+      setShowAlertItem(false);
+      const timer = setTimeout(() => {
+        setShowSuccess(false); // Hide the alert after 5 seconds
+      }, 5000); // Adjust time as needed
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
+    }
+  }, [showSuccess]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -324,6 +349,9 @@ export default function Component() {
 
         setShowModal(false);
         refreshItems();
+        setSuccessAction(values.itemid ? "edited" : "added");
+        setSuccessItem(uploadResult);
+        setShowSuccess(true);
         form.reset();
       } else {
         console.error("Upload failed", await uploadRes.text());
@@ -463,9 +491,25 @@ export default function Component() {
       <div className="flex h-screen">
         <SideMenu />
         <div className="flex-1 overflow-y-hidden p-5">
+          {showSuccess && (
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-6 w-6" />
+                {successAction === "added"
+                  ? "Item Added Successfully"
+                  : "Item Edited Successfully"}
+              </AlertTitle>
+              <AlertDescription>
+                Item {successItem?.name} with stocks of {successItem?.stock}{" "}
+                {successAction === "added" ? "added" : "edited"} successfully.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {showAlertItem && (
-            <Alert className="alert-center" variant="destructive">
-              <AlertTitle>
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-6 w-6" />
                 {alertType === "reorder"
                   ? "Reorder Level Reached"
                   : "Critical Level Reached"}
@@ -730,6 +774,7 @@ export default function Component() {
                                 <FormControl>
                                   <Input {...field} id="name" type="text" />
                                 </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -914,11 +959,24 @@ export default function Component() {
                           />
                         </div>
                       </div>
-                      <DialogFooter>
-                        <Button type="submit">Save</Button>
-                        <Button variant="outline" onClick={handleCancel}>
-                          Cancel
-                        </Button>
+                      {/* {Object.keys(form.formState.errors).length > 0 && (
+                        <Alert variant="destructive">
+                          <AlertDescription>
+                            {Object.keys(form.formState.errors).map((field) => (
+                              <span key={field}>{field}</span>
+                            ))}
+                            {""} is required.
+                          </AlertDescription>
+                        </Alert>
+                      )} */}
+
+                      <DialogFooter className="pt-2 lg:pt-1">
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="outline" onClick={handleCancel}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">Save</Button>
+                        </div>
                       </DialogFooter>
                     </form>
                   </Form>

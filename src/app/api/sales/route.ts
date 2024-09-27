@@ -43,9 +43,7 @@ export const POST = async (req: NextRequest) => {
       "InvoiceNumber[invoicenumber]"
     ) as string;
     const frommilling = formData.get("frommilling") === "true";
-    const firstname = formData.get("Entity[firstname]") as string;
-    const middlename = formData.get("Entity[middlename]") as string;
-    const lastname = formData.get("Entity[lastname]") as string;
+    const name = formData.get("Entity[name]") as string;
     const contactnumber = formData.get("Entity[contactnumber]") as string;
     const statusString = formData.get("status") as string;
     const status = statusString as Status;
@@ -61,7 +59,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     // Validate Supplier Information
-    if (!firstname || !lastname) {
+    if (!name) {
       return NextResponse.json(
         { error: "Entity name are required" },
         { status: 400 }
@@ -73,16 +71,15 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // Normalize middlename if it is null
-    const normalizedMiddlename = middlename || "";
+    const contactNumberIfNull = contactnumber || "";
+
 
     const [newPurchase, newInvoice] = await prisma.$transaction(async (tx) => {
       // Check or Create Entity with the appropriate role
       let entityId;
       const existingEntity = await tx.entity.findFirst({
         where: {
-          firstname,
-          lastname,
+          name,
         },
         include: {
           roles: true, // Assuming you have a relation with roles
@@ -106,10 +103,8 @@ export const POST = async (req: NextRequest) => {
       } else {
         const newEntity = await tx.entity.create({
           data: {
-            firstname,
-            middlename: normalizedMiddlename,
-            lastname,
-            contactnumber,
+            name,
+            contactnumber: contactNumberIfNull,
             roles: {
               create: [
                 {

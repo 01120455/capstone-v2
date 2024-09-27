@@ -14,9 +14,7 @@ export async function GET(req: NextRequest) {
         Entity: {
           select: {
             entityid: true,
-            firstname: true,
-            middlename: true,
-            lastname: true,
+            name: true,
             contactnumber: true,
           },
         },

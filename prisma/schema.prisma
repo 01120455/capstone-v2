@@ -25,9 +25,7 @@ model User {
 
 model Entity {
   entityid      Int       @id @default(autoincrement())
-  firstname            String    @db.VarChar(25)
-  middlename            String?    @db.VarChar(25)
-  lastname            String    @db.VarChar(25)
+  name            String    @db.VarChar(50)
   contactnumber   String? @db.VarChar(15)
   lastmodifiedby  Int?
   lastmodifiedat DateTime? @updatedAt

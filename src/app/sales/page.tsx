@@ -15,6 +15,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
   Select,
@@ -40,8 +41,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle } from "@/components/icons/Icons";
+import { AlertCircle, CheckCircle, TrashIcon } from "@/components/icons/Icons";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
@@ -57,6 +59,11 @@ export default function Component() {
       imagepath: string;
     }[]
   >([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successItem, setSuccessItem] = useState<AddSales | null>(null);
+  const [invoiceExists, setInvoiceExists] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [emptyCart, setEmptyCart] = useState(false);
   const { isAuthenticated, userRole } = useAuth();
   const router = useRouter();
 
@@ -69,11 +76,9 @@ export default function Component() {
       walkin: false,
       frommilling: false,
       taxpercentage: 0,
-      Entity: {
+      Customer: {
         entityid: 0,
-        firstname: "",
-        middlename: "",
-        lastname: "",
+        name: "",
         contactnumber: "",
       },
       InvoiceNumber: {
@@ -137,6 +142,38 @@ export default function Component() {
     console.log(form.formState.errors);
   }, [form.formState.errors]);
 
+  useEffect(() => {
+    if (showSuccess) {
+      setInvoiceExists(false); // Reset the invoice exists state
+      setEmptyCart(false);
+      const timer = setTimeout(() => {
+        setShowSuccess(false); // Hide the alert after 5 seconds
+      }, 5000); // Adjust time as needed
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
+    }
+  }, [showSuccess]);
+
+  useEffect(() => {
+    if (invoiceExists) {
+      const timer = setTimeout(() => {
+        setInvoiceExists(false); // Hide the alert after 3 seconds
+      }, 5000); // Adjust time as needed
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
+    }
+  }, [invoiceExists]);
+
+  useEffect(() => {
+    if (emptyCart) {
+      const timer = setTimeout(() => {
+        setEmptyCart(false); // Hide the alert after 3 seconds
+      }, 5000); // Adjust time as needed
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
+    }
+  }, [emptyCart]);
+
   const addToCart = (item: ViewItem, quantity: number = 1) => {
     // Transform the item to match the cart structure
     const cartItem = {
@@ -179,89 +216,37 @@ export default function Component() {
 
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  // const handleSubmit = async (values: AddSales) => {
-  //   console.log("Form Values:", values);
-  //   const formData = new FormData();
-
-  //   // Append general purchase data
-  //   formData.append("type", values.type);
-  //   formData.append("status", values.status);
-  //   formData.append("walkin", values.walkin.toString());
-  //   formData.append("frommilling", values.frommilling.toString());
-  //   formData.append(
-  //     "taxpercentage",
-  //     values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
-  //   );
-  //   formData.append("Entity[firstname]", values.Entity.firstname);
-  //   formData.append("Entity[middlename]", values.Entity.middlename ?? "");
-  //   formData.append("Entity[lastname]", values.Entity.lastname);
-  //   formData.append(
-  //     "Entity[contactnumber]",
-  //     values.Entity?.contactnumber?.toString() ?? ""
-  //   );
-  //   formData.append("invoicenumber", values.InvoiceNumber.invoicenumber || "");
-
-  //   // Loop through each Transaction item and append its data
-  //   values.TransactionItem !== undefined
-  //     ? values.TransactionItem.forEach((item, index) => {
-  //         formData.append(
-  //           `TransactionItem[${index}][item][name]`,
-  //           item.Item.name
-  //         );
-  //         formData.append(
-  //           `TransactionItem[${index}][item][type]`,
-  //           item.Item.type
-  //         );
-  //         formData.append(
-  //           `TransactionItem[${index}][item][sackweight]`,
-  //           item.Item.sackweight
-  //         );
-  //         formData.append(
-  //           `TransactionItem[${index}][unitofmeasurement]`,
-  //           item?.unitofmeasurement?.toString() ?? ""
-  //         );
-  //         formData.append(
-  //           `TransactionItem[${index}][measurementvalue]`,
-  //           item.measurementvalue.toString()
-  //         );
-  //         formData.append(
-  //           `TransactionItem[${index}][unitprice]`,
-  //           item.unitprice.toString()
-  //         );
-  //       })
-  //     : null;
-
-  //   try {
-  //     let method = "POST";
-  //     let endpoint = "/api/sales";
-
-  //     if (values.transactionid) {
-  //       method = "PUT";
-  //       endpoint = `/api/purchase/purchaseedit/${values.transactionid}`;
-  //       formData.append("transactionid", values.transactionid.toString());
-  //     }
-
-  //     const uploadRes = await fetch(endpoint, {
-  //       method: method,
-  //       body: formData,
-  //     });
-
-  //     if (uploadRes.ok) {
-  //       if (values.transactionid) {
-  //         console.log("Purchase updated successfully");
-  //       } else {
-  //         console.log("Purchase added successfully");
-  //       }
-  //       form.reset();
-  //     } else {
-  //       console.error("Upload failed", await uploadRes.text());
-  //     }
-  //   } catch (error) {
-  //     console.error("Error adding/updating purchase:", error);
-  //   }
-  // };
+  const checkInvoiceExists = async (invoicenumber: string) => {
+    try {
+      const response = await fetch(`/api/invoicenumber/${invoicenumber}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.exists; // Returns true if exists, false otherwise
+      } else {
+        console.error("Error checking invoice number:", response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking invoice number:", error);
+      return false;
+    }
+  };
 
   const handleSubmit = async (values: AddSales) => {
+    if (cart.length === 0) {
+      setEmptyCart(true);
+      return; // Exit the function early
+    }
+
+    const invoiceExists = await checkInvoiceExists(
+      values.InvoiceNumber.invoicenumber
+    );
+    if (invoiceExists) {
+      setInvoiceExists(true);
+      setInvoiceNumber(values.InvoiceNumber.invoicenumber);
+      return;
+    }
+
     console.log("Form Values:", values);
     const formData = new FormData();
 
@@ -274,10 +259,11 @@ export default function Component() {
       values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
     );
 
-    formData.append("Entity[firstname]", values.Entity.firstname);
-    formData.append("Entity[middlename]", values.Entity.middlename ?? "");
-    formData.append("Entity[lastname]", values.Entity.lastname);
-    formData.append("Entity[contactnumber]", values.Entity.contactnumber ?? "");
+    formData.append("Entity[name]", values.Customer.name);
+    formData.append(
+      "Entity[contactnumber]",
+      values.Customer.contactnumber ?? ""
+    );
 
     formData.append(
       "InvoiceNumber[invoicenumber]",
@@ -302,8 +288,8 @@ export default function Component() {
     });
 
     try {
-      const method = "POST"; 
-      const endpoint = "/api/sales"; 
+      const method = "POST";
+      const endpoint = "/api/sales";
 
       const uploadRes = await fetch(endpoint, {
         method: method,
@@ -311,8 +297,10 @@ export default function Component() {
       });
 
       if (uploadRes.ok) {
-        console.log("Purchase added successfully");
-        form.reset(); 
+        console.log("Sales added successfully");
+        setSuccessItem(values);
+        setShowSuccess(true);
+        form.reset();
         setCart([]);
       } else {
         const errorText = await uploadRes.text();
@@ -336,16 +324,52 @@ export default function Component() {
       <div className="flex h-screen">
         <SideMenu />
         <div className="flex-1 flex flex-col overflow-hidden">
+          {showSuccess && (
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-6 w-6" />
+                Sales added successfully.
+              </AlertTitle>
+              <AlertDescription>
+                Invoice Number {successItem?.InvoiceNumber.invoicenumber} {""}
+                for {""} {successItem?.Customer.name} {""} has been successfully
+                added to the system.
+              </AlertDescription>
+            </Alert>
+          )}
+          {invoiceExists && (
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-6 w-6" />
+                Invoice Number already exists.
+              </AlertTitle>
+              <AlertDescription>
+                Invoice Number {invoiceNumber} already exists in the system.
+              </AlertDescription>
+            </Alert>
+          )}
+          {emptyCart && (
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-6 w-6" />
+                Empty Cart Detected
+              </AlertTitle>
+              <AlertDescription>
+                Please add items to the cart before checkout.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="grid gap-6 md:grid-cols-[1fr_600px]">
+            <div className="grid gap-2 md:grid-cols-[1fr_400px]">
               <div className="flex-1 overflow-auto p-4 md:p-8">
-                <div className="overflow-y-auto h-[750px] border rounded-lg p-2">
+                <div className="overflow-y-auto h-[400px] lg:h-[600px] w-auto border rounded-lg p-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                     {items &&
                       items.map((item) => (
                         <div
                           key={item.itemid}
                           className="bg-white rounded-lg shadow-sm p-4 flex flex-col"
+                          onClick={() => addToCart(item)}
                         >
                           <Image
                             src={item.itemimage[0]?.imagepath ?? ""}
@@ -376,7 +400,7 @@ export default function Component() {
               </div>
 
               {/* Cart Section */}
-              <div className="bg-white shadow-t md:p-8">
+              <div className="bg-white shadow-t md:p-2">
                 <h2 className="text-xl font-bold">Sale Details</h2>
                 <Form {...form}>
                   <form
@@ -401,6 +425,7 @@ export default function Component() {
                                   type="text"
                                 />
                               </FormControl>
+                              <FormMessage />
                             </FormItem>
                           )}
                         />
@@ -408,15 +433,16 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="Entity.firstname"
+                          name="Customer.name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="firstname">
-                                Supplier First Name
+                              <FormLabel htmlFor="name">
+                                Customer Name
                               </FormLabel>
                               <FormControl>
-                                <Input {...field} id="firstname" type="text" />
+                                <Input {...field} id="name" type="text" />
                               </FormControl>
+                              <FormMessage />
                             </FormItem>
                           )}
                         />
@@ -424,39 +450,7 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="Entity.middlename"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="middlename">
-                                Supplier Middle Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="middlename" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Entity.lastname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="lastname">
-                                Supplier Last Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="lastname" type="text" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Entity.contactnumber"
+                          name="Customer.contactnumber"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel htmlFor="contactnumber">
@@ -558,12 +552,24 @@ export default function Component() {
                         />
                       </div>
                     </div>
+                    {/* {Object.keys(form.formState.errors).length > 0 && (
+                      <Alert variant="destructive">
+                        <AlertDescription>
+                          The following fields shouldn&apos;t be empty:
+                          <ul>
+                            {Object.keys(form.formState.errors).map((field) => (
+                              <li key={field}>{field}</li>
+                            ))}
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+                    )} */}
                     {/* Cart Details */}
                     <div className="mt-6 bg-gray-100 p-4 rounded-md">
                       <h2 className="text-lg font-semibold mb-2">
                         Order Summary
                       </h2>
-                      <div className="overflow-y-auto h-[200px] border rounded-lg p-2">
+                      <div className="overflow-y-auto h-[200px] w-auto border rounded-lg p-2">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -583,7 +589,7 @@ export default function Component() {
                                     type="number"
                                     min={1}
                                     value={item.quantity}
-                                    className="w-20 text-right"
+                                    className="w-14 text-right"
                                     onChange={(e) =>
                                       updateQuantity(
                                         index,
@@ -602,7 +608,7 @@ export default function Component() {
                                     className="px-2 py-1"
                                     onClick={() => removeFromCart(index)}
                                   >
-                                    Remove
+                                    <TrashIcon className="h-4 w-4" />
                                   </Button>
                                 </TableCell>
                               </TableRow>
@@ -617,9 +623,12 @@ export default function Component() {
                       <p className="text-lg font-semibold">
                         Total: ₱{total.toFixed(2)}
                       </p>
-                      <Button type="submit" className="px-4 py-2">
-                        Checkout
-                      </Button>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline">Cancel</Button>
+                        <Button type="submit" className="px-4 py-2">
+                          Checkout
+                        </Button>
+                      </div>
                     </div>
                   </form>
                 </Form>

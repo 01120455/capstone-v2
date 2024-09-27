@@ -146,9 +146,7 @@ export const PUT = async (req: NextRequest) => {
 
     const invoicenumber = formData.get("invoicenumber") as string;
     const frommilling = formData.get("frommilling") === "true";
-    const firstname = formData.get("Entity[firstname]") as string;
-    const middlename = formData.get("Entity[middlename]") as string;
-    const lastname = formData.get("Entity[lastname]") as string;
+    const name = formData.get("Entity[name]") as string;
     const contactnumber = formData.get("Entity[contactnumber]") as string;
     const statusString = formData.get("status") as string;
     const status = statusString as Status;
@@ -164,7 +162,7 @@ export const PUT = async (req: NextRequest) => {
     }
 
     // Validate Supplier Information
-    if (!firstname || !lastname) {
+    if (!name) {
       return NextResponse.json(
         { error: "Supplier name are required" },
         { status: 400 }
@@ -183,8 +181,7 @@ export const PUT = async (req: NextRequest) => {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // Normalize middlename if it is null
-    const normalizedMiddlename = middlename || "";
+    const contactNumberIfNull = contactnumber || "";
 
     // Execute Prisma transaction
     const updatedPurchase = await prisma.$transaction(async (tx) => {
@@ -205,8 +202,7 @@ export const PUT = async (req: NextRequest) => {
       let entityId;
       const existingEntity = await tx.entity.findFirst({
         where: {
-          firstname: firstname,
-          lastname: lastname,
+          name: name
         },
         include: { roles: true },
       });
@@ -229,10 +225,8 @@ export const PUT = async (req: NextRequest) => {
         // If the entity does not exist, create a new entity and role
         const newEntity = await tx.entity.create({
           data: {
-            firstname,
-            middlename: normalizedMiddlename,
-            lastname,
-            contactnumber,
+            name,
+            contactnumber: contactNumberIfNull,
             roles: {
               create: [
                 {

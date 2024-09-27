@@ -25,10 +25,10 @@ export const PUT = async (req: NextRequest) => {
     const formData = await req.formData();
 
     const entityid = parseInt(formData.get("entityid") as string, 10);
-    const firstname = formData.get("firstname") as string;
-    const middlename = formData.get("middlename") as string;
-    const lastname = formData.get("lastname") as string;
+    const name = formData.get("name") as string;
     const contactnumber = formData.get("contactnumber") as string;
+
+    const contactNumberIfNull = contactnumber || "";
 
     // Check for required fields
     if (!entityid) {
@@ -38,9 +38,9 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    if (!firstname && !lastname) {
+    if (!name) {
       return NextResponse.json(
-        { error: "firstname or lastname is required to update a supplier" },
+        { error: "name is required to update a supplier" },
         { status: 400 }
       );
     }
@@ -71,10 +71,8 @@ export const PUT = async (req: NextRequest) => {
           entityid,
         },
         data: {
-          firstname,
-          middlename,
-          lastname,
-          contactnumber,
+          name,
+          contactnumber: contactNumberIfNull,
         },
       });
     });

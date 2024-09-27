@@ -253,7 +253,7 @@ export default function Component() {
                     onClick={() => handleCustomerSelect(customer)}
                   >
                     <h3 className="text-lg font-medium">
-                      {customer.firstname}
+                      {customer.name}
                     </h3>
                   </div>
                 ))}
@@ -265,7 +265,7 @@ export default function Component() {
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b dark:border-gray-700 pb-4">
                     <div>
                       <h2 className="text-lg font-bold">
-                        {selectedCustomer.firstname}
+                        {selectedCustomer.name}
                       </h2>
                     </div>
                   </div>

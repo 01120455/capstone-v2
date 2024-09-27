@@ -2,9 +2,7 @@ import { date, z } from "zod";
 
 export const entitySchema = z.object({
   entityid: z.number().optional(),
-  firstname: z.string(),
-  middlename: z.string().optional(),
-  lastname: z.string(),
+  name: z.string(),
   contactnumber: z.string().optional(),
   lastmodifiedat: z.date().optional(),
   user: z
@@ -21,9 +19,7 @@ const transactionTableSchema = z.object({
   transactionid: z.number(),
   Entity: z.object({
     entityid: z.number(),
-    firstname: z.string(),
-    middlename: z.string().optional(),
-    lastname: z.string(),
+    name: z.string(),
     contactnumber: z.string().optional(),
   }),
   createdat: date(),
