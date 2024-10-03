@@ -80,8 +80,17 @@ import { AlertCircle } from "@/components/icons/Icons";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { User } from "@/interfaces/user";
+
+const ROLES = {
+  SALES: "sales",
+  INVENTORY: "inventory",
+  MANAGER: "manager",
+  ADMIN: "admin",
+};
 
 export default function Component() {
+  const [user, setUser] = useState<User | null>(null);
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
   const [purchaseItems, setPurchaseItems] = useState<TransactionItem[] | null>(
     null
@@ -248,6 +257,24 @@ export default function Component() {
       return () => clearTimeout(timer); // Cleanup the timer on unmount
     }
   }, [showSuccessTI]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/session", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const session = await response.json();
+        setUser(session || null);
+      } catch (error) {
+        console.error("Failed to fetch session", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // useEffect(() => {
   //   async function getPurchaseItem() {
@@ -728,6 +755,86 @@ export default function Component() {
     }).format(price);
   };
 
+  const canAccessButton = (role: String) => {
+    if (user?.role === ROLES.ADMIN) return true;
+    if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+    return false;
+  };
+
+  const transactionData = {
+    transactionid: formPurchaseOnly.getValues("transactionid") || 0,
+    type: formPurchaseOnly.getValues("type") || "purchase",
+    status: formPurchaseOnly.getValues("status") || "pending",
+    walkin: formPurchaseOnly.getValues("walkin") || false,
+    frommilling: formPurchaseOnly.getValues("frommilling") || false,
+    Entity: {
+      entityid: formPurchaseOnly.getValues("Entity.entityid") || null, // or default value if applicable
+      name: formPurchaseOnly.getValues("Entity.name") || "", // Must not be undefined
+      contactnumber: formPurchaseOnly.getValues("Entity.contactnumber"),
+    },
+    InvoiceNumber: {
+      invoicenumberid: formPurchaseOnly.getValues(
+        "InvoiceNumber.invoicenumberid"
+      ), // or default value if applicable
+      invoicenumber:
+        formPurchaseOnly.getValues("InvoiceNumber.invoicenumber") || "", // Must not be undefined
+    },
+  };
+
+  const userActionWithAccess = (
+    id: number,
+    role: string,
+    transactionData: any
+  ) => {
+    // Check if the user can access the input based on their role
+    if (!role) {
+      return "access denied";
+    }
+
+    const canAccessInput = () => {
+      if (user?.role === ROLES.ADMIN) return true;
+      if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+      return false;
+    };
+
+    // Check access rights
+    if (!canAccessInput()) {
+      return "access denied";
+    }
+
+    // If we are adding a new item, we skip validation
+    if (id === 0) {
+      // Assuming 0 indicates a new item
+      return "add";
+    }
+
+    // Validate the ID against the schemas
+    const parsedData = transactionSchema.safeParse(transactionData);
+
+    if (parsedData.success) {
+      const data = parsedData.data; // This is the validated data
+      if (data.transactionid === id) {
+        return "edit";
+      }
+    } else {
+      console.error("Validation failed:", parsedData.error);
+      return "error";
+    }
+  };
+
+  const transactionId = formPurchaseOnly.getValues("transactionid"); // Adjust the path as necessary
+
+  // Check user action based on the ID and role
+  const action = userActionWithAccess(
+    transactionId,
+    user?.role || "",
+    transactionData
+  );
+
   if (isAuthenticated === null) {
     return <p>Loading...</p>;
   }
@@ -911,14 +1018,20 @@ export default function Component() {
                                   <FilePenIcon className="w-4 h-4" />
                                   <span className="sr-only">Edit</span>
                                 </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDeletePurchase(purchase)}
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  <span className="sr-only">Delete</span>
-                                </Button>
+                                {canAccessButton(ROLES.ADMIN) && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleDeletePurchase(purchase)
+                                      }
+                                    >
+                                      <TrashIcon className="w-4 h-4" />
+                                      <span className="sr-only">Delete</span>
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -943,18 +1056,23 @@ export default function Component() {
                         List of items purchased
                       </DialogDescription>
                       <DialogClose onClick={closeViewPurchaseItem} />
-                      <Button
-                        onClick={() => {
-                          const transactionid = purchaseItems[0]?.transactionid; // Or select the specific purchase item by index
-                          handleAddPurchaseItem(transactionid);
-                        }}
-                      >
-                        {isSmallScreen ? (
-                          <PlusIcon className="w-6 h-6" />
-                        ) : (
-                          "Add Purchased Item"
-                        )}
-                      </Button>
+                      {canAccessButton(ROLES.ADMIN) && (
+                        <>
+                          <Button
+                            onClick={() => {
+                              const transactionid =
+                                purchaseItems[0]?.transactionid; // Or select the specific purchase item by index
+                              handleAddPurchaseItem(transactionid);
+                            }}
+                          >
+                            {isSmallScreen ? (
+                              <PlusIcon className="w-6 h-6" />
+                            ) : (
+                              "Add Purchased Item"
+                            )}
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </DialogHeader>
                   <div className="overflow-y-auto">
@@ -975,7 +1093,11 @@ export default function Component() {
                               <TableHead>Measurement Value</TableHead>
                               <TableHead>Unit Price</TableHead>
                               <TableHead>Total Amount</TableHead>
-                              <TableHead>Actions</TableHead>
+                              {canAccessButton(ROLES.ADMIN) && (
+                                <>
+                                  <TableHead>Actions</TableHead>
+                                </>
+                              )}
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -1009,36 +1131,40 @@ export default function Component() {
                                         {purchaseItem.totalamount}
                                       </TableCell>
                                       <TableCell>
-                                        <div className="flex items-center gap-2">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                              handleEditPurchaseItem(
-                                                purchaseItem
-                                              )
-                                            }
-                                          >
-                                            <FilePenIcon className="w-4 h-4" />
-                                            <span className="sr-only">
-                                              Edit
-                                            </span>
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                              handleDeletePurchaseItem(
-                                                purchaseItem
-                                              )
-                                            }
-                                          >
-                                            <TrashIcon className="w-4 h-4" />
-                                            <span className="sr-only">
-                                              Delete
-                                            </span>
-                                          </Button>
-                                        </div>
+                                        {canAccessButton(ROLES.ADMIN) && (
+                                          <>
+                                            <div className="flex items-center gap-2">
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  handleEditPurchaseItem(
+                                                    purchaseItem
+                                                  )
+                                                }
+                                              >
+                                                <FilePenIcon className="w-4 h-4" />
+                                                <span className="sr-only">
+                                                  Edit
+                                                </span>
+                                              </Button>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  handleDeletePurchaseItem(
+                                                    purchaseItem
+                                                  )
+                                                }
+                                              >
+                                                <TrashIcon className="w-4 h-4" />
+                                                <span className="sr-only">
+                                                  Delete
+                                                </span>
+                                              </Button>
+                                            </div>
+                                          </>
+                                        )}
                                       </TableCell>
                                     </TableRow>
                                   )
@@ -1772,7 +1898,15 @@ export default function Component() {
             )}
             {showModalEditPurchase && (
               <Dialog open={showModalEditPurchase} onOpenChange={handleCancel}>
-                <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
+                <DialogContent
+                  className={`w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4${
+                    user?.role === ROLES.ADMIN
+                      ? "w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4"
+                      : user?.role === ROLES.MANAGER
+                      ? "w-full max-w-full sm:min-w-[400px] md:w-[400px] lg:min-w-[400px] p-4"
+                      : "default-class"
+                  }`}
+                >
                   <DialogHeader>
                     <DialogTitle>
                       {formPurchaseOnly.getValues("transactionid")
@@ -1792,63 +1926,84 @@ export default function Component() {
                       className="w-full max-w-full  mx-auto p-4 sm:p-6"
                       onSubmit={formPurchaseOnly.handleSubmit(handleSubmit)}
                     >
-                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2">
-                        <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="InvoiceNumber.invoicenumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="invoicenumber">
-                                  Invoice Number
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="invoicenumber"
-                                    type="text"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="Entity.name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="name">Name</FormLabel>
-                                <FormControl>
-                                  <Input {...field} id="name" type="text" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="Entity.contactnumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="contactnumber">
-                                  Contact Number
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="contactnumber"
-                                    type="text"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                      <div
+                        className={`grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2 
+${
+  user?.role === ROLES.ADMIN
+    ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2"
+    : user?.role === ROLES.MANAGER
+    ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-1 gap-4 py-2"
+    : "default-class"
+}`}
+                      >
+                        {(action === "add" ||
+                          (action === "edit" &&
+                            user?.role === ROLES.ADMIN)) && (
+                          <div className="space-y-2">
+                            <FormField
+                              control={formPurchaseOnly.control}
+                              name="InvoiceNumber.invoicenumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="invoicenumber">
+                                    Invoice Number
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      id="invoicenumber"
+                                      type="text"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                        {(action === "add" ||
+                          (action === "edit" &&
+                            user?.role === ROLES.ADMIN)) && (
+                          <div className="space-y-2">
+                            <FormField
+                              control={formPurchaseOnly.control}
+                              name="Entity.name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="name">Name</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} id="name" type="text" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                        {(action === "add" ||
+                          (action === "edit" &&
+                            user?.role === ROLES.ADMIN)) && (
+                          <div className="space-y-2">
+                            <FormField
+                              control={formPurchaseOnly.control}
+                              name="Entity.contactnumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="contactnumber">
+                                    Contact Number
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      id="contactnumber"
+                                      type="text"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
                         <div className="space-y-2">
                           <FormField
                             control={formPurchaseOnly.control}
@@ -1884,94 +2039,77 @@ export default function Component() {
                             )}
                           />
                         </div>
-                        {/* <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="walkin"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="walkin">
-                                  Walk in Purchase
-                                </FormLabel>
-                                <FormControl>
-                                  <Select
-                                    value={field.value ? "true" : "false"}
-                                    onValueChange={(value) => {
-                                      field.onChange(value === "true");
-                                    }}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select Value">
-                                        {field.value ? "Yes" : "No"}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="true">Yes</SelectItem>
-                                      <SelectItem value="false">No</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div> */}
-                        <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="frommilling"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="frommilling">
-                                  From Milling
-                                </FormLabel>
-                                <FormControl>
-                                  <Select
-                                    value={field.value ? "true" : "false"}
-                                    onValueChange={(value) => {
-                                      field.onChange(value === "true");
-                                    }}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select Value">
-                                        {field.value ? "Yes" : "No"}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="true">Yes</SelectItem>
-                                      <SelectItem value="false">No</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={formPurchaseOnly.control}
-                            name="taxpercentage"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="taxpercentage">
-                                  Tax Percentage
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="taxpercentage"
-                                    type="number"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        {(action === "add" ||
+                          (action === "edit" &&
+                            user?.role === ROLES.ADMIN)) && (
+                          <div className="space-y-2">
+                            <FormField
+                              control={formPurchaseOnly.control}
+                              name="frommilling"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="frommilling">
+                                    From Milling
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Select
+                                      value={field.value ? "true" : "false"}
+                                      onValueChange={(value) => {
+                                        field.onChange(value === "true");
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select Value">
+                                          {field.value ? "Yes" : "No"}
+                                        </SelectValue>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="true">
+                                          Yes
+                                        </SelectItem>
+                                        <SelectItem value="false">
+                                          No
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                        {(action === "add" ||
+                          (action === "edit" &&
+                            user?.role === ROLES.ADMIN)) && (
+                          <div className="space-y-2">
+                            <FormField
+                              control={formPurchaseOnly.control}
+                              name="taxpercentage"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="taxpercentage">
+                                    Tax Percentage
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      id="taxpercentage"
+                                      type="number"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <DialogFooter className="items-end mt-4">
-                        <Button type="submit">Save</Button>
-                        <Button variant="outline" onClick={handleCancel}>
-                          Cancel
-                        </Button>
+                      <DialogFooter className="pt-2 lg:pt-1">
+                        <div className="flex justify-end space-x-2">
+                          <Button type="submit">Save</Button>
+                          <Button variant="outline" onClick={handleCancel}>
+                            Cancel
+                          </Button>
+                        </div>
                       </DialogFooter>
                     </form>
                   </Form>

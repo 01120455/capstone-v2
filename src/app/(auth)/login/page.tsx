@@ -51,19 +51,19 @@ export default function Home() {
     }, 1000); // 1000ms matches the fade-out duration
   }, []);
 
-  useEffect(() => {
-    async function createDummyUser() {
-      try {
-        const res = await fetch("/api/auth/cdu", { method: "POST" });
-        const data = await res.json();
-        console.log(data);
-      } catch (error) {
-        console.error("Error creating dummy user:", error);
-      }
-    }
+  // useEffect(() => {
+  //   async function createDummyUser() {
+  //     try {
+  //       const res = await fetch("/api/auth/cdu", { method: "POST" });
+  //       const data = await res.json();
+  //       console.log(data);
+  //     } catch (error) {
+  //       console.error("Error creating dummy user:", error);
+  //     }
+  //   }
 
-    createDummyUser();
-  }, []);
+  //   createDummyUser();
+  // }, []);
 
   useEffect(() => {
     if (alert) {
@@ -95,16 +95,19 @@ export default function Home() {
 
       if (response.ok) {
         setAlert({
-          message: data.message,
+          message: data.message || "Login successful",
           type: "success",
         });
       }
 
-      setAlert(null);
+      // setAlert(null);
 
       switch (data.role) {
         case "admin":
         case "manager":
+          // setTimeout(() => {
+          //   router.push("/dashboard");
+          // }, 500000); // 20 seconds delay
           router.push("/dashboard");
           break;
         case "sales":
@@ -236,13 +239,17 @@ export default function Home() {
           {alert && (
             <div
               className={`fixed-alert ${fadeOut ? "fade-out" : ""} ${
-                alert.type === "error" ? "alert-error" : "alert-success"
+                alert.type === "success" ? "alert-success" : "alert-error"
               }`}
             >
-              <Alert variant="destructive">
+              <Alert
+                variant={`${
+                  alert.type === "success" ? "default" : "destructive"
+                }`}
+              >
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>
-                  {alert.type === "error" ? "Error" : "Success"}
+                  {alert.type === "success" ? "Success" : "Error"}
                 </AlertTitle>
                 <AlertDescription>{alert.message}</AlertDescription>
               </Alert>

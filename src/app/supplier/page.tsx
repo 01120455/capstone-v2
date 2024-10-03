@@ -172,8 +172,8 @@ export default function Component() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const suppliersResponse = await fetch("/api/supplier"); 
-        const transactionsResponse = await fetch("/api/suppliertransaction"); 
+        const suppliersResponse = await fetch("/api/supplier");
+        const transactionsResponse = await fetch("/api/suppliertransaction");
 
         if (!suppliersResponse.ok || !transactionsResponse.ok) {
           throw new Error("Network response was not ok");
@@ -375,7 +375,7 @@ export default function Component() {
                 open={showEditSupplier}
                 onOpenChange={handleCancelEditSupplier}
               >
-                <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
+                <DialogContent className="w-full max-w-full sm:min-w-[400px] md:w-[400px] lg:min-w-[400px] p-4">
                   <DialogHeader>
                     <DialogTitle>Edit Supplier</DialogTitle>
                     <DialogDescription>
@@ -388,58 +388,16 @@ export default function Component() {
                       className="w-full max-w-full  mx-auto p-4 sm:p-6"
                       onSubmit={form.handleSubmit(handleSubmit)}
                     >
-                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4 py-2">
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="name">
-                                  Name
-                                </FormLabel>
+                                <FormLabel htmlFor="name">Name</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="name"
-                                    type="text"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="middlename"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="middlename">
-                                  Middle Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="middlename"
-                                    type="text"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="lastname"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="lastname">
-                                  Last Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input {...field} id="lastname" type="text" />
+                                  <Input {...field} id="name" type="text" />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -494,9 +452,7 @@ export default function Component() {
                   return (
                     <Card key={supplier.entityid}>
                       <CardHeader>
-                        <CardTitle>
-                          {supplier.name}
-                        </CardTitle>
+                        <CardTitle>{supplier.name}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="overflow-x-auto">

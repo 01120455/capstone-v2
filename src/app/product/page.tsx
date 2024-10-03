@@ -473,6 +473,71 @@ export default function Component() {
     return false;
   };
 
+  const itemData = {
+    itemid: form.getValues("itemid") || 0, // Use 0 as a default if not available
+    name: form.getValues("name") || "", // Default to empty string or a valid value
+    sackweight: form.getValues("sackweight") || "",
+    unitofmeasurement: form.getValues("unitofmeasurement") || "",
+    stock: form.getValues("stock") || 0, // Default to 0 if not available
+    unitprice: form.getValues("unitprice") || 0,
+    reorderlevel: form.getValues("reorderlevel") || null, // Use null if not available
+    criticallevel: form.getValues("criticallevel") || null,
+  };
+
+  const userActionWithAccess = (id: number, role: string, itemData: any) => {
+    // Check if the user can access the input based on their role
+    if (!role) {
+      return "access denied";
+    }
+
+    const canAccessInput = () => {
+      if (user?.role === ROLES.ADMIN) return true;
+      if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+      return false;
+    };
+
+    // Check access rights
+    if (!canAccessInput()) {
+      return "access denied";
+    }
+
+    // If we are adding a new item, we skip validation
+    if (id === 0) {
+      // Assuming 0 indicates a new item
+      return "add";
+    }
+
+    // Validate the ID against the schemas for editing
+    const parsedData = item.safeParse(itemData);
+
+    if (parsedData.success) {
+      const data = parsedData.data; // This is the validated data
+      if (data.itemid === id) {
+        return "edit";
+      }
+    } else {
+      console.error("Validation failed:", parsedData.error);
+      return "error";
+    }
+
+    return "unknown action"; // Fallback case
+  };
+
+  const itemId = form.getValues("itemid"); // Adjust the path as necessary
+
+  let action: string = "access denied";
+
+  if (itemId !== undefined) {
+    // Check user action based on the ID and role
+    action = userActionWithAccess(itemId, user?.role || "", itemData);
+    console.log("Action:", action);
+  } else {
+    console.warn("Transaction ID is undefined");
+    action = userActionWithAccess(0, user?.role || "", itemData);
+  }
+
   if (isAuthenticated === null) {
     // Show a loading state while checking authentication
     return <p>Loading...</p>;
@@ -633,7 +698,7 @@ export default function Component() {
                                   </Button>
                                 </>
                               )}
-                              {user?.role === ROLES.MANAGER && (
+                              {/* {user?.role === ROLES.MANAGER && (
                                 <>
                                   <Button
                                     variant="outline"
@@ -644,7 +709,7 @@ export default function Component() {
                                     <span className="sr-only">Delete</span>
                                   </Button>
                                 </>
-                              )}
+                              )} */}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -918,46 +983,54 @@ export default function Component() {
                             )}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="reorderlevel"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="reorderlevel">
-                                  Reorder Level
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="reorderlevel"
-                                    type="number"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="criticallevel"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="criticallevel">
-                                  Critical Level
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="criticallevel"
-                                    type="number"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        {(action === "add" ||
+                          (action === "edit" &&
+                            user?.role === ROLES.ADMIN)) && (
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="reorderlevel"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="reorderlevel">
+                                    Reorder Level
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      id="reorderlevel"
+                                      type="number"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                        {(action === "add" ||
+                          (action === "edit" &&
+                            user?.role === ROLES.ADMIN)) && (
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="criticallevel"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="criticallevel">
+                                    Critical Level
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      id="criticallevel"
+                                      type="number"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
                       </div>
                       {/* {Object.keys(form.formState.errors).length > 0 && (
                         <Alert variant="destructive">

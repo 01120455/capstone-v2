@@ -22,26 +22,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-
     // Check if the user is marked as deleted
     if (user.deleted) {
-      return NextResponse.json(
-        { message: "invalid account" },
-        { status: 403 }
-      );
+      return NextResponse.json({ message: "invalid account" }, { status: 403 });
     }
 
     // Create a response object
-    const res = NextResponse.json({ 
-      message: "Logged in",
-      role: user.role, 
+    const res = NextResponse.json({
+      message: "Logged in Successfully",
+      role: user.role,
     });
-
-
 
     // Initialize the session
     const session = await getIronSession(req, res, sessionOptions);
-    (session).user = {
+    session.user = {
       userid: user.userid,
       imagepath: user.imagepath,
       firstname: user.firstname,
