@@ -860,8 +860,9 @@ export default function Component() {
                 Purchase Order from supplier {""} {successItem?.Entity.name}{" "}
                 {""}
                 with Invoice number {""}
-                {successItem?.InvoiceNumber.invoicenumber} {""} successfully
-                added.
+                {successItem?.InvoiceNumber.invoicenumber} {""} successfully{" "}
+                {""}
+                {successAction === "added" ? "added" : "Edited"}
               </AlertDescription>
             </Alert>
           )}
