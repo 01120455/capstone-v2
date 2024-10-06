@@ -7,7 +7,6 @@ import SideMenu from "@/components/sidemenu";
 import { ViewItem } from "@/schemas/item.schema";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
-import transactionSchema, { Transaction } from "@/schemas/transaction.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
