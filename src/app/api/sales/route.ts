@@ -73,7 +73,6 @@ export const POST = async (req: NextRequest) => {
 
     const contactNumberIfNull = contactnumber || "";
 
-
     const [newPurchase, newInvoice] = await prisma.$transaction(async (tx) => {
       // Check or Create Entity with the appropriate role
       let entityId;
@@ -170,15 +169,21 @@ export const POST = async (req: NextRequest) => {
           itemUnitOfMeasurement = existingItem.unitofmeasurement;
 
           const currentStock = existingItem.stock ?? 0;
-          const newStock = currentStock - measurementvalue;
 
-          await tx.item.update({
-            where: { itemid: itemId },
-            data: {
-              stock: newStock,
-              lastmodifiedby: userid,
-            },
-          });
+          if (currentStock === 0) {
+            // Throw an error if stock is 0
+            throw new Error("Transaction cannot proceed: stock is zero.");
+          } else {
+            const newStock = currentStock - measurementvalue;
+
+            await tx.item.update({
+              where: { itemid: itemId },
+              data: {
+                stock: newStock,
+                lastmodifiedby: userid,
+              },
+            });
+          }
         }
 
         // Calculate total amount for each purchase item

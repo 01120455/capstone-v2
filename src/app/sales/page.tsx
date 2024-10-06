@@ -64,6 +64,7 @@ export default function Component() {
   const [invoiceExists, setInvoiceExists] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [emptyCart, setEmptyCart] = useState(false);
+  const [insufficientStock, setInsufficientStock] = useState(false);
   const { isAuthenticated, userRole } = useAuth();
   const router = useRouter();
 
@@ -232,6 +233,22 @@ export default function Component() {
     }
   };
 
+  const checkItemStock = async (itemid: number, quantity: number) => {
+    try {
+      const response = await fetch(`/api/item/${itemid}`);
+      if (response.ok) {
+        const item = await response.json();
+        return item.stock >= quantity; // Returns true if stock is enough
+      } else {
+        console.error("Error fetching item:", response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error fetching item:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (values: AddSales) => {
     if (cart.length === 0) {
       setEmptyCart(true);
@@ -244,6 +261,21 @@ export default function Component() {
     if (invoiceExists) {
       setInvoiceExists(true);
       setInvoiceNumber(values.InvoiceNumber.invoicenumber);
+      return;
+    }
+
+    // Check if the stock is enough for each item in the cart
+    const stockCheckPromises = cart.map((item) =>
+      checkItemStock(item.id, item.quantity)
+    );
+    const stockCheckResults = await Promise.all(stockCheckPromises);
+    const insufficientStock = stockCheckResults.some((result) => !result);
+    if (insufficientStock) {
+      setInsufficientStock(true);
+      setTimeout(() => {
+        setInsufficientStock(false);
+      }, 5000);
+      console.error("Insufficient stock for one or more items");
       return;
     }
 
@@ -305,6 +337,7 @@ export default function Component() {
       } else {
         const errorText = await uploadRes.text();
         console.error("Upload failed:", errorText);
+        throw new Error(errorText);
       }
     } catch (error) {
       console.error("Error adding purchase:", error);
@@ -359,6 +392,17 @@ export default function Component() {
               </AlertDescription>
             </Alert>
           )}
+          {insufficientStock && (
+            <Alert className="alert-center">
+              <AlertTitle className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-6 w-6" />
+                Insufficient Stock
+              </AlertTitle>
+              <AlertDescription>
+                One or more items in the cart have insufficient stock.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="flex-1 overflow-y-auto p-4">
             <div className="grid gap-2 md:grid-cols-[1fr_400px]">
               <div className="flex-1 overflow-auto p-4 md:p-8">
@@ -378,12 +422,28 @@ export default function Component() {
                             height={250}
                             className="rounded-lg mb-4 object-cover h-32 w-32 lg:h-48 lg:w-48"
                           />
+
                           <h3 className="text-lg font-semibold mb-2">
                             {item.name}
                           </h3>
-                          <p className="text-gray-500 mb-4">
-                            ₱{item.unitprice}
-                          </p>
+                          <div className="flex flex-row justify-between">
+                            <p className="text-gray-500 mb-4">
+                              ₱{item.unitprice}
+                            </p>
+                            <p className="text-gray-500 mb-4 text-right">
+                              {item.type === "bigas" ? "Rice" : "Palay"}
+                            </p>
+                            {item.unitofmeasurement === "quantity" && (
+                              <p className="text-gray-500 mb-4 text-right">
+                                {item.stock} pcs
+                              </p>
+                            )}
+                            {item.unitofmeasurement === "weight" && (
+                              <p className="text-gray-500 mb-4 text-right">
+                                {item.stock} kg
+                              </p>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2">
                             <Button
                               variant="outline"
