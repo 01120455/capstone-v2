@@ -19,11 +19,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import SideMenu from "@/components/sidemenu";
-import entitySchema, {
-  Entity,
-  EntityTransaction,
-} from "@/schemas/entity.schema";
+import entitySchema, { Entity } from "@/schemas/entity.schema";
 import {
   TransactionItem,
   TransactionTable,
@@ -53,6 +49,8 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
+import Layout from "@/components/layout";
+import AccessDenied from "@/components/accessdenied";
 
 export default function Component() {
   const [suppliers, setSuppliers] = useState<Entity[]>([]);
@@ -134,7 +132,7 @@ export default function Component() {
     }
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
@@ -233,7 +231,7 @@ export default function Component() {
   ) {
     return (
       <div className="flex h-screen">
-        <SideMenu />
+        <Layout />
         <div className="flex-1 overflow-y-auto p-8">
           <div className="container mx-auto px-4 md:px-6 py-8">
             <h1 className="text-3xl font-bold mb-6">Supplier Management</h1>
@@ -564,26 +562,5 @@ export default function Component() {
     );
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-[380px]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            You do not have permission to view this page.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button asChild className="w-full">
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+  return <AccessDenied />;
 }

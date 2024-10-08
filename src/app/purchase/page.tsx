@@ -46,7 +46,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import Image from "next/image";
 import transactionSchema, {
   Transaction,
   TransactionItem,
@@ -58,7 +57,6 @@ import transactionItemSchema, {
 } from "@/schemas/transactionitem.schema";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import SideMenu from "@/components/sidemenu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   PlusIcon,
@@ -69,18 +67,11 @@ import {
 } from "@/components/icons/Icons";
 import { useAuth } from "../../utils/hooks/auth";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { AlertCircle } from "@/components/icons/Icons";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { User } from "@/interfaces/user";
+import Layout from "@/components/layout";
+import AccessDenied from "@/components/accessdenied";
 
 const ROLES = {
   SALES: "sales",
@@ -112,7 +103,7 @@ export default function Component() {
   const [successTransactionItem, setSuccessTransactionItem] =
     useState<TransactionItemOnly | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
   const { isAuthenticated, userRole } = useAuth();
@@ -137,7 +128,6 @@ export default function Component() {
       walkin: false,
       frommilling: false,
       taxpercentage: 0,
-      // totalamount: 0,
       Entity: {
         entityid: 0,
         name: "",
@@ -240,10 +230,10 @@ export default function Component() {
     if (showSuccess) {
       setShowSuccessTI(false);
       const timer = setTimeout(() => {
-        setShowSuccess(false); // Hide the alert after 5 seconds
-      }, 8000); // Adjust time as needed
+        setShowSuccess(false);
+      }, 8000);
 
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
+      return () => clearTimeout(timer);
     }
   }, [showSuccess]);
 
@@ -251,10 +241,10 @@ export default function Component() {
     if (showSuccessTI) {
       setShowSuccess(false);
       const timer = setTimeout(() => {
-        setShowSuccessTI(false); // Hide the alert after 5 seconds
-      }, 8000); // Adjust time as needed
+        setShowSuccessTI(false);
+      }, 8000);
 
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
+      return () => clearTimeout(timer);
     }
   }, [showSuccessTI]);
 
@@ -275,37 +265,6 @@ export default function Component() {
     };
     fetchUser();
   }, []);
-
-  // useEffect(() => {
-  //   async function getPurchaseItem() {
-  //     try {
-  //       const response = await fetch("/api/purchaseitem");
-  //       if (response.ok) {
-  //         const purchaseItems = await response.json();
-  //         setPurchases(purchaseItems);
-  //       } else {
-  //         console.error("Error fetching purchase items:", response.status);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching items:", error);
-  //     }
-  //   }
-  //   getPurchaseItem();
-  // }, []);
-
-  // const refreshPurchaseItems = async () => {
-  //   try {
-  //     const response = await fetch("/api/purchaseitem");
-  //     if (response.ok) {
-  //       const purchaseItems = await response.json();
-  //       setPurchaseItems(purchaseItems);
-  //     } else {
-  //       console.error("Error fetching purchase items:", response.status);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching purchase items:", error);
-  //   }
-  // }
 
   const refreshPurchases = async () => {
     try {
@@ -332,7 +291,6 @@ export default function Component() {
       walkin: false,
       frommilling: false,
       taxpercentage: 0,
-      // totalamount: 0,
       Entity: {
         entityid: 0,
         name: "",
@@ -432,7 +390,6 @@ export default function Component() {
       walkin: false,
       frommilling: false,
       taxpercentage: 0,
-      // totalamount: 0,
       Entity: {
         entityid: 0,
         name: "",
@@ -478,7 +435,6 @@ export default function Component() {
       walkin: false,
       frommilling: false,
       taxpercentage: 0,
-      // totalamount: 0,
       Entity: {
         entityid: 0,
         name: "",
@@ -490,23 +446,6 @@ export default function Component() {
       },
     });
   };
-
-  // const handleCancelPurchaseItem = () => {
-  //   setShowModalPurchaseItem(false);
-
-  //   formPurchaseItem.reset({
-  //     transactionitemid: 0,
-  //     Item: {
-  //       itemid: 0,
-  //       name: "",
-  //       type: "palay",
-  //       sackweight: "bag25kg",
-  //     },
-  //     unitofmeasurement: "",
-  //     measurementvalue: 0,
-  //     unitprice: 0,
-  //   });
-  // };
 
   const handleViewPurchaseItem = (purchase: TransactionTable) => {
     setPurchaseItems(purchase.TransactionItem);
@@ -589,7 +528,6 @@ export default function Component() {
           console.log("Purchase added successfully");
         }
 
-        // Check if the result has the expected structure
         if (uploadResult.Entity) {
           setSuccessItem(uploadResult);
         } else {
@@ -613,19 +551,16 @@ export default function Component() {
   };
 
   const handleSubmitEditPurchaseItem = async (values: TransactionItemOnly) => {
-    // Validate required fields
     if (!values.transactionid) {
       console.error("Transaction ID is required.");
       return;
     }
 
-    // Check if it's an update or create operation
-    const isUpdate = !!values.transactionitemid; // True if transactionitemid exists
+    const isUpdate = !!values.transactionitemid;
     const endpoint = isUpdate
-      ? `/api/purchaseitem/purchaseitem/${values.transactionitemid}` // PUT endpoint for update
-      : `/api/purchaseitem/purchaseitem/${values.transactionid}`; // POST endpoint for creation
+      ? `/api/purchaseitem/purchaseitem/${values.transactionitemid}`
+      : `/api/purchaseitem/purchaseitem/${values.transactionid}`;
 
-    // Prepare form data for submission
     const formData = new FormData();
     formData.append("Item[name]", values.Item.name);
     formData.append("Item[type]", values.Item.type);
@@ -633,11 +568,11 @@ export default function Component() {
     formData.append("unitofmeasurement", values.unitofmeasurement);
     formData.append("measurementvalue", values.measurementvalue.toString());
     formData.append("unitprice", values.unitprice.toString());
-    formData.append("transactionid", values.transactionid.toString()); // Convert to string
+    formData.append("transactionid", values.transactionid.toString());
 
     try {
       const uploadRes = await fetch(endpoint, {
-        method: isUpdate ? "PUT" : "POST", // Determine HTTP method based on the operation
+        method: isUpdate ? "PUT" : "POST",
         body: formData,
       });
 
@@ -770,16 +705,16 @@ export default function Component() {
     walkin: formPurchaseOnly.getValues("walkin") || false,
     frommilling: formPurchaseOnly.getValues("frommilling") || false,
     Entity: {
-      entityid: formPurchaseOnly.getValues("Entity.entityid") || null, // or default value if applicable
-      name: formPurchaseOnly.getValues("Entity.name") || "", // Must not be undefined
+      entityid: formPurchaseOnly.getValues("Entity.entityid") || null,
+      name: formPurchaseOnly.getValues("Entity.name") || "",
       contactnumber: formPurchaseOnly.getValues("Entity.contactnumber"),
     },
     InvoiceNumber: {
       invoicenumberid: formPurchaseOnly.getValues(
         "InvoiceNumber.invoicenumberid"
-      ), // or default value if applicable
+      ),
       invoicenumber:
-        formPurchaseOnly.getValues("InvoiceNumber.invoicenumber") || "", // Must not be undefined
+        formPurchaseOnly.getValues("InvoiceNumber.invoicenumber") || "",
     },
   };
 
@@ -788,7 +723,6 @@ export default function Component() {
     role: string,
     transactionData: any
   ) => {
-    // Check if the user can access the input based on their role
     if (!role) {
       return "access denied";
     }
@@ -801,22 +735,18 @@ export default function Component() {
       return false;
     };
 
-    // Check access rights
     if (!canAccessInput()) {
       return "access denied";
     }
 
-    // If we are adding a new item, we skip validation
     if (id === 0) {
-      // Assuming 0 indicates a new item
       return "add";
     }
 
-    // Validate the ID against the schemas
     const parsedData = transactionSchema.safeParse(transactionData);
 
     if (parsedData.success) {
-      const data = parsedData.data; // This is the validated data
+      const data = parsedData.data;
       if (data.transactionid === id) {
         return "edit";
       }
@@ -826,9 +756,8 @@ export default function Component() {
     }
   };
 
-  const transactionId = formPurchaseOnly.getValues("transactionid"); // Adjust the path as necessary
+  const transactionId = formPurchaseOnly.getValues("transactionid");
 
-  // Check user action based on the ID and role
   const action = userActionWithAccess(
     transactionId,
     user?.role || "",
@@ -839,14 +768,10 @@ export default function Component() {
     return <p>Loading...</p>;
   }
 
-  // if (isAuthenticated === false) {
-  //   return null; // Prevent showing the page while redirecting
-  // }
-
   if (userRole === "admin" || userRole === "manager") {
     return (
       <div className="flex h-screen">
-        <SideMenu />
+        <Layout />
         <div className="flex-1 overflow-y-hidden p-5">
           {showSuccess && (
             <Alert className="alert-center">
@@ -918,14 +843,17 @@ export default function Component() {
                         <TableHead>Supplier Name</TableHead>
                         <TableHead>Contact No.</TableHead>
                         <TableHead>Status</TableHead>
-                        {/* <TableHead>Walk-in</TableHead> */}
                         <TableHead>From Milling</TableHead>
                         <TableHead>Tax %</TableHead>
                         <TableHead>Tax Amount</TableHead>
                         <TableHead>Total Amount</TableHead>
                         <TableHead>Created at</TableHead>
-                        <TableHead>Last Modify by</TableHead>
-                        <TableHead>Last Modified at</TableHead>
+                        {canAccessButton(ROLES.ADMIN) && (
+                          <>
+                            <TableHead>Last Modify by</TableHead>
+                            <TableHead>Last Modified at</TableHead>
+                          </>
+                        )}
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -955,9 +883,6 @@ export default function Component() {
                                 {purchase.status}
                               </Badge>
                             </TableCell>
-                            {/* <TableCell>
-                              {purchase.walkin ? "Yes" : "No"}
-                            </TableCell> */}
                             <TableCell>
                               {purchase.frommilling ? "Yes" : "No"}
                             </TableCell>
@@ -981,24 +906,28 @@ export default function Component() {
                                   })
                                 : "N/A"}
                             </TableCell>
-                            <TableCell>
-                              {purchase.User
-                                ? `${purchase.User.firstname} ${purchase.User.lastname}`
-                                : "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {purchase.lastmodifiedat
-                                ? new Date(
-                                    purchase.lastmodifiedat
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                : "N/A"}
-                            </TableCell>
+                            {canAccessButton(ROLES.ADMIN) && (
+                              <>
+                                <TableCell>
+                                  {purchase.User
+                                    ? `${purchase.User.firstname} ${purchase.User.lastname}`
+                                    : "N/A"}
+                                </TableCell>
+                                <TableCell>
+                                  {purchase.lastmodifiedat
+                                    ? new Date(
+                                        purchase.lastmodifiedat
+                                      ).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : "N/A"}
+                                </TableCell>
+                              </>
+                            )}
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Button
@@ -1062,7 +991,7 @@ export default function Component() {
                           <Button
                             onClick={() => {
                               const transactionid =
-                                purchaseItems[0]?.transactionid; // Or select the specific purchase item by index
+                                purchaseItems[0]?.transactionid;
                               handleAddPurchaseItem(transactionid);
                             }}
                           >
@@ -1086,7 +1015,6 @@ export default function Component() {
                         >
                           <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                             <TableRow>
-                              {/* <TableHead>Purchased ID</TableHead> */}
                               <TableHead>Item Name</TableHead>
                               <TableHead>Item Type</TableHead>
                               <TableHead>Sack Weight</TableHead>
@@ -1107,9 +1035,6 @@ export default function Component() {
                                 purchaseItems.map(
                                   (purchaseItem, index: number) => (
                                     <TableRow key={index}>
-                                      {/* <TableCell>
-                              {purchaseItem.transactionitemid}
-                            </TableCell> */}
                                       <TableCell>
                                         {purchaseItem.Item.name}
                                       </TableCell>
@@ -1365,21 +1290,6 @@ export default function Component() {
                           />
                         </div>
                       </div>
-                      {/* {Object.keys(formPurchaseItemOnly.formState.errors)
-                        .length > 0 && (
-                        <Alert variant="destructive">
-                          <AlertDescription>
-                            The following fields shouldn&apos;t be empty:
-                            <ul>
-                              {Object.keys(
-                                formPurchaseItemOnly.formState.errors
-                              ).map((field) => (
-                                <li key={field}>{field}</li>
-                              ))}
-                            </ul>
-                          </AlertDescription>
-                        </Alert>
-                      )} */}
                       <div className="flex justify-end gap-4 mt-4">
                         <Button variant="outline" onClick={handleCancel}>
                           Cancel
@@ -1563,37 +1473,6 @@ export default function Component() {
                             )}
                           />
                         </div>
-                        {/* <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="walkin"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="walkin">
-                                  Walk in Purchase
-                                </FormLabel>
-                                <FormControl>
-                                  <Select
-                                    value={field.value ? "true" : "false"}
-                                    onValueChange={(value) => {
-                                      field.onChange(value === "true");
-                                    }}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select Value">
-                                        {field.value ? "Yes" : "No"}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="true">Yes</SelectItem>
-                                      <SelectItem value="false">No</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div> */}
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
@@ -1625,38 +1504,6 @@ export default function Component() {
                             )}
                           />
                         </div>
-                        {/* <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="frommilling"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="frommilling">
-                                From Milling
-                              </FormLabel>
-                              <FormControl>
-                                <div className="flex items-center">
-                                  <Input
-                                    id="frommilling"
-                                    type="checkbox"
-                                    checked={field.value}
-                                    onChange={(e) =>
-                                      field.onChange(e.target.checked)
-                                    }
-                                    className="mr-2"
-                                  />
-                                  <FormLabel
-                                    htmlFor="frommilling"
-                                    className="mb-0"
-                                  >
-                                    {field.value ? "True" : "False"}
-                                  </FormLabel>
-                                </div>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div> */}
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
@@ -1678,20 +1525,6 @@ export default function Component() {
                           />
                         </div>
                       </div>
-                      {/* {Object.keys(form.formState.errors).length > 0 && (
-                        <Alert variant="destructive">
-                          <AlertDescription>
-                            The following fields shouldn&apos;t be empty:
-                            <ul>
-                              {Object.keys(form.formState.errors).map(
-                                (field) => (
-                                  <li key={field}>{field}</li>
-                                )
-                              )}
-                            </ul>
-                          </AlertDescription>
-                        </Alert>
-                      )} */}
                       {!form.getValues("transactionid") && (
                         <>
                           <div className="overflow-y-auto h-[300px] border rounded-lg p-2">
@@ -1880,7 +1713,22 @@ export default function Component() {
                                 </div>
                               </div>
                             ))}
-                            <Button onClick={() => append({})} className="mt-4">
+                            <Button
+                              onClick={() =>
+                                append({
+                                  Item: {
+                                    type: "palay",
+                                    name: "",
+                                    sackweight: "bag25kg",
+                                    itemid: undefined,
+                                  },
+                                  unitofmeasurement: "",
+                                  measurementvalue: 0,
+                                  unitprice: 0,
+                                })
+                              }
+                              className="mt-4"
+                            >
                               Add Item
                             </Button>
                           </div>
@@ -1971,7 +1819,9 @@ ${
                               name="Entity.name"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel htmlFor="name">Name</FormLabel>
+                                  <FormLabel htmlFor="name">
+                                    Supplier Name
+                                  </FormLabel>
                                   <FormControl>
                                     <Input {...field} id="name" type="text" />
                                   </FormControl>
@@ -2123,26 +1973,5 @@ ${
     );
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-[380px]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            You do not have permission to view this page.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button asChild className="w-full">
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+  return <AccessDenied />;
 }

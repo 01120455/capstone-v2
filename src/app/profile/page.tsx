@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import SideMenu from "@/components/sidemenu";
 import { ChangeEvent, useEffect, useState } from "react";
-import { User } from "@/interfaces/user";
 import {
   Form,
   FormControl,
@@ -26,13 +25,11 @@ import {
 import { useForm } from "react-hook-form";
 import { user, AddUser } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Layout from "@/components/layout";
 
 export default function Component() {
   const [userSession, setUserSession] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
-
-  // const userID = userSession?.userid;
-  // console.log("User ID:", userID);
 
   const form = useForm<AddUser>({
     resolver: zodResolver(user),
@@ -105,7 +102,7 @@ export default function Component() {
             role: session.role || "",
             status: "active",
             username: session.username || "",
-            password: "", 
+            password: "",
             userid: session.userid || 0,
           });
         }
@@ -124,7 +121,6 @@ export default function Component() {
     console.log("Form Values:", values);
     const formData = new FormData();
 
-
     formData.append("firstname", values.firstname);
     formData.append("middlename", values.middlename ?? "");
     formData.append("lastname", values.lastname);
@@ -133,18 +129,18 @@ export default function Component() {
     formData.append("username", values.username);
 
     if (selectedFile) {
-      formData.append("image", selectedFile); 
+      formData.append("image", selectedFile);
     }
 
     if (values.password) {
-      formData.append("password", values.password); 
+      formData.append("password", values.password);
     }
 
     try {
       if (values.userid) {
-        const endpoint = `/api/user/`; 
+        const endpoint = `/api/user/`;
 
-        formData.append("userid", values.userid.toString()); 
+        formData.append("userid", values.userid.toString());
 
         const uploadRes = await fetch(endpoint, {
           method: "PUT",
@@ -159,7 +155,7 @@ export default function Component() {
             console.log("Image uploaded successfully:", uploadResult.imagepath);
           }
 
-          form.reset(); 
+          form.reset();
         } else {
           console.error("Error updating user:", uploadRes.status);
         }
@@ -187,7 +183,7 @@ export default function Component() {
 
   return (
     <div className="flex h-screen">
-      <SideMenu />
+      <Layout />
       <div className="flex-1 overflow-y-auto p-8">
         <header className="flex flex-col sm:flex-row justify-start items-center mb-8">
           <div className="w-full">

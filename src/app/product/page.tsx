@@ -18,7 +18,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,23 +49,20 @@ import Image from "next/image";
 import { item, AddItem, ViewItem } from "@/schemas/item.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import SideMenu from "@/components/sidemenu";
-import { set } from "lodash";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { User } from "@/interfaces/user";
-import { FilePenIcon, PlusIcon, TrashIcon } from "@/components/icons/Icons";
+import {
+  FilePenIcon,
+  PlusIcon,
+  TrashIcon,
+  AlertCircle,
+  CheckCircle,
+} from "@/components/icons/Icons";
 import { useAuth } from "../../utils/hooks/auth";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { AlertCircle, CheckCircle } from "@/components/icons/Icons";
-import Link from "next/link";
+import Layout from "@/components/layout";
+import AccessDenied from "@/components/accessdenied";
 
 const ROLES = {
   SALES: "sales",
@@ -93,15 +89,11 @@ export default function Component() {
   const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
   const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
   const { isAuthenticated, userRole } = useAuth();
   const router = useRouter();
-
-  // const filteredItems = items.filter((item) =>
-  //   item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
 
   const filteredItems = items.filter((item) => {
     // Convert searchTerm to lower case for case-insensitive comparison
@@ -142,10 +134,10 @@ export default function Component() {
   useEffect(() => {
     if (showAlertItem) {
       const timer = setTimeout(() => {
-        setShowAlertItem(false); // Hide the alert after 3 seconds
-      }, 5000); // Adjust time as needed
+        setShowAlertItem(false);
+      }, 5000);
 
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
+      return () => clearTimeout(timer);
     }
   }, [showAlertItem]);
 
@@ -153,10 +145,10 @@ export default function Component() {
     if (showSuccess) {
       setShowAlertItem(false);
       const timer = setTimeout(() => {
-        setShowSuccess(false); // Hide the alert after 5 seconds
-      }, 5000); // Adjust time as needed
+        setShowSuccess(false);
+      }, 5000);
 
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
+      return () => clearTimeout(timer);
     }
   }, [showSuccess]);
 
@@ -361,25 +353,6 @@ export default function Component() {
     }
   };
 
-  // const handleDelete = async (itemid: number | undefined) => {
-  //   try {
-  //     const response = await fetch(`/api/product-delete/${itemid}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     if (response.ok) {
-  //       console.log("Item deleted successfully");
-  //       setShowAlert(false);
-  //       setItemToDelete(null);
-  //       refreshItems();
-  //     } else {
-  //       console.error("Error deleting item:", response.status);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting item:", error);
-  //   }
-  // };
-
   const handleDelete = async (itemid: number | undefined) => {
     try {
       const response = await fetch(
@@ -474,18 +447,17 @@ export default function Component() {
   };
 
   const itemData = {
-    itemid: form.getValues("itemid") || 0, // Use 0 as a default if not available
-    name: form.getValues("name") || "", // Default to empty string or a valid value
+    itemid: form.getValues("itemid") || 0,
+    name: form.getValues("name") || "",
     sackweight: form.getValues("sackweight") || "",
     unitofmeasurement: form.getValues("unitofmeasurement") || "",
-    stock: form.getValues("stock") || 0, // Default to 0 if not available
+    stock: form.getValues("stock") || 0,
     unitprice: form.getValues("unitprice") || 0,
-    reorderlevel: form.getValues("reorderlevel") || null, // Use null if not available
+    reorderlevel: form.getValues("reorderlevel") || null,
     criticallevel: form.getValues("criticallevel") || null,
   };
 
   const userActionWithAccess = (id: number, role: string, itemData: any) => {
-    // Check if the user can access the input based on their role
     if (!role) {
       return "access denied";
     }
@@ -498,22 +470,18 @@ export default function Component() {
       return false;
     };
 
-    // Check access rights
     if (!canAccessInput()) {
       return "access denied";
     }
 
-    // If we are adding a new item, we skip validation
     if (id === 0) {
-      // Assuming 0 indicates a new item
       return "add";
     }
 
-    // Validate the ID against the schemas for editing
     const parsedData = item.safeParse(itemData);
 
     if (parsedData.success) {
-      const data = parsedData.data; // This is the validated data
+      const data = parsedData.data;
       if (data.itemid === id) {
         return "edit";
       }
@@ -522,15 +490,14 @@ export default function Component() {
       return "error";
     }
 
-    return "unknown action"; // Fallback case
+    return "unknown action";
   };
 
-  const itemId = form.getValues("itemid"); // Adjust the path as necessary
+  const itemId = form.getValues("itemid");
 
   let action: string = "access denied";
 
   if (itemId !== undefined) {
-    // Check user action based on the ID and role
     action = userActionWithAccess(itemId, user?.role || "", itemData);
     console.log("Action:", action);
   } else {
@@ -539,13 +506,8 @@ export default function Component() {
   }
 
   if (isAuthenticated === null) {
-    // Show a loading state while checking authentication
     return <p>Loading...</p>;
   }
-
-  // if (isAuthenticated === false) {
-  //   return null; // Prevent showing the page while redirecting
-  // }
 
   if (
     userRole === "admin" ||
@@ -554,7 +516,7 @@ export default function Component() {
   ) {
     return (
       <div className="flex h-screen">
-        <SideMenu />
+        <Layout />
         <div className="flex-1 overflow-y-hidden p-5">
           {showSuccess && (
             <Alert className="alert-center">
@@ -634,15 +596,6 @@ export default function Component() {
                     <TableBody>
                       {filteredItems.map((item) => (
                         <TableRow key={item.itemid}>
-                          {/* <TableCell>
-                        <Image
-                          src={item.itemimage[0]?.imagepath ?? ""}
-                          alt="Product Image"
-                          width={250}
-                          height={250}
-                          className="rounded"
-                        />
-                      </TableCell> */}
                           <TableCell>
                             <Button
                               variant="outline"
@@ -1032,17 +985,6 @@ export default function Component() {
                           </div>
                         )}
                       </div>
-                      {/* {Object.keys(form.formState.errors).length > 0 && (
-                        <Alert variant="destructive">
-                          <AlertDescription>
-                            {Object.keys(form.formState.errors).map((field) => (
-                              <span key={field}>{field}</span>
-                            ))}
-                            {""} is required.
-                          </AlertDescription>
-                        </Alert>
-                      )} */}
-
                       <DialogFooter className="pt-2 lg:pt-1">
                         <div className="flex justify-end space-x-2">
                           <Button variant="outline" onClick={handleCancel}>
@@ -1062,26 +1004,5 @@ export default function Component() {
     );
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-[380px]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            You do not have permission to view this page.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button asChild className="w-full">
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+  return <AccessDenied />;
 }

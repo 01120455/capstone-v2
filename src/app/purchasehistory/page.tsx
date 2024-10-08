@@ -12,24 +12,14 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import SideMenu from "@/components/sidemenu";
-import transactionSchema, {
-  TransactionTable,
-} from "@/schemas/transaction.schema";
+import { TransactionTable } from "@/schemas/transaction.schema";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { XIcon, ArrowRightIcon } from "@/components/icons/Icons";
 import { useAuth } from "../../utils/hooks/auth";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { AlertCircle } from "@/components/icons/Icons";
-import Link from "next/link";
+import Layout from "@/components/layout";
+import AccessDenied from "@/components/accessdenied";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -50,7 +40,7 @@ export default function Component() {
       try {
         const response = await fetch("/api/suppliertransaction");
         const text = await response.text();
-        console.log("Raw Response Text:", text);
+        // console.log("Raw Response Text:", text);
 
         const data = JSON.parse(text);
 
@@ -66,9 +56,9 @@ export default function Component() {
           };
         });
 
-        console.log("Parsed Data with Date Conversion:", parsedData);
+        // console.log("Parsed Data with Date Conversion:", parsedData);
 
-        console.log("Parsed Data:", parsedData);
+        // console.log("Parsed Data:", parsedData);
         setPurchases(parsedData);
       } catch (error) {
         console.error("Error in getPurchases:", error);
@@ -79,8 +69,8 @@ export default function Component() {
   }, []);
 
   const filteredTransactions = useMemo(() => {
-    console.log("Filters:", filters);
-    console.log("Search Term:", searchTerm);
+    // console.log("Filters:", filters);
+    // console.log("Search Term:", searchTerm);
 
     if (
       !filters.invoiceno &&
@@ -96,12 +86,11 @@ export default function Component() {
     return purchases.filter((purchase) => {
       const invoiceNo =
         purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-      const supplierName =
-        `${purchase.Entity.name}`.toLowerCase();
+      const supplierName = `${purchase.Entity.name}`.toLowerCase();
       const searchLower = searchTerm.toLowerCase();
 
-      console.log("Invoice Number:", invoiceNo);
-      console.log("Filter Invoice Number:", filters.invoiceno.toLowerCase());
+      // console.log("Invoice Number:", invoiceNo);
+      // console.log("Filter Invoice Number:", filters.invoiceno.toLowerCase());
 
       const itemNameMatches = purchase.TransactionItem.some((item) => {
         const itemName = item?.Item?.name?.toLowerCase() || "";
@@ -163,7 +152,7 @@ export default function Component() {
   if (userRole === "admin" || userRole === "manager") {
     return (
       <div className="flex h-screen">
-        <SideMenu />
+        <Layout />
         <div className="flex-1 overflow-y-auto p-8">
           <div className="container mx-auto px-4 md:px-6 ">
             <h1 className="text-2xl font-bold mb-6">Purchase Order History</h1>
@@ -198,9 +187,7 @@ export default function Component() {
                         <div className="font-medium text-muted-foreground">
                           Supplier Name:
                         </div>
-                        <div>
-                          {selectedTransaction.Entity.name}
-                        </div>
+                        <div>{selectedTransaction.Entity.name}</div>
                         <div className="font-medium text-muted-foreground">
                           Purchase Date:
                         </div>
@@ -350,12 +337,6 @@ export default function Component() {
                                     onClick={() =>
                                       setSelectedTransaction(transaction)
                                     }
-                                    // onClick={() => {
-                                    //   console.log(transaction); // Ensure `transaction` is defined and has expected properties
-                                    //   if (transaction) {
-                                    //     setSelectedTransaction(transaction);
-                                    //   }
-                                    // }}
                                     className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                                   >
                                     <TableCell>
@@ -533,26 +514,5 @@ export default function Component() {
     );
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-[380px]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            You do not have permission to view this page.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button asChild className="w-full">
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+  return <AccessDenied />;
 }

@@ -19,7 +19,6 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import SideMenu from "@/components/sidemenu";
 import { Entity } from "@/schemas/entity.schema";
 import {
   TransactionItem,
@@ -36,6 +35,7 @@ import { useAuth } from "../../utils/hooks/auth";
 import { useRouter } from "next/navigation";
 import { Cell, LabelList, Pie, PieChart } from "recharts";
 import Link from "next/link";
+import Layout from "@/components/layout";
 
 type CategorySpend = {
   [key: string]: number;
@@ -57,7 +57,6 @@ export default function Component() {
   const router = useRouter();
 
   const handleCustomerSelect = (customer: Entity) => {
-    // Assuming Entity includes entityid, firstname, etc.
     const transactionForSelectedCustomer = transactions.find(
       (transaction) => transaction.Entity.entityid === customer.entityid
     );
@@ -96,11 +95,6 @@ export default function Component() {
             (!dateFilter.end || purchaseDate <= new Date(dateFilter.end)) &&
             (!categoryFilter ||
               itemNames.includes(categoryFilter.toLowerCase()))
-            // (!categoryFilter ||
-            //   (purchase.TransactionItem[0]?.Item?.name &&
-            //     purchase.TransactionItem[0].Item.name
-            //       .toLowerCase()
-            //       .includes(categoryFilter.toLowerCase())))
           );
         })
     : [];
@@ -144,16 +138,6 @@ export default function Component() {
       [key]: value,
     }));
   };
-
-  // const handleSave = () => {
-  //   setFilteredPurchases((prevData) =>
-  //     prevData.map((row) =>
-  //       row.transactionid === editingRow ? { ...row, ...editData } : row
-  //     )
-  //   );
-  //   setEditingRow(null);
-  //   setEditData({});
-  // };
 
   useEffect(() => {
     const getSales = async () => {
@@ -243,14 +227,10 @@ export default function Component() {
     return <p>Loading...</p>;
   }
 
-  // if (isAuthenticated === false) {
-  //   return null; // Prevent showing the page while redirecting
-  // }
-
   if (userRole === "admin" || userRole === "manager" || userRole === "sales") {
     return (
       <div className="flex h-screen">
-        <SideMenu />
+        <Layout />
         <div className="flex-1 overflow-y-auto p-4">
           <div className="flex flex-col h-full">
             <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">
@@ -290,33 +270,6 @@ export default function Component() {
                     <div className="mt-4">
                       <h2 className="text-lg font-bold">Purchase History</h2>
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4">
-                        {/* <Popover>
-                    <PopoverTrigger>
-                      <button>Start Date</button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <Calendar
-                        value={dateFilter.start}
-                        onChange={(date) =>
-                          setDateFilter({ ...dateFilter, start: date })
-                        }
-                      />
-                    </PopoverContent>
-                  </Popover>
-
-                  <Popover>
-                    <PopoverTrigger>
-                      <button>End Date</button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <Calendar
-                        value={dateFilter.end}
-                        onChange={(date) =>
-                          setDateFilter({ ...dateFilter, end: date })
-                        }
-                      />
-                    </PopoverContent>
-                  </Popover> */}
                         <div className="grid gap-2 mt-4">
                           <Label htmlFor="start-date">Start Date</Label>
                           <Input
@@ -354,10 +307,7 @@ export default function Component() {
                             onChange={(e) => setCategoryFilter(e.target.value)}
                           />
                         </div>
-                        <Button
-                          className="mt-9"
-                          // onClick={handleClearFilters}
-                        >
+                        <Button className="mt-9" onClick={handleClearFilters}>
                           Clear Filters
                         </Button>
                       </div>
@@ -454,18 +404,6 @@ export default function Component() {
                               </TableRow>
                             )
                           )}
-
-                          {/* {filteredPurchases.map((purchase) => (
-                      <TableRow key={purchase.id}>
-                        <TableCell>{purchase.date}</TableCell>
-                        <TableCell>
-                          {purchase.items.map((item, index) => (
-                            <div key={index}>{item}</div>
-                          ))}
-                        </TableCell>
-                        <TableCell>${purchase.total.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))} */}
                         </TableBody>
                       </Table>
                     </div>
@@ -571,25 +509,36 @@ export default function Component() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-[380px]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            You do not have permission to view this page.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button asChild className="w-full">
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </CardFooter>
-      </Card>
+    <div className="flex h-screen">
+      <div className="flex items-center justify-center w-full">
+        <div className="flex justify-center">
+          <Card className="w-[400px]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="h-5 w-5" />
+                Access Denied
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                You do not have permission to view this page.
+              </p>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button
+                onClick={() => router.back()}
+                variant="secondary"
+                className="max-w-lg"
+              >
+                Go Back
+              </Button>
+              <Button asChild className="max-w-lg">
+                <Link href="/login">Go to Login</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

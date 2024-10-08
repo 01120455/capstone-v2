@@ -3,7 +3,6 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import SideMenu from "@/components/sidemenu";
 import { ViewItem } from "@/schemas/item.schema";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -33,16 +32,10 @@ import Table, {
 import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
 import { useAuth } from "../../utils/hooks/auth";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { AlertCircle, CheckCircle, TrashIcon } from "@/components/icons/Icons";
-import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Layout from "@/components/layout";
+import AccessDenied from "@/components/accessdenied";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
@@ -144,33 +137,31 @@ export default function Component() {
 
   useEffect(() => {
     if (showSuccess) {
-      setInvoiceExists(false); // Reset the invoice exists state
+      setInvoiceExists(false);
       setEmptyCart(false);
       const timer = setTimeout(() => {
-        setShowSuccess(false); // Hide the alert after 5 seconds
-      }, 5000); // Adjust time as needed
+        setShowSuccess(false);
+      }, 5000);
 
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
+      return () => clearTimeout(timer);
     }
   }, [showSuccess]);
 
   useEffect(() => {
     if (invoiceExists) {
       const timer = setTimeout(() => {
-        setInvoiceExists(false); // Hide the alert after 3 seconds
-      }, 5000); // Adjust time as needed
-
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
+        setInvoiceExists(false);
+      }, 5000);
+      return () => clearTimeout(timer);
     }
   }, [invoiceExists]);
 
   useEffect(() => {
     if (emptyCart) {
       const timer = setTimeout(() => {
-        setEmptyCart(false); // Hide the alert after 3 seconds
-      }, 5000); // Adjust time as needed
-
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
+        setEmptyCart(false);
+      }, 5000);
+      return () => clearTimeout(timer);
     }
   }, [emptyCart]);
 
@@ -221,7 +212,7 @@ export default function Component() {
       const response = await fetch(`/api/invoicenumber/${invoicenumber}`);
       if (response.ok) {
         const data = await response.json();
-        return data.exists; // Returns true if exists, false otherwise
+        return data.exists;
       } else {
         console.error("Error checking invoice number:", response.status);
         return false;
@@ -237,7 +228,7 @@ export default function Component() {
       const response = await fetch(`/api/item/${itemid}`);
       if (response.ok) {
         const item = await response.json();
-        return item.stock >= quantity; // Returns true if stock is enough
+        return item.stock >= quantity;
       } else {
         console.error("Error fetching item:", response.status);
         return false;
@@ -251,7 +242,7 @@ export default function Component() {
   const handleSubmit = async (values: AddSales) => {
     if (cart.length === 0) {
       setEmptyCart(true);
-      return; // Exit the function early
+      return;
     }
 
     const invoiceExists = await checkInvoiceExists(
@@ -263,7 +254,6 @@ export default function Component() {
       return;
     }
 
-    // Check if the stock is enough for each item in the cart
     const stockCheckPromises = cart.map((item) =>
       checkItemStock(item.id, item.quantity)
     );
@@ -347,14 +337,10 @@ export default function Component() {
     return <p>Loading...</p>;
   }
 
-  // if (isAuthenticated === false) {
-  //   return null; // Prevent showing the page while redirecting
-  // }
-
   if (userRole === "admin" || userRole === "manager" || userRole === "sales") {
     return (
       <div className="flex h-screen">
-        <SideMenu />
+        <Layout />
         <div className="flex-1 flex flex-col overflow-hidden">
           {showSuccess && (
             <Alert className="alert-center">
@@ -457,8 +443,6 @@ export default function Component() {
                   </div>
                 </div>
               </div>
-
-              {/* Cart Section */}
               <div className="bg-white shadow-t md:p-2">
                 <h2 className="text-xl font-bold">Sale Details</h2>
                 <Form {...form}>
@@ -467,7 +451,6 @@ export default function Component() {
                     className="w-full max-w-full mx-auto p-4 sm:p-6"
                   >
                     <div className="grid grid-cols-2 gap-2 py-2">
-                      {/* Invoice Number */}
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
@@ -611,19 +594,6 @@ export default function Component() {
                         />
                       </div>
                     </div>
-                    {/* {Object.keys(form.formState.errors).length > 0 && (
-                      <Alert variant="destructive">
-                        <AlertDescription>
-                          The following fields shouldn&apos;t be empty:
-                          <ul>
-                            {Object.keys(form.formState.errors).map((field) => (
-                              <li key={field}>{field}</li>
-                            ))}
-                          </ul>
-                        </AlertDescription>
-                      </Alert>
-                    )} */}
-                    {/* Cart Details */}
                     <div className="mt-6 bg-gray-100 p-4 rounded-md">
                       <h2 className="text-lg font-semibold mb-2">
                         Order Summary
@@ -676,8 +646,6 @@ export default function Component() {
                         </Table>
                       </div>
                     </div>
-
-                    {/* Total and Checkout */}
                     <div className="mt-4 flex items-center justify-between">
                       <p className="text-lg font-semibold">
                         Total: ₱{total.toFixed(2)}
@@ -699,26 +667,5 @@ export default function Component() {
     );
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-[380px]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            You do not have permission to view this page.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button asChild className="w-full">
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
+  return <AccessDenied />;
 }
