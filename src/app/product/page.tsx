@@ -59,10 +59,6 @@ import {
   AlertCircle,
   CheckCircle,
 } from "@/components/icons/Icons";
-import { useAuth } from "../../utils/hooks/auth";
-import { useRouter } from "next/navigation";
-import Layout from "@/components/layout";
-import AccessDenied from "@/components/accessdenied";
 
 const ROLES = {
   SALES: "sales",
@@ -92,8 +88,6 @@ export default function Component() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
-  const { isAuthenticated, userRole } = useAuth();
-  const router = useRouter();
 
   const filteredItems = items.filter((item) => {
     // Convert searchTerm to lower case for case-insensitive comparison
@@ -505,153 +499,140 @@ export default function Component() {
     action = userActionWithAccess(0, user?.role || "", itemData);
   }
 
-  if (isAuthenticated === null) {
-    return <p>Loading...</p>;
-  }
+  return (
+    <div className="flex h-screen w-full">
+      <div className="flex-1 overflow-y-hidden p-5">
+        {showSuccess && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-6 w-6" />
+              {successAction === "added"
+                ? "Item Added Successfully"
+                : "Item Edited Successfully"}
+            </AlertTitle>
+            <AlertDescription>
+              Item {successItem?.name} with stocks of {successItem?.stock}{" "}
+              {successAction === "added" ? "added" : "edited"} successfully.
+            </AlertDescription>
+          </Alert>
+        )}
 
-  if (
-    userRole === "admin" ||
-    userRole === "manager" ||
-    userRole === "inventory"
-  ) {
-    return (
-      <div className="flex h-screen">
-        <Layout />
-        <div className="flex-1 overflow-y-hidden p-5">
-          {showSuccess && (
-            <Alert className="alert-center">
-              <AlertTitle className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-6 w-6" />
-                {successAction === "added"
-                  ? "Item Added Successfully"
-                  : "Item Edited Successfully"}
-              </AlertTitle>
-              <AlertDescription>
-                Item {successItem?.name} with stocks of {successItem?.stock}{" "}
-                {successAction === "added" ? "added" : "edited"} successfully.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {showAlertItem && (
-            <Alert className="alert-center">
-              <AlertTitle className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="h-6 w-6" />
-                {alertType === "reorder"
-                  ? "Reorder Level Reached"
-                  : "Critical Level Reached"}
-              </AlertTitle>
-              <AlertDescription>
-                The stock level Item {alertItem?.name} Type {alertItem?.type}{" "}
-                {""} {alertItem?.unitofmeasurement} has reached the{" "}
-                {alertType === "reorder" ? "reorder" : "critical"} level. Please
-                take necessary action.
-              </AlertDescription>
-            </Alert>
-          )}
-          <div className="p-6 md:p-8">
-            <div className="flex  items-center justify-between mb-6 -mr-6">
-              <h1 className="text-2xl font-bold ">Product Management</h1>
-              <Button onClick={handleAddProduct}>
-                {isSmallScreen ? (
-                  <PlusIcon className="w-6 h-6" />
-                ) : (
-                  "Add Product"
-                )}
-              </Button>
-            </div>
-            <div>
-              <Input
-                type="text"
-                placeholder="Search item name..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="w-full md:w-auto mb-4"
-              />
-            </div>
-            <div className="overflow-x-auto">
-              <div className="table-container relative ">
-                <ScrollArea>
-                  <Table
-                    style={{ width: "100%" }}
-                    className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                    divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                  >
-                    <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                      <TableRow>
-                        <TableHead>Image</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Sack Weight</TableHead>
-                        <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Available Stocks</TableHead>
-                        <TableHead>Unit Price</TableHead>
-                        <TableHead>Reorder Level</TableHead>
-                        <TableHead>Critical Level</TableHead>
-                        <TableHead>Last Modified by</TableHead>
-                        <TableHead>Last Modified at</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredItems.map((item) => (
-                        <TableRow key={item.itemid}>
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleShowImage(item)}
-                            >
-                              View Image
-                            </Button>
-                          </TableCell>
-                          <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.type}</TableCell>
-                          <TableCell>{item.sackweight}</TableCell>
-                          <TableCell>{item.unitofmeasurement}</TableCell>
-                          <TableCell>{formatStock(item.stock)}</TableCell>
-                          <TableCell>{formatPrice(item.unitprice)}</TableCell>
-                          <TableCell>{item.reorderlevel}</TableCell>
-                          <TableCell>{item.criticallevel}</TableCell>
-                          <TableCell>
-                            {item.User.firstname} {item.User.lastname}
-                          </TableCell>
-                          <TableCell>
-                            {item.lastmodifiedat
-                              ? new Date(
-                                  item.lastmodifiedat
-                                ).toLocaleDateString("en-US", {
+        {showAlertItem && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-6 w-6" />
+              {alertType === "reorder"
+                ? "Reorder Level Reached"
+                : "Critical Level Reached"}
+            </AlertTitle>
+            <AlertDescription>
+              The stock level Item {alertItem?.name} Type {alertItem?.type} {""}{" "}
+              {alertItem?.unitofmeasurement} has reached the{" "}
+              {alertType === "reorder" ? "reorder" : "critical"} level. Please
+              take necessary action.
+            </AlertDescription>
+          </Alert>
+        )}
+        <div className="p-6 md:p-8">
+          <div className="flex  items-center justify-between mb-6 -mr-6">
+            <h1 className="text-2xl font-bold ">Product Management</h1>
+            <Button onClick={handleAddProduct}>
+              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
+            </Button>
+          </div>
+          <div>
+            <Input
+              type="text"
+              placeholder="Search item name..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="w-full md:w-auto mb-4"
+            />
+          </div>
+          <div className="overflow-x-auto">
+            <div className="table-container relative ">
+              <ScrollArea>
+                <Table
+                  style={{ width: "100%" }}
+                  className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                  divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                >
+                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                    <TableRow>
+                      <TableHead>Image</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Sack Weight</TableHead>
+                      <TableHead>Unit of Measurement</TableHead>
+                      <TableHead>Available Stocks</TableHead>
+                      <TableHead>Unit Price</TableHead>
+                      <TableHead>Reorder Level</TableHead>
+                      <TableHead>Critical Level</TableHead>
+                      <TableHead>Last Modified by</TableHead>
+                      <TableHead>Last Modified at</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.map((item) => (
+                      <TableRow key={item.itemid}>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleShowImage(item)}
+                          >
+                            View Image
+                          </Button>
+                        </TableCell>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{item.type}</TableCell>
+                        <TableCell>{item.sackweight}</TableCell>
+                        <TableCell>{item.unitofmeasurement}</TableCell>
+                        <TableCell>{formatStock(item.stock)}</TableCell>
+                        <TableCell>{formatPrice(item.unitprice)}</TableCell>
+                        <TableCell>{item.reorderlevel}</TableCell>
+                        <TableCell>{item.criticallevel}</TableCell>
+                        <TableCell>
+                          {item.User.firstname} {item.User.lastname}
+                        </TableCell>
+                        <TableCell>
+                          {item.lastmodifiedat
+                            ? new Date(item.lastmodifiedat).toLocaleDateString(
+                                "en-US",
+                                {
                                   year: "numeric",
                                   month: "long",
                                   day: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                })
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(item)}
-                              >
-                                <FilePenIcon className="w-4 h-4" />
-                                <span className="sr-only">Edit</span>
-                              </Button>
-                              {canAccessButton(ROLES.ADMIN) && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDeleteItem(item)}
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                    <span className="sr-only">Delete</span>
-                                  </Button>
-                                </>
-                              )}
-                              {/* {user?.role === ROLES.MANAGER && (
+                                }
+                              )
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <FilePenIcon className="w-4 h-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            {canAccessButton(ROLES.ADMIN) && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteItem(item)}
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </>
+                            )}
+                            {/* {user?.role === ROLES.MANAGER && (
                                 <>
                                   <Button
                                     variant="outline"
@@ -663,272 +644,286 @@ export default function Component() {
                                   </Button>
                                 </>
                               )} */}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-              </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </div>
-            <>
-              {showImageModal && showImage && (
-                <Dialog open={showImageModal} onOpenChange={closeImage}>
-                  <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
-                    <div className="flex flex-col">
-                      <DialogHeader className="mb-2 flex items-start">
-                        <DialogTitle className="text-left flex-grow">
-                          Product Image
-                        </DialogTitle>
-                      </DialogHeader>
-                      <DialogDescription className="mb-4 text-left">
-                        <p>You can click outside to close</p>
-                      </DialogDescription>
-                      <div className="flex-grow flex items-center justify-center overflow-hidden">
-                        <div className="relative w-full h-[400px]">
-                          {showImage.itemimage[0]?.imagepath ? (
-                            <Image
-                              src={showImage.itemimage[0].imagepath}
-                              alt="Product Image"
-                              fill
-                              sizes="(max-width: 600px) 100vw, 50vw"
-                              style={{ objectFit: "contain" }}
-                              className="absolute"
-                            />
-                          ) : (
-                            <p className="text-center">No image available</p>
-                          )}
-                        </div>
-                      </div>
-                      <DialogFooter className="mt-4">
-                        <Button onClick={closeImage}>Close</Button>
-                      </DialogFooter>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </>
-            {itemToDelete && (
-              <AlertDialog open={showAlert}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete
-                      the item name {itemToDelete?.name} {""} which consists of
-                      {itemToDelete?.unitofmeasurement}
-                      {""}
-                      {itemToDelete?.stock} stocks and remove their data from
-                      our database.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={handleDeleteCancel}>
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleDelete(itemToDelete.itemid)}
-                    >
-                      Continue
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            {showModal && (
-              <Dialog open={showModal} onOpenChange={handleCancel}>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {form.getValues("itemid")
-                        ? "Edit Product"
-                        : "Add New Product"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      Fill out the form to{" "}
-                      {form.getValues("itemid") ? "edit a" : "add a new"}{" "}
-                      product to your inventory.
+          </div>
+          <>
+            {showImageModal && showImage && (
+              <Dialog open={showImageModal} onOpenChange={closeImage}>
+                <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
+                  <div className="flex flex-col">
+                    <DialogHeader className="mb-2 flex items-start">
+                      <DialogTitle className="text-left flex-grow">
+                        Product Image
+                      </DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="mb-4 text-left">
+                      <p>You can click outside to close</p>
                     </DialogDescription>
-                    <DialogClose onClick={handleCancel} />
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form
-                      className="w-full max-w-4xl mx-auto -mt-8 p-6"
-                      onSubmit={form.handleSubmit(handleSubmit)}
-                    >
-                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                    <div className="flex-grow flex items-center justify-center overflow-hidden">
+                      <div className="relative w-full h-[400px]">
+                        {showImage.itemimage[0]?.imagepath ? (
+                          <Image
+                            src={showImage.itemimage[0].imagepath}
+                            alt="Product Image"
+                            fill
+                            sizes="(max-width: 600px) 100vw, 50vw"
+                            style={{ objectFit: "contain" }}
+                            className="absolute"
+                          />
+                        ) : (
+                          <p className="text-center">No image available</p>
+                        )}
+                      </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                      <Button onClick={closeImage}>Close</Button>
+                    </DialogFooter>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </>
+          {itemToDelete && (
+            <AlertDialog open={showAlert}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the item name {itemToDelete?.name} {""} which consists of
+                    {itemToDelete?.unitofmeasurement}
+                    {""}
+                    {itemToDelete?.stock} stocks and remove their data from our
+                    database.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handleDeleteCancel}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDelete(itemToDelete.itemid)}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {showModal && (
+            <Dialog open={showModal} onOpenChange={handleCancel}>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {form.getValues("itemid")
+                      ? "Edit Product"
+                      : "Add New Product"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Fill out the form to{" "}
+                    {form.getValues("itemid") ? "edit a" : "add a new"} product
+                    to your inventory.
+                  </DialogDescription>
+                  <DialogClose onClick={handleCancel} />
+                </DialogHeader>
+                <Form {...form}>
+                  <form
+                    className="w-full max-w-4xl mx-auto -mt-8 p-6"
+                    onSubmit={form.handleSubmit(handleSubmit)}
+                  >
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="image"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="file">Upload Image</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...fileRef}
+                                  id="file"
+                                  type="file"
+                                  onChange={handleImage}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="name">Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} id="name" type="text" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="type"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="type">Type</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="bigas">Bigas</SelectItem>
+                                    <SelectItem value="palay">Palay</SelectItem>
+                                    <SelectItem value="resico">
+                                      Resico
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="sackweight"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="sackweight">
+                                Sack Weight
+                              </FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select Sack Weight">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="bag25kg">
+                                      Bag25kg
+                                    </SelectItem>
+                                    <SelectItem value="cavan50kg">
+                                      Cavan50kg
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="unitofmeasurement"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="unitofmeasurement">
+                                Unit of Measurement
+                              </FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select Unit of Measurement">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="quantity">
+                                      Quantity
+                                    </SelectItem>
+                                    <SelectItem value="weight">
+                                      Weight
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="stock"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="stock">
+                                Measurement Value
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} id="stock" type="number" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="unitprice"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="unitprice">
+                                Unit Price
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="unitprice"
+                                  type="number"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {(action === "add" ||
+                        (action === "edit" && user?.role === ROLES.ADMIN)) && (
                         <div className="space-y-2">
                           <FormField
                             control={form.control}
-                            name="image"
+                            name="reorderlevel"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel htmlFor="file">
-                                  Upload Image
+                                <FormLabel htmlFor="reorderlevel">
+                                  Reorder Level
                                 </FormLabel>
                                 <FormControl>
                                   <Input
-                                    {...fileRef}
-                                    id="file"
-                                    type="file"
-                                    onChange={handleImage}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="name">Name</FormLabel>
-                                <FormControl>
-                                  <Input {...field} id="name" type="text" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="type"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="type">Type</FormLabel>
-                                <FormControl>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
                                     {...field}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select type">
-                                        {field.value}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="bigas">
-                                        Bigas
-                                      </SelectItem>
-                                      <SelectItem value="palay">
-                                        Palay
-                                      </SelectItem>
-                                      <SelectItem value="resico">
-                                        Resico
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="sackweight"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="sackweight">
-                                  Sack Weight
-                                </FormLabel>
-                                <FormControl>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                    {...field}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select Sack Weight">
-                                        {field.value}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="bag25kg">
-                                        Bag25kg
-                                      </SelectItem>
-                                      <SelectItem value="cavan50kg">
-                                        Cavan50kg
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="unitofmeasurement"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="unitofmeasurement">
-                                  Unit of Measurement
-                                </FormLabel>
-                                <FormControl>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                    {...field}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select Unit of Measurement">
-                                        {field.value}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="quantity">
-                                        Quantity
-                                      </SelectItem>
-                                      <SelectItem value="weight">
-                                        Weight
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="stock"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="stock">
-                                  Measurement Value
-                                </FormLabel>
-                                <FormControl>
-                                  <Input {...field} id="stock" type="number" />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="unitprice"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="unitprice">
-                                  Unit Price
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="unitprice"
+                                    id="reorderlevel"
                                     type="number"
                                   />
                                 </FormControl>
@@ -936,73 +931,46 @@ export default function Component() {
                             )}
                           />
                         </div>
-                        {(action === "add" ||
-                          (action === "edit" &&
-                            user?.role === ROLES.ADMIN)) && (
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="reorderlevel"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="reorderlevel">
-                                    Reorder Level
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="reorderlevel"
-                                      type="number"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        )}
-                        {(action === "add" ||
-                          (action === "edit" &&
-                            user?.role === ROLES.ADMIN)) && (
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="criticallevel"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="criticallevel">
-                                    Critical Level
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="criticallevel"
-                                      type="number"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <DialogFooter className="pt-2 lg:pt-1">
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={handleCancel}>
-                            Cancel
-                          </Button>
-                          <Button type="submit">Save</Button>
+                      )}
+                      {(action === "add" ||
+                        (action === "edit" && user?.role === ROLES.ADMIN)) && (
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="criticallevel"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="criticallevel">
+                                  Critical Level
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="criticallevel"
+                                    type="number"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
                         </div>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
+                      )}
+                    </div>
+                    <DialogFooter className="pt-2 lg:pt-1">
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={handleCancel}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">Save</Button>
+                      </div>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
-    );
-  }
-
-  return <AccessDenied />;
+    </div>
+  );
 }

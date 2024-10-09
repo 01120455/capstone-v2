@@ -30,12 +30,8 @@ import Table, {
   TableRow,
 } from "@/components/ui/table";
 import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
-import { useAuth } from "../../utils/hooks/auth";
-import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle, TrashIcon } from "@/components/icons/Icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import Layout from "@/components/layout";
-import AccessDenied from "@/components/accessdenied";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
@@ -57,8 +53,6 @@ export default function Component() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [emptyCart, setEmptyCart] = useState(false);
   const [insufficientStock, setInsufficientStock] = useState(false);
-  const { isAuthenticated, userRole } = useAuth();
-  const router = useRouter();
 
   const form = useForm<AddSales>({
     resolver: zodResolver(salesTransactionSchema),
@@ -333,339 +327,326 @@ export default function Component() {
     }
   };
 
-  if (isAuthenticated === null) {
-    return <p>Loading...</p>;
-  }
+  return (
+    <div className="flex h-screen w-full">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {showSuccess && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-6 w-6" />
+              Sales added successfully.
+            </AlertTitle>
+            <AlertDescription>
+              Invoice Number {successItem?.InvoiceNumber.invoicenumber} {""}
+              for {""} {successItem?.Customer.name} {""} has been successfully
+              added to the system.
+            </AlertDescription>
+          </Alert>
+        )}
+        {invoiceExists && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-6 w-6" />
+              Invoice Number already exists.
+            </AlertTitle>
+            <AlertDescription>
+              Invoice Number {invoiceNumber} already exists in the system.
+            </AlertDescription>
+          </Alert>
+        )}
+        {emptyCart && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-6 w-6" />
+              Empty Cart Detected
+            </AlertTitle>
+            <AlertDescription>
+              Please add items to the cart before checkout.
+            </AlertDescription>
+          </Alert>
+        )}
+        {insufficientStock && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-6 w-6" />
+              Insufficient Stock
+            </AlertTitle>
+            <AlertDescription>
+              One or more items in the cart have insufficient stock.
+            </AlertDescription>
+          </Alert>
+        )}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="grid gap-2 md:grid-cols-[1fr_400px]">
+            <div className="flex-1 overflow-auto p-4 md:p-8">
+              <div className="overflow-y-auto h-[400px] lg:h-[600px] w-auto border rounded-lg p-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+                  {items &&
+                    items.map((item) => (
+                      <div
+                        key={item.itemid}
+                        className="bg-white rounded-lg shadow-sm p-4 flex flex-col"
+                        onClick={() => addToCart(item)}
+                      >
+                        <Image
+                          src={item.itemimage[0]?.imagepath ?? ""}
+                          alt="Product Image"
+                          width={250}
+                          height={250}
+                          className="rounded-lg mb-4 object-cover h-32 w-32 lg:h-48 lg:w-48"
+                        />
 
-  if (userRole === "admin" || userRole === "manager" || userRole === "sales") {
-    return (
-      <div className="flex h-screen">
-        <Layout />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {showSuccess && (
-            <Alert className="alert-center">
-              <AlertTitle className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-6 w-6" />
-                Sales added successfully.
-              </AlertTitle>
-              <AlertDescription>
-                Invoice Number {successItem?.InvoiceNumber.invoicenumber} {""}
-                for {""} {successItem?.Customer.name} {""} has been successfully
-                added to the system.
-              </AlertDescription>
-            </Alert>
-          )}
-          {invoiceExists && (
-            <Alert className="alert-center">
-              <AlertTitle className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="h-6 w-6" />
-                Invoice Number already exists.
-              </AlertTitle>
-              <AlertDescription>
-                Invoice Number {invoiceNumber} already exists in the system.
-              </AlertDescription>
-            </Alert>
-          )}
-          {emptyCart && (
-            <Alert className="alert-center">
-              <AlertTitle className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="h-6 w-6" />
-                Empty Cart Detected
-              </AlertTitle>
-              <AlertDescription>
-                Please add items to the cart before checkout.
-              </AlertDescription>
-            </Alert>
-          )}
-          {insufficientStock && (
-            <Alert className="alert-center">
-              <AlertTitle className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="h-6 w-6" />
-                Insufficient Stock
-              </AlertTitle>
-              <AlertDescription>
-                One or more items in the cart have insufficient stock.
-              </AlertDescription>
-            </Alert>
-          )}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="grid gap-2 md:grid-cols-[1fr_400px]">
-              <div className="flex-1 overflow-auto p-4 md:p-8">
-                <div className="overflow-y-auto h-[400px] lg:h-[600px] w-auto border rounded-lg p-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-                    {items &&
-                      items.map((item) => (
-                        <div
-                          key={item.itemid}
-                          className="bg-white rounded-lg shadow-sm p-4 flex flex-col"
-                          onClick={() => addToCart(item)}
-                        >
-                          <Image
-                            src={item.itemimage[0]?.imagepath ?? ""}
-                            alt="Product Image"
-                            width={250}
-                            height={250}
-                            className="rounded-lg mb-4 object-cover h-32 w-32 lg:h-48 lg:w-48"
-                          />
-
-                          <h3 className="text-lg font-semibold mb-2">
-                            {item.name}
-                          </h3>
-                          <div className="flex flex-row justify-between">
-                            <p className="text-gray-500 mb-4">
-                              ₱{item.unitprice}
-                            </p>
+                        <h3 className="text-lg font-semibold mb-2">
+                          {item.name}
+                        </h3>
+                        <div className="flex flex-row justify-between">
+                          <p className="text-gray-500 mb-4">
+                            ₱{item.unitprice}
+                          </p>
+                          <p className="text-gray-500 mb-4 text-right">
+                            {item.type === "bigas" ? "Rice" : "Palay"}
+                          </p>
+                          {item.unitofmeasurement === "quantity" && (
                             <p className="text-gray-500 mb-4 text-right">
-                              {item.type === "bigas" ? "Rice" : "Palay"}
+                              {item.stock} pcs
                             </p>
-                            {item.unitofmeasurement === "quantity" && (
-                              <p className="text-gray-500 mb-4 text-right">
-                                {item.stock} pcs
-                              </p>
-                            )}
-                            {item.unitofmeasurement === "weight" && (
-                              <p className="text-gray-500 mb-4 text-right">
-                                {item.stock} kg
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              className="px-4 py-2"
-                              onClick={() => addToCart(item)}
-                            >
-                              Add to Cart
-                            </Button>
-                          </div>
+                          )}
+                          {item.unitofmeasurement === "weight" && (
+                            <p className="text-gray-500 mb-4 text-right">
+                              {item.stock} kg
+                            </p>
+                          )}
                         </div>
-                      ))}
-                  </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            className="px-4 py-2"
+                            onClick={() => addToCart(item)}
+                          >
+                            Add to Cart
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                 </div>
               </div>
-              <div className="bg-white shadow-t md:p-2">
-                <h2 className="text-xl font-bold">Sale Details</h2>
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(handleSubmit)}
-                    className="w-full max-w-full mx-auto p-4 sm:p-6"
-                  >
-                    <div className="grid grid-cols-2 gap-2 py-2">
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="InvoiceNumber.invoicenumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="invoicenumber">
-                                Invoice Number
-                              </FormLabel>
-                              <FormControl>
+            </div>
+            <div className="bg-white shadow-t md:p-2">
+              <h2 className="text-xl font-bold">Sale Details</h2>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="w-full max-w-full mx-auto p-4 sm:p-6"
+                >
+                  <div className="grid grid-cols-2 gap-2 py-2">
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="InvoiceNumber.invoicenumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="invoicenumber">
+                              Invoice Number
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                id="invoicenumber"
+                                type="text"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="Customer.name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="name">Customer Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} id="name" type="text" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="Customer.contactnumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="contactnumber">
+                              Contact Number
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                id="contactnumber"
+                                type="text"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="status">
+                              Payment Status
+                            </FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                {...field}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status">
+                                    {field.value}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">
+                                    Pending
+                                  </SelectItem>
+                                  <SelectItem value="paid">Paid</SelectItem>
+                                  <SelectItem value="cancelled">
+                                    Cancelled
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="walkin"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="walkin">Walk-in</FormLabel>
+                            <FormControl>
+                              <Select
+                                value={field.value ? "true" : "false"}
+                                onValueChange={(value) => {
+                                  field.onChange(value === "true");
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Value">
+                                    {field.value ? "Yes" : "No"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="true">Yes</SelectItem>
+                                  <SelectItem value="false">No</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="taxpercentage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="taxpercentage">
+                              Tax Percentage
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                id="taxpercentage"
+                                type="number"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 bg-gray-100 p-4 rounded-md">
+                    <h2 className="text-lg font-semibold mb-2">
+                      Order Summary
+                    </h2>
+                    <div className="overflow-y-auto h-[200px] w-auto border rounded-lg p-2">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Item</TableHead>
+                            <TableHead>Qty</TableHead>
+                            <TableHead className="text-right">Price</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {cart.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{item.name}</TableCell>
+                              <TableCell>
                                 <Input
-                                  {...field}
-                                  id="invoicenumber"
-                                  type="text"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Customer.name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="name">
-                                Customer Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input {...field} id="name" type="text" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="Customer.contactnumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="contactnumber">
-                                Contact Number
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="contactnumber"
-                                  type="text"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="status">
-                                Payment Status
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select status">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pending">
-                                      Pending
-                                    </SelectItem>
-                                    <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="cancelled">
-                                      Cancelled
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="walkin"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="walkin">Walk-in</FormLabel>
-                              <FormControl>
-                                <Select
-                                  value={field.value ? "true" : "false"}
-                                  onValueChange={(value) => {
-                                    field.onChange(value === "true");
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select Value">
-                                      {field.value ? "Yes" : "No"}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="true">Yes</SelectItem>
-                                    <SelectItem value="false">No</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="taxpercentage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="taxpercentage">
-                                Tax Percentage
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="taxpercentage"
                                   type="number"
+                                  min={1}
+                                  value={item.quantity}
+                                  className="w-14 text-right"
+                                  onChange={(e) =>
+                                    updateQuantity(
+                                      index,
+                                      parseInt(e.target.value, 10)
+                                    )
+                                  }
                                 />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="mt-6 bg-gray-100 p-4 rounded-md">
-                      <h2 className="text-lg font-semibold mb-2">
-                        Order Summary
-                      </h2>
-                      <div className="overflow-y-auto h-[200px] w-auto border rounded-lg p-2">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Item</TableHead>
-                              <TableHead>Qty</TableHead>
-                              <TableHead className="text-right">
-                                Price
-                              </TableHead>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                ₱{item.price.toFixed(2)}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="px-2 py-1"
+                                  onClick={() => removeFromCart(index)}
+                                >
+                                  <TrashIcon className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {cart.map((item, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{item.name}</TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    value={item.quantity}
-                                    className="w-14 text-right"
-                                    onChange={(e) =>
-                                      updateQuantity(
-                                        index,
-                                        parseInt(e.target.value, 10)
-                                      )
-                                    }
-                                  />
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  ₱{item.price.toFixed(2)}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="px-2 py-1"
-                                    onClick={() => removeFromCart(index)}
-                                  >
-                                    <TrashIcon className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                    <div className="mt-4 flex items-center justify-between">
-                      <p className="text-lg font-semibold">
-                        Total: ₱{total.toFixed(2)}
-                      </p>
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline">Cancel</Button>
-                        <Button type="submit" className="px-4 py-2">
-                          Checkout
-                        </Button>
-                      </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-lg font-semibold">
+                      Total: ₱{total.toFixed(2)}
+                    </p>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline">Cancel</Button>
+                      <Button type="submit" className="px-4 py-2">
+                        Checkout
+                      </Button>
                     </div>
-                  </form>
-                </Form>
-              </div>
+                  </div>
+                </form>
+              </Form>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
-
-  return <AccessDenied />;
+    </div>
+  );
 }

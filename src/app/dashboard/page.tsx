@@ -8,8 +8,6 @@ import {
   Card,
 } from "@/components/ui/card";
 import { ResponsiveBar } from "@nivo/bar";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../../utils/hooks/auth";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { TransactionTable } from "@/schemas/transaction.schema";
 import {
@@ -21,7 +19,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import Layout from "@/components/layout";
-import AccessDenied from "@/components/accessdenied";
 
 interface SalesData {
   totalSales: number;
@@ -124,125 +121,104 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const { isAuthenticated, userRole } = useAuth();
-  const router = useRouter();
-
-  if (isAuthenticated === null) {
-    return <p>Loading...</p>;
-  }
-
-  if (userRole === "admin" || userRole === "manager") {
-    return (
-      <div className="flex h-screen">
-        <Layout />
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="flex items-center space-x-4 mb-4 sm:mb-0 sm:mb-4">
-            <h1 className="text-xl font-bold">Dashboard</h1>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <Card className="bg-[#57a0ab] text-white">
-              <CardHeader>
-                <CardTitle>Gross Sale</CardTitle>
-                <CardDescription className="text-white">
-                  ₱100,000
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Last Month: ₱100,000</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-[#ab5757] text-white">
-              <CardHeader>
-                <CardTitle>Items Sold</CardTitle>
-                <CardDescription className="text-white">
-                  ₱100,000
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Last Month: ₱100,000</p>
-              </CardContent>
-            </Card>
-          </div>
-          <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Sales</h2>
-            <p className="text-sm mb-4">
-              Analysis of different items based on their selling performance
-            </p>
-            {/* <LineChart className="w-full h-[300px]" /> */}
-            <ChartContainer
-              config={chartConfig}
-              className="w-full h-[300px] md:h-[400px]"
+  return (
+    <div className="flex h-screen w-full">
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex items-center space-x-4 mb-4 sm:mb-0 sm:mb-4">
+          <h1 className="text-xl font-bold">Dashboard</h1>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <Card className="bg-[#57a0ab] text-white">
+            <CardHeader>
+              <CardTitle>Gross Sale</CardTitle>
+              <CardDescription className="text-white">₱100,000</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Last Month: ₱100,000</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-[#ab5757] text-white">
+            <CardHeader>
+              <CardTitle>Items Sold</CardTitle>
+              <CardDescription className="text-white">₱100,000</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Last Month: ₱100,000</p>
+            </CardContent>
+          </Card>
+        </div>
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Sales</h2>
+          <p className="text-sm mb-4">
+            Analysis of different items based on their selling performance
+          </p>
+          {/* <LineChart className="w-full h-[300px]" /> */}
+          <ChartContainer
+            config={chartConfig}
+            className="w-full h-[300px] md:h-[400px]"
+          >
+            <LineChart
+              accessibilityLayer
+              data={chartData}
+              margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
             >
-              <LineChart
-                accessibilityLayer
-                data={chartData}
-                margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
-              >
-                <CartesianGrid vertical={false} />
+              <CartesianGrid vertical={false} />
 
-                {/* Configure the XAxis */}
-                <XAxis
-                  dataKey="name"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={(value) =>
-                    isSmallScreen && value.length > 3
-                      ? value.slice(0, 4)
-                      : value
-                  }
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  className="text-caption-2 border border-cyan-900"
-                  stroke="var(--gray-60)"
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent />}
-                />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Line
-                  dataKey="quantitySold"
-                  data={chartData}
-                  type="monotone"
-                  stroke="var(--color-quantitySold)"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                {/* <Line
+              {/* Configure the XAxis */}
+              <XAxis
+                dataKey="name"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={(value) =>
+                  isSmallScreen && value.length > 3 ? value.slice(0, 4) : value
+                }
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                className="text-caption-2 border border-cyan-900"
+                stroke="var(--gray-60)"
+              />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Line
+                dataKey="quantitySold"
+                data={chartData}
+                type="monotone"
+                stroke="var(--color-quantitySold)"
+                strokeWidth={2}
+                dot={false}
+              />
+              {/* <Line
                   dataKey="totalSales"
                   type="monotone"
                   stroke="var(--color-totalSales)"
                   strokeWidth={2}
                   dot={false}
                 /> */}
-              </LineChart>
-            </ChartContainer>
-          </section>
-          <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">Sales per product</h2>
-            <p className="text-sm mb-4">Analysis of Sales per product</p>
-            <BarChart className="w-full h-[300px]" />
-          </section>
-          <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">
-              White Rice Varieties Sales Performance
-            </h2>
-            <p className="text-sm mb-4">
-              Analysis of different rice varieties based on their selling
-              performance
-            </p>
-            <BarChart className="w-full h-[300px]" />
-          </section>
-        </div>
+            </LineChart>
+          </ChartContainer>
+        </section>
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Sales per product</h2>
+          <p className="text-sm mb-4">Analysis of Sales per product</p>
+          <BarChart className="w-full h-[300px]" />
+        </section>
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">
+            White Rice Varieties Sales Performance
+          </h2>
+          <p className="text-sm mb-4">
+            Analysis of different rice varieties based on their selling
+            performance
+          </p>
+          <BarChart className="w-full h-[300px]" />
+        </section>
       </div>
-    );
-  }
-
-  return <AccessDenied />;
+    </div>
+  );
 }
 
 function BarChart(props: any) {

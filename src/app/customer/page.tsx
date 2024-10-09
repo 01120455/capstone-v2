@@ -31,8 +31,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useAuth } from "../../utils/hooks/auth";
-import { useRouter } from "next/navigation";
+
 import { Cell, LabelList, Pie, PieChart } from "recharts";
 import Link from "next/link";
 import Layout from "@/components/layout";
@@ -52,8 +51,6 @@ export default function Component() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ [key: string]: any }>({});
-  const { isAuthenticated, userRole } = useAuth();
-  const router = useRouter();
 
   const handleCustomerSelect = (customer: Entity) => {
     const transactionForSelectedCustomer = transactions.find(
@@ -222,320 +219,276 @@ export default function Component() {
     return acc;
   }, {} as ChartConfig);
 
-  if (isAuthenticated === null) {
-    return <p>Loading...</p>;
-  }
-
-  if (userRole === "admin" || userRole === "manager" || userRole === "sales") {
-    return (
-      <div className="flex h-screen">
-        <Layout />
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex flex-col h-full">
-            <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">
-              <h1 className="text-2xl font-bold">Customer Management</h1>
-            </header>
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
-              <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
-                <div className="p-4 border-b dark:border-gray-700">
-                  <h2 className="text-lg font-bold">Customers</h2>
-                </div>
-                <div className="p-4 max-h-[calc(100vh-200px)]">
-                  {customers.map((customer: Entity, index: number) => (
-                    <div
-                      key={index}
-                      className={`px-4 py-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                        selectedCustomer?.entityid === customer.entityid
-                          ? "bg-gray-100 dark:bg-gray-700"
-                          : ""
-                      }`}
-                      onClick={() => handleCustomerSelect(customer)}
-                    >
-                      <h3 className="text-lg font-medium">{customer.name}</h3>
-                    </div>
-                  ))}
-                </div>
+  return (
+    <div className="flex h-screen w-full">
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex flex-col h-full">
+          <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Customer Management</h1>
+          </header>
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+            <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
+              <div className="p-4 border-b dark:border-gray-700">
+                <h2 className="text-lg font-bold">Customers</h2>
               </div>
-              <div className="col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
-                {selectedCustomer ? (
-                  <div className="p-4">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b dark:border-gray-700 pb-4">
-                      <div>
-                        <h2 className="text-lg font-bold">
-                          {selectedCustomer.name}
-                        </h2>
-                      </div>
+              <div className="p-4 max-h-[calc(100vh-200px)]">
+                {customers.map((customer: Entity, index: number) => (
+                  <div
+                    key={index}
+                    className={`px-4 py-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                      selectedCustomer?.entityid === customer.entityid
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }`}
+                    onClick={() => handleCustomerSelect(customer)}
+                  >
+                    <h3 className="text-lg font-medium">{customer.name}</h3>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
+              {selectedCustomer ? (
+                <div className="p-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b dark:border-gray-700 pb-4">
+                    <div>
+                      <h2 className="text-lg font-bold">
+                        {selectedCustomer.name}
+                      </h2>
                     </div>
-                    <div className="mt-4">
-                      <h2 className="text-lg font-bold">Purchase History</h2>
-                      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4">
-                        <div className="grid gap-2 mt-4">
-                          <Label htmlFor="start-date">Start Date</Label>
-                          <Input
-                            type="date"
-                            placeholder="Start Date"
-                            value={dateFilter.start}
-                            onChange={(e) =>
-                              setDateFilter({
-                                ...dateFilter,
-                                start: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div className="grid gap-2 mt-4">
-                          <Label htmlFor="end-date">End Date</Label>
-                          <Input
-                            type="date"
-                            placeholder="End Date"
-                            value={dateFilter.end}
-                            onChange={(e) =>
-                              setDateFilter({
-                                ...dateFilter,
-                                end: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div className="grid gap-2 mt-4">
-                          <Label htmlFor="item-filter">Item Filter</Label>
-                          <Input
-                            type="text"
-                            placeholder="Filter by Item"
-                            value={categoryFilter}
-                            onChange={(e) => setCategoryFilter(e.target.value)}
-                          />
-                        </div>
-                        <Button className="mt-9" onClick={handleClearFilters}>
-                          Clear Filters
-                        </Button>
+                  </div>
+                  <div className="mt-4">
+                    <h2 className="text-lg font-bold">Purchase History</h2>
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4">
+                      <div className="grid gap-2 mt-4">
+                        <Label htmlFor="start-date">Start Date</Label>
+                        <Input
+                          type="date"
+                          placeholder="Start Date"
+                          value={dateFilter.start}
+                          onChange={(e) =>
+                            setDateFilter({
+                              ...dateFilter,
+                              start: e.target.value,
+                            })
+                          }
+                        />
                       </div>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Items</TableHead>
-                            <TableHead>Total</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredTransactions.map(
-                            (purchase: TransactionTable) => (
-                              <TableRow key={purchase.transactionid}>
-                                {editingRow === purchase.transactionid ? (
-                                  <>
-                                    <TableCell>
-                                      <Input
-                                        type="date"
-                                        value={editData.date || ""}
-                                        onChange={(e) =>
-                                          handleInputChange(
-                                            "date",
-                                            e.target.value
-                                          )
-                                        }
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <Input
-                                        value={
-                                          editData.items
-                                            ? editData.items.join(", ")
-                                            : ""
-                                        }
-                                        onChange={(e) =>
-                                          handleInputChange(
-                                            "items",
-                                            e.target.value.split(", ")
-                                          )
-                                        }
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <Input
-                                        value={editData.totalamount || ""}
-                                        onChange={(e) =>
-                                          handleInputChange(
-                                            "totalamount",
-                                            e.target.value
-                                          )
-                                        }
-                                      />
-                                    </TableCell>
-                                    {/* <TableCell>
+                      <div className="grid gap-2 mt-4">
+                        <Label htmlFor="end-date">End Date</Label>
+                        <Input
+                          type="date"
+                          placeholder="End Date"
+                          value={dateFilter.end}
+                          onChange={(e) =>
+                            setDateFilter({
+                              ...dateFilter,
+                              end: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="grid gap-2 mt-4">
+                        <Label htmlFor="item-filter">Item Filter</Label>
+                        <Input
+                          type="text"
+                          placeholder="Filter by Item"
+                          value={categoryFilter}
+                          onChange={(e) => setCategoryFilter(e.target.value)}
+                        />
+                      </div>
+                      <Button className="mt-9" onClick={handleClearFilters}>
+                        Clear Filters
+                      </Button>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Items</TableHead>
+                          <TableHead>Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTransactions.map(
+                          (purchase: TransactionTable) => (
+                            <TableRow key={purchase.transactionid}>
+                              {editingRow === purchase.transactionid ? (
+                                <>
+                                  <TableCell>
+                                    <Input
+                                      type="date"
+                                      value={editData.date || ""}
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "date",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      value={
+                                        editData.items
+                                          ? editData.items.join(", ")
+                                          : ""
+                                      }
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "items",
+                                          e.target.value.split(", ")
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      value={editData.totalamount || ""}
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "totalamount",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  {/* <TableCell>
                                     <Button onClick={handleSave}>Save</Button>
                                   </TableCell> */}
-                                  </>
-                                ) : (
-                                  <>
-                                    <TableCell>
-                                      {purchase.createdat
-                                        ? new Date(
-                                            purchase.createdat
-                                          ).toLocaleDateString("en-US", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })
-                                        : "N/A"}
-                                    </TableCell>
-                                    <TableCell>
-                                      {purchase.TransactionItem.map(
-                                        (item, index) => item.Item?.name
-                                      )
-                                        .filter(Boolean)
-                                        .join(", ")}
-                                    </TableCell>
-                                    <TableCell>
-                                      ${purchase.totalamount?.toFixed(2)}
-                                    </TableCell>
-                                    {/* <TableCell>
+                                </>
+                              ) : (
+                                <>
+                                  <TableCell>
+                                    {purchase.createdat
+                                      ? new Date(
+                                          purchase.createdat
+                                        ).toLocaleDateString("en-US", {
+                                          year: "numeric",
+                                          month: "long",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })
+                                      : "N/A"}
+                                  </TableCell>
+                                  <TableCell>
+                                    {purchase.TransactionItem.map(
+                                      (item, index) => item.Item?.name
+                                    )
+                                      .filter(Boolean)
+                                      .join(", ")}
+                                  </TableCell>
+                                  <TableCell>
+                                    ${purchase.totalamount?.toFixed(2)}
+                                  </TableCell>
+                                  {/* <TableCell>
                                     <Button
                                       onClick={() => handleEdit(purchase)}
                                     >
                                       Edit
                                     </Button>
                                   </TableCell> */}
-                                  </>
-                                )}
-                              </TableRow>
-                            )
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
+                                </>
+                              )}
+                            </TableRow>
+                          )
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Select a customer to view details
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="col-span-1 lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
-                {selectedCustomer && (
-                  <div className="p-4">
-                    <h2 className="text-lg font-bold">Customer Analysis</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Total Spend</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-4xl font-bold">
-                            ₱{totalSpend.toFixed(2)}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Purchase Frequency</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-4xl font-bold">
-                            {purchaseFrequency.toFixed(2)}/month
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Favorite Categories</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ChartContainer
-                            config={chartConfig}
-                            className="mx-auto aspect-square max-h-[400px]"
-                          >
-                            <PieChart>
-                              <ChartTooltip
-                                content={
-                                  <ChartTooltipContent
-                                    nameKey="item"
-                                    hideLabel
-                                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Select a customer to view details
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="col-span-1 lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
+              {selectedCustomer && (
+                <div className="p-4">
+                  <h2 className="text-lg font-bold">Customer Analysis</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Total Spend</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-4xl font-bold">
+                          ₱{totalSpend.toFixed(2)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Purchase Frequency</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-4xl font-bold">
+                          {purchaseFrequency.toFixed(2)}/month
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Favorite Categories</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer
+                          config={chartConfig}
+                          className="mx-auto aspect-square max-h-[400px]"
+                        >
+                          <PieChart>
+                            <ChartTooltip
+                              content={
+                                <ChartTooltipContent nameKey="item" hideLabel />
+                              }
+                            />
+                            <Pie
+                              data={pieData}
+                              dataKey="value"
+                              nameKey="item"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius="80%"
+                            >
+                              <LabelList
+                                dataKey="item"
+                                className="fill-foreground"
+                                stroke="none"
+                                fontSize={13}
+                                formatter={(value: keyof typeof chartConfig) =>
+                                  chartConfig[value]?.label
                                 }
                               />
-                              <Pie
-                                data={pieData}
-                                dataKey="value"
-                                nameKey="item"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius="80%"
-                              >
-                                <LabelList
-                                  dataKey="item"
-                                  className="fill-foreground"
-                                  stroke="none"
-                                  fontSize={13}
-                                  formatter={(
-                                    value: keyof typeof chartConfig
-                                  ) => chartConfig[value]?.label}
+                              {pieData.map(({ item }) => (
+                                <Cell
+                                  key={item}
+                                  fill={chartConfig[item]?.color}
                                 />
-                                {pieData.map(({ item }) => (
-                                  <Cell
-                                    key={item}
-                                    fill={chartConfig[item]?.color}
-                                  />
-                                ))}
-                              </Pie>
-                            </PieChart>
-                          </ChartContainer>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    <div className="mt-4">
-                      <h3 className="text-lg font-bold">Insights</h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Based on the customer`&apos;`s purchase history, we can
-                        see that they have a strong preference for certain
-                        product categories. To better serve this customer, we
-                        could recommend similar products or offer personalized
-                        promotions in their favorite categories.
-                      </p>
-                    </div>
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
                   </div>
-                )}
-              </div>
+                  <div className="mt-4">
+                    <h3 className="text-lg font-bold">Insights</h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Based on the customer`&apos;`s purchase history, we can
+                      see that they have a strong preference for certain product
+                      categories. To better serve this customer, we could
+                      recommend similar products or offer personalized
+                      promotions in their favorite categories.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-screen">
-      <div className="flex items-center justify-center w-full">
-        <div className="flex justify-center">
-          <Card className="w-[400px]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="h-5 w-5" />
-                Access Denied
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                You do not have permission to view this page.
-              </p>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                onClick={() => router.back()}
-                variant="secondary"
-                className="max-w-lg"
-              >
-                Go Back
-              </Button>
-              <Button asChild className="max-w-lg">
-                <Link href="/login">Go to Login</Link>
-              </Button>
-            </CardFooter>
-          </Card>
         </div>
       </div>
     </div>

@@ -31,8 +31,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useAuth } from "../../utils/hooks/auth";
-import { useRouter } from "next/navigation";
+
 import { Cell, LabelList, Pie, PieChart } from "recharts";
 import Link from "next/link";
 import Layout from "@/components/layout";
@@ -52,8 +51,6 @@ export default function Component() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ [key: string]: any }>({});
-  const { isAuthenticated, userRole } = useAuth();
-  const router = useRouter();
 
   const handleCustomerSelect = (customer: Entity) => {
     const transactionForSelectedCustomer = transactions.find(

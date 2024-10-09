@@ -56,10 +56,6 @@ import {
   AlertCircle,
 } from "@/components/icons/Icons";
 import { User } from "@/interfaces/user";
-import { useAuth } from "../../utils/hooks/auth";
-import { useRouter } from "next/navigation";
-import Layout from "@/components/layout";
-import AccessDenied from "@/components/accessdenied";
 
 const ROLES = {
   SALES: "sales",
@@ -77,8 +73,6 @@ export default function Component() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
-  const { isAuthenticated, userRole } = useAuth();
-  const router = useRouter();
 
   const form = useForm<AddUser>({
     resolver: zodResolver(UserSchema),
@@ -342,399 +336,378 @@ export default function Component() {
     return false;
   };
 
-  if (isAuthenticated === null) {
-    return <p>Loading...</p>;
-  }
-
-  if (userRole === "admin") {
-    return (
-      <div className="flex h-screen">
-        <Layout />
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="w-full max-w-4xl mx-auto p-4">
-            <div className="flex justify-between items-center mb-6 -mr-6">
-              <h1 className="text-2xl font-bold">User Management</h1>
-              <Button onClick={handleAddUser}>
-                {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add User"}
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Image</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Username</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users &&
-                    users.map((user: AddUser, index: number) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {/* <Image
+  return (
+    <div className="flex h-screen w-full">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full max-w-4xl mx-auto p-4">
+          <div className="flex justify-between items-center mb-6 -mr-6">
+            <h1 className="text-2xl font-bold">User Management</h1>
+            <Button onClick={handleAddUser}>
+              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add User"}
+            </Button>
+          </div>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Username</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users &&
+                  users.map((user: AddUser, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        {/* <Image
                           src={user.imagepath ?? ""}
                           alt="User Image"
                           width={250}
                           height={250}
                           className="rounded"
                         /> */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleShowImage(user)}
-                          >
-                            View Image
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          {user.firstname} {user.middlename} {user.lastname}
-                        </TableCell>
-                        <TableCell>{user.role}</TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`px-2 py-1 rounded-full ${
-                              user.status === "active"
-                                ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                            }`}
-                          >
-                            {user.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{user.username}</TableCell>
-                        <TableCell className="text-right">
-                          {canAccessButton(ROLES.ADMIN) && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleEditUser(user)}
-                              >
-                                <FilePenIcon className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleDeleteUser(user)}
-                              >
-                                <TrashIcon className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-            <>
-              {showImageModal && showImage && (
-                <Dialog open={showImageModal} onOpenChange={closeImage}>
-                  <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
-                    <div className="flex flex-col">
-                      <DialogHeader className="mb-2 flex items-start">
-                        <DialogTitle className="text-left flex-grow">
-                          User Image
-                        </DialogTitle>
-                      </DialogHeader>
-                      <DialogDescription className="mb-4 text-left">
-                        <p>You can click outside to close</p>
-                      </DialogDescription>
-                      <div className="flex-grow flex items-center justify-center overflow-hidden">
-                        <div className="relative w-full h-[400px]">
-                          {showImage?.imagepath ? (
-                            <Image
-                              src={showImage.imagepath}
-                              alt="Product Image"
-                              fill
-                              sizes="(max-width: 600px) 100vw, 50vw"
-                              style={{ objectFit: "contain" }}
-                              className="absolute"
-                            />
-                          ) : (
-                            <p className="text-center">No image available</p>
-                          )}
-                        </div>
-                      </div>
-                      <DialogFooter className="mt-4">
-                        <Button onClick={closeImage}>Close</Button>
-                      </DialogFooter>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </>
-            {userToDelete && (
-              <AlertDialog open={showAlert}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete
-                      the user {userToDelete?.userid} {userToDelete?.firstname}{" "}
-                      {userToDelete?.lastname} and remove their data from our
-                      servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={handleDeleteCancel}>
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleDelete(userToDelete.userid)}
-                    >
-                      Continue
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            {showModal && (
-              <Dialog open={showModal} onOpenChange={handleCancel}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {form.getValues("userid") ? "Edit User" : "Add User"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      Fill in the form below to{" "}
-                      {form.getValues("userid") ? "edit" : "add"} a user.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form
-                      className="w-full max-w-4xl mx-auto p-6"
-                      onSubmit={form.handleSubmit(handleSubmit)}
-                    >
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="imagepath"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="file">
-                                  Upload Image
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...fileRef}
-                                    id="file"
-                                    type="file"
-                                    onChange={handleImage}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="firstname"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="firstname">
-                                  First Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="firstname"
-                                    placeholder="John"
-                                    defaultValue={field.value}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="middlename"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="middlename">
-                                  Middle Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="middlename"
-                                    placeholder="Alcarra"
-                                    defaultValue={field.value}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="lastname"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="lastname">
-                                  Last Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="lastname"
-                                    placeholder="Doe"
-                                    defaultValue={field.value}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="role"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="role">Role</FormLabel>
-                                <FormControl>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                    {...field}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select role">
-                                        {field.value}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="admin">
-                                        Admin
-                                      </SelectItem>
-                                      <SelectItem value="manager">
-                                        Manager
-                                      </SelectItem>
-                                      <SelectItem value="sales">
-                                        Sales
-                                      </SelectItem>
-                                      <SelectItem value="inventory">
-                                        Inventory
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="status"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="status">Status</FormLabel>
-                                <FormControl>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                    {...field}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select status">
-                                        {field.value}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="active">
-                                        Active
-                                      </SelectItem>
-                                      <SelectItem value="inactive">
-                                        Inactive
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="username">
-                                  Username
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="username"
-                                    placeholder="JohnDoe@gmail.com"
-                                    defaultValue={field.value}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="password">
-                                  Password
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="password"
-                                    type="password"
-                                    defaultValue={field.value}
-                                    placeholder={
-                                      form.getValues("userid")
-                                        ? "Leave blank if not changing"
-                                        : "Enter password"
-                                    }
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter className="pt-2">
-                        <Button type="submit">Save</Button>
-                        <Button variant="outline" onClick={handleCancel}>
-                          Cancel
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleShowImage(user)}
+                        >
+                          View Image
                         </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
+                      </TableCell>
+                      <TableCell>
+                        {user.firstname} {user.middlename} {user.lastname}
+                      </TableCell>
+                      <TableCell>{user.role}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`px-2 py-1 rounded-full ${
+                            user.status === "active"
+                              ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                              : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                          }`}
+                        >
+                          {user.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{user.username}</TableCell>
+                      <TableCell className="text-right">
+                        {canAccessButton(ROLES.ADMIN) && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditUser(user)}
+                            >
+                              <FilePenIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDeleteUser(user)}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+          <>
+            {showImageModal && showImage && (
+              <Dialog open={showImageModal} onOpenChange={closeImage}>
+                <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
+                  <div className="flex flex-col">
+                    <DialogHeader className="mb-2 flex items-start">
+                      <DialogTitle className="text-left flex-grow">
+                        User Image
+                      </DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="mb-4 text-left">
+                      <p>You can click outside to close</p>
+                    </DialogDescription>
+                    <div className="flex-grow flex items-center justify-center overflow-hidden">
+                      <div className="relative w-full h-[400px]">
+                        {showImage?.imagepath ? (
+                          <Image
+                            src={showImage.imagepath}
+                            alt="Product Image"
+                            fill
+                            sizes="(max-width: 600px) 100vw, 50vw"
+                            style={{ objectFit: "contain" }}
+                            className="absolute"
+                          />
+                        ) : (
+                          <p className="text-center">No image available</p>
+                        )}
+                      </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                      <Button onClick={closeImage}>Close</Button>
+                    </DialogFooter>
+                  </div>
                 </DialogContent>
               </Dialog>
             )}
-          </div>
+          </>
+          {userToDelete && (
+            <AlertDialog open={showAlert}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the user {userToDelete?.userid} {userToDelete?.firstname}{" "}
+                    {userToDelete?.lastname} and remove their data from our
+                    servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handleDeleteCancel}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDelete(userToDelete.userid)}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {showModal && (
+            <Dialog open={showModal} onOpenChange={handleCancel}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {form.getValues("userid") ? "Edit User" : "Add User"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Fill in the form below to{" "}
+                    {form.getValues("userid") ? "edit" : "add"} a user.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form
+                    className="w-full max-w-4xl mx-auto p-6"
+                    onSubmit={form.handleSubmit(handleSubmit)}
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="imagepath"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="file">Upload Image</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...fileRef}
+                                  id="file"
+                                  type="file"
+                                  onChange={handleImage}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="firstname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="firstname">
+                                First Name
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="firstname"
+                                  placeholder="John"
+                                  defaultValue={field.value}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="middlename"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="middlename">
+                                Middle Name
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="middlename"
+                                  placeholder="Alcarra"
+                                  defaultValue={field.value}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="lastname"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="lastname">
+                                Last Name
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="lastname"
+                                  placeholder="Doe"
+                                  defaultValue={field.value}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="role"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="role">Role</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select role">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                    <SelectItem value="manager">
+                                      Manager
+                                    </SelectItem>
+                                    <SelectItem value="sales">Sales</SelectItem>
+                                    <SelectItem value="inventory">
+                                      Inventory
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="status"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="status">Status</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select status">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="active">
+                                      Active
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                      Inactive
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="username">Username</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="username"
+                                  placeholder="JohnDoe@gmail.com"
+                                  defaultValue={field.value}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="password">Password</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="password"
+                                  type="password"
+                                  defaultValue={field.value}
+                                  placeholder={
+                                    form.getValues("userid")
+                                      ? "Leave blank if not changing"
+                                      : "Enter password"
+                                  }
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter className="pt-2">
+                      <Button type="submit">Save</Button>
+                      <Button variant="outline" onClick={handleCancel}>
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
-    );
-  }
-
-  return <AccessDenied />;
+    </div>
+  );
 }

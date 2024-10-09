@@ -35,8 +35,6 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { FilePenIcon } from "@/components/icons/Icons";
-import { useAuth } from "../../utils/hooks/auth";
-import { useRouter } from "next/navigation";
 import { AlertCircle } from "@/components/icons/Icons";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -61,8 +59,6 @@ export default function Component() {
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
   const [showEditSupplier, setShowEditSupplier] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { isAuthenticated, userRole } = useAuth();
-  const router = useRouter();
 
   const form = useForm<Entity>({
     resolver: zodResolver(entitySchema),
@@ -230,8 +226,7 @@ export default function Component() {
     userRole === "inventory"
   ) {
     return (
-      <div className="flex h-screen">
-        <Layout />
+      <div className="flex h-screen w-full">
         <div className="flex-1 overflow-y-auto p-8">
           <div className="container mx-auto px-4 md:px-6 py-8">
             <h1 className="text-3xl font-bold mb-6">Supplier Management</h1>

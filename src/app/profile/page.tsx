@@ -2,15 +2,7 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import SideMenu from "@/components/sidemenu";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -25,7 +17,6 @@ import {
 import { useForm } from "react-hook-form";
 import { user, AddUser } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Layout from "@/components/layout";
 
 export default function Component() {
   const [userSession, setUserSession] = useState<AddUser | null>(null);
@@ -182,8 +173,7 @@ export default function Component() {
       : "Guest";
 
   return (
-    <div className="flex h-screen">
-      <Layout />
+    <div className="flex h-screen w-full">
       <div className="flex-1 overflow-y-auto p-8">
         <header className="flex flex-col sm:flex-row justify-start items-center mb-8">
           <div className="w-full">
@@ -206,8 +196,8 @@ export default function Component() {
           </div>
         </header>
 
-        <div className="flex flex-col lg:flex-row">
-          <aside className="flex flex-col justify-items-start p-4 space-y-4 mb-2 lg:mb-0 lg:w-1/4">
+        <div className="flex flex-col lg:flex-row xl:px-32">
+          <aside className="flex flex-col justify-items-start p-4 space-y-4 mb-2 lg:mb-0 lg:w-1/4 md:w-1/8 xl:w-1/2 ">
             <div className="p-6 grid gap-4">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">

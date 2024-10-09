@@ -9,6 +9,9 @@
     "lint": "next lint",
     "db:studio": "prisma studio"
   },
+  "prisma": {
+    "seed": "node prisma/seed.mjs --compiler-options {\"module\":\"CommonJS\"}"
+  },
   "dependencies": {
     "@fontsource/inter": "^5.1.0",
     "@hookform/resolvers": "^3.9.0",

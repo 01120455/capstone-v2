@@ -26,6 +26,7 @@ import {
   EllipsisIcon,
   MenuIcon,
 } from "@/components/icons/Icons";
+import { useAuth } from "../utils/hooks/auth";
 
 const ROLES = {
   SALES: "sales",
@@ -37,6 +38,7 @@ const ROLES = {
 export default function SideMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const { isAuthenticated, isLoggedIn, userRole } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -85,17 +87,33 @@ export default function SideMenu() {
     ? `${user.imagepath[0]}`
     : "/path/to/default/image.png";
 
+  if (isAuthenticated === null) {
+    return <p>loading...</p>;
+  }
+
+  // if (!isAuthenticated) {
+  //   return <AccessDenied />;
+  // }
+
+  if (isLoggedIn === null) {
+    return <p>loading...</p>;
+  }
+
+  if (isLoggedIn === false) {
+    return null;
+  }
+
   return (
     <div className="relative h-screen flex flex-col lg:flex-row">
       <div
-        className={`flex flex-col h-full ${
+        className={`flex flex-col ${
           isMenuOpen ? "w-48" : "w-14"
-        } lg:w-44 bg-white shadow-lg transition-all duration-300 ease-in-out`}
+        } lg:w-52 xl:w-58 bg-white shadow-lg transition-all duration-300 ease-in-out`}
       >
         {/* Header Section */}
         <div className="flex items-center justify-between p-4 border-b">
           <button className="lg:hidden text-gray-500" onClick={toggleMenu}>
-            <MenuIcon className="w-6 h-6" />
+            <MenuIcon className="w-4 h-4" />
           </button>
           <span className="text-lg font-semibold hidden lg:block">
             Point of Sale
@@ -114,75 +132,75 @@ export default function SideMenu() {
                 {canAccessMenuItem(ROLES.ADMIN) && (
                   <>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/dashboard"
                       prefetch={false}
                     >
-                      <LayoutDashboardIcon className="inline-block w-6 h-6 mr-3" />
+                      <LayoutDashboardIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Dashboard</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/product"
                       prefetch={false}
                     >
-                      <BoxIcon className="inline-block w-6 h-6 mr-3" />
+                      <BoxIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Product</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/sales"
                       prefetch={false}
                     >
-                      <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
+                      <DollarSignIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Sales</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/saleshistory"
                       prefetch={false}
                     >
-                      <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Sales History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/purchase"
                       prefetch={false}
                     >
-                      <PurchaseIcon className="inline-block w-6 h-6 mr-3" />
+                      <PurchaseIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Purchase</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/purchasehistory"
                       prefetch={false}
                     >
-                      <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Purchase History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/customer"
                       prefetch={false}
                     >
-                      <UserIcon className="inline-block w-6 h-6 mr-3" />
+                      <UserIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Customer</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/supplier"
                       prefetch={false}
                     >
-                      <TruckIcon className="inline-block w-6 h-6 mr-3" />
+                      <TruckIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Supplier</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/user"
                       prefetch={false}
                     >
-                      <UsersIcon className="inline-block w-6 h-6 mr-3" />
+                      <UsersIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Users</span>
                     </Link>
                   </>
@@ -190,67 +208,67 @@ export default function SideMenu() {
                 {user?.role === ROLES.MANAGER && (
                   <>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/dashboard"
                       prefetch={false}
                     >
-                      <LayoutDashboardIcon className="inline-block w-6 h-6 mr-3" />
+                      <LayoutDashboardIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Dashboard</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/product"
                       prefetch={false}
                     >
-                      <BoxIcon className="inline-block w-6 h-6 mr-3" />
+                      <BoxIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Product</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/sales"
                       prefetch={false}
                     >
-                      <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
+                      <DollarSignIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Sales</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/saleshistory"
                       prefetch={false}
                     >
-                      <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Sales History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/purchase"
                       prefetch={false}
                     >
-                      <PurchaseIcon className="inline-block w-6 h-6 mr-3" />
+                      <PurchaseIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Purchase</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/purchasehistory"
                       prefetch={false}
                     >
-                      <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Purchase History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/customer"
                       prefetch={false}
                     >
-                      <UserIcon className="inline-block w-6 h-6 mr-3" />
+                      <UserIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Customer</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/supplier"
                       prefetch={false}
                     >
-                      <TruckIcon className="inline-block w-6 h-6 mr-3" />
+                      <TruckIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Supplier</span>
                     </Link>
                   </>
@@ -258,27 +276,27 @@ export default function SideMenu() {
                 {user?.role === ROLES.SALES && (
                   <>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/sales"
                       prefetch={false}
                     >
-                      <DollarSignIcon className="inline-block w-6 h-6 mr-3" />
+                      <DollarSignIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Sales</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/saleshistory"
                       prefetch={false}
                     >
-                      <CalendarIcon className="inline-block w-6 h-6 mr-3" />
+                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Sales History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/customer"
                       prefetch={false}
                     >
-                      <UserIcon className="inline-block w-6 h-6 mr-3" />
+                      <UserIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Customer</span>
                     </Link>
                   </>
@@ -286,19 +304,19 @@ export default function SideMenu() {
                 {user?.role === ROLES.INVENTORY && (
                   <>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/product"
                       prefetch={false}
                     >
-                      <BoxIcon className="inline-block w-6 h-6 mr-3" />
+                      <BoxIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Product</span>
                     </Link>
                     <Link
-                      className="block p-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
                       href="/supplier"
                       prefetch={false}
                     >
-                      <TruckIcon className="inline-block w-6 h-6 mr-3" />
+                      <TruckIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Supplier</span>
                     </Link>
                   </>
