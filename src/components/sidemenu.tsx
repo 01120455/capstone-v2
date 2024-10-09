@@ -92,7 +92,7 @@ export default function SideMenu() {
   }
 
   return (
-    <div className="relative h-screen flex flex-col lg:flex-row">
+    <div className="absolute h-screen flex flex-col lg:flex-row">
       <div
         className={`flex flex-col h-screen ${
           isMenuOpen ? "w-48" : "w-14"

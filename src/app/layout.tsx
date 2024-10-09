@@ -4,7 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import SideMenu from "@/components/sidemenu";
 import { ReactNode } from "react";
-import Layout from "@/components/layout";
 
 const fontSans = FontSans({ subsets: ["latin"], variable: "--font-sans" });
 

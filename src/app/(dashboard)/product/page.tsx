@@ -63,7 +63,6 @@ import SideMenu from "@/components/sidemenu";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -95,11 +94,11 @@ export default function Component() {
   const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
   const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 1; // You can adjust this value as needed
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const filteredItems = items.filter((item) => {
     // Convert searchTerm to lower case for case-insensitive comparison
@@ -122,17 +121,6 @@ export default function Component() {
     // Return true if any of the criteria match
     return nameMatches || typeMatches || sackweightMatches || unitMatches;
   });
-
-  // papanoorin ko bukas HAHAHAHA https://www.youtube.com/watch?v=1DtJDGwdMQs
-
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = filteredItems.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   const checkItemLevels = (items: ViewItem[]) => {
     items.forEach((item) => {
@@ -200,19 +188,13 @@ export default function Component() {
     };
 
     fetchItems();
-
-    const intervalId = setInterval(() => {
-      fetchItems();
-    }, 60000);
-
-    return () => clearInterval(intervalId);
   }, []);
 
   const form = useForm<AddItem>({
     resolver: zodResolver(item),
     defaultValues: {
       name: "",
-      type: "palay",
+      type: "bigas",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
       stock: 0,
@@ -265,7 +247,7 @@ export default function Component() {
 
     form.reset({
       name: "",
-      type: "palay",
+      type: "bigas",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
       stock: 0,
@@ -299,7 +281,7 @@ export default function Component() {
 
     form.reset({
       name: "",
-      type: "palay",
+      type: "bigas",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
       stock: 0,
@@ -522,9 +504,18 @@ export default function Component() {
     action = userActionWithAccess(0, user?.role || "", itemData);
   }
 
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="flex h-screen w-full">
-      <SideMenu />
       <div className="flex-1 overflow-y-hidden p-5">
         {showSuccess && (
           <Alert className="alert-center">
@@ -598,7 +589,7 @@ export default function Component() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredItems.map((item) => (
+                    {paginatedItems.map((item) => (
                       <TableRow key={item.itemid}>
                         <TableCell>
                           <Button
@@ -623,14 +614,7 @@ export default function Component() {
                         <TableCell>
                           {item.lastmodifiedat
                             ? new Date(item.lastmodifiedat).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
+                                "en-US"
                               )
                             : "N/A"}
                         </TableCell>
@@ -641,71 +625,55 @@ export default function Component() {
                               size="sm"
                               onClick={() => handleEdit(item)}
                             >
-                              <FilePenIcon className="w-4 h-4" />
-                              <span className="sr-only">Edit</span>
+                              Edit
                             </Button>
                             {canAccessButton(ROLES.ADMIN) && (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDeleteItem(item)}
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  <span className="sr-only">Delete</span>
-                                </Button>
-                              </>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteItem(item)}
+                              >
+                                Delete
+                              </Button>
                             )}
-                            {/* {user?.role === ROLES.MANAGER && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDeleteItem(item)}
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                    <span className="sr-only">Delete</span>
-                                  </Button>
-                                </>
-                              )} */}
                           </div>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          handlePageChange(Math.max(1, currentPage - 1))
-                        }
-                        disabled={currentPage === 1}
-                      />
-                    </PaginationItem>
-                    {[...Array(totalPages)].map((_, index) => (
-                      <PaginationItem key={index}>
-                        <PaginationLink
-                          onClick={() => handlePageChange(index + 1)}
-                          isActive={currentPage === index + 1}
-                        >
-                          {index + 1}
-                        </PaginationLink>
+                <div className="flex items-center justify-center mt-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            handlePageChange(Math.max(1, currentPage - 1))
+                          }
+                        />
                       </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          handlePageChange(
-                            Math.min(totalPages, currentPage + 1)
-                          )
-                        }
-                        disabled={currentPage === totalPages}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                      {[...Array(totalPages)].map((_, index) => (
+                        <PaginationItem key={index}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(index + 1)}
+                            isActive={currentPage === index + 1}
+                          >
+                            {index + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            handlePageChange(
+                              Math.min(totalPages, currentPage + 1)
+                            )
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </div>

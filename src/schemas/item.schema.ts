@@ -11,7 +11,7 @@ export const item = z.object({
     .enum(["bigas", "palay", "resico"], {
       invalid_type_error: "Invalid Type Received",
     })
-    .default("palay"),
+    .default("bigas"),
   sackweight: z.enum(["bag25kg", "cavan50kg"], {
     invalid_type_error: "Invalid Type Received",
   }),

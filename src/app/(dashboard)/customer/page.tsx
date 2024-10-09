@@ -33,8 +33,6 @@ import {
 } from "@/components/ui/chart";
 
 import { Cell, LabelList, Pie, PieChart } from "recharts";
-import Link from "next/link";
-import Layout from "@/components/layout";
 import SideMenu from "@/components/sidemenu";
 
 type CategorySpend = {
@@ -231,7 +229,6 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
-      <SideMenu />
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col h-full">
           <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">

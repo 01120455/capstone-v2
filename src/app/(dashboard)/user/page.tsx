@@ -57,6 +57,14 @@ import {
 } from "@/components/icons/Icons";
 import { User } from "@/interfaces/user";
 import SideMenu from "@/components/sidemenu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const ROLES = {
   SALES: "sales",
@@ -79,6 +87,8 @@ export default function Component() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const currentUsers = users?.filter(
     (user) =>
@@ -349,9 +359,18 @@ export default function Component() {
     return false;
   };
 
+  const totalPages = Math.ceil((currentUsers?.length || 0) / itemsPerPage);
+  const paginatedUsers = (currentUsers || []).slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="flex h-screen w-full">
-      <SideMenu />
       <div className="flex-1 overflow-y-auto p-6">
         <div className="w-full max-w-screen-2xl mx-auto p-4">
           <div className="flex justify-between items-center mb-6 -mr-6">
@@ -370,7 +389,11 @@ export default function Component() {
             />
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <Table>
+            <Table
+              style={{ width: "100%" }}
+              className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+              divClassname="overflow-y-scroll min-h-[310px] overflow-y-auto"
+            >
               <TableHeader>
                 <TableRow>
                   <TableHead>Image</TableHead>
@@ -382,8 +405,8 @@ export default function Component() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentUsers &&
-                  currentUsers.map((user: AddUser, index: number) => (
+                {paginatedUsers &&
+                  paginatedUsers.map((user: AddUser, index: number) => (
                     <TableRow key={index}>
                       <TableCell>
                         {/* <Image
@@ -441,6 +464,36 @@ export default function Component() {
                   ))}
               </TableBody>
             </Table>
+          </div>
+          <div className="flex items-center justify-center mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      handlePageChange(Math.max(1, currentPage - 1))
+                    }
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, index) => (
+                  <PaginationItem key={index}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(index + 1)}
+                      isActive={currentPage === index + 1}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      handlePageChange(Math.min(totalPages, currentPage + 1))
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
           <>
             {showImageModal && showImage && (

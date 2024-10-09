@@ -174,31 +174,30 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
-      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <header className="flex flex-col sm:flex-row justify-start items-center mb-8">
           <div className="w-full">
             <div className="p-6">
-              <div className="flex flex-col lg:flex-row items-center gap-4">
+              <div className="flex flex-col lg:flex-row justify-center items-center gap-4">
                 <Avatar className="h-32 w-32 lg:h-52 lg:w-52">
                   <AvatarImage src={userSession?.imagepath} />
                   <AvatarFallback>
                     {userSession?.firstname?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="grid gap-1">
-                  <h2 className="text-4xl font-bold">{fullName || "Guest"}</h2>
-                  <p className="text-xl text-muted-foreground">
-                    {userSession?.role}
-                  </p>
-                </div>
+              </div>
+              <div className="flex flex-col justify-center items-center pt-4">
+                <h2 className="text-4xl font-bold">{fullName || "Guest"}</h2>
+                <p className="text-xl text-muted-foreground">
+                  {userSession?.role}
+                </p>
               </div>
             </div>
           </div>
         </header>
 
         <div className="flex flex-col lg:flex-row xl:px-32">
-          <aside className="flex flex-col justify-items-start p-4 space-y-4 mb-2 lg:mb-0 lg:w-1/4 md:w-1/8 xl:w-1/2 ">
+          <aside className="flex flex-col justify-items-start p-4 space-y-4 mb-2 lg:mb-0 lg:w-1/4 md:w-1/8  ">
             <div className="p-6 grid gap-4">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
@@ -244,34 +243,6 @@ export default function Component() {
               </div>
             </div>
           </aside>
-
-          {/* Inputs section */}
-          {/* <div className="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-2">
-            <div className="space-y-2 ml-10">
-              <Label htmlFor="profilePicture">Profile Picture</Label>
-              <Input id="profilePicture" type="file" />
-            </div>
-            <div className="space-y-2 ml-10">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" defaultValue="" />
-            </div>
-            <div className="space-y-2 ml-10">
-              <Label htmlFor="middleName">Middle Name</Label>
-              <Input id="middleName" defaultValue="" />
-            </div>
-            <div className="space-y-2 ml-10">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" defaultValue="" />
-            </div>
-            <div className="space-y-2 ml-10">
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" defaultValue="" />
-            </div>
-            <div className="space-y-2 ml-10">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" />
-            </div>
-          </div> */}
           {/* {form.getValues("userid") ? "Edit User" : "Add User"} */}
           <Form {...form}>
             <form
@@ -291,6 +262,7 @@ export default function Component() {
                           id="file"
                           type="file"
                           onChange={handleImage}
+                          className="w-1/2 lg:w-full"
                         />
                       </FormControl>
                     </FormItem>
@@ -310,6 +282,7 @@ export default function Component() {
                           id="firstName"
                           placeholder="John"
                           defaultValue={field.value}
+                          className="w-1/2 lg:w-full"
                         />
                       </FormControl>
                     </FormItem>
@@ -329,6 +302,7 @@ export default function Component() {
                           id="middleName"
                           placeholder="Doe"
                           defaultValue={field.value}
+                          className="w-1/2 lg:w-full"
                         />
                       </FormControl>
                     </FormItem>
@@ -348,6 +322,7 @@ export default function Component() {
                           id="lastName"
                           placeholder="Smith"
                           defaultValue={field.value}
+                          className="w-1/2 lg:w-full"
                         />
                       </FormControl>
                     </FormItem>
@@ -367,6 +342,7 @@ export default function Component() {
                           id="username"
                           placeholder="johndoe"
                           defaultValue={field.value}
+                          className="w-1/2 lg:w-full"
                         />
                       </FormControl>
                     </FormItem>
@@ -387,16 +363,18 @@ export default function Component() {
                           type="password"
                           placeholder="********"
                           defaultValue={field.value}
+                          className="w-1/2 lg:w-full"
                         />
                       </FormControl>
                     </FormItem>
                   )}
                 />
-                <div className="flex flex-row-reverse items-end">
+                <div className="flex flex-row-reverse items-end pr-4 lg:pr-1">
                   <Button type="submit" className="mt-10">
                     Save Changes
                   </Button>
                 </div>
+                <div className="p-10"></div>
               </div>
             </form>
           </Form>

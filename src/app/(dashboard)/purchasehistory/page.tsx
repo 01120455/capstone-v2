@@ -17,6 +17,14 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { XIcon, ArrowRightIcon } from "@/components/icons/Icons";
 import SideMenu from "@/components/sidemenu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -29,6 +37,8 @@ export default function Component() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   useEffect(() => {
     const getPurchases = async () => {
@@ -135,10 +145,18 @@ export default function Component() {
     }).format(price);
   };
 
-  // Role-based access control
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="flex h-screen w-full">
-      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8 w-full">
         <div className=" mx-auto px-4 md:px-6 ">
           <h1 className="text-2xl font-bold mb-6">Purchase Order History</h1>
@@ -312,8 +330,8 @@ export default function Component() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredTransactions.length > 0 ? (
-                            filteredTransactions.map(
+                          {paginatedTransactions.length > 0 ? (
+                            paginatedTransactions.map(
                               (
                                 transaction: TransactionTable,
                                 index: number
@@ -388,6 +406,38 @@ export default function Component() {
                           )}
                         </TableBody>
                       </Table>
+                      <div className="flex items-center justify-center mt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() =>
+                                  handlePageChange(Math.max(1, currentPage - 1))
+                                }
+                              />
+                            </PaginationItem>
+                            {[...Array(totalPages)].map((_, index) => (
+                              <PaginationItem key={index}>
+                                <PaginationLink
+                                  onClick={() => handlePageChange(index + 1)}
+                                  isActive={currentPage === index + 1}
+                                >
+                                  {index + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() =>
+                                  handlePageChange(
+                                    Math.min(totalPages, currentPage + 1)
+                                  )
+                                }
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
                       <ScrollBar orientation="horizontal" />
                     </ScrollArea>
                   </div>

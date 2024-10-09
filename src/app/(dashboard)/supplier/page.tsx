@@ -45,6 +45,14 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import SideMenu from "@/components/sidemenu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function Component() {
   const [suppliers, setSuppliers] = useState<Entity[]>([]);
@@ -55,6 +63,11 @@ export default function Component() {
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
   const [showEditSupplier, setShowEditSupplier] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const form = useForm<Entity>({
     resolver: zodResolver(entitySchema),
@@ -122,10 +135,6 @@ export default function Component() {
     } catch (error) {
       console.error("Error submitting form:", error);
     }
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
   };
 
   useEffect(() => {
@@ -208,9 +217,18 @@ export default function Component() {
     }).format(price);
   };
 
+  const totalPages = Math.ceil(currentSuppliers.length / itemsPerPage);
+  const paginatedSuppliers = currentSuppliers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="flex h-screen w-full">
-      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <div className="container mx-auto px-4 md:px-6 py-8">
           <h1 className="text-3xl font-bold mb-6">Supplier Management</h1>
@@ -224,7 +242,11 @@ export default function Component() {
             />
           </div>
           <div className="overflow-x-auto">
-            <Table className="w-full table-auto">
+            <Table
+              style={{ width: "100%" }}
+              className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+              divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+            >
               <TableHeader>
                 <TableRow className="bg-gray-100 dark:bg-gray-800">
                   <TableHead className="px-4 py-3 text-left font-medium">
@@ -239,7 +261,7 @@ export default function Component() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentSuppliers.map((supplier: Entity, index: number) => (
+                {paginatedSuppliers.map((supplier: Entity, index: number) => (
                   <TableRow
                     key={index}
                     className="border-b border-gray-200 dark:border-gray-700"
@@ -268,6 +290,36 @@ export default function Component() {
                 ))}
               </TableBody>
             </Table>
+            <div className="alert-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        handlePageChange(Math.max(1, currentPage - 1))
+                      }
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        handlePageChange(Math.min(totalPages, currentPage + 1))
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
           {showTablePurchaseItem && purchaseItems && (
             <Dialog
