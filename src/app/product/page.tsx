@@ -60,6 +60,15 @@ import {
   CheckCircle,
 } from "@/components/icons/Icons";
 import SideMenu from "@/components/sidemenu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const ROLES = {
   SALES: "sales",
@@ -86,6 +95,8 @@ export default function Component() {
   const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
   const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 1; // You can adjust this value as needed
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -111,6 +122,17 @@ export default function Component() {
     // Return true if any of the criteria match
     return nameMatches || typeMatches || sackweightMatches || unitMatches;
   });
+
+  // papanoorin ko bukas HAHAHAHA https://www.youtube.com/watch?v=1DtJDGwdMQs
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredItems.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const checkItemLevels = (items: ViewItem[]) => {
     items.forEach((item) => {
@@ -652,6 +674,38 @@ export default function Component() {
                     ))}
                   </TableBody>
                 </Table>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          handlePageChange(Math.max(1, currentPage - 1))
+                        }
+                        disabled={currentPage === 1}
+                      />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, index) => (
+                      <PaginationItem key={index}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(index + 1)}
+                          isActive={currentPage === index + 1}
+                        >
+                          {index + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          handlePageChange(
+                            Math.min(totalPages, currentPage + 1)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </div>
