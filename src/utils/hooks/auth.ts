@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  // const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,17 +21,17 @@ export function useAuth() {
           ["admin", "manager", "sales", "inventory"].includes(data.role)
         ) {
           setIsAuthenticated(true);
-          setIsLoggedIn(true);
+          // setIsLoggedIn(true);
           setUserRole(data.role);
         } else {
           setIsAuthenticated(false);
-          setIsLoggedIn(false);
+          // setIsLoggedIn(false);
           // router.push("/login"); // Redirect to login if not authenticated
         }
       } catch (error) {
         console.error("Error checking authentication", error);
         setIsAuthenticated(false);
-        setIsLoggedIn(false);
+        // setIsLoggedIn(false);
         // router.push("/login"); // Redirect on error
       }
     };
@@ -39,5 +39,5 @@ export function useAuth() {
     checkAuth();
   }, [router]);
 
-  return { isAuthenticated, isLoggedIn, userRole };
+  return { isAuthenticated, userRole };
 }

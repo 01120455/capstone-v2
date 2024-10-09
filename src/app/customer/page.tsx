@@ -35,6 +35,7 @@ import {
 import { Cell, LabelList, Pie, PieChart } from "recharts";
 import Link from "next/link";
 import Layout from "@/components/layout";
+import SideMenu from "@/components/sidemenu";
 
 type CategorySpend = {
   [key: string]: number;
@@ -51,6 +52,15 @@ export default function Component() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ [key: string]: any }>({});
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const currentCustomers = customers.filter((customer) =>
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleCustomerSelect = (customer: Entity) => {
     const transactionForSelectedCustomer = transactions.find(
@@ -221,6 +231,7 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col h-full">
           <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">
@@ -229,10 +240,20 @@ export default function Component() {
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
             <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
               <div className="p-4 border-b dark:border-gray-700">
-                <h2 className="text-lg font-bold">Customers</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold">Customers</h2>
+
+                  <Input
+                    type="text"
+                    placeholder="Search customers..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full md:w-auto"
+                  />
+                </div>
               </div>
               <div className="p-4 max-h-[calc(100vh-200px)]">
-                {customers.map((customer: Entity, index: number) => (
+                {currentCustomers.map((customer: Entity, index: number) => (
                   <div
                     key={index}
                     className={`px-4 py-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${

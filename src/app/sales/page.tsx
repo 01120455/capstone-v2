@@ -32,6 +32,7 @@ import Table, {
 import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
 import { AlertCircle, CheckCircle, TrashIcon } from "@/components/icons/Icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import SideMenu from "@/components/sidemenu";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
@@ -104,6 +105,20 @@ export default function Component() {
     getItems();
   }, []);
 
+  const refreshItems = async () => {
+    try {
+      const response = await fetch("/api/product");
+      if (response.ok) {
+        const items = await response.json();
+        setItems(items);
+      } else {
+        console.error("Error fetching items:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
+
   useEffect(() => {
     form.setValue(
       "TransactionItem",
@@ -168,7 +183,7 @@ export default function Component() {
       type: item.type,
       sackweight: item.sackweight,
       unitofmeasurement: item.unitofmeasurement,
-      quantity,
+      quantity, // Use the provided quantity here
       imagepath: item.itemimage[0]?.imagepath ?? "",
     };
 
@@ -179,7 +194,7 @@ export default function Component() {
     if (existingItemIndex > -1) {
       // Update quantity if item already exists in the cart
       const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity += quantity;
+      updatedCart[existingItemIndex].quantity += quantity; // Increment by the specified quantity
       setCart(updatedCart);
     } else {
       // Add new item to cart
@@ -217,22 +232,6 @@ export default function Component() {
     }
   };
 
-  const checkItemStock = async (itemid: number, quantity: number) => {
-    try {
-      const response = await fetch(`/api/item/${itemid}`);
-      if (response.ok) {
-        const item = await response.json();
-        return item.stock >= quantity;
-      } else {
-        console.error("Error fetching item:", response.status);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error fetching item:", error);
-      return false;
-    }
-  };
-
   const handleSubmit = async (values: AddSales) => {
     if (cart.length === 0) {
       setEmptyCart(true);
@@ -247,6 +246,21 @@ export default function Component() {
       setInvoiceNumber(values.InvoiceNumber.invoicenumber);
       return;
     }
+    const checkItemStock = async (itemid: number, quantity: number) => {
+      try {
+        const response = await fetch(`/api/item/${itemid}`);
+        if (response.ok) {
+          const item = await response.json();
+          return item.stock >= quantity;
+        } else {
+          console.error("Error fetching item:", response.status);
+          return false;
+        }
+      } catch (error) {
+        console.error("Error fetching item:", error);
+        return false;
+      }
+    };
 
     const stockCheckPromises = cart.map((item) =>
       checkItemStock(item.id, item.quantity)
@@ -317,6 +331,7 @@ export default function Component() {
         setShowSuccess(true);
         form.reset();
         setCart([]);
+        refreshItems();
       } else {
         const errorText = await uploadRes.text();
         console.error("Upload failed:", errorText);
@@ -329,6 +344,7 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 flex flex-col overflow-hidden">
         {showSuccess && (
           <Alert className="alert-center">
@@ -386,7 +402,6 @@ export default function Component() {
                       <div
                         key={item.itemid}
                         className="bg-white rounded-lg shadow-sm p-4 flex flex-col"
-                        onClick={() => addToCart(item)}
                       >
                         <Image
                           src={item.itemimage[0]?.imagepath ?? ""}
@@ -394,6 +409,7 @@ export default function Component() {
                           width={250}
                           height={250}
                           className="rounded-lg mb-4 object-cover h-32 w-32 lg:h-48 lg:w-48"
+                          onClick={() => addToCart(item)}
                         />
 
                         <h3 className="text-lg font-semibold mb-2">

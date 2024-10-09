@@ -26,6 +26,7 @@ import { useForm } from "react-hook-form";
 import { Login, loginSchema } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/utils/hooks/auth";
 
 export default function Home() {
   const [alert, setAlert] = useState<{
@@ -108,7 +109,7 @@ export default function Home() {
           // setTimeout(() => {
           //   router.push("/dashboard");
           // }, 500000); // 20 seconds delay
-          router.push("/dashboard");
+          router.push("/dashboard"); // Adjust the delay as needed
           break;
         case "sales":
           router.push("/sales");

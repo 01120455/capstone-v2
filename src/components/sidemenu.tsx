@@ -38,7 +38,7 @@ const ROLES = {
 export default function SideMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const { isAuthenticated, isLoggedIn, userRole } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -88,27 +88,15 @@ export default function SideMenu() {
     : "/path/to/default/image.png";
 
   if (isAuthenticated === null) {
-    return <p>loading...</p>;
-  }
-
-  // if (!isAuthenticated) {
-  //   return <AccessDenied />;
-  // }
-
-  if (isLoggedIn === null) {
-    return <p>loading...</p>;
-  }
-
-  if (isLoggedIn === false) {
     return null;
   }
 
   return (
     <div className="relative h-screen flex flex-col lg:flex-row">
       <div
-        className={`flex flex-col ${
+        className={`flex flex-col h-screen ${
           isMenuOpen ? "w-48" : "w-14"
-        } lg:w-52 xl:w-58 bg-white shadow-lg transition-all duration-300 ease-in-out`}
+        } lg:w-52 bg-white shadow-lg transition-all duration-300 ease-in-out`}
       >
         {/* Header Section */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -128,7 +116,7 @@ export default function SideMenu() {
             }`}
           >
             <ScrollArea className="h-full">
-              <nav className="mt-4 space-y-1">
+              <nav className="mt-4 space-y-1 px-4">
                 {canAccessMenuItem(ROLES.ADMIN) && (
                   <>
                     <Link
@@ -351,7 +339,7 @@ export default function SideMenu() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="ml-auto">
                   <EllipsisIcon className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

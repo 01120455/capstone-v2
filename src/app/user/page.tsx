@@ -56,6 +56,7 @@ import {
   AlertCircle,
 } from "@/components/icons/Icons";
 import { User } from "@/interfaces/user";
+import SideMenu from "@/components/sidemenu";
 
 const ROLES = {
   SALES: "sales",
@@ -73,6 +74,18 @@ export default function Component() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const currentUsers = users?.filter(
+    (user) =>
+      user.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const form = useForm<AddUser>({
     resolver: zodResolver(UserSchema),
@@ -338,13 +351,23 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="w-full max-w-4xl mx-auto p-4">
+        <div className="w-full max-w-screen-2xl mx-auto p-4">
           <div className="flex justify-between items-center mb-6 -mr-6">
             <h1 className="text-2xl font-bold">User Management</h1>
             <Button onClick={handleAddUser}>
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add User"}
             </Button>
+          </div>
+          <div className="mb-6">
+            <Input
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="w-full md:w-auto"
+            />
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <Table>
@@ -359,8 +382,8 @@ export default function Component() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users &&
-                  users.map((user: AddUser, index: number) => (
+                {currentUsers &&
+                  currentUsers.map((user: AddUser, index: number) => (
                     <TableRow key={index}>
                       <TableCell>
                         {/* <Image

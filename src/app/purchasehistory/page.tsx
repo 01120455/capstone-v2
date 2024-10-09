@@ -16,6 +16,7 @@ import { TransactionTable } from "@/schemas/transaction.schema";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { XIcon, ArrowRightIcon } from "@/components/icons/Icons";
+import SideMenu from "@/components/sidemenu";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -137,10 +138,11 @@ export default function Component() {
   // Role-based access control
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8 w-full">
-        <div className="container mx-auto px-4 md:px-6 ">
+        <div className=" mx-auto px-4 md:px-6 ">
           <h1 className="text-2xl font-bold mb-6">Purchase Order History</h1>
-          <div className="grid gap-6 md:grid-cols-[1fr_380px]">
+          <div className="grid gap-6 md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_550px]">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4">
                 {/* <Input
@@ -295,7 +297,7 @@ export default function Component() {
                       <Table
                         style={{ width: "100%" }}
                         className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                        divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                        divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                           <TableRow>
@@ -367,8 +369,8 @@ export default function Component() {
                                       : "N/A"}
                                   </TableCell>
                                   <TableCell>
-                                    <Button variant="outline" size="icon">
-                                      <ArrowRightIcon className="h-4 w-4" />
+                                    <Button variant="ghost" size="icon">
+                                      <ArrowRightIcon className="h-6 w-6" />
                                       <span className="sr-only">
                                         View details
                                       </span>

@@ -71,6 +71,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { User } from "@/interfaces/user";
 import Layout from "@/components/layout";
 import AccessDenied from "@/components/accessdenied";
+import SideMenu from "@/components/sidemenu";
 
 const ROLES = {
   SALES: "sales",
@@ -763,6 +764,7 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 overflow-y-hidden p-5">
         {showSuccess && (
           <Alert className="alert-center">

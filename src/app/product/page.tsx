@@ -59,6 +59,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "@/components/icons/Icons";
+import SideMenu from "@/components/sidemenu";
 
 const ROLES = {
   SALES: "sales",
@@ -501,6 +502,7 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 overflow-y-hidden p-5">
         {showSuccess && (
           <Alert className="alert-center">

@@ -174,6 +174,7 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <header className="flex flex-col sm:flex-row justify-start items-center mb-8">
           <div className="w-full">

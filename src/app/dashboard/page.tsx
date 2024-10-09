@@ -19,6 +19,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import Layout from "@/components/layout";
+import SideMenu from "@/components/sidemenu";
 
 interface SalesData {
   totalSales: number;
@@ -32,7 +33,7 @@ export default function Dashboard() {
   useEffect(() => {
     const getPurchases = async () => {
       try {
-        const response = await fetch("/api/customertransaction");
+        const response = await fetch("/api/dashboard/customertransaction");
         const text = await response.text();
         // console.log("Raw Response Text:", text);
 
@@ -123,6 +124,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen w-full">
+      <SideMenu />
       <div className="flex-1 overflow-y-auto p-8">
         <div className="flex items-center space-x-4 mb-4  sm:mb-4">
           <h1 className="text-xl font-bold">Dashboard</h1>
