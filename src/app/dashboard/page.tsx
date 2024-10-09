@@ -124,7 +124,7 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen w-full">
       <div className="flex-1 overflow-y-auto p-8">
-        <div className="flex items-center space-x-4 mb-4 sm:mb-0 sm:mb-4">
+        <div className="flex items-center space-x-4 mb-4  sm:mb-4">
           <h1 className="text-xl font-bold">Dashboard</h1>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">

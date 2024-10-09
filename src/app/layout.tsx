@@ -48,16 +48,7 @@ export const metadata: Metadata = {
   description: "Rice Mill Inventory Management System",
 };
 
-export default function RootLayout({
-  children,
-  pathname, // Accept pathname as a prop
-}: {
-  children: ReactNode;
-  pathname: string; // Define the type for pathname
-}) {
-  // Check if the current path is '/accessdenied'
-  const isAccessDeniedPage = pathname === "/accessdenied";
-
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body
@@ -66,14 +57,10 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        {!isAccessDeniedPage ? (
-          <div className="flex h-screen">
-            <SideMenu />
-            {children}
-          </div>
-        ) : (
-          <div>{children}</div> // Render only children for the access denied page
-        )}
+        <div className="flex h-screen">
+          <SideMenu />
+          {children}
+        </div>
       </body>
     </html>
   );
