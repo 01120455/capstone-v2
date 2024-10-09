@@ -6,110 +6,111 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
 model User {
-  userid            Int       @id @default(autoincrement())
-  imagepath         String?
-  firstname         String    @db.VarChar(25)
-  middlename        String?   @db.VarChar(25)
-  lastname          String    @db.VarChar(25)
-  role              Role
-  status            Status
-  username          String    @unique @db.VarChar(50)
-  password          String
-  deleted           Boolean   @default(false)
-  Item              Item[]
-  TransactionItem   TransactionItem[]
-  Entity            Entity[]
-  Transaction       Transaction[]
+  userid          Int               @id @default(autoincrement())
+  imagepath       String?
+  firstname       String            @db.VarChar(25)
+  middlename      String?           @db.VarChar(25)
+  lastname        String            @db.VarChar(25)
+  role            Role
+  status          Status
+  username        String            @unique @db.VarChar(50)
+  password        String
+  deleted         Boolean           @default(false)
+  Item            Item[]
+  TransactionItem TransactionItem[]
+  Entity          Entity[]
+  Transaction     Transaction[]
 }
 
 model Entity {
-  entityid      Int       @id @default(autoincrement())
-  name            String    @db.VarChar(50)
-  contactnumber   String? @db.VarChar(15)
-  lastmodifiedby  Int?
-  lastmodifiedat DateTime? @updatedAt
-  deleted         Boolean   @default(false)
-  User User? @relation(fields: [lastmodifiedby], references: [userid])
-  roles EntityRole[]
-  transaction     Transaction[]
+  entityid       Int           @id @default(autoincrement())
+  name           String        @db.VarChar(50)
+  contactnumber  String?       @db.VarChar(15)
+  lastmodifiedby Int?
+  lastmodifiedat DateTime?     @updatedAt
+  deleted        Boolean       @default(false)
+  User           User?         @relation(fields: [lastmodifiedby], references: [userid])
+  roles          EntityRole[]
+  transaction    Transaction[]
 }
 
 model EntityRole {
-  roleid   Int       @id @default(autoincrement())
+  roleid   Int      @id @default(autoincrement())
   entityid Int
   role     RoleType
-  Entity   Entity    @relation(fields: [entityid], references: [entityid])
+  deleted  Boolean  @default(false)
+  Entity   Entity   @relation(fields: [entityid], references: [entityid])
 }
 
-
 model InvoiceNumber {
-  invoicenumberid      Int       @id @default(autoincrement())
-  invoicenumber        String   @unique @db.VarChar(30)
-  deleted              Boolean   @default(false)
-  transaction         Transaction[]
+  invoicenumberid Int           @id @default(autoincrement())
+  invoicenumber   String        @unique @db.VarChar(30)
+  deleted         Boolean       @default(false)
+  transaction     Transaction[]
 }
 
 model Transaction {
-  transactionid      Int       @id @default(autoincrement())
-  entityid           Int
-  type TransactionType
-  status TransactionStatus
-  walkin            Boolean @default(false)
-  frommilling      Boolean @default(false)
-  taxpercentage        Int?
-  taxamount            Float?
-  totalamount Float?
-  createdat          DateTime  @default(now())
-  lastmodifiedby     Int?
-  lastmodifiedat     DateTime? @updatedAt
-  invoicenumberid          Int?
-  deleted            Boolean   @default(false)
-  Entity             Entity    @relation(fields: [entityid], references: [entityid])
-  InvoiceNumber      InvoiceNumber? @relation(fields: [invoicenumberid], references: [invoicenumberid])
-  User User? @relation(fields: [lastmodifiedby], references: [userid])
-  TransactionItem    TransactionItem[]
+  transactionid   Int               @id @default(autoincrement())
+  entityid        Int
+  type            TransactionType
+  status          TransactionStatus
+  walkin          Boolean           @default(false)
+  frommilling     Boolean           @default(false)
+  taxpercentage   Int?
+  taxamount       Float?
+  totalamount     Float?
+  createdat       DateTime          @default(now())
+  lastmodifiedby  Int?
+  lastmodifiedat  DateTime?         @updatedAt
+  invoicenumberid Int?
+  deleted         Boolean           @default(false)
+  Entity          Entity            @relation(fields: [entityid], references: [entityid])
+  InvoiceNumber   InvoiceNumber?    @relation(fields: [invoicenumberid], references: [invoicenumberid])
+  User            User?             @relation(fields: [lastmodifiedby], references: [userid])
+  TransactionItem TransactionItem[]
 }
 
 model TransactionItem {
-  transactionitemid      Int       @id @default(autoincrement())
-  transactionid          Int
-  itemid                 Int
-  unitofmeasurement      UnitofMeasurementType
-  measurementvalue       Float?
-  unitprice              Float?
-  totalamount            Float
-  lastmodifiedby     Int?
-  lastmodifiedat     DateTime? @updatedAt
-  deleted                Boolean   @default(false)
-  Transaction            Transaction @relation(fields: [transactionid], references: [transactionid])
-  Item                   Item        @relation(fields: [itemid], references: [itemid])
-  user User? @relation(fields: [lastmodifiedby], references: [userid])
+  transactionitemid Int                   @id @default(autoincrement())
+  transactionid     Int
+  itemid            Int
+  unitofmeasurement UnitofMeasurementType
+  measurementvalue  Float?
+  unitprice         Float?
+  totalamount       Float
+  lastmodifiedby    Int?
+  lastmodifiedat    DateTime?             @updatedAt
+  deleted           Boolean               @default(false)
+  Transaction       Transaction           @relation(fields: [transactionid], references: [transactionid])
+  Item              Item                  @relation(fields: [itemid], references: [itemid])
+  user              User?                 @relation(fields: [lastmodifiedby], references: [userid])
 }
 
 model Item {
-  itemid        Int      @id @default(autoincrement())
-  name          String?  @db.VarChar(50)
-  type          ItemType
-  sackweight      SackWeightType
+  itemid            Int                   @id @default(autoincrement())
+  name              String?               @db.VarChar(50)
+  type              ItemType
+  sackweight        SackWeightType
   unitofmeasurement UnitofMeasurementType
-  stock  Float?
-  unitprice    Float?
-  reorderlevel  Int? 
-  criticallevel Int?
-  lastmodifiedby     Int?
-  lastmodifiedat     DateTime? @updatedAt
-  deleted Boolean   @default(false)
-  User User? @relation(fields: [lastmodifiedby], references: [userid])
-  itemimage    ItemImage[]
-  Item       TransactionItem[]
+  stock             Float?
+  unitprice         Float?
+  reorderlevel      Int?
+  criticallevel     Int?
+  lastmodifiedby    Int?
+  lastmodifiedat    DateTime?             @updatedAt
+  deleted           Boolean               @default(false)
+  User              User?                 @relation(fields: [lastmodifiedby], references: [userid])
+  itemimage         ItemImage[]
+  Item              TransactionItem[]
 }
 
 model ItemImage {
-  imageid      Int       @id @default(autoincrement())
-  itemid       Int
-  imagepath     String
-  Item         Item      @relation(fields: [itemid], references: [itemid])
+  imageid   Int    @id @default(autoincrement())
+  itemid    Int
+  imagepath String
+  Item      Item   @relation(fields: [itemid], references: [itemid])
 }
 
 enum RoleType {
@@ -131,7 +132,6 @@ enum UnitofMeasurementType {
   quantity
   weight
 }
-
 
 enum Status {
   active

@@ -25,6 +25,7 @@ import {
   UsersIcon,
   EllipsisIcon,
   MenuIcon,
+  ArchiveIcon,
 } from "@/components/icons/Icons";
 import { useAuth } from "../utils/hooks/auth";
 
@@ -190,6 +191,15 @@ export default function SideMenu() {
                     >
                       <UsersIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Users</span>
+                    </Link>
+
+                    <Link
+                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      href="/archive"
+                      prefetch={false}
+                    >
+                      <ArchiveIcon className="inline-block w-4 h-4 mr-3" />
+                      <span>Archive</span>
                     </Link>
                   </>
                 )}

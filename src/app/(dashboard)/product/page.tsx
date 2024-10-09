@@ -625,7 +625,8 @@ export default function Component() {
                               size="sm"
                               onClick={() => handleEdit(item)}
                             >
-                              Edit
+                              <FilePenIcon className="w-4 h-4" />
+                              <span className="sr-only">Edit</span>
                             </Button>
                             {canAccessButton(ROLES.ADMIN) && (
                               <Button
@@ -633,7 +634,8 @@ export default function Component() {
                                 size="sm"
                                 onClick={() => handleDeleteItem(item)}
                               >
-                                Delete
+                                <TrashIcon className="w-4 h-4" />
+                                <span className="sr-only">Delete</span>
                               </Button>
                             )}
                           </div>
