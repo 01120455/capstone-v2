@@ -10,6 +10,15 @@ import Table, {
 import { AddUser } from "@/schemas/User.schema";
 import { Button } from "@/components/ui/button";
 import { Entity } from "@/schemas/entity.schema";
+import { useState } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export function CustomersTable({
   customers,
@@ -24,31 +33,74 @@ export function CustomersTable({
     `${customers.name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const totalPages = Math.ceil(filteredCustomers?.length ?? 0 / itemsPerPage);
+  const paginatedCustomers = filteredCustomers?.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Phone</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {filteredCustomers?.map((customer, index) => (
-          <TableRow key={index}>
-            <TableCell>{customer.name}</TableCell>
-            <TableCell>{customer.contactnumber}</TableCell>
-            <TableCell>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onRestore(customer.entityid ?? 0)}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            </TableCell>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Phone</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {paginatedCustomers?.map((customer, index) => (
+            <TableRow key={index}>
+              <TableCell>{customer.name}</TableCell>
+              <TableCell>{customer.contactnumber}</TableCell>
+              <TableCell>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRestore(customer.entityid ?? 0)}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <div className="flex items-center justify-center mt-4">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  onClick={() => handlePageChange(index + 1)}
+                  isActive={currentPage === index + 1}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  handlePageChange(Math.min(totalPages, currentPage + 1))
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    </>
   );
 }

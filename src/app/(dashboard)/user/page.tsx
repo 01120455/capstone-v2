@@ -189,31 +189,6 @@ export default function Component() {
     form.reset();
   };
 
-  // const handleSubmit = async (values: AddUser) => {
-  //   console.log("values", values);
-  //   try {
-  //     if (values.userid) {
-  //       await axios.put(`/api/user/`, values, {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //     } else {
-  //       await axios.post("/api/user", values, {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //     }
-  //     setShowModal(false);
-  //     form.reset();
-  //     refreshUsers();
-  //     console.log("User added/updated successfully");
-  //   } catch (error) {
-  //     console.error("Error adding user:", error);
-  //   }
-  // };
-
   const fileRef = form.register("image");
 
   const handleSubmit = async (values: AddUser) => {

@@ -19,7 +19,7 @@ export const PUT = async (req: NextRequest) => {
       }),
       prisma.user.update({
         where: { userid: userId },
-        data: { deleted: true },
+        data: { deleted: true, status: "inactive" },
       }),
     ]);
 

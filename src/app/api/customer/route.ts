@@ -9,12 +9,13 @@ export async function GET(req: NextRequest) {
       deleted: false,
       roles: {
         some: {
-          role: "customer", // Only fetch entities with the "supplier" role
+          role: "customer",
+          deleted: false,
         },
       },
     },
     include: {
-      roles: true, // Include the related roles
+      roles: true,
     },
   });
   return NextResponse.json(customers);

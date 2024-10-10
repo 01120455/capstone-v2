@@ -290,7 +290,7 @@ export default function Component() {
                 ))}
               </TableBody>
             </Table>
-            <div className="alert-center">
+            <div className="flex items-center justify-center mt-4">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>

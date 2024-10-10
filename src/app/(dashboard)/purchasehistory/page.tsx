@@ -315,7 +315,7 @@ export default function Component() {
                       <Table
                         style={{ width: "100%" }}
                         className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                        divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
+                        divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                           <TableRow>

@@ -137,7 +137,7 @@ export default function Component() {
       }))
     );
 
-    console.log("Cart updated:", cart);
+    // console.log("Cart updated:", cart);
   }, [cart, form]);
 
   useEffect(() => {
@@ -344,7 +344,6 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
-      <SideMenu />
       <div className="flex-1 flex flex-col overflow-hidden">
         {showSuccess && (
           <Alert className="alert-center">
@@ -401,17 +400,20 @@ export default function Component() {
                     items.map((item) => (
                       <div
                         key={item.itemid}
-                        className="bg-white rounded-lg shadow-sm p-4 flex flex-col"
+                        className="bg-white rounded-lg shadow-md p-4 flex flex-col"
                       >
-                        <Image
-                          src={item.itemimage[0]?.imagepath ?? ""}
-                          alt="Product Image"
-                          width={250}
-                          height={250}
-                          className="rounded-lg mb-4 object-cover h-32 w-32 lg:h-48 lg:w-48"
-                          onClick={() => addToCart(item)}
-                        />
-
+                        <div className="flex items-center justify-center">
+                          <Image
+                            src={
+                              item.itemimage[0]?.imagepath ?? "/no-image.jpg"
+                            }
+                            alt="Product Image"
+                            width={250}
+                            height={250}
+                            className="rounded-lg mb-4 object-cover h-40 w-40 lg:h-56 lg:w-56"
+                            onClick={() => addToCart(item)}
+                          />
+                        </div>
                         <h3 className="text-lg font-semibold mb-2">
                           {item.name}
                         </h3>

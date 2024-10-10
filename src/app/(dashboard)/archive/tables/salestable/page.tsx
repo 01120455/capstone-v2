@@ -1,4 +1,4 @@
-import { RotateCcw, XIcon } from "@/components/icons/Icons";
+import { ArrowRightIcon, RotateCcw, XIcon } from "@/components/icons/Icons";
 import { Badge } from "@/components/ui/badge";
 import Table, {
   TableBody,
@@ -11,6 +11,14 @@ import { Button } from "@/components/ui/button";
 import { TransactionTable } from "@/schemas/transaction.schema";
 import { useState } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export function SalesTable({
   sales,
@@ -30,6 +38,19 @@ export function SalesTable({
       .includes(searchTerm.toLowerCase())
   );
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const totalPages = Math.ceil(filteredSales?.length ?? 0 / itemsPerPage);
+  const paginatedSales = filteredSales?.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("en-PH", {
       style: "currency",
@@ -41,7 +62,6 @@ export function SalesTable({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4"></div>
       {selectedTransaction ? (
         <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between">
@@ -147,11 +167,7 @@ export function SalesTable({
       ) : (
         <div className="overflow-x-auto">
           <div className="table-container relative ">
-            <Table
-              style={{ width: "100%" }}
-              className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-              divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
-            >
+            <Table>
               <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                 <TableRow>
                   <TableHead>Invoice No.</TableHead>
@@ -161,16 +177,16 @@ export function SalesTable({
                   <TableHead>Status</TableHead>
                   <TableHead>Total Amount</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSales?.map(
+                {paginatedSales?.map(
                   (transaction: TransactionTable, index: number) => (
                     <TableRow
                       key={index}
-                      onClick={() => setSelectedTransaction(transaction)}
-                      className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      className=" hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                     >
                       <TableCell>
                         {transaction.InvoiceNumber.invoicenumber}
@@ -225,11 +241,51 @@ export function SalesTable({
                           <RotateCcw className="h-4 w-4" />
                         </Button>
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedTransaction(transaction)}
+                        >
+                          <ArrowRightIcon className="h-6 w-6" />
+                          <span className="sr-only">View details</span>
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   )
                 )}
               </TableBody>
             </Table>
+            <div className="flex items-center justify-center mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        handlePageChange(Math.max(1, currentPage - 1))
+                      }
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        handlePageChange(Math.min(totalPages, currentPage + 1))
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         </div>
       )}

@@ -93,7 +93,7 @@ export default function SideMenu() {
   }
 
   return (
-    <div className="absolute h-screen flex flex-col lg:flex-row">
+    <div className="absolute z-40 h-screen flex flex-col lg:flex-row">
       <div
         className={`flex flex-col h-screen ${
           isMenuOpen ? "w-48" : "w-14"
@@ -324,7 +324,7 @@ export default function SideMenu() {
           </div>
           <div
             className={`bg-white border-t border-gray-200 flex items-center justify-between ${
-              isMenuOpen ? "p-4" : "p-2"
+              isMenuOpen ? "p-4" : "pt-4 pb-4 pl-1"
             }  mt-auto`}
           >
             <div className="flex items-center space-x-3">
@@ -349,7 +349,10 @@ export default function SideMenu() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="ml-auto">
+                <Button
+                  variant="ghost"
+                  className="ml-auto h-8 rounded-md px-3 text-xs"
+                >
                   <EllipsisIcon className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

@@ -498,9 +498,9 @@ export default function Component() {
 
   if (itemId !== undefined) {
     action = userActionWithAccess(itemId, user?.role || "", itemData);
-    console.log("Action:", action);
+    // console.log("Action:", action);
   } else {
-    console.warn("Transaction ID is undefined");
+    // console.warn("Transaction ID is undefined");
     action = userActionWithAccess(0, user?.role || "", itemData);
   }
 

@@ -3,16 +3,14 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Search, RotateCcw } from "@/components/icons/Icons";
+  PurchaseIcon,
+  TagIcon,
+  TruckIcon,
+  UserIcon,
+  BoxIcon,
+  UsersIcon,
+} from "@/components/icons/Icons";
 import { AddUser, user } from "@/schemas/User.schema";
 import { Entity } from "@/schemas/entity.schema";
 import { TransactionTable } from "@/schemas/transaction.schema";
@@ -20,10 +18,10 @@ import { ViewItem } from "@/schemas/item.schema";
 import { UserTable } from "./tables/usertable/page";
 import { ItemTable } from "./tables/itemtable/page";
 import { SalesTable } from "./tables/salestable/page";
-import { get } from "lodash";
 import { PurchaseTable } from "./tables/purchasetable/page";
 import { CustomersTable } from "./tables/customertable/page";
 import { SuppliersTable } from "./tables/suppliertable/page";
+import { get } from "lodash";
 
 const tables = [
   "Users",
@@ -34,6 +32,15 @@ const tables = [
   "Suppliers",
 ];
 
+const tableIcon = {
+  Users: <UsersIcon />,
+  Items: <BoxIcon />,
+  Sales: <TagIcon />,
+  Purchases: <PurchaseIcon />,
+  Customers: <UserIcon />,
+  Suppliers: <TruckIcon />,
+};
+
 export default function ArchivePage() {
   const [activeTab, setActiveTab] = useState("Users");
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,22 +49,93 @@ export default function ArchivePage() {
     setSearchTerm(e.target.value);
   };
 
-  const handleRestore = (id: number) => {
-    console.log(`Restore item with id: ${id}`);
-    // Implement restore logic here
+  const handleRestore = async (id: number) => {
+    console.log(`Restore item with id: ${id} in tab: ${activeTab}`);
+
+    if (id <= 0) {
+      console.error("Invalid ID");
+      return;
+    }
+
+    let endpoint = "";
+
+    switch (activeTab) {
+      case "Users":
+        endpoint = `/api/archive/user/restore/${id}`;
+        break;
+      case "Items":
+        endpoint = `/api/archive/product/restore/${id}`;
+        break;
+      case "Sales":
+        endpoint = `/api/archive/customertransaction/restore/${id}`;
+        break;
+      case "Purchases":
+        endpoint = `/api/archive/suppliertransaction/restore/${id}`;
+        break;
+      case "Customers":
+        endpoint = `/api/archive/customer/restore/${id}`;
+        break;
+      case "Suppliers":
+        endpoint = `/api/archive/supplier/restore/${id}`;
+        break;
+      default:
+        console.error("Invalid active tab");
+        return;
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "PUT",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to restore item");
+      }
+
+      const data = await response.json();
+      console.log(`${activeTab} restored:`, data);
+      // Optionally, update local state or UI
+    } catch (error) {
+      console.error("Error restoring item:", error);
+    }
   };
+
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 576);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Archive</h1>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
-          {tables.map((table) => (
-            <TabsTrigger key={table} value={table}>
-              {table}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {isSmallScreen ? (
+          <TabsList className="grid h-12 w-full grid-cols-6">
+            {Object.entries(tableIcon).map(([key, Icon]) => (
+              <TabsTrigger key={key} value={key}>
+                {Icon}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        ) : (
+          <TabsList className="grid w-full grid-cols-6">
+            {tables.map((table) => (
+              <TabsTrigger key={table} value={table}>
+                {table}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
         <div className="mt-4 mb-4">
           <div className="relative w-full">
             <Input

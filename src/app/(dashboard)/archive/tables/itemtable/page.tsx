@@ -20,6 +20,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Image from "next/image";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export function ItemTable({
   items,
@@ -36,6 +44,19 @@ export function ItemTable({
   const filteredItems = items?.filter((items) =>
     `${items.name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const totalPages = Math.ceil(filteredItems?.length ?? 0 / itemsPerPage);
+  const paginatedItems = filteredItems?.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("en-PH", {
@@ -66,11 +87,7 @@ export function ItemTable({
 
   return (
     <div className="table-container relative ">
-      <Table
-        style={{ width: "100%" }}
-        className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-        divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-      >
+      <Table>
         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
           <TableRow>
             <TableHead>Image</TableHead>
@@ -88,7 +105,7 @@ export function ItemTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredItems?.map((item) => (
+          {paginatedItems?.map((item) => (
             <TableRow key={item.itemid}>
               <TableCell>
                 <Button
@@ -128,6 +145,34 @@ export function ItemTable({
           ))}
         </TableBody>
       </Table>
+      <div className="flex items-center justify-center mt-4">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  onClick={() => handlePageChange(index + 1)}
+                  isActive={currentPage === index + 1}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  handlePageChange(Math.min(totalPages, currentPage + 1))
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
       <>
         {showImageModal && showImage && (
           <Dialog open={showImageModal} onOpenChange={closeImage}>

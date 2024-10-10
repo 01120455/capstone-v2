@@ -9,12 +9,13 @@ export async function GET(req: NextRequest) {
       deleted: false,
       roles: {
         some: {
-          role: "supplier", // Only fetch entities with the "supplier" role
+          role: "supplier",
+          deleted: false,
         },
       },
     },
     include: {
-      roles: true, // Include the related roles
+      roles: true,
     },
   });
   return NextResponse.json(suppliers);
@@ -78,13 +79,10 @@ export const PUT = async (req: NextRequest) => {
     });
 
     return NextResponse.json(updateSupplier, { status: 200 });
-
   } catch (error) {
     console.error("Error updating supplier:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 };
