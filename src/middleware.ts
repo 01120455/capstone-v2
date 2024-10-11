@@ -4,22 +4,19 @@ import { sessionOptions } from "@/lib/session";
 
 interface UserSession {
   user?: {
-    role: "admin" | "manager" | "sales" | "inventory"; // Adjust roles as needed
-    // Add other user properties if necessary
+    role: "admin" | "manager" | "sales" | "inventory";
   };
 }
 
 export async function middleware(req: NextRequest) {
-  // Get the session
   const session = await getIronSession(
     req,
     NextResponse.next(),
     sessionOptions
   );
 
-  console.log("Session:", session);
+  // console.log("Session:", session);
 
-  // Define role-based access rules
   const accessRules: Record<string, string[]> = {
     admin: [
       "/dashboard",
@@ -31,6 +28,7 @@ export async function middleware(req: NextRequest) {
       "/purchasehistory",
       "/supplier",
       "/user",
+      "/archive",
     ],
     manager: [
       "/dashboard",
@@ -46,11 +44,9 @@ export async function middleware(req: NextRequest) {
     inventory: ["/product", "/supplier"],
   };
 
-  // Get user role from session
-  const userSession = session as UserSession; // Type assertion
-  const userRole = userSession.user?.role; // Adjust this based on your session structure
+  const userSession = session as UserSession;
+  const userRole = userSession.user?.role;
 
-  // Define the paths you want to protect
   const protectedPaths = [
     "/dashboard",
     "/product",
@@ -61,6 +57,7 @@ export async function middleware(req: NextRequest) {
     "/purchasehistory",
     "/supplier",
     "/user",
+    "/archive",
   ];
 
   // Check if the request URL matches any of the protected paths
@@ -89,5 +86,6 @@ export const config = {
     "/purchasehistory/:path*",
     "/supplier/:path*",
     "/user/:path*",
+    "/archive/:path*",
   ],
 };

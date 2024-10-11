@@ -92,6 +92,8 @@ export default function Component() {
   );
   const [showSuccess, setShowSuccess] = useState(false);
   const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
+  const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
+  const [showDeletedIem, setShowDeletedItem] = useState<ViewItem | null>(null);
   const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,16 +103,12 @@ export default function Component() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const filteredItems = items.filter((item) => {
-    // Convert searchTerm to lower case for case-insensitive comparison
     const searchTermLower = searchTerm.toLowerCase();
 
-    // Check if item name contains the searchTerm
     const nameMatches = item.name.toLowerCase().includes(searchTermLower);
 
-    // Check if item type matches the searchTerm
     const typeMatches = item.type.toLowerCase().includes(searchTermLower);
 
-    // Check if sackweight and unit of measurement match the searchTerm
     const sackweightMatches = item.sackweight
       .toString()
       .includes(searchTermLower);
@@ -118,7 +116,6 @@ export default function Component() {
       .toLowerCase()
       .includes(searchTermLower);
 
-    // Return true if any of the criteria match
     return nameMatches || typeMatches || sackweightMatches || unitMatches;
   });
 
@@ -362,10 +359,13 @@ export default function Component() {
       );
 
       if (response.ok) {
+        const data = await response.json();
         console.log("Item deleted successfully");
         setShowAlert(false);
         setItemToDelete(null);
         refreshItems();
+        setShowDeletedItem(data);
+        setShowDeletionSuccess(true);
       } else {
         console.error("Error deleting item:", response.status);
       }
@@ -531,7 +531,18 @@ export default function Component() {
             </AlertDescription>
           </Alert>
         )}
-
+        {showDeletionSuccess && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-6 w-6" />
+              Item Deleted Successfully
+            </AlertTitle>
+            <AlertDescription>
+              Item {showDeletedIem?.name} with stocks of {showDeletedIem?.stock}{" "}
+              deleted successfully.
+            </AlertDescription>
+          </Alert>
+        )}
         {showAlertItem && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-red-600">

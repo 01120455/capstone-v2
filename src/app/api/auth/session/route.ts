@@ -8,9 +8,11 @@ export async function GET(req: NextRequest) {
     NextResponse.next(),
     sessionOptions
   );
+  // @ts-ignore
   if (!session.user?.isLoggedIn) {
-    console.log("Session:", session);
+    // console.log("Session:", session);
     return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
   }
+  // @ts-ignore
   return NextResponse.json(session.user);
 }

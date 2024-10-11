@@ -55,6 +55,7 @@ export default function Component() {
   const [emptyCart, setEmptyCart] = useState(false);
   const [insufficientStock, setInsufficientStock] = useState(false);
 
+
   const form = useForm<AddSales>({
     resolver: zodResolver(salesTransactionSchema),
     defaultValues: {
@@ -392,10 +393,10 @@ export default function Component() {
           </Alert>
         )}
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid gap-2 md:grid-cols-[1fr_400px]">
+          <div className="grid gap-2 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_400px]">
             <div className="flex-1 overflow-auto p-4 md:p-8">
-              <div className="overflow-y-auto h-[400px] lg:h-[600px] w-auto border rounded-lg p-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+              <div className="overflow-y-auto h-[400px] md:h-[600px] lg:h-[600px] w-auto border rounded-lg p-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-8">
                   {items &&
                     items.map((item) => (
                       <div
@@ -410,7 +411,7 @@ export default function Component() {
                             alt="Product Image"
                             width={250}
                             height={250}
-                            className="rounded-lg mb-4 object-cover h-40 w-40 lg:h-56 lg:w-56"
+                            className="rounded-lg mb-4 object-cover sm:h-40 sm:w-40 md:h-32 md:w-32 lg:h-56 lg:w-56"
                             onClick={() => addToCart(item)}
                           />
                         </div>

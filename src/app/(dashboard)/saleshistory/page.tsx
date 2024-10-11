@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TransactionTable } from "@/schemas/transaction.schema";
 import { Badge } from "@/components/ui/badge";
-import { XIcon, ArrowRightIcon } from "@/components/icons/Icons";
+import { XIcon, ArrowRightIcon, FilterIcon } from "@/components/icons/Icons";
 import {
   Pagination,
   PaginationContent,
@@ -39,6 +39,11 @@ export default function Component() {
     useState<TransactionTable | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [showFilter, setShowFilter] = useState(false);
+
+  const toggleFilter = () => {
+    setShowFilter(!showFilter);
+  };
 
   useEffect(() => {
     const getPurchases = async () => {
@@ -156,10 +161,14 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full">
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4">
         <div className="mx-auto px-4 md:px-6 ">
           <h1 className="text-2xl font-bold mb-6">Sales History</h1>
-          <div className="grid gap-6 md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_550px]">
+          <div
+            className={`grid gap-6 ${
+              showFilter ? "grid-cols-[1fr_220px]" : "auto-cols-fr"
+            }`}
+          >
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4"></div>
               {selectedTransaction ? (
@@ -283,7 +292,19 @@ export default function Component() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <div className="table-container relative ">
+                  <div className="flex items-center justify-end">
+                    <div className="flex items-center gap-4 mb-4">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={toggleFilter}
+                      >
+                        <span className="sr-only">Filter</span>
+                        <FilterIcon className="w-6 h-6" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="table-container relative  ">
                     <ScrollArea>
                       <Table
                         style={{ width: "100%" }}
@@ -417,7 +438,11 @@ export default function Component() {
                 </div>
               )}
             </div>
-            <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
+            <div
+              className={`bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6 ${
+                showFilter ? "block" : "hidden"
+              }`}
+            >
               <h2 className="text-lg font-bold mb-4">Filters</h2>
               <div className="grid gap-4">
                 <div className="grid gap-2">
@@ -466,43 +491,38 @@ export default function Component() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label className="my-1.5 mt-3">Date Range</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="start-date">Start Date</Label>
-                      <Input
-                        id="start-date"
-                        type="date"
-                        value={filters.dateRange.start}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            dateRange: {
-                              ...prev.dateRange,
-                              start: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="end-date">End Date</Label>
-                      <Input
-                        id="end-date"
-                        type="date"
-                        value={filters.dateRange.end}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            dateRange: {
-                              ...prev.dateRange,
-                              end: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
+                  <Label htmlFor="start-date">Start Date</Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={filters.dateRange.start}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        dateRange: {
+                          ...prev.dateRange,
+                          start: e.target.value,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="end-date">End Date</Label>
+                  <Input
+                    id="end-date"
+                    type="date"
+                    value={filters.dateRange.end}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        dateRange: {
+                          ...prev.dateRange,
+                          end: e.target.value,
+                        },
+                      }))
+                    }
+                  />
                 </div>
               </div>
             </div>
