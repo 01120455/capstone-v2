@@ -22,13 +22,15 @@ import { PurchaseTable } from "./tables/purchasetable/page";
 import { CustomersTable } from "./tables/customertable/page";
 import { SuppliersTable } from "./tables/suppliertable/page";
 import { get } from "lodash";
+import { PurchaseItemTable } from "./tables/purchaseitemtable/page";
 
 const tables = [
   "Users",
   "Items",
   "Sales",
   "Purchases",
-  "Customers",
+  // "Customers",
+  "Purchase Items",
   "Suppliers",
 ];
 
@@ -117,7 +119,9 @@ export default function ArchivePage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Archive</h1>
+      <h1 className="text-3xl text-customColors-darkKnight font-bold mb-6">
+        Archive
+      </h1>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         {isSmallScreen ? (
           <TabsList className="grid h-12 w-full grid-cols-6">
@@ -169,10 +173,13 @@ type ArchiveTableProps = {
 
 function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
   const [users, setUsers] = useState<AddUser[] | null>(null);
-  const [customers, setCustomers] = useState<Entity[]>([]);
+  // const [customers, setCustomers] = useState<Entity[]>([]);
   const [suppliers, setSuppliers] = useState<Entity[]>([]);
   const [sales, setSales] = useState<TransactionTable[]>([]);
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
+  const [transactionItems, setTransactionItems] = useState<TransactionTable[]>(
+    []
+  );
   const [items, setItems] = useState<ViewItem[]>([]);
 
   useEffect(() => {
@@ -192,37 +199,36 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
     getUsers();
   }, []);
 
-  useEffect(() => {
-    const getCustomers = async () => {
-      try {
-        const response = await fetch("/api/archive/customer");
-        const text = await response.text();
-        console.log("Raw Response Text:", text);
+  // useEffect(() => {
+  //   const getCustomers = async () => {
+  //     try {
+  //       const response = await fetch("/api/archive/customer");
+  //       const text = await response.text();
+  //       console.log("Raw Response Text:", text);
 
-        const data = JSON.parse(text);
+  //       const data = JSON.parse(text);
 
-        // Convert date strings to Date objects
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
+  //       const parsedData = data.map((item: any) => {
+  //         return {
+  //           ...item,
+  //           createdat: item.createdat ? new Date(item.createdat) : null,
+  //           lastmodifiedat: item.lastmodifiedat
+  //             ? new Date(item.lastmodifiedat)
+  //             : null,
+  //           taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+  //         };
+  //       });
 
-        console.log("Parsed Data with Date Conversion:", parsedData);
+  //       console.log("Parsed Data with Date Conversion:", parsedData);
 
-        setCustomers(parsedData);
-      } catch (error) {
-        console.error("Error in getPurchases:", error);
-      }
-    };
+  //       setCustomers(parsedData);
+  //     } catch (error) {
+  //       console.error("Error in getPurchases:", error);
+  //     }
+  //   };
 
-    getCustomers();
-  }, []);
+  //   getCustomers();
+  // }, []);
 
   useEffect(() => {
     const getSuppliers = async () => {
@@ -298,7 +304,6 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
 
         const data = JSON.parse(text);
 
-        // Convert date strings to Date objects
         const parsedData = data.map((item: any) => {
           return {
             ...item,
@@ -320,6 +325,38 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
     };
 
     getPurchases();
+  }, []);
+
+  useEffect(() => {
+    const getTransactionItems = async () => {
+      try {
+        const response = await fetch("/api/archive/transactionitem");
+        const text = await response.text();
+        // console.log("Raw Response Text:", text);
+
+        const data = JSON.parse(text);
+
+        const parsedData = data.map((item: any) => {
+          return {
+            ...item,
+            createdat: item.createdat ? new Date(item.createdat) : null,
+            lastmodifiedat: item.lastmodifiedat
+              ? new Date(item.lastmodifiedat)
+              : null,
+            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+          };
+        });
+
+        // console.log("Parsed Data with Date Conversion:", parsedData);
+
+        // console.log("Parsed Data:", parsedData);
+        setTransactionItems(parsedData);
+      } catch (error) {
+        console.error("Error in getPurchases:", error);
+      }
+    };
+
+    getTransactionItems();
   }, []);
 
   useEffect(() => {
@@ -373,10 +410,18 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
           onRestore={onRestore}
         />
       );
-    case "customers":
+    // case "customers":
+    //   return (
+    //     <CustomersTable
+    //       customers={customers}
+    //       searchTerm={searchTerm}
+    //       onRestore={onRestore}
+    //     />
+    //   );
+    case "purchase items":
       return (
-        <CustomersTable
-          customers={customers}
+        <PurchaseItemTable
+          purchases={transactionItems}
           searchTerm={searchTerm}
           onRestore={onRestore}
         />

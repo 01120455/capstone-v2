@@ -48,6 +48,7 @@ import SideMenu from "@/components/sidemenu";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -231,7 +232,9 @@ export default function Component() {
     <div className="flex h-screen w-full">
       <div className="flex-1 overflow-y-auto p-8">
         <div className="container mx-auto px-4 md:px-6 py-8">
-          <h1 className="text-3xl font-bold mb-6">Supplier Management</h1>
+          <h1 className="text-3xl font-bold mb-6 text-customColors-darkKnight">
+            Supplier Management
+          </h1>
           <div className="mb-6">
             <Input
               type="text"
@@ -248,7 +251,7 @@ export default function Component() {
               divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
             >
               <TableHeader>
-                <TableRow className="bg-gray-100 dark:bg-gray-800">
+                <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                   <TableHead className="px-4 py-3 text-left font-medium">
                     Name
                   </TableHead>
@@ -300,7 +303,7 @@ export default function Component() {
                       }
                     />
                   </PaginationItem>
-                  {[...Array(totalPages)].map((_, index) => (
+                  {/* {[...Array(totalPages)].map((_, index) => (
                     <PaginationItem key={index}>
                       <PaginationLink
                         onClick={() => handlePageChange(index + 1)}
@@ -309,7 +312,55 @@ export default function Component() {
                         {index + 1}
                       </PaginationLink>
                     </PaginationItem>
-                  ))}
+                  ))} */}
+
+                  {currentPage > 3 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => handlePageChange(1)}
+                          isActive={currentPage === 1}
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      {currentPage > 3 && <PaginationEllipsis />}
+                    </>
+                  )}
+
+                  {Array.from(
+                    { length: Math.min(3, totalPages) },
+                    (_, index) => {
+                      const pageIndex = Math.max(1, currentPage - 1) + index;
+                      if (pageIndex < 1 || pageIndex > totalPages) return null;
+
+                      return (
+                        <PaginationItem key={pageIndex}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(pageIndex)}
+                            isActive={currentPage === pageIndex}
+                          >
+                            {pageIndex}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                  )}
+
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && <PaginationEllipsis />}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => handlePageChange(totalPages)}
+                          isActive={currentPage === totalPages}
+                        >
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
                   <PaginationItem>
                     <PaginationNext
                       onClick={() =>
@@ -345,7 +396,7 @@ export default function Component() {
                         divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow>
+                          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                             {/* <TableHead>Purchased ID</TableHead> */}
                             <TableHead>Item Name</TableHead>
                             <TableHead>Item Type</TableHead>
@@ -473,9 +524,6 @@ export default function Component() {
                   (transaction) =>
                     transaction.Entity?.entityid === supplier.entityid
                 );
-
-                // console.log("Supplier Transactions:", supplierTransactions);
-
                 return (
                   <Card key={supplier.entityid}>
                     <CardHeader>
@@ -491,7 +539,7 @@ export default function Component() {
                               divClassname="min-h-[300px] overflow-y-scroll max-h-[300px] overflow-y-auto"
                             >
                               <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                                <TableRow className="bg-gray-100 dark:bg-gray-800">
+                                <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                                   <TableHead className="px-4 py-2 text-left font-medium">
                                     Invoice
                                   </TableHead>

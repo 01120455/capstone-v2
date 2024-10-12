@@ -108,6 +108,9 @@ export default function Component() {
   const [showSuccessTI, setShowSuccessTI] = useState(false);
   const [successTransactionItem, setSuccessTransactionItem] =
     useState<TransactionItemOnly | null>(null);
+  const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
+  const [showDeletedTransaction, setShowDeletedTransaction] =
+    useState<TransactionTable | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -646,10 +649,13 @@ export default function Component() {
       );
 
       if (response.ok) {
+        const data = await response.json();
         console.log("Purchase deleted successfully");
         setShowAlert(false);
         setPurchaseToDelete(null);
         refreshPurchases();
+        setShowDeletionSuccess(true);
+        setShowDeletedTransaction(data);
       } else {
         console.error("Error deleting Purchase:", response.status);
       }
@@ -812,6 +818,19 @@ export default function Component() {
               {successAction === "added"
                 ? "added to the purchase order."
                 : "edited successfully in the purchase order"}
+            </AlertDescription>
+          </Alert>
+        )}
+        {showDeletionSuccess && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-6 w-6" />
+              Transaction Deleted Successfully
+            </AlertTitle>
+            <AlertDescription>
+              Transaction with Invoice Number {""}{" "}
+              {showDeletedTransaction?.InvoiceNumber.invoicenumber} is deleted
+              successfully.
             </AlertDescription>
           </Alert>
         )}

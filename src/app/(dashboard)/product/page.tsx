@@ -63,6 +63,7 @@ import SideMenu from "@/components/sidemenu";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -93,7 +94,7 @@ export default function Component() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
   const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
-  const [showDeletedIem, setShowDeletedItem] = useState<ViewItem | null>(null);
+  const [showDeletedItem, setShowDeletedItem] = useState<ViewItem | null>(null);
   const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -538,8 +539,8 @@ export default function Component() {
               Item Deleted Successfully
             </AlertTitle>
             <AlertDescription>
-              Item {showDeletedIem?.name} with stocks of {showDeletedIem?.stock}{" "}
-              deleted successfully.
+              Item {showDeletedItem?.name} with stocks of{" "}
+              {showDeletedItem?.stock} deleted successfully.
             </AlertDescription>
           </Alert>
         )}
@@ -561,7 +562,9 @@ export default function Component() {
         )}
         <div className="p-6 md:p-8">
           <div className="flex  items-center justify-between mb-6 -mr-6">
-            <h1 className="text-2xl font-bold ">Product Management</h1>
+            <h1 className="text-2xl font-bold text-customColors-darkKnight">
+              Product Management
+            </h1>
             <Button onClick={handleAddProduct}>
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
@@ -594,8 +597,12 @@ export default function Component() {
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Reorder Level</TableHead>
                       <TableHead>Critical Level</TableHead>
-                      <TableHead>Last Modified by</TableHead>
-                      <TableHead>Last Modified at</TableHead>
+                      {canAccessButton(ROLES.ADMIN) && (
+                        <TableHead>Last Modified by</TableHead>
+                      )}
+                      {canAccessButton(ROLES.ADMIN) && (
+                        <TableHead>Last Modified at</TableHead>
+                      )}
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -619,16 +626,20 @@ export default function Component() {
                         <TableCell>{formatPrice(item.unitprice)}</TableCell>
                         <TableCell>{item.reorderlevel}</TableCell>
                         <TableCell>{item.criticallevel}</TableCell>
-                        <TableCell>
-                          {item.User.firstname} {item.User.lastname}
-                        </TableCell>
-                        <TableCell>
-                          {item.lastmodifiedat
-                            ? new Date(item.lastmodifiedat).toLocaleDateString(
-                                "en-US"
-                              )
-                            : "N/A"}
-                        </TableCell>
+                        {canAccessButton(ROLES.ADMIN) && (
+                          <TableCell>
+                            {item.User.firstname} {item.User.lastname}
+                          </TableCell>
+                        )}
+                        {canAccessButton(ROLES.ADMIN) && (
+                          <TableCell>
+                            {item.lastmodifiedat
+                              ? new Date(
+                                  item.lastmodifiedat
+                                ).toLocaleDateString("en-US")
+                              : "N/A"}
+                          </TableCell>
+                        )}
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Button
@@ -665,7 +676,7 @@ export default function Component() {
                           }
                         />
                       </PaginationItem>
-                      {[...Array(totalPages)].map((_, index) => (
+                      {/* {[...Array(totalPages)].map((_, index) => (
                         <PaginationItem key={index}>
                           <PaginationLink
                             onClick={() => handlePageChange(index + 1)}
@@ -674,7 +685,58 @@ export default function Component() {
                             {index + 1}
                           </PaginationLink>
                         </PaginationItem>
-                      ))}
+                      ))} */}
+                      {currentPage > 3 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() => handlePageChange(1)}
+                              isActive={currentPage === 1}
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                          {currentPage > 3 && <PaginationEllipsis />}
+                        </>
+                      )}
+
+                      {Array.from(
+                        { length: Math.min(3, totalPages) },
+                        (_, index) => {
+                          const pageIndex =
+                            Math.max(1, currentPage - 1) + index;
+                          if (pageIndex < 1 || pageIndex > totalPages)
+                            return null;
+
+                          return (
+                            <PaginationItem key={pageIndex}>
+                              <PaginationLink
+                                onClick={() => handlePageChange(pageIndex)}
+                                isActive={currentPage === pageIndex}
+                              >
+                                {pageIndex}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
+                      )}
+
+                      {currentPage < totalPages - 2 && (
+                        <>
+                          {currentPage < totalPages - 3 && (
+                            <PaginationEllipsis />
+                          )}
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() => handlePageChange(totalPages)}
+                              isActive={currentPage === totalPages}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+
                       <PaginationItem>
                         <PaginationNext
                           onClick={() =>

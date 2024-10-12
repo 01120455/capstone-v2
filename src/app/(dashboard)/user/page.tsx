@@ -54,17 +54,20 @@ import {
   TrashIcon,
   PlusIcon,
   AlertCircle,
+  CheckCircle,
 } from "@/components/icons/Icons";
 import { User } from "@/interfaces/user";
 import SideMenu from "@/components/sidemenu";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ROLES = {
   SALES: "sales",
@@ -81,6 +84,8 @@ export default function Component() {
   const [showImage, setShowImage] = useState<AddUser | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<AddUser | null>(null);
+  const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
+  const [showDeletedUser, setShowDeletedUser] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -261,10 +266,13 @@ export default function Component() {
         method: "PUT",
       });
       if (response.ok) {
+        const data = await response.json();
         console.log("User deleted successfully");
         refreshUsers();
         setShowAlert(false);
         setUserToDelete(null);
+        setShowDeletionSuccess(true);
+        setShowDeletedUser(data);
       } else {
         console.error("Error deleting user:", response.status);
       }
@@ -347,129 +355,206 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full">
       <div className="flex-1 overflow-y-auto p-6">
+        {showDeletionSuccess && (
+          <Alert className="alert-center">
+            <AlertTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-6 w-6" />
+              Item Deleted Successfully
+            </AlertTitle>
+            <AlertDescription>
+              User {showDeletedUser?.firstname} {""}{" "}
+              {showDeletedUser?.middlename} {""} {showDeletedUser?.lastname}{" "}
+              deleted successfully.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="w-full max-w-screen-2xl mx-auto p-4">
-          <div className="flex justify-between items-center mb-6 -mr-6">
-            <h1 className="text-2xl font-bold">User Management</h1>
-            <Button onClick={handleAddUser}>
-              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add User"}
-            </Button>
+          <div className="flex flex-col items-center">
+            <div className="w-[1000px]">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-customColors-darkKnight">
+                  User Management
+                </h1>
+                <Button onClick={handleAddUser}>
+                  {isSmallScreen ? (
+                    <PlusIcon className="w-6 h-6" />
+                  ) : (
+                    "Add User"
+                  )}
+                </Button>
+              </div>
+              <div className="mb-6">
+                <Input
+                  type="text"
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="w-full md:w-auto"
+                />
+              </div>
+            </div>
           </div>
-          <div className="mb-6">
-            <Input
-              type="text"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="w-full md:w-auto"
-            />
-          </div>
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <Table
-              style={{ width: "100%" }}
-              className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-              divClassname="overflow-y-scroll min-h-[310px] overflow-y-auto"
-            >
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Username</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedUsers &&
-                  paginatedUsers.map((user: AddUser, index: number) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        {/* <Image
+          <div className="flex items-center justify-center bg-white rounded-lg overflow-hidden">
+            <div className="w-full max-w-[1000px]">
+              <Table
+                style={{ width: "100%" }}
+                className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden"
+                divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto"
+              >
+                <TableHeader>
+                  <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                    <TableHead>Image</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedUsers &&
+                    paginatedUsers.map((user: AddUser, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {/* <Image
                           src={user.imagepath ?? ""}
                           alt="User Image"
                           width={250}
                           height={250}
                           className="rounded"
                         /> */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleShowImage(user)}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleShowImage(user)}
+                          >
+                            View Image
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          {user.firstname} {user.middlename} {user.lastname}
+                        </TableCell>
+                        <TableCell>{user.role}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`px-2 py-1 rounded-full ${
+                              user.status === "active"
+                                ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                            }`}
+                          >
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{user.username}</TableCell>
+                        <TableCell className="text-right">
+                          {canAccessButton(ROLES.ADMIN) && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleEditUser(user)}
+                              >
+                                <FilePenIcon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleDeleteUser(user)}
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+              <div className="flex items-center justify-center mt-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          handlePageChange(Math.max(1, currentPage - 1))
+                        }
+                      />
+                    </PaginationItem>
+                    {/* {[...Array(totalPages)].map((_, index) => (
+                      <PaginationItem key={index}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(index + 1)}
+                          isActive={currentPage === index + 1}
                         >
-                          View Image
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        {user.firstname} {user.middlename} {user.lastname}
-                      </TableCell>
-                      <TableCell>{user.role}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`px-2 py-1 rounded-full ${
-                            user.status === "active"
-                              ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                              : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                          }`}
-                        >
-                          {user.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell className="text-right">
-                        {canAccessButton(ROLES.ADMIN) && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleEditUser(user)}
+                          {index + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))} */}
+
+                    {currentPage > 3 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => handlePageChange(1)}
+                            isActive={currentPage === 1}
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                        {currentPage > 3 && <PaginationEllipsis />}
+                      </>
+                    )}
+
+                    {Array.from(
+                      { length: Math.min(3, totalPages) },
+                      (_, index) => {
+                        const pageIndex = Math.max(1, currentPage - 1) + index;
+                        if (pageIndex < 1 || pageIndex > totalPages)
+                          return null;
+
+                        return (
+                          <PaginationItem key={pageIndex}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(pageIndex)}
+                              isActive={currentPage === pageIndex}
                             >
-                              <FilePenIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleDeleteUser(user)}
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
+                              {pageIndex}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+                    )}
+
+                    {currentPage < totalPages - 2 && (
+                      <>
+                        {currentPage < totalPages - 3 && <PaginationEllipsis />}
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => handlePageChange(totalPages)}
+                            isActive={currentPage === totalPages}
+                          >
+                            {totalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          handlePageChange(
+                            Math.min(totalPages, currentPage + 1)
+                          )
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center justify-center mt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      handlePageChange(Math.max(1, currentPage - 1))
-                    }
-                  />
-                </PaginationItem>
-                {[...Array(totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
-                      onClick={() => handlePageChange(index + 1)}
-                      isActive={currentPage === index + 1}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      handlePageChange(Math.min(totalPages, currentPage + 1))
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
+
           <>
             {showImageModal && showImage && (
               <Dialog open={showImageModal} onOpenChange={closeImage}>

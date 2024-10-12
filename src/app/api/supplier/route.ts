@@ -31,7 +31,6 @@ export const PUT = async (req: NextRequest) => {
 
     const contactNumberIfNull = contactnumber || "";
 
-    // Check for required fields
     if (!entityid) {
       return NextResponse.json(
         { error: "entityid is required to update a supplier" },
@@ -46,18 +45,16 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    // Use a transaction for the update operation
     const updateSupplier = await prisma.$transaction(async (prisma) => {
       const existingSupplier = await prisma.entity.findFirst({
         where: {
-          entityid, // Use entityid to find the supplier
+          entityid,
         },
         include: {
           roles: true,
         },
       });
 
-      // Check if supplier exists and has the right role
       if (!existingSupplier) {
         throw new Error("Supplier not found");
       }
@@ -66,7 +63,6 @@ export const PUT = async (req: NextRequest) => {
         throw new Error("Entity is not a supplier");
       }
 
-      // Perform the update
       return await prisma.entity.update({
         where: {
           entityid,

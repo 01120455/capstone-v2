@@ -187,7 +187,9 @@ export default function Component() {
                 </Avatar>
               </div>
               <div className="flex flex-col justify-center items-center pt-4">
-                <h2 className="text-4xl font-bold">{fullName || "Guest"}</h2>
+                <h2 className="text-4xl font-bold text-customColors-darkKnigh">
+                  {fullName || "Guest"}
+                </h2>
                 <p className="text-xl text-muted-foreground">
                   {userSession?.role}
                 </p>

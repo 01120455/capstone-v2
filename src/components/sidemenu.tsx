@@ -93,11 +93,11 @@ export default function SideMenu() {
   }
 
   return (
-    <div className="absolute z-40 h-screen flex flex-col lg:flex-row">
+    <div className="absolute z-40 h-screen flex flex-col lg:flex-row bg-customColors-ivoryWhite">
       <div
         className={`flex flex-col h-screen ${
           isMenuOpen ? "w-48" : "w-14"
-        } lg:w-52 bg-white shadow-lg transition-all duration-300 ease-in-out`}
+        } lg:w-52 bg-CustomColors-ivoryWhite shadow-lg transition-all duration-300 ease-in-out`}
       >
         {/* Header Section */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -121,7 +121,7 @@ export default function SideMenu() {
                 {canAccessMenuItem(ROLES.ADMIN) && (
                   <>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/dashboard"
                       prefetch={false}
                     >
@@ -129,7 +129,7 @@ export default function SideMenu() {
                       <span>Dashboard</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/product"
                       prefetch={false}
                     >
@@ -137,7 +137,7 @@ export default function SideMenu() {
                       <span>Product</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/sales"
                       prefetch={false}
                     >
@@ -145,7 +145,7 @@ export default function SideMenu() {
                       <span>Sales</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/saleshistory"
                       prefetch={false}
                     >
@@ -153,7 +153,7 @@ export default function SideMenu() {
                       <span>Sales History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/purchase"
                       prefetch={false}
                     >
@@ -161,7 +161,7 @@ export default function SideMenu() {
                       <span>Purchase</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/purchasehistory"
                       prefetch={false}
                     >
@@ -169,7 +169,7 @@ export default function SideMenu() {
                       <span>Purchase History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/customer"
                       prefetch={false}
                     >
@@ -177,7 +177,7 @@ export default function SideMenu() {
                       <span>Customer</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/supplier"
                       prefetch={false}
                     >
@@ -185,7 +185,7 @@ export default function SideMenu() {
                       <span>Supplier</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/user"
                       prefetch={false}
                     >
@@ -194,7 +194,7 @@ export default function SideMenu() {
                     </Link>
 
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/archive"
                       prefetch={false}
                     >
@@ -206,7 +206,7 @@ export default function SideMenu() {
                 {user?.role === ROLES.MANAGER && (
                   <>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/dashboard"
                       prefetch={false}
                     >
@@ -214,7 +214,7 @@ export default function SideMenu() {
                       <span>Dashboard</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/product"
                       prefetch={false}
                     >
@@ -222,7 +222,7 @@ export default function SideMenu() {
                       <span>Product</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/sales"
                       prefetch={false}
                     >
@@ -230,7 +230,7 @@ export default function SideMenu() {
                       <span>Sales</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/saleshistory"
                       prefetch={false}
                     >
@@ -238,7 +238,7 @@ export default function SideMenu() {
                       <span>Sales History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/purchase"
                       prefetch={false}
                     >
@@ -246,7 +246,7 @@ export default function SideMenu() {
                       <span>Purchase</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/purchasehistory"
                       prefetch={false}
                     >
@@ -254,7 +254,7 @@ export default function SideMenu() {
                       <span>Purchase History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/customer"
                       prefetch={false}
                     >
@@ -262,7 +262,7 @@ export default function SideMenu() {
                       <span>Customer</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/supplier"
                       prefetch={false}
                     >
@@ -274,7 +274,7 @@ export default function SideMenu() {
                 {user?.role === ROLES.SALES && (
                   <>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/sales"
                       prefetch={false}
                     >
@@ -282,7 +282,7 @@ export default function SideMenu() {
                       <span>Sales</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/saleshistory"
                       prefetch={false}
                     >
@@ -290,7 +290,7 @@ export default function SideMenu() {
                       <span>Sales History</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/customer"
                       prefetch={false}
                     >
@@ -302,7 +302,7 @@ export default function SideMenu() {
                 {user?.role === ROLES.INVENTORY && (
                   <>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/product"
                       prefetch={false}
                     >
@@ -310,7 +310,7 @@ export default function SideMenu() {
                       <span>Product</span>
                     </Link>
                     <Link
-                      className="block p-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/supplier"
                       prefetch={false}
                     >
@@ -323,7 +323,7 @@ export default function SideMenu() {
             </ScrollArea>
           </div>
           <div
-            className={`bg-white border-t border-gray-200 flex items-center justify-between ${
+            className={`bg-customColors-ivoryWhite border-t border-gray-200 flex items-center justify-between ${
               isMenuOpen ? "p-4" : "pt-4 pb-4 pl-1"
             }  mt-auto`}
           >
@@ -337,7 +337,7 @@ export default function SideMenu() {
                   isMenuOpen ? "block" : "hidden"
                 } lg:block`}
               >
-                <span className="text-sm font-medium text-gray-800">
+                <span className="text-sm font-medium text-gray-800 text-customColors-darkKnight">
                   {user?.firstname && user?.lastname
                     ? `${user.firstname} ${user.lastname}`
                     : "Guest"}
@@ -359,14 +359,14 @@ export default function SideMenu() {
               <DropdownMenuContent className="w-56">
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100"
+                    className="w-full p-2 text-left text-sm text-gray-800 rounded-xl hover:bg-customColors-mercury"
                     onClick={() => (window.location.href = "/profile")}
                   >
                     <ProfileIcon className="inline-block mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="w-full p-2 text-left text-sm text-gray-800 hover:bg-gray-100"
+                    className="w-full p-2 text-left text-sm text-gray-800 rounded-xl hover:bg-customColors-mercury"
                     onClick={logout}
                   >
                     <LogoutIcon className="mr-2 h-4 w-4" />

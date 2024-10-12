@@ -8,7 +8,6 @@ export async function GET(req: NextRequest) {
     const transaction = await prisma.transaction.findMany({
       where: {
         type: "purchase",
-        deleted: true,
       },
       include: {
         Entity: {

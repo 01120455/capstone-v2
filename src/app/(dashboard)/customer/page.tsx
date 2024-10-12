@@ -69,17 +69,6 @@ export default function Component() {
     }
   };
 
-  // useEffect(() => {
-  //   if (customers.length > 0) {
-  //     const testCustomer = customers.find(
-  //       (customer) => customer.entityid === 4
-  //     );
-  //     if (testCustomer) {
-  //       setSelectedCustomer(testCustomer);
-  //     }
-  //   }
-  // }, [customers]);
-
   const filteredTransactions = selectedCustomer
     ? transactions
         .filter(
@@ -232,10 +221,12 @@ export default function Component() {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col h-full">
           <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Customer Management</h1>
+            <h1 className="text-2xl font-bold text-customColors-darkKnight">
+              Customer Management
+            </h1>
           </header>
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
-            <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
+            <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md ">
               <div className="p-4 border-b dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold">Customers</h2>
@@ -249,7 +240,7 @@ export default function Component() {
                   />
                 </div>
               </div>
-              <div className="p-4 max-h-[calc(100vh-200px)]">
+              <div className="p-4 max-h-[calc(100vh-200px)] overflow-auto">
                 {currentCustomers.map((customer: Entity, index: number) => (
                   <div
                     key={index}

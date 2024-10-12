@@ -19,6 +19,7 @@ import { XIcon, ArrowRightIcon, FilterIcon } from "@/components/icons/Icons";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -410,7 +411,7 @@ export default function Component() {
                                 }
                               />
                             </PaginationItem>
-                            {[...Array(totalPages)].map((_, index) => (
+                            {/* {[...Array(totalPages)].map((_, index) => (
                               <PaginationItem key={index}>
                                 <PaginationLink
                                   onClick={() => handlePageChange(index + 1)}
@@ -419,7 +420,61 @@ export default function Component() {
                                   {index + 1}
                                 </PaginationLink>
                               </PaginationItem>
-                            ))}
+                            ))} */}
+
+                            {currentPage > 3 && (
+                              <>
+                                <PaginationItem>
+                                  <PaginationLink
+                                    onClick={() => handlePageChange(1)}
+                                    isActive={currentPage === 1}
+                                  >
+                                    1
+                                  </PaginationLink>
+                                </PaginationItem>
+                                {currentPage > 3 && <PaginationEllipsis />}
+                              </>
+                            )}
+
+                            {Array.from(
+                              { length: Math.min(3, totalPages) },
+                              (_, index) => {
+                                const pageIndex =
+                                  Math.max(1, currentPage - 1) + index;
+                                if (pageIndex < 1 || pageIndex > totalPages)
+                                  return null;
+
+                                return (
+                                  <PaginationItem key={pageIndex}>
+                                    <PaginationLink
+                                      onClick={() =>
+                                        handlePageChange(pageIndex)
+                                      }
+                                      isActive={currentPage === pageIndex}
+                                    >
+                                      {pageIndex}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                );
+                              }
+                            )}
+
+                            {currentPage < totalPages - 2 && (
+                              <>
+                                {currentPage < totalPages - 3 && (
+                                  <PaginationEllipsis />
+                                )}
+                                <PaginationItem>
+                                  <PaginationLink
+                                    onClick={() => handlePageChange(totalPages)}
+                                    isActive={currentPage === totalPages}
+                                  >
+                                    {totalPages}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              </>
+                            )}
+
                             <PaginationItem>
                               <PaginationNext
                                 onClick={() =>

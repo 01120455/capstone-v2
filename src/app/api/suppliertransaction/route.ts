@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         },
         TransactionItem: {
           where: {
-            deleted: false, // Add condition to filter only non-deleted TransactionItems
+            deleted: false,
           },
           select: {
             transactionid: true,

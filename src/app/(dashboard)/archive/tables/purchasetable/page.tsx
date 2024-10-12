@@ -31,8 +31,7 @@ export function PurchaseTable({
 }) {
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
-  const filteredSales = purchases?.filter((purchases) =>
-    // sales InvoiceNumber.invoicenumber or sales entity.name
+  const filteredPurchases = purchases?.filter((purchases) =>
     `${purchases.InvoiceNumber.invoicenumber} ${purchases.Entity.name}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
@@ -41,8 +40,8 @@ export function PurchaseTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  const totalPages = Math.ceil(filteredSales?.length ?? 0 / itemsPerPage);
-  const paginatedSales = filteredSales?.slice(
+  const totalPages = Math.ceil(filteredPurchases?.length ?? 0 / itemsPerPage);
+  const paginatedPurchases = filteredPurchases?.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -178,7 +177,7 @@ export function PurchaseTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedSales?.map(
+                {paginatedPurchases?.map(
                   (transaction: TransactionTable, index: number) => (
                     <TableRow
                       key={index}
