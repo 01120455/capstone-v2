@@ -85,9 +85,19 @@ export const POST = async (req: NextRequest) => {
         },
       });
 
+      const contactNumberIfNull =
+        contactnumber || existingEntity?.contactnumber || "";
+
       if (existingEntity) {
         entityId = existingEntity.entityid;
         // Check if the entity has the correct role
+        await tx.entity.update({
+          where: { entityid: entityId },
+          data: {
+            contactnumber: contactNumberIfNull,
+          },
+        });
+
         const hasRole = existingEntity.roles.some((r) => r.role === "customer");
 
         if (!hasRole) {

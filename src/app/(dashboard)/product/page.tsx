@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, ChangeEvent, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -515,6 +515,43 @@ export default function Component() {
     setCurrentPage(page);
   };
 
+  const [inputValue, setInputValue] = useState("");
+  const filteredItemsName = items.filter((item) =>
+    item.name.toLowerCase().includes(inputValue.toLowerCase())
+  );
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    setDropdownVisible(e.target.value.length > 0); // Show dropdown if there is input
+  };
+
+  const handleItemClick = (itemName: string) => {
+    setInputValue(itemName);
+    setDropdownVisible(false); // Hide dropdown when an item is clicked
+  };
+
+  // Hide dropdown when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside as EventListener
+      );
+    };
+  }, []);
+
   return (
     <div className="flex h-screen w-full">
       <div className="flex-1 overflow-y-hidden p-5">
@@ -858,7 +895,7 @@ export default function Component() {
                           )}
                         />
                       </div>
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <FormField
                           control={form.control}
                           name="name"
@@ -869,6 +906,53 @@ export default function Component() {
                                 <Input {...field} id="name" type="text" />
                               </FormControl>
                               <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div> */}
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="name">Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="name"
+                                  type="text"
+                                  value={inputValue}
+                                  onChange={(e) => {
+                                    handleInputChange(e);
+                                    field.onChange(e); // Call the original onChange
+                                  }}
+                                  onFocus={() =>
+                                    setDropdownVisible(inputValue.length > 0)
+                                  } // Show dropdown on focus
+                                />
+                              </FormControl>
+                              <FormMessage />
+                              {/* Dropdown for filtered items */}
+                              {dropdownVisible &&
+                                filteredItemsName.length > 0 && (
+                                  <div
+                                    ref={dropdownRef} // Attach ref to the dropdown
+                                    className="absolute z-10 bg-white border border-gray-300 mt-1 max-h-60 overflow-y-auto"
+                                  >
+                                    {filteredItemsName.map((item) => (
+                                      <div
+                                        key={item.itemid}
+                                        className="p-2 cursor-pointer hover:bg-gray-200"
+                                        onClick={() =>
+                                          handleItemClick(item.name)
+                                        } // Call the function on item click
+                                      >
+                                        {item.name}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                             </FormItem>
                           )}
                         />

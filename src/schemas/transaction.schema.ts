@@ -81,7 +81,10 @@ const TransactionItem = z.object({
   transactionid: z.number(),
   Item: z.object({
     itemid: z.number().optional(),
-    name: z.string().min(1, "Item Name is required").max(100, "Name is too long"),
+    name: z
+      .string()
+      .min(1, "Item Name is required")
+      .max(100, "Name is too long"),
     type: z
       .enum(["bigas", "palay", "resico"], {
         invalid_type_error: "Invalid Type Received",
@@ -145,7 +148,7 @@ const transactionOnlySchema = z.object({
   Entity: z.object({
     entityid: z.number(),
     name: z.string(),
-    contactnumber: z.string().optional(),
+    contactnumber: z.string(),
   }),
   createdat: date(),
   type: z.enum(["purchase", "sales"], {

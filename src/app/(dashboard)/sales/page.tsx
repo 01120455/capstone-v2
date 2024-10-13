@@ -55,7 +55,6 @@ export default function Component() {
   const [emptyCart, setEmptyCart] = useState(false);
   const [insufficientStock, setInsufficientStock] = useState(false);
 
-
   const form = useForm<AddSales>({
     resolver: zodResolver(salesTransactionSchema),
     defaultValues: {
@@ -539,9 +538,6 @@ export default function Component() {
                                     Pending
                                   </SelectItem>
                                   <SelectItem value="paid">Paid</SelectItem>
-                                  <SelectItem value="cancelled">
-                                    Cancelled
-                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>

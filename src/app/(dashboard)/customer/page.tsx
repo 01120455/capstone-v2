@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,6 +50,10 @@ export default function Component() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ [key: string]: any }>({});
+  const [isCustomerDropdownVisible, setCustomerDropdownVisible] =
+    useState(false);
+  const dropdownRefCustomer = useRef<HTMLDivElement>(null);
+  const [customerSuggestions, setCustomerSuggestions] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +96,7 @@ export default function Component() {
         })
     : [];
 
-  console.log("filteredTransactions", filteredTransactions);
+  // console.log("filteredTransactions", filteredTransactions);
 
   const totalSpend = filteredTransactions.reduce(
     (total, purchase) => total + (purchase.totalamount || 0),
@@ -216,6 +220,42 @@ export default function Component() {
     return acc;
   }, {} as ChartConfig);
 
+  const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setCustomerDropdownVisible(true);
+
+    setCustomerSuggestions(
+      value
+        ? currentCustomers
+            .filter((customer) =>
+              customer.name.toLowerCase().includes(value.toLowerCase())
+            )
+            .map((customer) => customer.name)
+        : []
+    );
+  };
+
+  // Hide dropdown when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRefCustomer.current &&
+        !dropdownRefCustomer.current.contains(event.target as Node)
+      ) {
+        setCustomerDropdownVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside as EventListener
+      );
+    };
+  }, []);
+
   return (
     <div className="flex h-screen w-full">
       <div className="flex-1 overflow-y-auto p-4">
@@ -228,16 +268,46 @@ export default function Component() {
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
             <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md ">
               <div className="p-4 border-b dark:border-gray-700">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between relative">
                   <h2 className="text-lg font-bold">Customers</h2>
 
-                  <Input
-                    type="text"
-                    placeholder="Search customers..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="w-full md:w-auto"
-                  />
+                  <div className="relative w-full md:w-auto">
+                    {" "}
+                    {/* Relative container for positioning */}
+                    <Input
+                      type="text"
+                      placeholder="Search customers..."
+                      value={searchTerm}
+                      onChange={handleCustomerChange}
+                      className="w-full" // Ensure input takes full width of container
+                    />
+                    {isCustomerDropdownVisible &&
+                      customerSuggestions.length > 0 && (
+                        <div
+                          ref={dropdownRefCustomer}
+                          className="absolute z-10 bg-white border border-gray-300 w-full max-h-60 overflow-y-auto" // Use w-full to match input width
+                          style={{ top: "100%", left: 0 }} // Align directly under the input
+                        >
+                          {customerSuggestions.map((customer) => (
+                            <div
+                              key={customer}
+                              className="p-2 cursor-pointer hover:bg-gray-200"
+                              onClick={() => {
+                                setSearchTerm(customer);
+                                setCustomerDropdownVisible(false);
+                                handleCustomerSelect(
+                                  customers.find(
+                                    (c) => c.name === customer
+                                  ) as Entity
+                                );
+                              }}
+                            >
+                              {customer}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                  </div>
                 </div>
               </div>
               <div className="p-4 max-h-[calc(100vh-200px)] overflow-auto">

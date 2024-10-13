@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +31,7 @@ export default function Component() {
   const [filters, setFilters] = useState({
     invoiceno: "",
     name: "",
-    supplier: "",
+    customer: "",
     dateRange: { start: "", end: "" },
   });
 
@@ -41,6 +41,16 @@ export default function Component() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [showFilter, setShowFilter] = useState(false);
+  const [customerSuggestions, setCustomerSuggestions] = useState<string[]>([]);
+  const [invoiceSuggestions, setInvoiceSuggestions] = useState<string[]>([]);
+  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  const [isInvoiceDropdownVisible, setInvoiceDropdownVisible] = useState(false);
+  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  const [isCustomerDropdownVisible, setCustomerDropdownVisible] =
+    useState(false);
+  const dropdownRefInvoice = useRef<HTMLDivElement>(null);
+  const dropdownRefItem = useRef<HTMLDivElement>(null);
+  const dropdownRefCustomer = useRef<HTMLDivElement>(null);
 
   const toggleFilter = () => {
     setShowFilter(!showFilter);
@@ -85,7 +95,7 @@ export default function Component() {
     if (
       !filters.invoiceno &&
       !filters.name &&
-      !filters.supplier &&
+      !filters.customer &&
       !filters.dateRange.start &&
       !filters.dateRange.end &&
       !searchTerm
@@ -96,7 +106,7 @@ export default function Component() {
     return purchases.filter((purchase) => {
       const invoiceNo =
         purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-      const supplierName = `${purchase.Entity.name}`.toLowerCase();
+      const customerName = `${purchase.Entity.name}`.toLowerCase();
       const searchLower = searchTerm.toLowerCase();
 
       // console.log("Invoice Number:", invoiceNo);
@@ -132,11 +142,11 @@ export default function Component() {
       return (
         (!filters.invoiceno ||
           invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
-        (!filters.supplier ||
-          supplierName.includes(filters.supplier.toLowerCase())) &&
+        (!filters.customer ||
+          customerName.includes(filters.customer.toLowerCase())) &&
         itemNameMatches &&
         isWithinDateRange(createdAt, start, end) &&
-        (itemNameMatches || supplierName.includes(searchLower))
+        (itemNameMatches || customerName.includes(searchLower))
       );
     });
   }, [filters, searchTerm, purchases]);
@@ -159,6 +169,149 @@ export default function Component() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  // const [invoiceInputValue, setInvoiceInputValue] = useState("");
+  // const [itemInputValue, setItemInputValue] = useState("");
+  // const [supplierInputValue, setSupplierInputValue] = useState("");
+  // const filteredInvoiceNo = purchases.filter((purchase) =>
+  //   purchase.InvoiceNumber?.invoicenumber
+  //     ?.toLowerCase()
+  //     .includes(invoiceInputValue.toLowerCase())
+  // );
+  // const filteredItemsName = purchases.filter((purchase) =>
+  //   purchase.TransactionItem.some((item) =>
+  //     item.Item.name.toLowerCase().includes(itemInputValue.toLowerCase())
+  //   )
+  // );
+  // const filteredSupplier = purchases.filter((purchase) =>
+  //   purchase.Entity.name.toLowerCase().includes(supplierInputValue.toLowerCase())
+  // );
+  // const [dropdownVisible, setDropdownVisible] = useState(false);
+  // const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // const handleInvoiceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setInvoiceInputValue(e.target.value);
+  //   setDropdownVisible(e.target.value.length > 0); // Show dropdown if there is input
+  // };
+
+  // const handleItemInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setItemInputValue(e.target.value);
+  //   setDropdownVisible(e.target.value.length > 0); // Show dropdown if there is input
+  // };
+
+  // const handleSupplierInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSupplierInputValue(e.target.value);
+  //   setDropdownVisible(e.target.value.length > 0); // Show dropdown if there is input
+  // };
+
+  // const handleInvoiceItemClick = (invoiceNo: string) => {
+  //   setInvoiceInputValue(invoiceNo);
+  //   setDropdownVisible(false); // Hide dropdown when an item is clicked
+  // };
+
+  // const handleItemClick = (itemName: string) => {
+  //   setItemInputValue(itemName);
+  //   setDropdownVisible(false); // Hide dropdown when an item is clicked
+  // };
+
+  // const handleSupplierClick = (supplierName: string) => {
+  //   setSupplierInputValue(supplierName);
+  //   setDropdownVisible(false); // Hide dropdown when an item is clicked
+  // };
+
+  // // Hide dropdown when clicking outside of it
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (
+  //       dropdownRef.current &&
+  //       !dropdownRef.current.contains(event.target as Node)
+  //     ) {
+  //       setDropdownVisible(false);
+  //     }
+  //   };
+
+  //   document.addEventListener("mousedown", handleClickOutside as EventListener);
+  //   return () => {
+  //     document.removeEventListener(
+  //       "mousedown",
+  //       handleClickOutside as EventListener
+  //     );
+  //   };
+  // }, []);
+
+  const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, customer: value }));
+    setCustomerDropdownVisible(e.target.value.length > 0);
+
+    const filtered = purchases
+      .map((p) => p.Entity.name) // Adjust according to your data structure
+      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+
+    setCustomerSuggestions(filtered);
+  };
+
+  const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, invoiceno: value }));
+    setInvoiceDropdownVisible(e.target.value.length > 0);
+
+    const filtered = purchases
+      .map((p) => p.InvoiceNumber?.invoicenumber) // Use optional chaining to avoid undefined
+      .filter(
+        (invoice): invoice is string =>
+          invoice !== undefined &&
+          invoice.toLowerCase().includes(value.toLowerCase())
+      ); // Type guard
+
+    setInvoiceSuggestions(filtered);
+  };
+
+  const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, name: value }));
+    setItemDropdownVisible(e.target.value.length > 0);
+
+    const filtered = purchases
+      .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name)) // Adjust according to your data structure
+      .filter((itemName) =>
+        itemName?.toLowerCase().includes(value.toLowerCase())
+      );
+
+    setItemNameSuggestions(filtered);
+  };
+
+  // Hide dropdown when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRefInvoice.current &&
+        !dropdownRefInvoice.current.contains(event.target as Node)
+      ) {
+        setInvoiceDropdownVisible(false);
+      }
+      if (
+        dropdownRefItem.current &&
+        !dropdownRefItem.current.contains(event.target as Node)
+      ) {
+        setItemDropdownVisible(false);
+      }
+      if (
+        dropdownRefCustomer.current &&
+        !dropdownRefCustomer.current.contains(event.target as Node)
+      ) {
+        setCustomerDropdownVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside as EventListener
+      );
+    };
+  }, []);
 
   return (
     <div className="flex h-screen w-full">
@@ -500,7 +653,7 @@ export default function Component() {
             >
               <h2 className="text-lg font-bold mb-4">Filters</h2>
               <div className="grid gap-4">
-                <div className="grid gap-2">
+                {/* <div className="grid gap-2">
                   <Label htmlFor="item-name">Invoice Number</Label>
                   <Input
                     id="invoice-number"
@@ -544,6 +697,95 @@ export default function Component() {
                       }))
                     }
                   />
+                </div> */}
+                <div className="grid gap-2">
+                  <Label htmlFor="invoice-number">Invoice Number</Label>
+                  <Input
+                    id="invoice-number"
+                    type="text"
+                    placeholder="Enter Invoice Number"
+                    value={filters.invoiceno}
+                    onChange={handleInvoiceChange}
+                  />
+                  {isInvoiceDropdownVisible &&
+                    invoiceSuggestions.length > 0 && (
+                      <div
+                        ref={dropdownRefInvoice} // Attach ref to the dropdown
+                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                      >
+                        {invoiceSuggestions.map((invoice) => (
+                          <div
+                            key={invoice}
+                            className="p-2 cursor-pointer hover:bg-gray-200"
+                            onClick={() =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                invoiceno: invoice,
+                              }))
+                            }
+                          >
+                            {invoice}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="item-name">Item Name</Label>
+                  <Input
+                    id="item-name"
+                    type="text"
+                    placeholder="Enter Item name"
+                    value={filters.name}
+                    onChange={handleItemNameChange}
+                  />
+                  {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+                    <div
+                      ref={dropdownRefItem} // Attach ref to the dropdown
+                      className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                    >
+                      {itemNameSuggestions.map((item) => (
+                        <div
+                          key={item}
+                          className="p-2 cursor-pointer hover:bg-gray-200"
+                          onClick={() =>
+                            setFilters((prev) => ({ ...prev, name: item }))
+                          }
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="customer">Customer</Label>
+                  <Input
+                    id="customer"
+                    type="text"
+                    placeholder="Enter customer name"
+                    value={filters.customer}
+                    onChange={handleCustomerChange}
+                  />
+                  {isCustomerDropdownVisible &&
+                    customerSuggestions.length > 0 && (
+                      <div
+                        ref={dropdownRefCustomer} // Attach ref to the dropdown
+                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                      >
+                        {customerSuggestions.map((customer) => (
+                          <div
+                            key={customer}
+                            className="p-2 cursor-pointer hover:bg-gray-200"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, customer }))
+                            }
+                          >
+                            {customer}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="start-date">Start Date</Label>

@@ -62,8 +62,6 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    const contactNumberIfNull = contactnumber || "";
-
     const [newPurchase, newInvoice] = await prisma.$transaction(async (tx) => {
       // Check or Create Entity with the appropriate role
       let entityId;
@@ -76,9 +74,19 @@ export const POST = async (req: NextRequest) => {
         },
       });
 
+      const contactNumberIfNull =
+        contactnumber || existingEntity?.contactnumber || "";
+
       if (existingEntity) {
         entityId = existingEntity.entityid;
         // Check if the entity has the correct role
+        await tx.entity.update({
+          where: { entityid: entityId },
+          data: {
+            contactnumber: contactNumberIfNull,
+          },
+        });
+
         const hasRole = existingEntity.roles.some((r) => r.role === "supplier");
 
         if (!hasRole) {

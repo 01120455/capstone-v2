@@ -4,19 +4,19 @@ import Image from "next/image";
 import { useEffect } from "react";
 
 export default function Component() {
-  useEffect(() => {
-    async function createDummyUser() {
-      try {
-        const res = await fetch("/api/auth/cdu", { method: "POST" });
-        const data = await res.json();
-        console.log(data);
-      } catch (error) {
-        console.error("Error creating dummy user:", error);
-      }
-    }
+  // useEffect(() => {
+  //   async function createDummyUser() {
+  //     try {
+  //       const res = await fetch("/api/auth/cdu", { method: "POST" });
+  //       const data = await res.json();
+  //       console.log(data);
+  //     } catch (error) {
+  //       console.error("Error creating dummy user:", error);
+  //     }
+  //   }
 
-    createDummyUser();
-  }, []);
+  //   createDummyUser();
+  // }, []);
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
