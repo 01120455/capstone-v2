@@ -378,7 +378,7 @@ export default function Component() {
       Entity: {
         entityid: purchase.Entity.entityid,
         name: purchase.Entity.name,
-        contactnumber: purchase.Entity.contactnumber,
+        contactnumber: purchase.Entity?.contactnumber || "",
       },
       InvoiceNumber: {
         invoicenumberid: purchase.InvoiceNumber.invoicenumberid,
@@ -1491,7 +1491,7 @@ export default function Component() {
                                   <Input
                                     {...field}
                                     id="contactnumber"
-                                    type="text"
+                                    type="number"
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1907,7 +1907,7 @@ ${
                                     <Input
                                       {...field}
                                       id="contactnumber"
-                                      type="text"
+                                      type="number"
                                     />
                                   </FormControl>
                                 </FormItem>

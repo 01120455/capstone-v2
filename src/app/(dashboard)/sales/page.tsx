@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, ChangeEvent, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ViewItem } from "@/schemas/item.schema";
@@ -33,9 +33,11 @@ import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
 import { AlertCircle, CheckCircle, TrashIcon } from "@/components/icons/Icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SideMenu from "@/components/sidemenu";
+import { Entity } from "@/schemas/entity.schema";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
+  const [customers, setCustomers] = useState<Entity[]>([]);
   const [cart, setCart] = useState<
     {
       id: number;
@@ -87,6 +89,38 @@ export default function Component() {
       })),
     },
   });
+
+  useEffect(() => {
+    const getCustomers = async () => {
+      try {
+        const response = await fetch("/api/customer");
+        const text = await response.text();
+        console.log("Raw Response Text:", text);
+
+        const data = JSON.parse(text);
+
+        // Convert date strings to Date objects
+        const parsedData = data.map((item: any) => {
+          return {
+            ...item,
+            createdat: item.createdat ? new Date(item.createdat) : null,
+            lastmodifiedat: item.lastmodifiedat
+              ? new Date(item.lastmodifiedat)
+              : null,
+            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+          };
+        });
+
+        console.log("Parsed Data with Date Conversion:", parsedData);
+
+        setCustomers(parsedData);
+      } catch (error) {
+        console.error("Error in getPurchases:", error);
+      }
+    };
+
+    getCustomers();
+  }, []);
 
   useEffect(() => {
     async function getItems() {
@@ -342,6 +376,43 @@ export default function Component() {
     }
   };
 
+  const [inputValue, setInputValue] = useState("");
+  const filteredCustomersName = customers.filter((item) =>
+    item.name.toLowerCase().includes(inputValue.toLowerCase())
+  );
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    setDropdownVisible(e.target.value.length > 0); // Show dropdown if there is input
+  };
+
+  const handleItemClick = (itemName: string) => {
+    setInputValue(itemName);
+    setDropdownVisible(false); // Hide dropdown when an item is clicked
+  };
+
+  // Hide dropdown when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside as EventListener
+      );
+    };
+  }, []);
+
   return (
     <div className="flex h-screen w-full">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -486,9 +557,40 @@ export default function Component() {
                           <FormItem>
                             <FormLabel htmlFor="name">Customer Name</FormLabel>
                             <FormControl>
-                              <Input {...field} id="name" type="text" />
+                              <Input
+                                {...field}
+                                id="name"
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => {
+                                  handleInputChange(e);
+                                  field.onChange(e); // Call the original onChange
+                                }}
+                                onFocus={() =>
+                                  setDropdownVisible(inputValue.length > 0)
+                                } // Show dropdown on focus
+                              />
                             </FormControl>
                             <FormMessage />
+                            {dropdownVisible &&
+                              filteredCustomersName.length > 0 && (
+                                <div
+                                  ref={dropdownRef} // Attach ref to the dropdown
+                                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-40 max-h-60 overflow-y-auto"
+                                >
+                                  {filteredCustomersName.map((customer) => (
+                                    <div
+                                      key={customer.entityid}
+                                      className="p-2 cursor-pointer hover:bg-gray-200"
+                                      onClick={() =>
+                                        handleItemClick(customer.name)
+                                      } // Call the function on item click
+                                    >
+                                      {customer.name}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                           </FormItem>
                         )}
                       />

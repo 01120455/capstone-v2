@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent, useRef } from "react";
+import { useEffect, useState, ChangeEvent, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -58,8 +58,8 @@ import {
   TrashIcon,
   AlertCircle,
   CheckCircle,
+  FilterIcon,
 } from "@/components/icons/Icons";
-import SideMenu from "@/components/sidemenu";
 import {
   Pagination,
   PaginationContent,
@@ -69,6 +69,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Label } from "recharts";
 
 const ROLES = {
   SALES: "sales",
@@ -80,6 +81,13 @@ const ROLES = {
 export default function Component() {
   const [user, setUser] = useState<User | null>(null);
   const [items, setItems] = useState<ViewItem[]>([]);
+  const [filters, setFilters] = useState({
+    name: "",
+    type: "all",
+    sackweight: "all",
+    unitofmeasurement: "all",
+  });
+  const [showFilter, setShowFilter] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
@@ -102,23 +110,68 @@ export default function Component() {
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  const dropdownRefItem = useRef<HTMLDivElement>(null);
 
-  const filteredItems = items.filter((item) => {
-    const searchTermLower = searchTerm.toLowerCase();
+  // const filteredItems = items.filter((item) => {
+  //   const searchTermLower = searchTerm.toLowerCase();
 
-    const nameMatches = item.name.toLowerCase().includes(searchTermLower);
+  //   const nameMatches = item.name.toLowerCase().includes(searchTermLower);
 
-    const typeMatches = item.type.toLowerCase().includes(searchTermLower);
+  //   const typeMatches = item.type.toLowerCase().includes(searchTermLower);
 
-    const sackweightMatches = item.sackweight
-      .toString()
-      .includes(searchTermLower);
-    const unitMatches = item.unitofmeasurement
-      .toLowerCase()
-      .includes(searchTermLower);
+  //   const sackweightMatches = item.sackweight
+  //     .toString()
+  //     .includes(searchTermLower);
+  //   const unitMatches = item.unitofmeasurement
+  //     .toLowerCase()
+  //     .includes(searchTermLower);
 
-    return nameMatches || typeMatches || sackweightMatches || unitMatches;
-  });
+  //   return nameMatches || typeMatches || sackweightMatches || unitMatches;
+  // });
+
+  const toggleFilter = () => {
+    setShowFilter(!showFilter);
+  };
+
+  const filteredItems = useMemo(() => {
+    const isEmptyFilters =
+      filters.name === "" &&
+      filters.type === "all" &&
+      filters.sackweight === "all" &&
+      filters.unitofmeasurement === "all";
+
+    if (isEmptyFilters) {
+      return items;
+    }
+
+    return items.filter((item) => {
+      const nameMatches = item.name
+        .toLowerCase()
+        .includes(filters.name.toLowerCase());
+      const searchLower = searchTerm.toLowerCase();
+      const typeMatches = item.type
+        .toLowerCase()
+        .includes(filters.type.toLowerCase());
+      const sackweightMatches = item.sackweight
+        .toString()
+        .includes(filters.sackweight.toLowerCase());
+      const unitMatches = item.unitofmeasurement
+        .toLowerCase()
+        .includes(filters.unitofmeasurement.toLowerCase());
+      return nameMatches && typeMatches && sackweightMatches && unitMatches;
+    });
+  }, [filters, searchTerm, items]);
+
+  const handleClearFilters = () => {
+    setFilters({
+      name: "",
+      type: "all",
+      sackweight: "all",
+      unitofmeasurement: "all",
+    });
+  };
 
   const checkItemLevels = (items: ViewItem[]) => {
     items.forEach((item) => {
@@ -552,9 +605,55 @@ export default function Component() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside as EventListener
+      );
+    };
+  }, []);
+
+  const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, name: value }));
+    setItemDropdownVisible(e.target.value.length > 0);
+
+    const filtered = items
+      .map((i) => i.name)
+      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+    setItemNameSuggestions(filtered);
+  };
+
+  const handleDropdownItemClick = (itemName: string) => {
+    setInputValue(itemName);
+    setItemDropdownVisible(false); // Hide dropdown when an item is clicked
+  };
+  const handleSackWeightChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, sackWeight: value }));
+  };
+
+  const handleUnitOfMeasurementChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, unitOfMeasurement: value }));
+  };
+
+  const handleItemTypeChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, type: value }));
+  };
+
   return (
     <div className="flex h-screen w-full">
-      <div className="flex-1 overflow-y-hidden p-5">
+      <div className="flex-1 overflow-y-hidden p-5 w-full">
         {showSuccess && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-green-600">
@@ -597,8 +696,8 @@ export default function Component() {
             </AlertDescription>
           </Alert>
         )}
-        <div className="p-6 md:p-8">
-          <div className="flex  items-center justify-between mb-6 -mr-6">
+        <div className="mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between mb-6 -mr-6">
             <h1 className="text-2xl font-bold text-customColors-darkKnight">
               Product Management
             </h1>
@@ -606,114 +705,127 @@ export default function Component() {
               {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
             </Button>
           </div>
-          <div>
-            <Input
-              type="text"
-              placeholder="Search item name..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="w-full md:w-auto mb-4"
-            />
-          </div>
-          <div className="overflow-x-auto">
-            <div className="table-container relative ">
-              <ScrollArea>
-                <Table
-                  style={{ width: "100%" }}
-                  className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                  divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                >
-                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                    <TableRow>
-                      <TableHead>Image</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Sack Weight</TableHead>
-                      <TableHead>Unit of Measurement</TableHead>
-                      <TableHead>Available Stocks</TableHead>
-                      <TableHead>Unit Price</TableHead>
-                      <TableHead>Reorder Level</TableHead>
-                      <TableHead>Critical Level</TableHead>
-                      {canAccessButton(ROLES.ADMIN) && (
-                        <TableHead>Last Modified by</TableHead>
-                      )}
-                      {canAccessButton(ROLES.ADMIN) && (
-                        <TableHead>Last Modified at</TableHead>
-                      )}
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedItems.map((item) => (
-                      <TableRow key={item.itemid}>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleShowImage(item)}
-                          >
-                            View Image
-                          </Button>
-                        </TableCell>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.type}</TableCell>
-                        <TableCell>{item.sackweight}</TableCell>
-                        <TableCell>{item.unitofmeasurement}</TableCell>
-                        <TableCell>{formatStock(item.stock)}</TableCell>
-                        <TableCell>{formatPrice(item.unitprice)}</TableCell>
-                        <TableCell>{item.reorderlevel}</TableCell>
-                        <TableCell>{item.criticallevel}</TableCell>
-                        {canAccessButton(ROLES.ADMIN) && (
-                          <TableCell>
-                            {item.User.firstname} {item.User.lastname}
-                          </TableCell>
-                        )}
-                        {canAccessButton(ROLES.ADMIN) && (
-                          <TableCell>
-                            {item.lastmodifiedat
-                              ? new Date(
-                                  item.lastmodifiedat
-                                ).toLocaleDateString("en-US")
-                              : "N/A"}
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(item)}
-                            >
-                              <FilePenIcon className="w-4 h-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            {canAccessButton(ROLES.ADMIN) && (
+          <div
+            className={`grid gap-6 ${
+              showFilter ? "grid-cols-[1fr_220px]" : "auto-cols-fr"
+            }`}
+          >
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="text"
+                    placeholder="Search item name..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full md:w-auto mb-4"
+                  />
+                  <Button variant="outline" size="icon" onClick={toggleFilter}>
+                    <span className="sr-only">Filter</span>
+                    <FilterIcon className="w-6 h-6" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <div className="table-container relative ">
+                  <ScrollArea>
+                    <Table
+                      style={{ width: "100%" }}
+                      className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+                      divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                    >
+                      <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                        <TableRow>
+                          <TableHead>Image</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Sack Weight</TableHead>
+                          <TableHead>Unit of Measurement</TableHead>
+                          <TableHead>Available Stocks</TableHead>
+                          <TableHead>Unit Price</TableHead>
+                          <TableHead>Reorder Level</TableHead>
+                          <TableHead>Critical Level</TableHead>
+                          {canAccessButton(ROLES.ADMIN) && (
+                            <TableHead>Last Modified by</TableHead>
+                          )}
+                          {canAccessButton(ROLES.ADMIN) && (
+                            <TableHead>Last Modified at</TableHead>
+                          )}
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedItems.map((item) => (
+                          <TableRow key={item.itemid}>
+                            <TableCell>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleDeleteItem(item)}
+                                onClick={() => handleShowImage(item)}
                               >
-                                <TrashIcon className="w-4 h-4" />
-                                <span className="sr-only">Delete</span>
+                                View Image
                               </Button>
+                            </TableCell>
+                            <TableCell>{item.name}</TableCell>
+                            <TableCell>{item.type}</TableCell>
+                            <TableCell>{item.sackweight}</TableCell>
+                            <TableCell>{item.unitofmeasurement}</TableCell>
+                            <TableCell>{formatStock(item.stock)}</TableCell>
+                            <TableCell>{formatPrice(item.unitprice)}</TableCell>
+                            <TableCell>{item.reorderlevel}</TableCell>
+                            <TableCell>{item.criticallevel}</TableCell>
+                            {canAccessButton(ROLES.ADMIN) && (
+                              <TableCell>
+                                {item.User.firstname} {item.User.lastname}
+                              </TableCell>
                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="flex items-center justify-center mt-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            handlePageChange(Math.max(1, currentPage - 1))
-                          }
-                        />
-                      </PaginationItem>
-                      {/* {[...Array(totalPages)].map((_, index) => (
+                            {canAccessButton(ROLES.ADMIN) && (
+                              <TableCell>
+                                {item.lastmodifiedat
+                                  ? new Date(
+                                      item.lastmodifiedat
+                                    ).toLocaleDateString("en-US")
+                                  : "N/A"}
+                              </TableCell>
+                            )}
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(item)}
+                                >
+                                  <FilePenIcon className="w-4 h-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                {canAccessButton(ROLES.ADMIN) && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteItem(item)}
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                    <span className="sr-only">Delete</span>
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    <div className="flex items-center justify-center mt-4">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={() =>
+                                handlePageChange(Math.max(1, currentPage - 1))
+                              }
+                            />
+                          </PaginationItem>
+                          {/* {[...Array(totalPages)].map((_, index) => (
                         <PaginationItem key={index}>
                           <PaginationLink
                             onClick={() => handlePageChange(index + 1)}
@@ -723,73 +835,154 @@ export default function Component() {
                           </PaginationLink>
                         </PaginationItem>
                       ))} */}
-                      {currentPage > 3 && (
-                        <>
-                          <PaginationItem>
-                            <PaginationLink
-                              onClick={() => handlePageChange(1)}
-                              isActive={currentPage === 1}
-                            >
-                              1
-                            </PaginationLink>
-                          </PaginationItem>
-                          {currentPage > 3 && <PaginationEllipsis />}
-                        </>
-                      )}
-
-                      {Array.from(
-                        { length: Math.min(3, totalPages) },
-                        (_, index) => {
-                          const pageIndex =
-                            Math.max(1, currentPage - 1) + index;
-                          if (pageIndex < 1 || pageIndex > totalPages)
-                            return null;
-
-                          return (
-                            <PaginationItem key={pageIndex}>
-                              <PaginationLink
-                                onClick={() => handlePageChange(pageIndex)}
-                                isActive={currentPage === pageIndex}
-                              >
-                                {pageIndex}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        }
-                      )}
-
-                      {currentPage < totalPages - 2 && (
-                        <>
-                          {currentPage < totalPages - 3 && (
-                            <PaginationEllipsis />
+                          {currentPage > 3 && (
+                            <>
+                              <PaginationItem>
+                                <PaginationLink
+                                  onClick={() => handlePageChange(1)}
+                                  isActive={currentPage === 1}
+                                >
+                                  1
+                                </PaginationLink>
+                              </PaginationItem>
+                              {currentPage > 3 && <PaginationEllipsis />}
+                            </>
                           )}
-                          <PaginationItem>
-                            <PaginationLink
-                              onClick={() => handlePageChange(totalPages)}
-                              isActive={currentPage === totalPages}
-                            >
-                              {totalPages}
-                            </PaginationLink>
-                          </PaginationItem>
-                        </>
-                      )}
 
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            handlePageChange(
-                              Math.min(totalPages, currentPage + 1)
-                            )
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                          {Array.from(
+                            { length: Math.min(3, totalPages) },
+                            (_, index) => {
+                              const pageIndex =
+                                Math.max(1, currentPage - 1) + index;
+                              if (pageIndex < 1 || pageIndex > totalPages)
+                                return null;
+
+                              return (
+                                <PaginationItem key={pageIndex}>
+                                  <PaginationLink
+                                    onClick={() => handlePageChange(pageIndex)}
+                                    isActive={currentPage === pageIndex}
+                                  >
+                                    {pageIndex}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                          )}
+
+                          {currentPage < totalPages - 2 && (
+                            <>
+                              {currentPage < totalPages - 3 && (
+                                <PaginationEllipsis />
+                              )}
+                              <PaginationItem>
+                                <PaginationLink
+                                  onClick={() => handlePageChange(totalPages)}
+                                  isActive={currentPage === totalPages}
+                                >
+                                  {totalPages}
+                                </PaginationLink>
+                              </PaginationItem>
+                            </>
+                          )}
+
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={() =>
+                                handlePageChange(
+                                  Math.min(totalPages, currentPage + 1)
+                                )
+                              }
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
                 </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+              </div>
+            </div>
+            <div
+              className={`bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6 ${
+                showFilter ? "block" : "hidden"
+              }`}
+            >
+              <h2 className="text-lg font-bold mb-4">Filters</h2>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Button className="mt-9" onClick={handleClearFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="item-name">Item Name</Label>
+                  <Input
+                    id="name"
+                    value={filters.name}
+                    onChange={handleItemNameChange}
+                  />
+                  {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+                    <div
+                      ref={dropdownRefItem} // Attach ref to the dropdown
+                      className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                    >
+                      {itemNameSuggestions.map((item) => (
+                        <div
+                          key={item}
+                          className="p-2 cursor-pointer hover:bg-gray-200"
+                          onClick={() =>
+                            setFilters((prev) => ({ ...prev, name: item }))
+                          }
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="type">Item Type</Label>
+                  <Select
+                    id="type"
+                    value={filters.type}
+                    onValueChange={handleItemTypeChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Item Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>{" "}
+                      {/* Keep "All" as the first option */}
+                      <SelectItem value="palay">Palay</SelectItem>
+                      <SelectItem value="bigas">Bigas</SelectItem>
+                      <SelectItem value="resico">Resico</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="unitofmeasurement">Unit of Measurement</Label>
+                  <Select
+                    id="unitofmeasurement"
+                    value={filters.unitofmeasurement}
+                    onValueChange={handleUnitOfMeasurementChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Unit of Measurement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>{" "}
+                      {/* Keep "All" as the first option */}
+                      <SelectItem value="quantity">Quantity</SelectItem>
+                      <SelectItem value="weight">Weight</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
+
           <>
             {showImageModal && showImage && (
               <Dialog open={showImageModal} onOpenChange={closeImage}>

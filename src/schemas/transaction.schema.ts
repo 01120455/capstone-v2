@@ -10,14 +10,7 @@ const transactionSchema = z.object({
       .string()
       .min(1, "Supplier name is required")
       .max(100, "Entity name is too long"),
-    contactnumber: z.coerce
-      .number()
-      .transform((val) => val.toString())
-      .refine(is11Digits, {
-        message: "Contact number must be exactly 11 digits",
-      })
-      .optional()
-      .or(z.literal("")),
+    contactnumber: z.string().max(11, "Contact number is too long").optional(),
   }),
   createdat: date().optional(),
   type: z.enum(["purchase", "sales"], {
@@ -148,7 +141,7 @@ const transactionOnlySchema = z.object({
   Entity: z.object({
     entityid: z.number(),
     name: z.string(),
-    contactnumber: z.string(),
+    contactnumber: z.string().optional(),
   }),
   createdat: date(),
   type: z.enum(["purchase", "sales"], {

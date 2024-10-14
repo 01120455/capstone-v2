@@ -26,6 +26,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -33,6 +40,8 @@ export default function Component() {
     invoiceno: "",
     name: "",
     supplier: "",
+    frommilling: "",
+    status: "",
     dateRange: { start: "", end: "" },
   });
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,7 +61,6 @@ export default function Component() {
   const dropdownRefItem = useRef<HTMLDivElement>(null);
   const dropdownRefSupplier = useRef<HTMLDivElement>(null);
 
-  
   const toggleFilter = () => {
     setShowFilter(!showFilter);
   };
@@ -91,34 +99,48 @@ export default function Component() {
   }, []);
 
   const filteredTransactions = useMemo(() => {
-    // console.log("Filters:", filters);
-    // console.log("Search Term:", searchTerm);
+    // Check if any filters are applied
+    const isEmptyFilters =
+      (!filters.invoiceno &&
+        !filters.name &&
+        !filters.supplier &&
+        !filters.frommilling &&
+        !filters.status) ||
+      (filters.status === "all" &&
+        !filters.dateRange.start &&
+        !filters.dateRange.end &&
+        !searchTerm);
 
-    if (
-      !filters.invoiceno &&
-      !filters.name &&
-      !filters.supplier &&
-      !filters.dateRange.start &&
-      !filters.dateRange.end &&
-      !searchTerm
-    ) {
-      return purchases;
-    }
+    console.log("Is Empty Filters:", isEmptyFilters);
+    console.log("Filters:", filters);
+
+    if (isEmptyFilters) return purchases;
 
     return purchases.filter((purchase) => {
       const invoiceNo =
         purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-      const supplierName = `${purchase.Entity.name}`.toLowerCase();
+      const supplierName = purchase.Entity.name.toLowerCase();
       const searchLower = searchTerm.toLowerCase();
 
-      // console.log("Invoice Number:", invoiceNo);
-      // console.log("Filter Invoice Number:", filters.invoiceno.toLowerCase());
+      // Status filter
+      const statusMatches =
+        filters.status && filters.status !== "all"
+          ? purchase.status === filters.status
+          : true;
 
+      // From Milling filter
+      const frommillingMatches =
+        filters.frommilling === "all" ||
+        (filters.frommilling === "true" && purchase.frommilling) ||
+        (filters.frommilling === "false" && !purchase.frommilling);
+
+      // Item name filter
       const itemNameMatches = purchase.TransactionItem.some((item) => {
         const itemName = item?.Item?.name?.toLowerCase() || "";
         return itemName.includes(filters.name.toLowerCase());
       });
 
+      // Date range handling
       const createdAt = purchase.createdat
         ? new Date(purchase.createdat)
         : null;
@@ -141,17 +163,31 @@ export default function Component() {
         return true;
       };
 
+      // Return filtered results
       return (
         (!filters.invoiceno ||
           invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
         (!filters.supplier ||
           supplierName.includes(filters.supplier.toLowerCase())) &&
+        statusMatches &&
+        frommillingMatches && // Include frommillingMatches
         itemNameMatches &&
         isWithinDateRange(createdAt, start, end) &&
         (itemNameMatches || supplierName.includes(searchLower))
       );
     });
   }, [filters, searchTerm, purchases]);
+
+  const handleClearFilters = () => {
+    setFilters({
+      invoiceno: "",
+      name: "",
+      supplier: "",
+      frommilling: "",
+      status: "",
+      dateRange: { start: "", end: "" },
+    });
+  };
 
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("en-PH", {
@@ -245,6 +281,27 @@ export default function Component() {
       );
     };
   }, []);
+
+  const handleStatusChange = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      status: value,
+    }));
+  };
+
+  const handleWalkinChange = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      walkin: value,
+    }));
+  };
+
+  const handleFromMillingChange = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      frommilling: value,
+    }));
+  };
 
   return (
     <div className="flex h-screen w-full">
@@ -610,51 +667,11 @@ export default function Component() {
             >
               <h2 className="text-lg font-bold mb-4">Filters</h2>
               <div className="grid gap-4">
-                {/* <div className="grid gap-2">
-                  <Label htmlFor="item-name">Invoice Number</Label>
-                  <Input
-                    id="invoice-number"
-                    type="text"
-                    placeholder="Enter Invoice Number"
-                    value={filters.invoiceno}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        invoiceno: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="item-name">Item Name</Label>
-                  <Input
-                    id="item-name"
-                    type="text"
-                    placeholder="Enter Item name"
-                    value={filters.name}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                  />
+                  <Button className="mt-9" onClick={handleClearFilters}>
+                    Clear Filters
+                  </Button>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="supplier">Supplier</Label>
-                  <Input
-                    id="supplier"
-                    type="text"
-                    placeholder="Enter supplier name"
-                    value={filters.supplier}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        supplier: e.target.value,
-                      }))
-                    }
-                  />
-                </div> */}
                 <div className="grid gap-2">
                   <Label htmlFor="invoice-number">Invoice Number</Label>
                   <Input
@@ -716,11 +733,11 @@ export default function Component() {
                   )}
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="supplier">Customer</Label>
+                  <Label htmlFor="supplier">Supplierr</Label>
                   <Input
-                    id="supplier"
+                    id="supplierr"
                     type="text"
-                    placeholder="Enter customer name"
+                    placeholder="Enter supplier name"
                     value={filters.supplier}
                     onChange={handleSupplierChange}
                   />
@@ -743,6 +760,39 @@ export default function Component() {
                         ))}
                       </div>
                     )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="frommillin">From Milling</Label>
+                  <Select
+                    value={filters.frommilling}
+                    onValueChange={handleFromMillingChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </SelectTrigger>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={filters.status}
+                    onValueChange={handleStatusChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </SelectTrigger>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="start-date">Start Date</Label>
