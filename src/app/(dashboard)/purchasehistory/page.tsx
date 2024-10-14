@@ -762,7 +762,7 @@ export default function Component() {
                     )}
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="frommillin">From Milling</Label>
+                  <Label htmlFor="frommilling">From Milling</Label>
                   <Select
                     value={filters.frommilling}
                     onValueChange={handleFromMillingChange}

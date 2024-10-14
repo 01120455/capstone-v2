@@ -916,7 +916,7 @@ export default function Component() {
                   </Button>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="item-name">Item Name</Label>
+                  <Label htmlFor="itemname">Item Name</Label>
                   <Input
                     id="name"
                     value={filters.name}
