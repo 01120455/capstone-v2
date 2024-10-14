@@ -39,13 +39,12 @@ export default function Component() {
     invoiceno: "",
     name: "",
     customer: "",
-    walkin: "",
-    frommilling: "",
-    status: "",
+    walkin: "all",
+    frommilling: "all",
+    status: "all",
     dateRange: { start: "", end: "" },
   });
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,55 +98,26 @@ export default function Component() {
   }, []);
 
   const filteredTransactions = useMemo(() => {
-    // Check if any filters are applied
-    const isEmptyFilters =
-      (!filters.invoiceno &&
-        !filters.name &&
-        !filters.customer &&
-        !filters.walkin &&
-        !filters.frommilling &&
-        !filters.status) ||
-      (filters.status === "all" &&
-        !filters.dateRange.start &&
-        !filters.dateRange.end &&
-        !searchTerm);
-
-    console.log("Is Empty Filters:", isEmptyFilters);
-    console.log("Filters:", filters);
-
-    if (isEmptyFilters) return purchases;
-
     return purchases.filter((purchase) => {
       const invoiceNo =
         purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
       const customerName = purchase.Entity.name.toLowerCase();
-      const searchLower = searchTerm.toLowerCase();
 
-      // Status filter
       const statusMatches =
-        filters.status && filters.status !== "all"
-          ? purchase.status === filters.status
-          : true;
-
-      // Walkin filter
+        filters.status === "all" || purchase.status === filters.status;
       const walkinMatches =
         filters.walkin === "all" ||
         (filters.walkin === "true" && purchase.walkin) ||
         (filters.walkin === "false" && !purchase.walkin);
-
-      // From Milling filter
       const frommillingMatches =
         filters.frommilling === "all" ||
         (filters.frommilling === "true" && purchase.frommilling) ||
         (filters.frommilling === "false" && !purchase.frommilling);
-
-      // Item name filter
       const itemNameMatches = purchase.TransactionItem.some((item) => {
         const itemName = item?.Item?.name?.toLowerCase() || "";
         return itemName.includes(filters.name.toLowerCase());
       });
 
-      // Date range handling
       const createdAt = purchase.createdat
         ? new Date(purchase.createdat)
         : null;
@@ -170,30 +140,45 @@ export default function Component() {
         return true;
       };
 
-      // Return filtered results
+      const dateRangeMatches = isWithinDateRange(createdAt, start, end);
+
+      console.log("Filtering Purchase:", purchase);
+      console.log("Matches:", {
+        invoiceNoMatches:
+          !filters.invoiceno ||
+          invoiceNo.includes(filters.invoiceno.toLowerCase()),
+        customerNameMatches:
+          !filters.customer ||
+          customerName.includes(filters.customer.toLowerCase()),
+        statusMatches,
+        walkinMatches,
+        frommillingMatches,
+        itemNameMatches,
+        dateRangeMatches,
+      });
+
       return (
         (!filters.invoiceno ||
           invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
         (!filters.customer ||
           customerName.includes(filters.customer.toLowerCase())) &&
         statusMatches &&
-        walkinMatches && // Include walkinMatches
-        frommillingMatches && // Include frommillingMatches
+        walkinMatches &&
+        frommillingMatches &&
         itemNameMatches &&
-        isWithinDateRange(createdAt, start, end) &&
-        (itemNameMatches || customerName.includes(searchLower))
+        dateRangeMatches
       );
     });
-  }, [filters, searchTerm, purchases]);
+  }, [filters, purchases]);
 
   const handleClearFilters = () => {
     setFilters({
       invoiceno: "",
       name: "",
       customer: "",
-      walkin: "",
-      frommilling: "",
-      status: "",
+      walkin: "all",
+      frommilling: "all",
+      status: "all",
       dateRange: { start: "", end: "" },
     });
   };
@@ -292,10 +277,10 @@ export default function Component() {
     setCustomerDropdownVisible(e.target.value.length > 0);
 
     const filtered = purchases
-      .map((p) => p.Entity.name) // Adjust according to your data structure
+      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
       .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
 
-    setCustomerSuggestions(filtered);
+    setCustomerSuggestions(Array.from(new Set(filtered)));
   };
 
   const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,7 +302,7 @@ export default function Component() {
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
-    setItemDropdownVisible(e.target.value.length > 0);
+    setItemDropdownVisible(value.length > 0);
 
     const filtered = purchases
       .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name)) // Adjust according to your data structure
@@ -325,7 +310,8 @@ export default function Component() {
         itemName?.toLowerCase().includes(value.toLowerCase())
       );
 
-    setItemNameSuggestions(filtered);
+    // Update state with unique suggestions
+    setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
   // Hide dropdown when clicking outside of it
@@ -382,8 +368,8 @@ export default function Component() {
   };
 
   return (
-    <div className="flex h-screen w-full">
-      <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
+      <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4 w-full">
         <div className="mx-auto px-4 md:px-6 ">
           <h1 className="text-2xl font-bold mb-6">Sales History</h1>
           <div
@@ -394,7 +380,7 @@ export default function Component() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4"></div>
               {selectedTransaction ? (
-                <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
+                <div className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold">Sales Details</h2>
                     <Button
@@ -446,7 +432,7 @@ export default function Component() {
                             divClassname="min-h-[200px] overflow-y-scroll max-h-[200px] overflow-y-auto"
                           >
                             <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                              <TableRow>
+                              <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                                 <TableHead>Item Name</TableHead>
                                 <TableHead>Item Type</TableHead>
                                 <TableHead>Sack Weight</TableHead>
@@ -534,7 +520,7 @@ export default function Component() {
                         divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow>
+                          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                             <TableHead>Invoice No.</TableHead>
                             <TableHead>Customer Name</TableHead>
                             <TableHead>Walk-in</TableHead>
@@ -715,7 +701,7 @@ export default function Component() {
               )}
             </div>
             <div
-              className={`bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6 ${
+              className={`bg-customColors-offWhite rounded-lg shadow-lg p-6 ${
                 showFilter ? "block" : "hidden"
               }`}
             >

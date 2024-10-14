@@ -257,16 +257,16 @@ export default function Component() {
   }, []);
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="flex flex-col h-full">
-          <header className="bg-gray-100 dark:bg-gray-900 py-4 px-4 flex items-center justify-between">
+        <div className="flex flex-col h-full ">
+          <header className=" py-4 px-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-customColors-darkKnight">
               Customer Management
             </h1>
           </header>
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
-            <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md ">
+            <div className="col-span-1 bg-customColors-offWhite rounded-lg shadow-md ">
               <div className="p-4 border-b dark:border-gray-700">
                 <div className="flex items-center justify-between relative">
                   <h2 className="text-lg font-bold">Customers</h2>
@@ -285,7 +285,7 @@ export default function Component() {
                       customerSuggestions.length > 0 && (
                         <div
                           ref={dropdownRefCustomer}
-                          className="absolute z-10 bg-white border border-gray-300 w-full max-h-60 overflow-y-auto" // Use w-full to match input width
+                          className="absolute z-10 bg-customColors-offWhite w-full max-h-60 overflow-y-auto" // Use w-full to match input width
                           style={{ top: "100%", left: 0 }} // Align directly under the input
                         >
                           {customerSuggestions.map((customer) => (
@@ -326,7 +326,7 @@ export default function Component() {
                 ))}
               </div>
             </div>
-            <div className="col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
+            <div className="col-span-2 bg-customColors-offWhite rounded-lg shadow-md overflow-auto">
               {selectedCustomer ? (
                 <div className="p-4">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b dark:border-gray-700 pb-4">
@@ -382,7 +382,7 @@ export default function Component() {
                     </div>
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                           <TableHead>Date</TableHead>
                           <TableHead>Items</TableHead>
                           <TableHead>Total</TableHead>
@@ -485,7 +485,7 @@ export default function Component() {
                 </div>
               )}
             </div>
-            <div className="col-span-1 lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-auto">
+            <div className="col-span-1 lg:col-span-3 bg-customColors-offWhite rounded-lg shadow-md overflow-auto">
               {selectedCustomer && (
                 <div className="p-4">
                   <h2 className="text-lg font-bold">Customer Analysis</h2>

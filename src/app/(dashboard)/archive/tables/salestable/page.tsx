@@ -63,7 +63,7 @@ export function SalesTable({
   return (
     <div className="flex flex-col gap-6">
       {selectedTransaction ? (
-        <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
+        <div className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold">Sales Details</h2>
             <Button
@@ -120,7 +120,7 @@ export function SalesTable({
                     divClassname="min-h-[200px] overflow-y-scroll max-h-[200px] overflow-y-auto"
                   >
                     <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                      <TableRow>
+                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                         <TableHead>Item Name</TableHead>
                         <TableHead>Item Type</TableHead>
                         <TableHead>Sack Weight</TableHead>
@@ -169,7 +169,7 @@ export function SalesTable({
           <div className="table-container relative ">
             <Table>
               <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                <TableRow>
+                <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                   <TableHead>Invoice No.</TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Walk-in</TableHead>

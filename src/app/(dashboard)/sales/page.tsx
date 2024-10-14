@@ -414,7 +414,7 @@ export default function Component() {
   }, []);
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 flex flex-col overflow-hidden">
         {showSuccess && (
           <Alert className="alert-center">
@@ -465,7 +465,7 @@ export default function Component() {
         <div className="flex-1 overflow-y-auto p-4">
           <div className="grid gap-2 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_400px]">
             <div className="flex-1 overflow-auto p-4 md:p-8">
-              <div className="overflow-y-auto h-[400px] md:h-[600px] lg:h-[600px] w-auto border rounded-lg p-2">
+              <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] w-auto border rounded-lg p-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-8">
                   {items &&
                     items.map((item) => (
@@ -520,7 +520,7 @@ export default function Component() {
                 </div>
               </div>
             </div>
-            <div className="bg-white shadow-t md:p-2">
+            <div className="bg-customColors-offWhite shadow-t md:p-2">
               <h2 className="text-xl font-bold">Sale Details</h2>
               <Form {...form}>
                 <form

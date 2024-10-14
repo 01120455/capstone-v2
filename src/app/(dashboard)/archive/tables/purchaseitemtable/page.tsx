@@ -62,12 +62,11 @@ export function PurchaseItemTable({
         <div className="table-container relative ">
           <Table>
             <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-              <TableRow>
+              <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                 <TableHead>Invoice No.</TableHead>
                 <TableHead>Customer Name</TableHead>
-                <TableHead>Walk-in</TableHead>
-                <TableHead>From Milling</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Item Name</TableHead>
+                <TableHead>Unit Price</TableHead>
                 <TableHead>Total Amount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Actions</TableHead>
@@ -116,7 +115,7 @@ export function PurchaseItemTable({
               )}
             </TableBody>
           </Table>
-          <div className="flex items-center justify-center mt-2">
+          <div className="flex items-center justify-center mt-4">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>

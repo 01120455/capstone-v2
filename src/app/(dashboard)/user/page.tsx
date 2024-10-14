@@ -353,7 +353,7 @@ export default function Component() {
   };
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto p-6">
         {showDeletionSuccess && (
           <Alert className="alert-center">
@@ -394,8 +394,8 @@ export default function Component() {
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-center bg-white rounded-lg overflow-hidden">
-            <div className="w-full max-w-[1000px]">
+          <div className="flex items-center justify-center rounded-lg overflow-hidden bg-customColors-offWhite">
+            <div className="w-full max-w-[1000px] bg-customColors-offWhite">
               <Table
                 style={{ width: "100%" }}
                 className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden"
@@ -558,7 +558,7 @@ export default function Component() {
           <>
             {showImageModal && showImage && (
               <Dialog open={showImageModal} onOpenChange={closeImage}>
-                <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
+                <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-customColors-offWhite rounded">
                   <div className="flex flex-col">
                     <DialogHeader className="mb-2 flex items-start">
                       <DialogTitle className="text-left flex-grow">
@@ -594,7 +594,7 @@ export default function Component() {
           </>
           {userToDelete && (
             <AlertDialog open={showAlert}>
-              <AlertDialogContent>
+              <AlertDialogContent className="bg-customColors-offWhite">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
@@ -619,7 +619,7 @@ export default function Component() {
           )}
           {showModal && (
             <Dialog open={showModal} onOpenChange={handleCancel}>
-              <DialogContent>
+              <DialogContent className="bg-customColors-offWhite">
                 <DialogHeader>
                   <DialogTitle>
                     {form.getValues("userid") ? "Edit User" : "Add User"}

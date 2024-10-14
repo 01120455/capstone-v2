@@ -27,7 +27,7 @@ import { PurchaseItemTable } from "./tables/purchaseitemtable/page";
 const tables = [
   "Users",
   "Items",
-  "Sales",
+  // "Sales",
   "Purchases",
   // "Customers",
   "Purchase Items",
@@ -37,7 +37,7 @@ const tables = [
 const tableIcon = {
   Users: <UsersIcon />,
   Items: <BoxIcon />,
-  Sales: <TagIcon />,
+  // Sales: <TagIcon />,
   Purchases: <PurchaseIcon />,
   Customers: <UserIcon />,
   Suppliers: <TruckIcon />,
@@ -68,9 +68,9 @@ export default function ArchivePage() {
       case "Items":
         endpoint = `/api/archive/product/restore/${id}`;
         break;
-      case "Sales":
-        endpoint = `/api/archive/customertransaction/restore/${id}`;
-        break;
+      // case "Sales":
+      //   endpoint = `/api/archive/customertransaction/restore/${id}`;
+      //   break;
       case "Purchases":
         endpoint = `/api/archive/suppliertransaction/restore/${id}`;
         break;
@@ -118,49 +118,53 @@ export default function ArchivePage() {
   }, []);
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl text-customColors-darkKnight font-bold mb-6">
-        Archive
-      </h1>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        {isSmallScreen ? (
-          <TabsList className="grid h-12 w-full grid-cols-6">
-            {Object.entries(tableIcon).map(([key, Icon]) => (
-              <TabsTrigger key={key} value={key}>
-                {Icon}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        ) : (
-          <TabsList className="grid w-full grid-cols-6">
-            {tables.map((table) => (
-              <TabsTrigger key={table} value={table}>
-                {table}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        )}
-        <div className="mt-4 mb-4">
-          <div className="relative w-full">
-            <Input
-              placeholder="Search archived items..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="max-w-sm"
-            />
-          </div>
-        </div>
+    <div className="flex h-screen w-full bg-customColors-offWhite">
+      <div className="flex-1 overflow-y-hidden p-5 w-full">
+        <div className="container mx-auto py-10 bg-customColors-offWhite">
+          <h1 className="text-3xl text-customColors-darkKnight font-bold mb-6">
+            Archive
+          </h1>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {isSmallScreen ? (
+              <TabsList className="grid h-12 w-full grid-cols-5">
+                {Object.entries(tableIcon).map(([key, Icon]) => (
+                  <TabsTrigger key={key} value={key}>
+                    {Icon}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            ) : (
+              <TabsList className="grid w-full grid-cols-5">
+                {tables.map((table) => (
+                  <TabsTrigger key={table} value={table}>
+                    {table}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            )}
+            <div className="mt-4 mb-4">
+              <div className="relative w-full">
+                <Input
+                  placeholder="Search archived items..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="max-w-sm"
+                />
+              </div>
+            </div>
 
-        {tables.map((table) => (
-          <TabsContent key={table} value={table}>
-            <ArchiveTable
-              type={table.toLowerCase()}
-              searchTerm={searchTerm}
-              onRestore={handleRestore}
-            />
-          </TabsContent>
-        ))}
-      </Tabs>
+            {tables.map((table) => (
+              <TabsContent key={table} value={table}>
+                <ArchiveTable
+                  type={table.toLowerCase()}
+                  searchTerm={searchTerm}
+                  onRestore={handleRestore}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
@@ -261,39 +265,39 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
     getSuppliers();
   }, []);
 
-  useEffect(() => {
-    const getSales = async () => {
-      try {
-        const response = await fetch("/api/archive/customertransaction");
-        const text = await response.text();
-        // console.log("Raw Response Text:", text);
+  // useEffect(() => {
+  //   const getSales = async () => {
+  //     try {
+  //       const response = await fetch("/api/archive/customertransaction");
+  //       const text = await response.text();
+  //       // console.log("Raw Response Text:", text);
 
-        const data = JSON.parse(text);
+  //       const data = JSON.parse(text);
 
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
+  //       const parsedData = data.map((item: any) => {
+  //         return {
+  //           ...item,
+  //           createdat: item.createdat ? new Date(item.createdat) : null,
+  //           lastmodifiedat: item.lastmodifiedat
+  //             ? new Date(item.lastmodifiedat)
+  //             : null,
+  //           taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+  //         };
+  //       });
 
-        // console.log("Parsed Data with Date Conversion:", parsedData);
+  //       // console.log("Parsed Data with Date Conversion:", parsedData);
 
-        // console.log("Parsed Data:", parsedData);
-        setSales(parsedData);
+  //       // console.log("Parsed Data:", parsedData);
+  //       setSales(parsedData);
 
-        console.log("Sales:", parsedData);
-      } catch (error) {
-        console.error("Error in getPurchases:", error);
-      }
-    };
+  //       console.log("Sales:", parsedData);
+  //     } catch (error) {
+  //       console.error("Error in getPurchases:", error);
+  //     }
+  //   };
 
-    getSales();
-  }, []);
+  //   getSales();
+  // }, []);
 
   useEffect(() => {
     const getPurchases = async () => {

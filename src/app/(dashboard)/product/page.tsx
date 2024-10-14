@@ -106,7 +106,9 @@ export default function Component() {
   const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    const newValue = e.target.value;
+    console.log("Search Input:", newValue);
+    setSearchTerm(newValue);
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -140,26 +142,28 @@ export default function Component() {
       filters.name === "" &&
       filters.type === "all" &&
       filters.sackweight === "all" &&
-      filters.unitofmeasurement === "all";
+      filters.unitofmeasurement === "all" &&
+      searchTerm === "";
 
     if (isEmptyFilters) {
       return items;
     }
 
     return items.filter((item) => {
-      const nameMatches = item.name
-        .toLowerCase()
-        .includes(filters.name.toLowerCase());
-      const searchLower = searchTerm.toLowerCase();
-      const typeMatches = item.type
-        .toLowerCase()
-        .includes(filters.type.toLowerCase());
-      const sackweightMatches = item.sackweight
-        .toString()
-        .includes(filters.sackweight.toLowerCase());
-      const unitMatches = item.unitofmeasurement
-        .toLowerCase()
-        .includes(filters.unitofmeasurement.toLowerCase());
+      const nameMatches =
+        item.name.toLowerCase().includes(filters.name.toLowerCase()) &&
+        item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const typeMatches =
+        filters.type === "all" ||
+        item.type.toLowerCase() === filters.type.toLowerCase();
+      const sackweightMatches =
+        filters.sackweight === "all" ||
+        item.sackweight.toString() === filters.sackweight;
+      const unitMatches =
+        filters.unitofmeasurement === "all" ||
+        item.unitofmeasurement.toLowerCase() ===
+          filters.unitofmeasurement.toLowerCase();
+
       return nameMatches && typeMatches && sackweightMatches && unitMatches;
     });
   }, [filters, searchTerm, items]);
@@ -171,6 +175,7 @@ export default function Component() {
       sackweight: "all",
       unitofmeasurement: "all",
     });
+    setSearchTerm(""); // Clear the search term as well
   };
 
   const checkItemLevels = (items: ViewItem[]) => {
@@ -640,11 +645,11 @@ export default function Component() {
     setItemDropdownVisible(false); // Hide dropdown when an item is clicked
   };
   const handleSackWeightChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, sackWeight: value }));
+    setFilters((prev) => ({ ...prev, sackweight: value }));
   };
 
   const handleUnitOfMeasurementChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, unitOfMeasurement: value }));
+    setFilters((prev) => ({ ...prev, unitofmeasurement: value }));
   };
 
   const handleItemTypeChange = (value: string) => {
@@ -652,7 +657,7 @@ export default function Component() {
   };
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
         {showSuccess && (
           <Alert className="alert-center">
@@ -696,14 +701,11 @@ export default function Component() {
             </AlertDescription>
           </Alert>
         )}
-        <div className="mx-auto px-4 md:px-6">
+        <div className="container mx-auto px-4 md:px-6 py-8">
           <div className="flex items-center justify-between mb-6 -mr-6">
             <h1 className="text-2xl font-bold text-customColors-darkKnight">
               Product Management
             </h1>
-            <Button onClick={handleAddProduct}>
-              {isSmallScreen ? <PlusIcon className="w-6 h-6" /> : "Add Product"}
-            </Button>
           </div>
           <div
             className={`grid gap-6 ${
@@ -712,17 +714,30 @@ export default function Component() {
           >
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-4">
-                  <Input
-                    type="text"
-                    placeholder="Search item name..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="w-full md:w-auto mb-4"
-                  />
-                  <Button variant="outline" size="icon" onClick={toggleFilter}>
-                    <span className="sr-only">Filter</span>
-                    <FilterIcon className="w-6 h-6" />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-row gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Search item name..."
+                      value={searchTerm}
+                      onChange={handleSearch}
+                      className="w-full md:w-auto mb-4"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={toggleFilter}
+                    >
+                      <span className="sr-only">Filter</span>
+                      <FilterIcon className="w-6 h-6" />
+                    </Button>
+                  </div>
+                  <Button onClick={handleAddProduct}>
+                    {isSmallScreen ? (
+                      <PlusIcon className="w-6 h-6" />
+                    ) : (
+                      "Add Product"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -736,7 +751,7 @@ export default function Component() {
                       divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                        <TableRow>
+                        <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                           <TableHead>Image</TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Type</TableHead>
@@ -904,21 +919,21 @@ export default function Component() {
               </div>
             </div>
             <div
-              className={`bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6 ${
+              className={`bg-customColors-offWhite rounded-lg shadow-lg p-6 ${
                 showFilter ? "block" : "hidden"
               }`}
             >
               <h2 className="text-lg font-bold mb-4">Filters</h2>
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Button className="mt-9" onClick={handleClearFilters}>
-                    Clear Filters
-                  </Button>
+                  <Button onClick={handleClearFilters}>Clear Filters</Button>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="itemname">Item Name</Label>
+                  <span className="text-sm">Item Name</span>
                   <Input
                     id="name"
+                    type="text"
+                    placeholder="Search item name..."
                     value={filters.name}
                     onChange={handleItemNameChange}
                   />
@@ -942,9 +957,8 @@ export default function Component() {
                   )}
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="type">Item Type</Label>
+                  <span className="text-sm">Item Type</span>
                   <Select
-                    id="type"
                     value={filters.type}
                     onValueChange={handleItemTypeChange}
                   >
@@ -962,9 +976,8 @@ export default function Component() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="unitofmeasurement">Unit of Measurement</Label>
+                  <span className="text-sm">Unit of Measurement</span>
                   <Select
-                    id="unitofmeasurement"
                     value={filters.unitofmeasurement}
                     onValueChange={handleUnitOfMeasurementChange}
                   >

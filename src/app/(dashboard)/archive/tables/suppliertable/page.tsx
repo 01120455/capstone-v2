@@ -48,10 +48,11 @@ export function SuppliersTable({
   return (
     <>
       <Table>
-        <TableHeader>
-          <TableRow>
+        <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
             <TableHead>Name</TableHead>
             <TableHead>Phone</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

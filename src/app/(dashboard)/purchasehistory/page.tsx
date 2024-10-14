@@ -40,11 +40,11 @@ export default function Component() {
     invoiceno: "",
     name: "",
     supplier: "",
-    frommilling: "",
-    status: "",
+    frommilling: "all",
+    status: "all",
     dateRange: { start: "", end: "" },
   });
-  const [searchTerm, setSearchTerm] = useState("");
+
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,49 +98,103 @@ export default function Component() {
     getPurchases();
   }, []);
 
+  // const filteredTransactions = useMemo(() => {
+  //   // Check if any filters are applied
+  //   const isEmptyFilters =
+  //     (!filters.invoiceno &&
+  //       !filters.name &&
+  //       !filters.supplier &&
+  //       !filters.frommilling &&
+  //       !filters.status) ||
+  //     (filters.status === "all" &&
+  //       !filters.dateRange.start &&
+  //       !filters.dateRange.end &&
+  //       !searchTerm);
+
+  //   console.log("Is Empty Filters:", isEmptyFilters);
+  //   console.log("Filters:", filters);
+
+  //   if (isEmptyFilters) return purchases;
+
+  //   return purchases.filter((purchase) => {
+  //     const invoiceNo =
+  //       purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
+  //     const supplierName = purchase.Entity.name.toLowerCase();
+  //     const searchLower = searchTerm.toLowerCase();
+
+  //     // Status filter
+  //     const statusMatches =
+  //       filters.status && filters.status !== "all"
+  //         ? purchase.status === filters.status
+  //         : true;
+
+  //     // From Milling filter
+  //     const frommillingMatches =
+  //       filters.frommilling === "all" ||
+  //       (filters.frommilling === "true" && purchase.frommilling) ||
+  //       (filters.frommilling === "false" && !purchase.frommilling);
+
+  //     // Item name filter
+  //     const itemNameMatches = purchase.TransactionItem.some((item) => {
+  //       const itemName = item?.Item?.name?.toLowerCase() || "";
+  //       return itemName.includes(filters.name.toLowerCase());
+  //     });
+
+  //     // Date range handling
+  //     const createdAt = purchase.createdat
+  //       ? new Date(purchase.createdat)
+  //       : null;
+  //     const start = filters.dateRange.start
+  //       ? new Date(filters.dateRange.start)
+  //       : null;
+  //     const end = filters.dateRange.end
+  //       ? new Date(filters.dateRange.end)
+  //       : null;
+
+  //     const isWithinDateRange = (
+  //       createdAt: Date | null,
+  //       start: Date | null,
+  //       end: Date | null
+  //     ) => {
+  //       if (!createdAt) return false;
+  //       if (start && end) return createdAt >= start && createdAt <= end;
+  //       if (start) return createdAt >= start;
+  //       if (end) return createdAt <= end;
+  //       return true;
+  //     };
+
+  //     // Return filtered results
+  //     return (
+  //       (!filters.invoiceno ||
+  //         invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
+  //       (!filters.supplier ||
+  //         supplierName.includes(filters.supplier.toLowerCase())) &&
+  //       statusMatches &&
+  //       frommillingMatches && // Include frommillingMatches
+  //       itemNameMatches &&
+  //       isWithinDateRange(createdAt, start, end) &&
+  //       (itemNameMatches || supplierName.includes(searchLower))
+  //     );
+  //   });
+  // }, [filters, searchTerm, purchases]);
+
   const filteredTransactions = useMemo(() => {
-    // Check if any filters are applied
-    const isEmptyFilters =
-      (!filters.invoiceno &&
-        !filters.name &&
-        !filters.supplier &&
-        !filters.frommilling &&
-        !filters.status) ||
-      (filters.status === "all" &&
-        !filters.dateRange.start &&
-        !filters.dateRange.end &&
-        !searchTerm);
-
-    console.log("Is Empty Filters:", isEmptyFilters);
-    console.log("Filters:", filters);
-
-    if (isEmptyFilters) return purchases;
-
     return purchases.filter((purchase) => {
       const invoiceNo =
         purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
       const supplierName = purchase.Entity.name.toLowerCase();
-      const searchLower = searchTerm.toLowerCase();
 
-      // Status filter
       const statusMatches =
-        filters.status && filters.status !== "all"
-          ? purchase.status === filters.status
-          : true;
-
-      // From Milling filter
+        filters.status === "all" || purchase.status === filters.status;
       const frommillingMatches =
         filters.frommilling === "all" ||
         (filters.frommilling === "true" && purchase.frommilling) ||
         (filters.frommilling === "false" && !purchase.frommilling);
-
-      // Item name filter
       const itemNameMatches = purchase.TransactionItem.some((item) => {
         const itemName = item?.Item?.name?.toLowerCase() || "";
         return itemName.includes(filters.name.toLowerCase());
       });
 
-      // Date range handling
       const createdAt = purchase.createdat
         ? new Date(purchase.createdat)
         : null;
@@ -163,28 +217,43 @@ export default function Component() {
         return true;
       };
 
-      // Return filtered results
+      const dateRangeMatches = isWithinDateRange(createdAt, start, end);
+
+      console.log("Filtering Purchase:", purchase);
+      console.log("Matches:", {
+        invoiceNoMatches:
+          !filters.invoiceno ||
+          invoiceNo.includes(filters.invoiceno.toLowerCase()),
+        supplierNameMatches:
+          !filters.supplier ||
+          supplierName.includes(filters.supplier.toLowerCase()),
+        statusMatches,
+
+        frommillingMatches,
+        itemNameMatches,
+        dateRangeMatches,
+      });
+
       return (
         (!filters.invoiceno ||
           invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
         (!filters.supplier ||
           supplierName.includes(filters.supplier.toLowerCase())) &&
         statusMatches &&
-        frommillingMatches && // Include frommillingMatches
+        frommillingMatches &&
         itemNameMatches &&
-        isWithinDateRange(createdAt, start, end) &&
-        (itemNameMatches || supplierName.includes(searchLower))
+        dateRangeMatches
       );
     });
-  }, [filters, searchTerm, purchases]);
+  }, [filters, purchases]);
 
   const handleClearFilters = () => {
     setFilters({
       invoiceno: "",
       name: "",
       supplier: "",
-      frommilling: "",
-      status: "",
+      frommilling: "all",
+      status: "all",
       dateRange: { start: "", end: "" },
     });
   };
@@ -214,10 +283,10 @@ export default function Component() {
     setSupplierDropdownVisible(e.target.value.length > 0);
 
     const filtered = purchases
-      .map((p) => p.Entity.name) // Adjust according to your data structure
+      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
       .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
 
-    setSupplierSuggestions(filtered);
+    setSupplierSuggestions(Array.from(new Set(filtered)));
   };
 
   const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,7 +316,7 @@ export default function Component() {
         itemName?.toLowerCase().includes(value.toLowerCase())
       );
 
-    setItemNameSuggestions(filtered);
+    setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
   // Hide dropdown when clicking outside of it
@@ -304,8 +373,8 @@ export default function Component() {
   };
 
   return (
-    <div className="flex h-screen w-full">
-      <div className="flex-1 overflow-y-auto p-8 w-full">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
+      <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4 w-full">
         <div className=" mx-auto px-4 md:px-6 ">
           <h1 className="text-2xl font-bold mb-6">Purchase Order History</h1>
           <div
@@ -324,7 +393,7 @@ export default function Component() {
                 /> */}
               </div>
               {selectedTransaction ? (
-                <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6">
+                <div className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold">
                       Purchase Order Details
@@ -393,8 +462,8 @@ export default function Component() {
                             className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
                             divClassname="min-h-[200px] overflow-y-scroll max-h-[200px] overflow-y-auto"
                           >
-                            <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                              <TableRow>
+                            <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md ">
+                              <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                                 <TableHead>Item Name</TableHead>
                                 <TableHead>Item Type</TableHead>
                                 <TableHead>Sack Weight</TableHead>
@@ -482,7 +551,7 @@ export default function Component() {
                         divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow>
+                          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                             <TableHead>Invoice No.</TableHead>
                             <TableHead>Supplier</TableHead>
                             {/* <TableHead>Walk-in</TableHead> */}
@@ -661,7 +730,7 @@ export default function Component() {
               )}
             </div>
             <div
-              className={`bg-white dark:bg-gray-950 rounded-lg shadow-lg p-6 ${
+              className={`bg-customColors-offWhite rounded-lg shadow-lg p-6 ${
                 showFilter ? "block" : "hidden"
               }`}
             >

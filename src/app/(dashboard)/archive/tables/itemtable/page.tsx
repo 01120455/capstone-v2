@@ -89,7 +89,7 @@ export function ItemTable({
     <div className="table-container relative ">
       <Table>
         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-          <TableRow>
+          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
             <TableHead>Image</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>

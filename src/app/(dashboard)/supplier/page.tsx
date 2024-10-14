@@ -229,7 +229,7 @@ export default function Component() {
   };
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto p-8">
         <div className="container mx-auto px-4 md:px-6 py-8">
           <h1 className="text-3xl font-bold mb-6 text-customColors-darkKnight">
@@ -377,7 +377,7 @@ export default function Component() {
               open={showTablePurchaseItem}
               onOpenChange={closeViewPurchaseItem}
             >
-              <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4">
+              <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4 bg-customColors-offWhite">
                 <DialogHeader>
                   <DialogTitle>Items Purchased</DialogTitle>
                   <div className="flex  items-center justify-between mb-6 mr-12">
@@ -455,7 +455,7 @@ export default function Component() {
               open={showEditSupplier}
               onOpenChange={handleCancelEditSupplier}
             >
-              <DialogContent className="w-full max-w-full sm:min-w-[400px] md:w-[400px] lg:min-w-[400px] p-4">
+              <DialogContent className="w-full max-w-full sm:min-w-[400px] md:w-[400px] lg:min-w-[400px] p-4 bg-customColors-offWhite">
                 <DialogHeader>
                   <DialogTitle>Edit Supplier</DialogTitle>
                   <DialogDescription>Update supplier details</DialogDescription>
@@ -525,7 +525,10 @@ export default function Component() {
                     transaction.Entity?.entityid === supplier.entityid
                 );
                 return (
-                  <Card key={supplier.entityid}>
+                  <Card
+                    className="bg-customColors-offWhite"
+                    key={supplier.entityid}
+                  >
                     <CardHeader>
                       <CardTitle>{supplier.name}</CardTitle>
                     </CardHeader>

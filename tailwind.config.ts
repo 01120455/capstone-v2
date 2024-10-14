@@ -57,6 +57,8 @@ const config = {
           ivoryWhite: "#f8f8f8",
           darkKnight: "#0f172a",
           mercury: "#ebebeb",
+          whiteSmoke: "#F5F5F5",
+          offWhite: "#FDFDFD",
         },
       },
       borderRadius: {

@@ -123,7 +123,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto p-8">
         <div className="flex items-center space-x-4 mb-4  sm:mb-4">
           <h1 className="text-xl font-bold text-customColors-darkKnight">
