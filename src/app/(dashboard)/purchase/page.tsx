@@ -80,6 +80,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { ViewItem } from "@/schemas/item.schema";
 
 const ROLES = {
   SALES: "sales",
@@ -91,6 +93,7 @@ const ROLES = {
 export default function Component() {
   const [user, setUser] = useState<User | null>(null);
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
+  const [items, setItems] = useState<ViewItem[]>([]);
   const [filters, setFilters] = useState({
     invoiceno: "",
     name: "",
@@ -113,14 +116,7 @@ export default function Component() {
   const [purchaseToDelete, setPurchaseToDelete] =
     useState<TransactionTable | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successItem, setSuccessItem] = useState<Transaction | null>(null);
-  const [successAction, setSuccessAction] = useState("");
-  const [showSuccessTI, setShowSuccessTI] = useState(false);
-  const [successTransactionItem, setSuccessTransactionItem] =
-    useState<TransactionItemOnly | null>(null);
-  const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
-  const [showDeletedTransaction, setShowDeletedTransaction] =
-    useState<TransactionTable | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -128,6 +124,7 @@ export default function Component() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [showFilter, setShowFilter] = useState(false);
+
   const [supplierSuggestions, setSupplierSuggestions] = useState<string[]>([]);
   const [invoiceSuggestions, setInvoiceSuggestions] = useState<string[]>([]);
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
@@ -138,6 +135,27 @@ export default function Component() {
   const dropdownRefInvoice = useRef<HTMLDivElement>(null);
   const dropdownRefItem = useRef<HTMLDivElement>(null);
   const dropdownRefSupplier = useRef<HTMLDivElement>(null);
+
+  const [supplierInputValue, setSupplierInputValue] = useState("");
+  const [supplierFormSuggestions, setSupplierFormSuggestions] = useState<
+    string[]
+  >([]);
+  const [isSupplierFormDropdownVisible, setSupplierFormDropdownVisible] =
+    useState(false);
+
+  const [itemInputValue, setItemInputValue] = useState("");
+  const [itemFormSuggestions, setItemFormSuggestions] = useState<string[]>([]);
+  const [isItemFormDropdownVisible, setItemFormDropdownVisible] =
+    useState(false);
+
+  // const [successItem, setSuccessItem] = useState<Transaction | null>(null);
+  // const [successAction, setSuccessAction] = useState("");
+  // const [showSuccessTI, setShowSuccessTI] = useState(false);
+  // const [successTransactionItem, setSuccessTransactionItem] =
+  //   useState<TransactionItemOnly | null>(null);
+  // const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
+  // const [showDeletedTransaction, setShowDeletedTransaction] =
+  //   useState<TransactionTable | null>(null);
 
   const toggleFilter = () => {
     setShowFilter(!showFilter);
@@ -331,26 +349,40 @@ export default function Component() {
   }, []);
 
   useEffect(() => {
-    if (showSuccess) {
-      setShowSuccessTI(false);
-      const timer = setTimeout(() => {
-        setShowSuccess(false);
-      }, 8000);
+    const fetchItems = async () => {
+      try {
+        const response = await fetch("/api/product");
+        const data = await response.json();
+        setItems(data);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    };
 
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccess]);
+    fetchItems();
+  }, []);
 
-  useEffect(() => {
-    if (showSuccessTI) {
-      setShowSuccess(false);
-      const timer = setTimeout(() => {
-        setShowSuccessTI(false);
-      }, 8000);
+  // useEffect(() => {
+  //   if (showSuccess) {
+  //     setShowSuccessTI(false);
+  //     const timer = setTimeout(() => {
+  //       setShowSuccess(false);
+  //     }, 8000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccessTI]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [showSuccess]);
+
+  // useEffect(() => {
+  //   if (showSuccessTI) {
+  //     setShowSuccess(false);
+  //     const timer = setTimeout(() => {
+  //       setShowSuccessTI(false);
+  //     }, 8000);
+
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [showSuccessTI]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -486,6 +518,8 @@ export default function Component() {
     setShowModal(false);
     setShowModalPurchaseItem(false);
     setShowModalEditPurchase(false);
+    setSupplierInputValue("");
+    setItemInputValue("");
 
     form.reset({
       transactionid: 0,
@@ -627,24 +661,42 @@ export default function Component() {
       if (uploadRes.ok) {
         const uploadResult = await uploadRes.json();
         if (values.transactionid) {
+          toast.success(
+            `Purchase with invoice number ${formPurchaseOnly.getValues(
+              "InvoiceNumber.invoicenumber"
+            )} has been updated`,
+            {
+              description: "You have successfully edited the purchase.",
+            }
+          );
           console.log("Purchase updated successfully");
         } else {
+          toast.success(
+            `Purchase with invoice number ${form.getValues(
+              "InvoiceNumber.invoicenumber"
+            )} has been added`,
+            {
+              description: "You have successfully added the purchase.",
+            }
+          );
           console.log("Purchase added successfully");
         }
 
-        if (uploadResult.Entity) {
-          setSuccessItem(uploadResult);
-        } else {
-          console.error("Unexpected structure:", uploadResult);
-        }
+        // if (uploadResult.Entity) {
+        //   setSuccessItem(uploadResult);
+        // } else {
+        //   console.error("Unexpected structure:", uploadResult);
+        // }
 
         console.log("Upload Result:", uploadResult);
         setShowModal(false);
         setShowModalEditPurchase(false);
         refreshPurchases();
-        setSuccessAction(values.transactionid ? "edited" : "added");
-        setSuccessItem(values);
+        // setSuccessAction(values.transactionid ? "edited" : "added");
+        // setSuccessItem(values);
         setShowSuccess(true);
+        setSupplierInputValue("");
+        setItemInputValue("");
         form.reset();
       } else {
         console.error("Upload failed", await uploadRes.text());
@@ -681,13 +733,40 @@ export default function Component() {
       });
 
       if (uploadRes.ok) {
+        if (values.transactionid) {
+          toast.success(
+            `Successfully added Item ${formPurchaseItemOnly.getValues(
+              "Item.name"
+            )} `,
+            {
+              description:
+                "You have successfully added an item to the purchase.",
+            }
+          );
+          console.log("Purchase Item added successfully");
+        }
+
+        if (values.transactionitemid) {
+          toast.success(
+            `Successfully updated Item ${formPurchaseItemOnly.getValues(
+              "Item.name"
+            )} `,
+            {
+              description:
+                "You have successfully updated an item to the purchase.",
+            }
+          );
+          console.log("Purchase item updated successfully");
+        }
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
         refreshPurchases();
-        setSuccessAction(values.transactionitemid ? "edited" : "added");
-        setSuccessTransactionItem(values);
-        setShowSuccessTI(true);
+        // setSuccessAction(values.transactionitemid ? "edited" : "added");
+        // setSuccessTransactionItem(values);
+        // setShowSuccessTI(true);
         formPurchaseItemOnly.reset();
+        setSupplierInputValue("");
+        setItemInputValue("");
       } else {
         console.error("Operation failed", await uploadRes.text());
       }
@@ -717,6 +796,25 @@ export default function Component() {
     } catch (error) {
       console.error("Error deleting Purchase Item:", error);
     }
+  };
+
+  const handleDeletePurchaseItemConfirmWithToast = (
+    purchaseItem: TransactionItem
+  ) => {
+    handleDeletePurchaseItemConfirm(purchaseItem);
+    toast.success(`Purchase item ${purchaseItem.Item.name} has been deleted`, {
+      description: "You can now continue with what you are doing.",
+    });
+  };
+
+  const handleDeleteWithToast = (itemid: number | undefined) => {
+    handleDelete(itemid);
+    toast.success(
+      `Purchase with invoice number ${purchaseToDelete?.InvoiceNumber.invoicenumber} has been deleted`,
+      {
+        description: "You can now continue with what you are doing.",
+      }
+    );
   };
 
   const handleDeletePurchaseItem = (purchaseItem: TransactionItem) => {
@@ -749,8 +847,8 @@ export default function Component() {
         setShowAlert(false);
         setPurchaseToDelete(null);
         refreshPurchases();
-        setShowDeletionSuccess(true);
-        setShowDeletedTransaction(data);
+        // setShowDeletionSuccess(true);
+        // setShowDeletedTransaction(data);
       } else {
         console.error("Error deleting Purchase:", response.status);
       }
@@ -870,6 +968,7 @@ export default function Component() {
     user?.role || "",
     transactionData
   );
+  console.log(action);
 
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
   const paginatedPurchases = filteredTransactions.slice(
@@ -879,6 +978,53 @@ export default function Component() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleFormSupplierInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setSupplierInputValue(value);
+    setSupplierFormDropdownVisible(e.target.value.length > 0);
+
+    const filtered = purchases
+      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
+      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+
+    setSupplierFormSuggestions(Array.from(new Set(filtered)));
+  };
+
+  const handleFormSupplierClick = (itemName: string) => {
+    setSupplierInputValue(itemName);
+    form.setValue("Entity.name", itemName);
+    formPurchaseOnly.setValue("Entity.name", itemName);
+    setSupplierFormDropdownVisible(false);
+  };
+
+  const handleFormItemInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setItemInputValue(value);
+    setItemFormDropdownVisible(value.length > 0);
+
+    const filtered = items
+      .flatMap((p) => p.name) // Adjust according to your data structure
+      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+
+    setItemFormSuggestions(Array.from(new Set(filtered)));
+  };
+
+  const handleFormItemClick = (itemName: string, index: number) => {
+    setItemInputValue(itemName);
+    form.setValue(`TransactionItem.${index}.Item.name`, itemName);
+    setItemFormDropdownVisible(false);
+  };
+
+  const handleFormTransactionItemClick = (itemName: string) => {
+    setItemInputValue(itemName);
+    formPurchaseItemOnly.setValue(`Item.name`, itemName);
+    setItemFormDropdownVisible(false);
   };
 
   const handleSupplierChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -937,12 +1083,14 @@ export default function Component() {
         !dropdownRefItem.current.contains(event.target as Node)
       ) {
         setItemDropdownVisible(false);
+        setItemFormDropdownVisible(false);
       }
       if (
         dropdownRefSupplier.current &&
         !dropdownRefSupplier.current.contains(event.target as Node)
       ) {
         setSupplierDropdownVisible(false);
+        setSupplierFormDropdownVisible(false);
       }
     };
 
@@ -979,7 +1127,7 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
-        {showSuccess && (
+        {/* {showSuccess && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-6 w-6" />
@@ -1023,7 +1171,7 @@ export default function Component() {
               successfully.
             </AlertDescription>
           </Alert>
-        )}
+        )} */}
         <div className="container mx-auto px-4 md:px-6 py-8">
           <div
             className={`grid gap-6 ${
@@ -1068,7 +1216,7 @@ export default function Component() {
                       divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                        <TableRow className="bg-customColors-mercury/50 bg-customColors-mercury/50">
+                        <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                           <TableHead>Invoice No.</TableHead>
                           <TableHead>Supplier Name</TableHead>
                           <TableHead>Contact No.</TableHead>
@@ -1398,16 +1546,56 @@ export default function Component() {
                           <div className="space-y-2">
                             <FormField
                               control={formPurchaseItemOnly.control}
-                              name="Item.name"
+                              name={`Item.name`}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel htmlFor="name">
                                     Item Name
                                   </FormLabel>
                                   <FormControl>
-                                    <Input {...field} id="name" type="text" />
+                                    <Input
+                                      {...field}
+                                      id="name"
+                                      type="text"
+                                      value={
+                                        itemInputValue ||
+                                        formPurchaseItemOnly.getValues(
+                                          "Item.name"
+                                        )
+                                      }
+                                      onChange={(e) => {
+                                        handleFormItemInputChange(e);
+                                        field.onChange(e); // Call the original onChange
+                                      }}
+                                      onFocus={() => {
+                                        setItemFormDropdownVisible(
+                                          itemInputValue.length > 0
+                                        );
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormMessage />
+                                  {isItemFormDropdownVisible &&
+                                    itemInputValue.length > 0 && (
+                                      <div
+                                        ref={dropdownRefItem} // Attach ref to the dropdown
+                                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                                      >
+                                        {itemFormSuggestions.map((item) => (
+                                          <div
+                                            key={item}
+                                            className="p-2 cursor-pointer hover:bg-gray-200"
+                                            onClick={() =>
+                                              handleFormTransactionItemClick(
+                                                item
+                                              )
+                                            }
+                                          >
+                                            {item}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                 </FormItem>
                               )}
                             />
@@ -1592,7 +1780,9 @@ export default function Component() {
                       </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() =>
-                          handleDeletePurchaseItemConfirm(purchaseItemToDelete)
+                          handleDeletePurchaseItemConfirmWithToast(
+                            purchaseItemToDelete
+                          )
                         }
                       >
                         Continue
@@ -1622,7 +1812,7 @@ export default function Component() {
                       </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() =>
-                          handleDelete(purchaseToDelete.transactionid)
+                          handleDeleteWithToast(purchaseToDelete.transactionid)
                         }
                       >
                         Continue
@@ -1685,9 +1875,47 @@ export default function Component() {
                                     Supplier Name
                                   </FormLabel>
                                   <FormControl>
-                                    <Input {...field} id="name" type="text" />
+                                    <Input
+                                      {...field}
+                                      id="name"
+                                      type="text"
+                                      value={supplierInputValue}
+                                      onChange={(e) => {
+                                        handleFormSupplierInputChange(e);
+                                        field.onChange(e); // Call the original onChange
+                                      }}
+                                      onFocus={() =>
+                                        setSupplierFormDropdownVisible(
+                                          supplierInputValue.length > 0 &&
+                                            !form.getValues("transactionid")
+                                        )
+                                      }
+                                    />
                                   </FormControl>
                                   <FormMessage />
+                                  {isSupplierFormDropdownVisible &&
+                                    supplierInputValue.length > 0 && (
+                                      <div
+                                        ref={dropdownRefSupplier} // Attach ref to the dropdown
+                                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                                      >
+                                        {supplierFormSuggestions.map(
+                                          (supplier) => (
+                                            <div
+                                              key={supplier}
+                                              className="p-2 cursor-pointer hover:bg-gray-200"
+                                              onClick={() =>
+                                                handleFormSupplierClick(
+                                                  supplier
+                                                )
+                                              }
+                                            >
+                                              {supplier}
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    )}
                                 </FormItem>
                               )}
                             />
@@ -1827,9 +2055,43 @@ export default function Component() {
                                               {...field}
                                               id="name"
                                               type="text"
+                                              value={itemInputValue}
+                                              onChange={(e) => {
+                                                handleFormItemInputChange(e);
+                                                field.onChange(e); // Call the original onChange
+                                              }}
+                                              onFocus={() => {
+                                                setItemFormDropdownVisible(
+                                                  itemInputValue.length > 0
+                                                );
+                                              }}
                                             />
                                           </FormControl>
                                           <FormMessage />
+                                          {isItemFormDropdownVisible &&
+                                            itemInputValue.length > 0 && (
+                                              <div
+                                                ref={dropdownRefItem} // Attach ref to the dropdown
+                                                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                                              >
+                                                {itemFormSuggestions.map(
+                                                  (item) => (
+                                                    <div
+                                                      key={item}
+                                                      className="p-2 cursor-pointer hover:bg-gray-200"
+                                                      onClick={() =>
+                                                        handleFormItemClick(
+                                                          item,
+                                                          index
+                                                        )
+                                                      }
+                                                    >
+                                                      {item}
+                                                    </div>
+                                                  )
+                                                )}
+                                              </div>
+                                            )}
                                         </FormItem>
                                       )}
                                     />
@@ -2015,10 +2277,10 @@ export default function Component() {
                           </>
                         )}
                         <DialogFooter className="mt-4">
-                          <Button type="submit">Save</Button>
                           <Button variant="outline" onClick={handleCancel}>
                             Cancel
                           </Button>
+                          <Button type="submit">Save</Button>
                         </DialogFooter>
                       </form>
                     </Form>
@@ -2106,9 +2368,52 @@ ${
                                       Supplier Name
                                     </FormLabel>
                                     <FormControl>
-                                      <Input {...field} id="name" type="text" />
+                                      <Input
+                                        {...field}
+                                        id="name"
+                                        type="text"
+                                        value={
+                                          supplierInputValue ||
+                                          formPurchaseOnly.getValues(
+                                            "Entity.name"
+                                          )
+                                        }
+                                        onChange={(e) => {
+                                          handleFormSupplierInputChange(e);
+                                          field.onChange(e); // Call the original onChange
+                                        }}
+                                        onFocus={() =>
+                                          setSupplierFormDropdownVisible(
+                                            supplierInputValue.length > 0 &&
+                                              !form.getValues("transactionid")
+                                          )
+                                        }
+                                      />
                                     </FormControl>
                                     <FormMessage />
+                                    {isSupplierFormDropdownVisible &&
+                                      supplierInputValue.length > 0 && (
+                                        <div
+                                          ref={dropdownRefSupplier} // Attach ref to the dropdown
+                                          className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                                        >
+                                          {supplierFormSuggestions.map(
+                                            (supplier) => (
+                                              <div
+                                                key={supplier}
+                                                className="p-2 cursor-pointer hover:bg-gray-200"
+                                                onClick={() =>
+                                                  handleFormSupplierClick(
+                                                    supplier
+                                                  )
+                                                }
+                                              >
+                                                {supplier}
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      )}
                                   </FormItem>
                                 )}
                               />
@@ -2241,10 +2546,10 @@ ${
                         </div>
                         <DialogFooter className="pt-2 lg:pt-1">
                           <div className="flex justify-end space-x-2">
-                            <Button type="submit">Save</Button>
                             <Button variant="outline" onClick={handleCancel}>
                               Cancel
                             </Button>
+                            <Button type="submit">Save</Button>
                           </div>
                         </DialogFooter>
                       </form>

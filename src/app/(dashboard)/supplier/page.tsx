@@ -503,13 +503,13 @@ export default function Component() {
                       </div>
                     </div>
                     <DialogFooter className="mt-4">
-                      <Button type="submit">Save</Button>
                       <Button
                         variant="outline"
                         onClick={handleCancelEditSupplier}
                       >
                         Cancel
                       </Button>
+                      <Button type="submit">Save</Button>
                     </DialogFooter>
                   </form>
                 </Form>

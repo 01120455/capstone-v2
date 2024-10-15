@@ -6,10 +6,7 @@ const transactionSchema = z.object({
   transactionid: z.number().optional(),
   Entity: z.object({
     entityid: z.number().optional(),
-    name: z
-      .string()
-      .min(1, "Supplier name is required")
-      .max(100, "Entity name is too long"),
+    name: z.string().max(100, "Entity name is too long"),
     contactnumber: z.string().max(11, "Contact number is too long").optional(),
   }),
   createdat: date().optional(),

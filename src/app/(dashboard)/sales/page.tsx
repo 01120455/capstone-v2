@@ -32,12 +32,14 @@ import Table, {
 import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
 import { AlertCircle, CheckCircle, TrashIcon } from "@/components/icons/Icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import SideMenu from "@/components/sidemenu";
 import { Entity } from "@/schemas/entity.schema";
+import { toast } from "sonner";
+import { TransactionTable } from "@/schemas/transaction.schema";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
   const [customers, setCustomers] = useState<Entity[]>([]);
+  const [sales, setSales] = useState<TransactionTable[]>([]);
   const [cart, setCart] = useState<
     {
       id: number;
@@ -50,12 +52,73 @@ export default function Component() {
       imagepath: string;
     }[]
   >([]);
-  const [showSuccess, setShowSuccess] = useState(false);
+  // const [showSuccess, setShowSuccess] = useState(false);
   const [successItem, setSuccessItem] = useState<AddSales | null>(null);
   const [invoiceExists, setInvoiceExists] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [emptyCart, setEmptyCart] = useState(false);
   const [insufficientStock, setInsufficientStock] = useState(false);
+
+  useEffect(() => {
+    const getPurchases = async () => {
+      try {
+        const response = await fetch("/api/customertransaction");
+        const text = await response.text();
+        // console.log("Raw Response Text:", text);
+
+        const data = JSON.parse(text);
+
+        const parsedData = data.map((item: any) => {
+          return {
+            ...item,
+            createdat: item.createdat ? new Date(item.createdat) : null,
+            lastmodifiedat: item.lastmodifiedat
+              ? new Date(item.lastmodifiedat)
+              : null,
+            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+          };
+        });
+
+        // console.log("Parsed Data with Date Conversion:", parsedData);
+
+        // console.log("Parsed Data:", parsedData);
+        setSales(parsedData);
+      } catch (error) {
+        console.error("Error in getSales:", error);
+      }
+    };
+
+    getPurchases();
+  }, []);
+
+  const [customerInputValue, setCustomerInputValue] = useState("");
+  const [customerFormSuggestions, setCustomerFormSuggestions] = useState<
+    string[]
+  >([]);
+  const [isCustomerFormDropdownVisible, setCustomerFormDropdownVisible] =
+    useState(false);
+
+  const dropdownRefCustomer = useRef<HTMLDivElement>(null);
+
+  const handleFormCustomerInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setCustomerInputValue(value);
+    setCustomerFormDropdownVisible(e.target.value.length > 0);
+
+    const filtered = sales
+      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
+      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+
+    setCustomerFormSuggestions(Array.from(new Set(filtered)));
+  };
+
+  const handleFormSupplierClick = (itemName: string) => {
+    setCustomerInputValue(itemName);
+    form.setValue("Customer.name", itemName);
+    setCustomerFormDropdownVisible(false);
+  };
 
   const form = useForm<AddSales>({
     resolver: zodResolver(salesTransactionSchema),
@@ -178,17 +241,17 @@ export default function Component() {
     console.log(form.formState.errors);
   }, [form.formState.errors]);
 
-  useEffect(() => {
-    if (showSuccess) {
-      setInvoiceExists(false);
-      setEmptyCart(false);
-      const timer = setTimeout(() => {
-        setShowSuccess(false);
-      }, 5000);
+  // useEffect(() => {
+  //   if (showSuccess) {
+  //     setInvoiceExists(false);
+  //     setEmptyCart(false);
+  //     const timer = setTimeout(() => {
+  //       setShowSuccess(false);
+  //     }, 5000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccess]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [showSuccess]);
 
   useEffect(() => {
     if (invoiceExists) {
@@ -268,18 +331,24 @@ export default function Component() {
 
   const handleSubmit = async (values: AddSales) => {
     if (cart.length === 0) {
-      setEmptyCart(true);
+      // setEmptyCart(true);
+      toast.error("Cart is empty", {
+        description: "Please add items to the cart before checkout.",
+      });
       return;
     }
 
     const invoiceExists = await checkInvoiceExists(
       values.InvoiceNumber.invoicenumber
     );
-    if (invoiceExists) {
-      setInvoiceExists(true);
-      setInvoiceNumber(values.InvoiceNumber.invoicenumber);
-      return;
-    }
+    // if (invoiceExists) {
+    //   // setInvoiceExists(true);
+    //   // setInvoiceNumber(values.InvoiceNumber.invoicenumber);
+    //   // return;
+    //   toast.error("Invoice number already exists", {
+    //     description: "Please enter a different invoice number.",
+    //   });
+    // }
     const checkItemStock = async (itemid: number, quantity: number) => {
       try {
         const response = await fetch(`/api/item/${itemid}`);
@@ -301,13 +370,44 @@ export default function Component() {
     );
     const stockCheckResults = await Promise.all(stockCheckPromises);
     const insufficientStock = stockCheckResults.some((result) => !result);
-    if (insufficientStock) {
-      setInsufficientStock(true);
-      setTimeout(() => {
-        setInsufficientStock(false);
-      }, 5000);
-      console.error("Insufficient stock for one or more items");
-      return;
+    // if (insufficientStock) {
+    //   // setInsufficientStock(true);
+    //   // setTimeout(() => {
+    //   //   setInsufficientStock(false);
+    //   // }, 5000);
+    //   // console.error("Insufficient stock for one or more items");
+    //   // return;
+    //   toast.error("Insufficient stock for one or more items", {
+    //     description: "Check your item stock and try again.",
+    //   });
+    // }
+
+    if (invoiceExists && insufficientStock) {
+      toast.error(
+        "Invoice number already exists and item stock is insufficient",
+        {
+          description:
+            "Please enter a different invoice number and check your item stock.",
+        }
+      );
+    } else if (insufficientStock) {
+      toast.error("Item stock is insufficient", {
+        description: "Check your item stock and try again.",
+      });
+    } else if (invoiceExists) {
+      toast.error("Invoice number already exists", {
+        description: "Please enter a different invoice number.",
+      });
+    } else if (insufficientStock) {
+      toast.error("Item stock is insufficient", {
+        description: "Check your item stock and try again.",
+      });
+    } else if (invoiceExists) {
+      toast.error("Invoice number already exists", {
+        description: "Please enter a different invoice number.",
+      });
+    } else {
+      null;
     }
 
     console.log("Form Values:", values);
@@ -360,9 +460,16 @@ export default function Component() {
       });
 
       if (uploadRes.ok) {
+        toast.success(
+          `Sales with invoice number ${form.getValues(
+            "InvoiceNumber.invoicenumber"
+          )} has been created`,
+          { description: "You have successfully added a sale." }
+        );
+
         console.log("Sales added successfully");
         setSuccessItem(values);
-        setShowSuccess(true);
+        // setShowSuccess(true);
         form.reset();
         setCart([]);
         refreshItems();
@@ -416,7 +523,7 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 flex flex-col overflow-hidden">
-        {showSuccess && (
+        {/* {showSuccess && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-6 w-6" />
@@ -428,7 +535,7 @@ export default function Component() {
               added to the system.
             </AlertDescription>
           </Alert>
-        )}
+        )} */}
         {invoiceExists && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-red-600">
@@ -549,7 +656,7 @@ export default function Component() {
                         )}
                       />
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <FormField
                         control={form.control}
                         name="Customer.name"
@@ -587,6 +694,55 @@ export default function Component() {
                                       } // Call the function on item click
                                     >
                                       {customer.name}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                          </FormItem>
+                        )}
+                      />
+                    </div> */}
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="Customer.name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="name">Customer Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                id="name"
+                                type="text"
+                                value={customerInputValue}
+                                onChange={(e) => {
+                                  handleFormCustomerInputChange(e);
+                                  field.onChange(e); // Call the original onChange
+                                }}
+                                onFocus={() =>
+                                  setCustomerFormDropdownVisible(
+                                    customerInputValue.length > 0 &&
+                                      !form.getValues("transactionid")
+                                  )
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                            {isCustomerFormDropdownVisible &&
+                              customerInputValue.length > 0 && (
+                                <div
+                                  ref={dropdownRefCustomer} // Attach ref to the dropdown
+                                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                                >
+                                  {customerFormSuggestions.map((customer) => (
+                                    <div
+                                      key={customer}
+                                      className="p-2 cursor-pointer hover:bg-gray-200"
+                                      onClick={() =>
+                                        handleFormSupplierClick(customer)
+                                      }
+                                    >
+                                      {customer}
                                     </div>
                                   ))}
                                 </div>

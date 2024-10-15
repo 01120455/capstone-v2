@@ -68,6 +68,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 const ROLES = {
   SALES: "sales",
@@ -234,8 +235,24 @@ export default function Component() {
         const uploadResult = await uploadRes.json();
         if (values.userid) {
           console.log("User updated successfully:", uploadResult);
+          toast.success(
+            `User ${form.getValues("firstname")} ${form.getValues(
+              "lastname"
+            )} has been updated`,
+            {
+              description: "You have successfully updated the user.",
+            }
+          );
         } else {
           console.log("User added successfully:", uploadResult);
+          toast.success(
+            `User ${form.getValues("firstname")} ${form.getValues(
+              "lastname"
+            )} has been added`,
+            {
+              description: "You have successfully added the user.",
+            }
+          );
         }
 
         if (uploadResult.imagepath) {
@@ -271,7 +288,7 @@ export default function Component() {
         refreshUsers();
         setShowAlert(false);
         setUserToDelete(null);
-        setShowDeletionSuccess(true);
+        // setShowDeletionSuccess(true);
         setShowDeletedUser(data);
       } else {
         console.error("Error deleting user:", response.status);
@@ -279,6 +296,18 @@ export default function Component() {
     } catch (error) {
       console.error("Error deleting user:", error);
     }
+  };
+
+  const handleDeleteWithToast = (itemid: number | undefined) => {
+    handleDelete(itemid);
+    toast(
+      `User ${form.getValues("firstname")} ${form.getValues(
+        "lastname"
+      )} has been deleted`,
+      {
+        description: "You have successfully deleted the user.",
+      }
+    );
   };
 
   const handleDeleteUser = (user: AddUser) => {
@@ -355,7 +384,7 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto p-6">
-        {showDeletionSuccess && (
+        {/* {showDeletionSuccess && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-6 w-6" />
@@ -367,7 +396,7 @@ export default function Component() {
               deleted successfully.
             </AlertDescription>
           </Alert>
-        )}
+        )} */}
         <div className="w-full max-w-screen-2xl mx-auto p-4">
           <div className="flex flex-col items-center">
             <div className="w-[1000px]">
@@ -609,7 +638,7 @@ export default function Component() {
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleDelete(userToDelete.userid)}
+                    onClick={() => handleDeleteWithToast(userToDelete.userid)}
                   >
                     Continue
                   </AlertDialogAction>
@@ -832,10 +861,10 @@ export default function Component() {
                       </div>
                     </div>
                     <DialogFooter className="pt-2">
-                      <Button type="submit">Save</Button>
                       <Button variant="outline" onClick={handleCancel}>
                         Cancel
                       </Button>
+                      <Button type="submit">Save</Button>
                     </DialogFooter>
                   </form>
                 </Form>

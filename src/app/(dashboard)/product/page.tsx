@@ -69,7 +69,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Label } from "recharts";
+import { toast } from "sonner";
 
 const ROLES = {
   SALES: "sales",
@@ -99,11 +99,6 @@ export default function Component() {
   const [alertType, setAlertType] = useState<"reorder" | "critical" | null>(
     null
   );
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
-  const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
-  const [showDeletedItem, setShowDeletedItem] = useState<ViewItem | null>(null);
-  const [successAction, setSuccessAction] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -115,6 +110,23 @@ export default function Component() {
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
   const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
   const dropdownRefItem = useRef<HTMLDivElement>(null);
+
+  // const [showSuccess, setShowSuccess] = useState(false);
+  // const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
+  // const [successAction, setSuccessAction] = useState("");
+  // const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
+  // const [showDeletedItem, setShowDeletedItem] = useState<ViewItem | null>(null);
+
+  // useEffect(() => {
+  //   if (showSuccess) {
+  //     setShowAlertItem(false);
+  //     const timer = setTimeout(() => {
+  //       setShowSuccess(false);
+  //     }, 5000);
+
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [showSuccess]);
 
   // const filteredItems = items.filter((item) => {
   //   const searchTermLower = searchTerm.toLowerCase();
@@ -201,17 +213,6 @@ export default function Component() {
       return () => clearTimeout(timer);
     }
   }, [showAlertItem]);
-
-  useEffect(() => {
-    if (showSuccess) {
-      setShowAlertItem(false);
-      const timer = setTimeout(() => {
-        setShowSuccess(false);
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccess]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -317,6 +318,8 @@ export default function Component() {
   const handleEdit = (item: ViewItem) => {
     setShowModal(true);
 
+    console.log(item);
+
     form.reset({
       itemid: item.itemid,
       name: item.name,
@@ -334,6 +337,7 @@ export default function Component() {
   const handleCancel = () => {
     setShowModal(false);
     setSelectedFile(undefined);
+    setInputValue("");
 
     form.reset({
       name: "",
@@ -386,8 +390,14 @@ export default function Component() {
         const uploadResult = await uploadRes.json();
         if (values.itemid) {
           console.log("Item updated successfully");
+          toast.success(`Item ${form.getValues("name")} has been updated`, {
+            description: "You have successfully edited the item.",
+          });
         } else {
           console.log("Item added successfully");
+          toast.success(`Item ${form.getValues("name")} has been added`, {
+            description: "You have successfully added the item.",
+          });
         }
 
         if (uploadResult.itemimage && uploadResult.itemimage[0]) {
@@ -396,9 +406,10 @@ export default function Component() {
 
         setShowModal(false);
         refreshItems();
-        setSuccessAction(values.itemid ? "edited" : "added");
-        setSuccessItem(uploadResult);
-        setShowSuccess(true);
+        // setSuccessAction(values.itemid ? "edited" : "added");
+        // setSuccessItem(uploadResult);
+        // setShowSuccess(true);
+        setInputValue("");
         form.reset();
       } else {
         console.error("Upload failed", await uploadRes.text());
@@ -423,14 +434,22 @@ export default function Component() {
         setShowAlert(false);
         setItemToDelete(null);
         refreshItems();
-        setShowDeletedItem(data);
-        setShowDeletionSuccess(true);
+        // setShowDeletedItem(data);
+        // setShowDeletionSuccess(true);
+        form.reset();
       } else {
         console.error("Error deleting item:", response.status);
       }
     } catch (error) {
       console.error("Error deleting item:", error);
     }
+  };
+
+  const handleDeleteWithToast = (itemid: number | undefined) => {
+    handleDelete(itemid);
+    toast.success(`Item ${form.getValues().name} has been deleted`, {
+      description: "You can now add more items to the inventory.",
+    });
   };
 
   const handleDeleteItem = (item: AddItem) => {
@@ -574,6 +593,7 @@ export default function Component() {
   };
 
   const [inputValue, setInputValue] = useState("");
+  console.log(inputValue);
   const filteredItemsName = items.filter((item) =>
     item.name.toLowerCase().includes(inputValue.toLowerCase())
   );
@@ -581,14 +601,20 @@ export default function Component() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    setDropdownVisible(e.target.value.length > 0); // Show dropdown if there is input
+    const value = e.target.value;
+    setInputValue(value);
+    setDropdownVisible(value.length > 0);
   };
 
   const handleItemClick = (itemName: string) => {
     setInputValue(itemName);
+    form.setValue("name", itemName);
     setDropdownVisible(false); // Hide dropdown when an item is clicked
   };
+
+  useEffect(() => {
+    console.log("Current inputValue:", inputValue);
+  }, [inputValue]);
 
   // Hide dropdown when clicking outside of it
   useEffect(() => {
@@ -610,24 +636,24 @@ export default function Component() {
     };
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setDropdownVisible(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (
+  //       dropdownRef.current &&
+  //       !dropdownRef.current.contains(event.target as Node)
+  //     ) {
+  //       setDropdownVisible(false);
+  //     }
+  //   };
 
-    document.addEventListener("mousedown", handleClickOutside as EventListener);
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside as EventListener
-      );
-    };
-  }, []);
+  //   document.addEventListener("mousedown", handleClickOutside as EventListener);
+  //   return () => {
+  //     document.removeEventListener(
+  //       "mousedown",
+  //       handleClickOutside as EventListener
+  //     );
+  //   };
+  // }, []);
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -659,7 +685,7 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
-        {showSuccess && (
+        {/* {showSuccess && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-6 w-6" />
@@ -672,8 +698,8 @@ export default function Component() {
               {successAction === "added" ? "added" : "edited"} successfully.
             </AlertDescription>
           </Alert>
-        )}
-        {showDeletionSuccess && (
+        )} */}
+        {/* {showDeletionSuccess && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-6 w-6" />
@@ -684,7 +710,7 @@ export default function Component() {
               {showDeletedItem?.stock} deleted successfully.
             </AlertDescription>
           </Alert>
-        )}
+        )} */}
         {showAlertItem && (
           <Alert className="alert-center">
             <AlertTitle className="flex items-center gap-2 text-red-600">
@@ -1052,7 +1078,7 @@ export default function Component() {
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleDelete(itemToDelete.itemid)}
+                    onClick={() => handleDeleteWithToast(itemToDelete.itemid)}
                   >
                     Continue
                   </AlertDialogAction>
@@ -1116,6 +1142,7 @@ export default function Component() {
                           )}
                         />
                       </div> */}
+                      {/* {action === "add" && ( */}
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
@@ -1128,14 +1155,14 @@ export default function Component() {
                                   {...field}
                                   id="name"
                                   type="text"
-                                  value={inputValue}
+                                  value={inputValue || form.getValues("name")}
                                   onChange={(e) => {
                                     handleInputChange(e);
                                     field.onChange(e); // Call the original onChange
                                   }}
                                   onFocus={() =>
                                     setDropdownVisible(inputValue.length > 0)
-                                  } // Show dropdown on focus
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -1163,6 +1190,59 @@ export default function Component() {
                           )}
                         />
                       </div>
+                      {/* )} */}
+
+                      {/* {action === "edit" && (
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="name">Name</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="name"
+                                    type="text"
+                                    value={inputValue || form.getValues("name")}
+                                    onChange={(e) => {
+                                      handleInputChange(e);
+                                      field.onChange(e); // Call the original onChange
+                                    }}
+                                    onFocus={() =>
+                                      setDropdownVisible(
+                                        inputValue.length > 0 &&
+                                          !form.getValues("itemid")
+                                      )
+                                    }
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                                {dropdownVisible &&
+                                  filteredItemsName.length > 0 && (
+                                    <div
+                                      ref={dropdownRef} // Attach ref to the dropdown
+                                      className="absolute z-10 bg-white border border-gray-300 mt-1 max-h-60 overflow-y-auto"
+                                    >
+                                      {filteredItemsName.map((item) => (
+                                        <div
+                                          key={item.itemid}
+                                          className="p-2 cursor-pointer hover:bg-gray-200"
+                                          onClick={() =>
+                                            handleItemClick(item.name)
+                                          } // Call the function on item click
+                                        >
+                                          {item.name}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )} */}
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
@@ -1350,7 +1430,20 @@ export default function Component() {
                         <Button variant="outline" onClick={handleCancel}>
                           Cancel
                         </Button>
-                        <Button type="submit">Save</Button>
+                        <Button
+                          type="submit"
+                          // onClick={() =>
+                          //   toast(
+                          //     `Item ${form.getValues().name} has been added`,
+                          //     {
+                          //       description:
+                          //         "You can now add more items to the inventory.",
+                          //     }
+                          //   )
+                          // }
+                        >
+                          Save
+                        </Button>
                       </div>
                     </DialogFooter>
                   </form>
