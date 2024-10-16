@@ -18,13 +18,11 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-// import Layout from "@/components/layout";
-import SideMenu from "@/components/sidemenu";
 
-interface SalesData {
-  totalSales: number;
-  quantitySold: number;
-}
+type ChartData = {
+  month: string;
+  [itemName: string]: number | string; // Allow dynamic keys for item sales
+};
 
 export default function Dashboard() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -62,50 +60,86 @@ export default function Dashboard() {
     getPurchases();
   }, []);
 
+  // Define all months from January to December
+  const allMonths = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  // Collect all items in a set to ensure every item appears in each month
+  const allItems = new Set<string>();
+
+  purchases.forEach((purchase) => {
+    purchase.TransactionItem.forEach((item) => {
+      if (item.Item?.name) {
+        allItems.add(item.Item.name);
+      }
+    });
+  });
+
+  // Convert Set to Array for easier handling
+  const itemNames = Array.from(allItems);
+
+  // Initialize salesData
   const salesData = purchases.reduce((acc, purchase) => {
+    const purchaseDate = new Date(purchase.createdat);
+    const month = purchaseDate.toLocaleString("default", { month: "long" });
+
+    acc[month] = acc[month] || {};
+
     purchase.TransactionItem.forEach((item) => {
       const itemName = item.Item?.name;
-      const quantitySold = item.measurementvalue || 1;
-      const amount = item.totalamount || 0;
+      const quantitySold = item.measurementvalue || 1; // Default to 1 if measurement value is not provided
 
       if (itemName) {
-        acc[itemName] = acc[itemName] || { quantitySold: 0, totalSales: 0 };
-        acc[itemName].quantitySold += quantitySold;
-        acc[itemName].totalSales += amount;
+        acc[month][itemName] = (acc[month][itemName] || 0) + quantitySold; // Aggregate the quantity sold
       }
     });
 
     return acc;
-  }, {} as Record<string, { quantitySold: number; totalSales: number }>);
+  }, {} as Record<string, Record<string, number>>);
 
-  const chartData = Object.entries(salesData).map(
-    ([name, { quantitySold, totalSales }]) => ({
-      name,
-      quantitySold,
-      totalSales,
-    })
-  );
+  // Create chartData for each month, ensuring all items are present with a value
+  const chartData: ChartData[] = allMonths.map((month) => {
+    const monthData = salesData[month] || {}; // Get sales data for the month
 
-  console.log("Sales Data:", chartData);
-
-  const chartConfig: ChartConfig = chartData.reduce(
-    (acc, { name, quantitySold, totalSales }, index) => {
-      (acc[name] = {
-        label: name,
-        color: `hsl(var(--chart-${index + 1}))`,
-      }),
-        (acc["quantitySold"] = {
-          label: "Quantity Sold",
-          color: "hsl(var(--chart-1))",
-        }),
-        (acc["totalSales"] = {
-          label: "TotalSales",
-          color: "hsl(var(--chart-2))",
-        });
+    // Ensure every item is present in the chart data, even if its value is 0
+    const dataForMonth = itemNames.reduce((acc, itemName) => {
+      acc[itemName] = monthData[itemName] || 0; // Default to 0 if no data for that item in this month
       return acc;
-    },
-    {} as ChartConfig
-  );
+    }, {} as Record<string, number>);
+
+    return {
+      month, // Keep the month
+      ...dataForMonth, // Spread the data for each item
+    };
+  });
+
+  // Check output
+  console.log("Chart Data:", chartData);
+
+  // Adjust chartConfig to dynamically generate configuration for each item
+  const chartConfig: ChartConfig = {
+    month: { label: "Month", color: "var(--chart-0)" }, // X-axis config
+  };
+
+  // Dynamically configure chart lines for each item
+  itemNames.forEach((itemName, index) => {
+    chartConfig[itemName] = {
+      label: itemName,
+      color: `hsl(var(--chart-${index + 1}))`, // String interpolation for colors
+    };
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -161,46 +195,33 @@ export default function Dashboard() {
             className="w-full h-[300px] md:h-[400px]"
           >
             <LineChart
-              accessibilityLayer
               data={chartData}
               margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
             >
+              {/* Ensure only one XAxis is rendered */}
               <CartesianGrid vertical={false} />
-
-              {/* Configure the XAxis */}
               <XAxis
-                dataKey="name"
+                dataKey="month"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) =>
-                  isSmallScreen && value.length > 3 ? value.slice(0, 4) : value
-                }
               />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                className="text-caption-2 border border-cyan-900"
-                stroke="var(--gray-60)"
-              />
+              <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+
               <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
-              <Line
-                dataKey="quantitySold"
-                data={chartData}
-                type="monotone"
-                stroke="var(--color-quantitySold)"
-                strokeWidth={2}
-                dot={false}
-              />
-              {/* <Line
-                  dataKey="totalSales"
+
+              {/* Render lines dynamically, one for each item */}
+              {itemNames.map((itemName, index) => (
+                <Line
+                  key={itemName} // Ensure each line has a unique key
+                  dataKey={itemName} // Must match item names in chartData
                   type="monotone"
-                  stroke="var(--color-totalSales)"
+                  stroke={`hsl(var(--chart-${index + 1}))`} // Use proper string interpolation for colors
                   strokeWidth={2}
                   dot={false}
-                /> */}
+                />
+              ))}
             </LineChart>
           </ChartContainer>
         </section>

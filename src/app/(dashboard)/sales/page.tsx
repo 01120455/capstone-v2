@@ -470,6 +470,7 @@ export default function Component() {
         console.log("Sales added successfully");
         setSuccessItem(values);
         // setShowSuccess(true);
+        setCustomerInputValue("");
         form.reset();
         setCart([]);
         refreshItems();
