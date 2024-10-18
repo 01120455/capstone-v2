@@ -21,7 +21,7 @@ import {
 
 type ChartData = {
   month: string;
-  [itemName: string]: number | string; // Allow dynamic keys for item sales
+  [itemName: string]: number | string;
 };
 
 export default function Dashboard() {
@@ -60,7 +60,6 @@ export default function Dashboard() {
     getPurchases();
   }, []);
 
-  // Define all months from January to December
   const allMonths = [
     "January",
     "February",
@@ -76,7 +75,6 @@ export default function Dashboard() {
     "December",
   ];
 
-  // Collect all items in a set to ensure every item appears in each month
   const allItems = new Set<string>();
 
   purchases.forEach((purchase) => {
@@ -87,10 +85,8 @@ export default function Dashboard() {
     });
   });
 
-  // Convert Set to Array for easier handling
   const itemNames = Array.from(allItems);
 
-  // Initialize salesData
   const salesData = purchases.reduce((acc, purchase) => {
     const purchaseDate = new Date(purchase.createdat);
     const month = purchaseDate.toLocaleString("default", { month: "long" });
@@ -99,45 +95,42 @@ export default function Dashboard() {
 
     purchase.TransactionItem.forEach((item) => {
       const itemName = item.Item?.name;
-      const quantitySold = item.measurementvalue || 1; // Default to 1 if measurement value is not provided
+      const quantitySold = item.measurementvalue || 1;
 
       if (itemName) {
-        acc[month][itemName] = (acc[month][itemName] || 0) + quantitySold; // Aggregate the quantity sold
+        acc[month][itemName] = (acc[month][itemName] || 0) + quantitySold;
       }
     });
 
     return acc;
   }, {} as Record<string, Record<string, number>>);
 
-  // Create chartData for each month, ensuring all items are present with a value
-  const chartData: ChartData[] = allMonths.map((month) => {
-    const monthData = salesData[month] || {}; // Get sales data for the month
+  console.log("sales data:", salesData);
 
-    // Ensure every item is present in the chart data, even if its value is 0
+  const chartData: ChartData[] = allMonths.map((month) => {
+    const monthData = salesData[month] || {};
+
     const dataForMonth = itemNames.reduce((acc, itemName) => {
-      acc[itemName] = monthData[itemName] || 0; // Default to 0 if no data for that item in this month
+      acc[itemName] = monthData[itemName] || 0;
       return acc;
     }, {} as Record<string, number>);
 
     return {
-      month, // Keep the month
-      ...dataForMonth, // Spread the data for each item
+      month,
+      ...dataForMonth,
     };
   });
 
-  // Check output
   console.log("Chart Data:", chartData);
 
-  // Adjust chartConfig to dynamically generate configuration for each item
   const chartConfig: ChartConfig = {
-    month: { label: "Month", color: "var(--chart-0)" }, // X-axis config
+    month: { label: "Month", color: "var(--chart-0)" },
   };
 
-  // Dynamically configure chart lines for each item
   itemNames.forEach((itemName, index) => {
     chartConfig[itemName] = {
       label: itemName,
-      color: `hsl(var(--chart-${index + 1}))`, // String interpolation for colors
+      color: `hsl(var(--chart-${index + 1}))`,
     };
   });
 
@@ -146,13 +139,10 @@ export default function Dashboard() {
       setIsSmallScreen(window.innerWidth < 640);
     };
 
-    // Set initial value on mount
     handleResize();
 
-    // Add event listener
     window.addEventListener("resize", handleResize);
 
-    // Cleanup function to remove event listener on unmount
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -189,7 +179,6 @@ export default function Dashboard() {
           <p className="text-sm mb-4">
             Analysis of different items based on their selling performance
           </p>
-          {/* <LineChart className="w-full h-[300px]" /> */}
           <ChartContainer
             config={chartConfig}
             className="w-full h-[300px] md:h-[400px]"
@@ -198,7 +187,6 @@ export default function Dashboard() {
               data={chartData}
               margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
             >
-              {/* Ensure only one XAxis is rendered */}
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="month"
@@ -210,14 +198,12 @@ export default function Dashboard() {
 
               <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
-
-              {/* Render lines dynamically, one for each item */}
               {itemNames.map((itemName, index) => (
                 <Line
-                  key={itemName} // Ensure each line has a unique key
-                  dataKey={itemName} // Must match item names in chartData
+                  key={itemName}
+                  dataKey={itemName}
                   type="monotone"
-                  stroke={`hsl(var(--chart-${index + 1}))`} // Use proper string interpolation for colors
+                  stroke={`hsl(var(--chart-${index + 1}))`}
                   strokeWidth={2}
                   dot={false}
                 />
