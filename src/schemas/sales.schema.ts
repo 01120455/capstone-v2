@@ -4,21 +4,6 @@ const is11Digits = (val: string) => /^\d{10}$/.test(val);
 
 const salesTransactionSchema = z.object({
   transactionid: z.number().optional(),
-  Customer: z.object({
-    entityid: z.number(),
-    name: z
-      .string({ required_error: "Customer name is required" })
-      .min(1, "Customer name is required")
-      .max(100, "Entity name is too long"),
-    contactnumber: z.coerce
-      .number()
-      .transform((val) => val.toString())
-      .refine(is11Digits, {
-        message: "Contact number must be exactly 11 digits",
-      })
-      .optional()
-      .or(z.literal("")),
-  }),
   createdat: date().optional(),
   type: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
@@ -31,9 +16,9 @@ const salesTransactionSchema = z.object({
   taxpercentage: z.coerce.number().optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
   lastmodifiedat: date().optional(),
-  InvoiceNumber: z.object({
-    invoicenumberid: z.number(),
-    invoicenumber: z
+  DocumentNumber: z.object({
+    documentnumberid: z.number(),
+    documentnumber: z
       .string({ required_error: "Invoice Number is required" })
       .min(1, "Invoice Number is required")
       .max(100, "Invoice Number is too long"),

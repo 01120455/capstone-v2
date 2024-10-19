@@ -11,27 +11,20 @@ export async function GET(req: NextRequest) {
         deleted: false,
       },
       include: {
-        Entity: {
-          select: {
-            entityid: true,
-            name: true,
-            contactnumber: true,
-          },
-        },
         User: {
           select: {
             firstname: true,
             lastname: true,
           },
         },
-        InvoiceNumber: {
+        DocumentNumber: {
           select: {
-            invoicenumber: true,
+            documentnumber: true,
           },
         },
         TransactionItem: {
           where: {
-            deleted: false, // Add condition to filter only non-deleted TransactionItems
+            deleted: false, 
           },
           select: {
             transactionid: true,
@@ -53,7 +46,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: [
         {
-          createdat: "desc", // First sort by createdat in descending order
+          createdat: "desc", 
         },
       ],
     });

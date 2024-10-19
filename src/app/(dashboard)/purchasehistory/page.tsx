@@ -16,7 +16,6 @@ import { TransactionTable } from "@/schemas/transaction.schema";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { XIcon, ArrowRightIcon, FilterIcon } from "@/components/icons/Icons";
-import SideMenu from "@/components/sidemenu";
 import {
   Pagination,
   PaginationContent,
@@ -37,7 +36,7 @@ import {
 export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
   const [filters, setFilters] = useState({
-    invoiceno: "",
+    purordno: "",
     name: "",
     supplier: "",
     frommilling: "all",
@@ -50,16 +49,15 @@ export default function Component() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [showFilter, setShowFilter] = useState(false);
-  const [supplierSuggestions, setSupplierSuggestions] = useState<string[]>([]);
-  const [invoiceSuggestions, setInvoiceSuggestions] = useState<string[]>([]);
+  const [purchaseOrderSuggestions, setPurchaseOrderSuggestions] = useState<
+    string[]
+  >([]);
   const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  const [isInvoiceDropdownVisible, setInvoiceDropdownVisible] = useState(false);
-  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  const [isSupplierDropdownVisible, setSupplierDropdownVisible] =
+  const [isPurchaseOrderDropdownVisible, setPurchaseOrderDropdownVisible] =
     useState(false);
-  const dropdownRefInvoice = useRef<HTMLDivElement>(null);
+  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  const dropdownRefPurchaseOrder = useRef<HTMLDivElement>(null);
   const dropdownRefItem = useRef<HTMLDivElement>(null);
-  const dropdownRefSupplier = useRef<HTMLDivElement>(null);
 
   const toggleFilter = () => {
     setShowFilter(!showFilter);
@@ -98,91 +96,10 @@ export default function Component() {
     getPurchases();
   }, []);
 
-  // const filteredTransactions = useMemo(() => {
-  //   // Check if any filters are applied
-  //   const isEmptyFilters =
-  //     (!filters.invoiceno &&
-  //       !filters.name &&
-  //       !filters.supplier &&
-  //       !filters.frommilling &&
-  //       !filters.status) ||
-  //     (filters.status === "all" &&
-  //       !filters.dateRange.start &&
-  //       !filters.dateRange.end &&
-  //       !searchTerm);
-
-  //   console.log("Is Empty Filters:", isEmptyFilters);
-  //   console.log("Filters:", filters);
-
-  //   if (isEmptyFilters) return purchases;
-
-  //   return purchases.filter((purchase) => {
-  //     const invoiceNo =
-  //       purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-  //     const supplierName = purchase.Entity.name.toLowerCase();
-  //     const searchLower = searchTerm.toLowerCase();
-
-  //     // Status filter
-  //     const statusMatches =
-  //       filters.status && filters.status !== "all"
-  //         ? purchase.status === filters.status
-  //         : true;
-
-  //     // From Milling filter
-  //     const frommillingMatches =
-  //       filters.frommilling === "all" ||
-  //       (filters.frommilling === "true" && purchase.frommilling) ||
-  //       (filters.frommilling === "false" && !purchase.frommilling);
-
-  //     // Item name filter
-  //     const itemNameMatches = purchase.TransactionItem.some((item) => {
-  //       const itemName = item?.Item?.name?.toLowerCase() || "";
-  //       return itemName.includes(filters.name.toLowerCase());
-  //     });
-
-  //     // Date range handling
-  //     const createdAt = purchase.createdat
-  //       ? new Date(purchase.createdat)
-  //       : null;
-  //     const start = filters.dateRange.start
-  //       ? new Date(filters.dateRange.start)
-  //       : null;
-  //     const end = filters.dateRange.end
-  //       ? new Date(filters.dateRange.end)
-  //       : null;
-
-  //     const isWithinDateRange = (
-  //       createdAt: Date | null,
-  //       start: Date | null,
-  //       end: Date | null
-  //     ) => {
-  //       if (!createdAt) return false;
-  //       if (start && end) return createdAt >= start && createdAt <= end;
-  //       if (start) return createdAt >= start;
-  //       if (end) return createdAt <= end;
-  //       return true;
-  //     };
-
-  //     // Return filtered results
-  //     return (
-  //       (!filters.invoiceno ||
-  //         invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
-  //       (!filters.supplier ||
-  //         supplierName.includes(filters.supplier.toLowerCase())) &&
-  //       statusMatches &&
-  //       frommillingMatches && // Include frommillingMatches
-  //       itemNameMatches &&
-  //       isWithinDateRange(createdAt, start, end) &&
-  //       (itemNameMatches || supplierName.includes(searchLower))
-  //     );
-  //   });
-  // }, [filters, searchTerm, purchases]);
-
   const filteredTransactions = useMemo(() => {
     return purchases.filter((purchase) => {
-      const invoiceNo =
-        purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-      const supplierName = purchase.Entity.name.toLowerCase();
+      const purordNo =
+        purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
 
       const statusMatches =
         filters.status === "all" || purchase.status === filters.status;
@@ -221,12 +138,9 @@ export default function Component() {
 
       console.log("Filtering Purchase:", purchase);
       console.log("Matches:", {
-        invoiceNoMatches:
-          !filters.invoiceno ||
-          invoiceNo.includes(filters.invoiceno.toLowerCase()),
-        supplierNameMatches:
-          !filters.supplier ||
-          supplierName.includes(filters.supplier.toLowerCase()),
+        purordNoMatches:
+          !filters.purordno ||
+          purordNo.includes(filters.purordno.toLowerCase()),
         statusMatches,
 
         frommillingMatches,
@@ -235,10 +149,8 @@ export default function Component() {
       });
 
       return (
-        (!filters.invoiceno ||
-          invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
-        (!filters.supplier ||
-          supplierName.includes(filters.supplier.toLowerCase())) &&
+        (!filters.purordno ||
+          purordNo.includes(filters.purordno.toLowerCase())) &&
         statusMatches &&
         frommillingMatches &&
         itemNameMatches &&
@@ -249,7 +161,7 @@ export default function Component() {
 
   const handleClearFilters = () => {
     setFilters({
-      invoiceno: "",
+      purordno: "",
       name: "",
       supplier: "",
       frommilling: "all",
@@ -277,32 +189,21 @@ export default function Component() {
     setCurrentPage(page);
   };
 
-  const handleSupplierChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePurchaseOrderChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
-    setFilters((prev) => ({ ...prev, supplier: value }));
-    setSupplierDropdownVisible(e.target.value.length > 0);
+    setFilters((prev) => ({ ...prev, purordno: value }));
+    setPurchaseOrderDropdownVisible(e.target.value.length > 0);
 
     const filtered = purchases
-      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
-
-    setSupplierSuggestions(Array.from(new Set(filtered)));
-  };
-
-  const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFilters((prev) => ({ ...prev, invoiceno: value }));
-    setInvoiceDropdownVisible(e.target.value.length > 0);
-
-    const filtered = purchases
-      .map((p) => p.InvoiceNumber?.invoicenumber) // Use optional chaining to avoid undefined
+      .map((p) => p.DocumentNumber?.documentnumber) // Use optional chaining to avoid undefined
       .filter(
-        (invoice): invoice is string =>
-          invoice !== undefined &&
-          invoice.toLowerCase().includes(value.toLowerCase())
-      ); // Type guard
-
-    setInvoiceSuggestions(filtered);
+        (purordno): purordno is string =>
+          purordno !== undefined &&
+          purordno.toLowerCase().includes(value.toLowerCase())
+      );
+    setPurchaseOrderSuggestions(filtered);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,22 +224,16 @@ export default function Component() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRefInvoice.current &&
-        !dropdownRefInvoice.current.contains(event.target as Node)
+        dropdownRefPurchaseOrder.current &&
+        !dropdownRefPurchaseOrder.current.contains(event.target as Node)
       ) {
-        setInvoiceDropdownVisible(false);
+        setPurchaseOrderDropdownVisible(false);
       }
       if (
         dropdownRefItem.current &&
         !dropdownRefItem.current.contains(event.target as Node)
       ) {
         setItemDropdownVisible(false);
-      }
-      if (
-        dropdownRefSupplier.current &&
-        !dropdownRefSupplier.current.contains(event.target as Node)
-      ) {
-        setSupplierDropdownVisible(false);
       }
     };
 
@@ -409,10 +304,6 @@ export default function Component() {
                   </div>
                   <div className="grid gap-1">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-1 p-2">
-                      <div className="font-medium text-muted-foreground">
-                        Supplier Name:
-                      </div>
-                      <div>{selectedTransaction.Entity.name}</div>
                       <div className="font-medium text-muted-foreground">
                         Purchase Date:
                       </div>
@@ -506,12 +397,6 @@ export default function Component() {
                     <div className="grid grid-cols-2">
                       <div className="font-medium">Total Items:</div>
                       <div>{selectedTransaction.TransactionItem.length}</div>
-                      <div className="font-medium">
-                        Tax Amount {""} {selectedTransaction.taxpercentage}%:
-                      </div>
-                      <div>
-                        {formatPrice(selectedTransaction.taxamount ?? 0)}
-                      </div>
                       <div className="font-medium">Total:</div>
                       <div>
                         {formatPrice(selectedTransaction.totalamount ?? 0)}
@@ -552,8 +437,7 @@ export default function Component() {
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                           <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                            <TableHead>Invoice No.</TableHead>
-                            <TableHead>Supplier</TableHead>
+                            <TableHead>Purchase Order No.</TableHead>
                             {/* <TableHead>Walk-in</TableHead> */}
                             <TableHead>From Milling</TableHead>
                             <TableHead>Status</TableHead>
@@ -577,10 +461,7 @@ export default function Component() {
                                   className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                                 >
                                   <TableCell>
-                                    {transaction.InvoiceNumber.invoicenumber}
-                                  </TableCell>
-                                  <TableCell>
-                                    {transaction.Entity.name}
+                                    {transaction.DocumentNumber.documentnumber}
                                   </TableCell>
                                   {/* <TableCell>
                                       {transaction.walkin ? "Yes" : "No"}
@@ -742,32 +623,32 @@ export default function Component() {
                   </Button>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="invoice-number">Invoice Number</Label>
+                  <Label htmlFor="document-number">Purchase Order Number</Label>
                   <Input
-                    id="invoice-number"
+                    id="document-number"
                     type="text"
-                    placeholder="Enter Invoice Number"
-                    value={filters.invoiceno}
-                    onChange={handleInvoiceChange}
+                    placeholder="Enter Purchase Order No."
+                    value={filters.purordno}
+                    onChange={handlePurchaseOrderChange}
                   />
-                  {isInvoiceDropdownVisible &&
-                    invoiceSuggestions.length > 0 && (
+                  {isPurchaseOrderDropdownVisible &&
+                    purchaseOrderSuggestions.length > 0 && (
                       <div
-                        ref={dropdownRefInvoice} // Attach ref to the dropdown
+                        ref={dropdownRefPurchaseOrder}
                         className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
                       >
-                        {invoiceSuggestions.map((invoice) => (
+                        {purchaseOrderSuggestions.map((purordno) => (
                           <div
-                            key={invoice}
+                            key={purordno}
                             className="p-2 cursor-pointer hover:bg-gray-200"
                             onClick={() =>
                               setFilters((prev) => ({
                                 ...prev,
-                                invoiceno: invoice,
+                                purordno: purordno,
                               }))
                             }
                           >
-                            {invoice}
+                            {purordno}
                           </div>
                         ))}
                       </div>
@@ -784,7 +665,7 @@ export default function Component() {
                   />
                   {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
                     <div
-                      ref={dropdownRefItem} // Attach ref to the dropdown
+                      ref={dropdownRefItem}
                       className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
                     >
                       {itemNameSuggestions.map((item) => (
@@ -800,35 +681,6 @@ export default function Component() {
                       ))}
                     </div>
                   )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="supplier">Supplierr</Label>
-                  <Input
-                    id="supplierr"
-                    type="text"
-                    placeholder="Enter supplier name"
-                    value={filters.supplier}
-                    onChange={handleSupplierChange}
-                  />
-                  {isSupplierDropdownVisible &&
-                    supplierSuggestions.length > 0 && (
-                      <div
-                        ref={dropdownRefSupplier} // Attach ref to the dropdown
-                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                      >
-                        {supplierSuggestions.map((supplier) => (
-                          <div
-                            key={supplier}
-                            className="p-2 cursor-pointer hover:bg-gray-200"
-                            onClick={() =>
-                              setFilters((prev) => ({ ...prev, supplier }))
-                            }
-                          >
-                            {supplier}
-                          </div>
-                        ))}
-                      </div>
-                    )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="frommilling">From Milling</Label>

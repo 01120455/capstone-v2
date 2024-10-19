@@ -11,26 +11,26 @@ interface Params {
 }
 
 export async function GET(req: NextRequest, { params }: { params: Params }) {
-  const { invoicenumber } = params; // Get the invoice number from params
+  const { documentnumber } = params;
 
-  if (!invoicenumber) {
+  if (!documentnumber) {
     return NextResponse.json(
-      { message: "Invoice number is required." },
+      { message: "Document number is required." },
       { status: 400 }
     );
   }
 
   try {
-    const exists = await prisma.invoiceNumber.findUnique({
+    const exists = await prisma.documentNumber.findUnique({
       where: {
-        invoicenumber,
+        documentnumber,
         deleted: false,
       },
     });
 
     return NextResponse.json({ exists: !!exists });
   } catch (error) {
-    console.error("Error checking invoice number:", error);
+    console.error("Error checking document number:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

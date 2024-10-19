@@ -4,11 +4,6 @@ const is11Digits = (val: string) => /^\d{10}$/.test(val);
 
 const transactionSchema = z.object({
   transactionid: z.number().optional(),
-  Entity: z.object({
-    entityid: z.number().optional(),
-    name: z.string().max(100, "Entity name is too long"),
-    contactnumber: z.string().max(11, "Contact number is too long").optional(),
-  }),
   createdat: date().optional(),
   type: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
@@ -18,12 +13,11 @@ const transactionSchema = z.object({
   }),
   walkin: z.boolean(),
   frommilling: z.boolean(),
-  taxpercentage: z.coerce.number().optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
   lastmodifiedat: date().optional(),
-  InvoiceNumber: z.object({
-    invoicenumberid: z.number().optional(),
-    invoicenumber: z.string().optional(),
+  DocumentNumber: z.object({
+    documentnumberid: z.number().optional(),
+    documentnumber: z.string().optional(),
   }),
   TransactionItem: z
     .array(
@@ -102,11 +96,6 @@ const TransactionItem = z.object({
 
 const transactionTableSchema = z.object({
   transactionid: z.number(),
-  Entity: z.object({
-    entityid: z.number(),
-    name: z.string(),
-    contactnumber: z.string().optional(),
-  }),
   createdat: date(),
   type: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
@@ -116,8 +105,6 @@ const transactionTableSchema = z.object({
   }),
   walkin: z.boolean(),
   frommilling: z.boolean(),
-  taxpercentage: z.coerce.number().optional(),
-  taxamount: z.number().multipleOf(0.01).optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
   User: z.object({
     userid: z.number().optional(),
@@ -135,11 +122,6 @@ const transactionTableSchema = z.object({
 
 const transactionOnlySchema = z.object({
   transactionid: z.number(),
-  Entity: z.object({
-    entityid: z.number(),
-    name: z.string(),
-    contactnumber: z.string().optional(),
-  }),
   createdat: date(),
   type: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
@@ -149,13 +131,11 @@ const transactionOnlySchema = z.object({
   }),
   walkin: z.boolean(),
   frommilling: z.boolean(),
-  taxpercentage: z.coerce.number().optional(),
-  taxamount: z.number().multipleOf(0.01).optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
   lastmodifiedat: date().optional(),
-  InvoiceNumber: z.object({
-    invoicenumberid: z.number().optional(),
-    invoicenumber: z.string().optional(),
+  DocumentNumber: z.object({
+    documentnumberid: z.number().optional(),
+    documentnumber: z.string().optional(),
   }),
 });
 

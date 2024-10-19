@@ -34,7 +34,7 @@ export const POST = async (req: NextRequest) => {
       req,
       NextResponse.next(),
       sessionOptions
-    );
+    ); // @ts-ignore
     const userid = session.user.userid;
 
     const formData = await req.formData();

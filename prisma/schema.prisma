@@ -20,33 +20,13 @@ model User {
   deleted         Boolean           @default(false)
   Item            Item[]
   TransactionItem TransactionItem[]
-  Entity          Entity[]
   Transaction     Transaction[]
 }
 
-model Entity {
-  entityid       Int           @id @default(autoincrement())
-  name           String        @db.VarChar(50)
-  contactnumber  String?       @db.VarChar(15)
-  lastmodifiedby Int?
-  lastmodifiedat DateTime?     @updatedAt
-  deleted        Boolean       @default(false)
-  User           User?         @relation(fields: [lastmodifiedby], references: [userid])
-  roles          EntityRole[]
-  transaction    Transaction[]
-}
 
-model EntityRole {
-  roleid   Int      @id @default(autoincrement())
-  entityid Int
-  role     RoleType
-  deleted  Boolean  @default(false)
-  Entity   Entity   @relation(fields: [entityid], references: [entityid])
-}
-
-model InvoiceNumber {
-  invoicenumberid Int           @id @default(autoincrement())
-  invoicenumber   String        @unique @db.VarChar(30)
+model DocumentNumber {
+  documentnumberid Int           @id @default(autoincrement())
+  documentnumber   String        @unique @db.VarChar(30)
   deleted         Boolean       @default(false)
   transaction     Transaction[]
 }
@@ -58,16 +38,13 @@ model Transaction {
   status          TransactionStatus
   walkin          Boolean           @default(false)
   frommilling     Boolean           @default(false)
-  taxpercentage   Int?
-  taxamount       Float?
   totalamount     Float?
   createdat       DateTime          @default(now())
   lastmodifiedby  Int?
   lastmodifiedat  DateTime?         @updatedAt
-  invoicenumberid Int?
+  documentnumberid Int?
   deleted         Boolean           @default(false)
-  Entity          Entity            @relation(fields: [entityid], references: [entityid])
-  InvoiceNumber   InvoiceNumber?    @relation(fields: [invoicenumberid], references: [invoicenumberid])
+  DocumentNumber   DocumentNumber?    @relation(fields: [documentnumberid], references: [documentnumberid])
   User            User?             @relation(fields: [lastmodifiedby], references: [userid])
   TransactionItem TransactionItem[]
 }
@@ -111,11 +88,6 @@ model ItemImage {
   itemid    Int
   imagepath String
   Item      Item   @relation(fields: [itemid], references: [itemid])
-}
-
-enum RoleType {
-  customer
-  supplier
 }
 
 enum SackWeightType {

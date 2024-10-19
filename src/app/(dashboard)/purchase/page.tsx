@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef } from "react";
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -63,14 +63,11 @@ import {
   TrashIcon,
   ViewIcon,
   FilePenIcon,
-  CheckCircle,
   FilterIcon,
 } from "@/components/icons/Icons";
 
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { User } from "@/interfaces/user";
-import SideMenu from "@/components/sidemenu";
 import {
   Pagination,
   PaginationContent,
@@ -95,7 +92,7 @@ export default function Component() {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
   const [items, setItems] = useState<ViewItem[]>([]);
   const [filters, setFilters] = useState({
-    invoiceno: "",
+    purordno: "",
     name: "",
     supplier: "",
     frommilling: "all",
@@ -115,8 +112,6 @@ export default function Component() {
     useState<TransactionItem | null>(null);
   const [purchaseToDelete, setPurchaseToDelete] =
     useState<TransactionTable | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -125,37 +120,19 @@ export default function Component() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [showFilter, setShowFilter] = useState(false);
 
-  const [supplierSuggestions, setSupplierSuggestions] = useState<string[]>([]);
-  const [invoiceSuggestions, setInvoiceSuggestions] = useState<string[]>([]);
-  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  const [isInvoiceDropdownVisible, setInvoiceDropdownVisible] = useState(false);
-  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  const [isSupplierDropdownVisible, setSupplierDropdownVisible] =
-    useState(false);
-  const dropdownRefInvoice = useRef<HTMLDivElement>(null);
-  const dropdownRefItem = useRef<HTMLDivElement>(null);
-  const dropdownRefSupplier = useRef<HTMLDivElement>(null);
-
-  const [supplierInputValue, setSupplierInputValue] = useState("");
-  const [supplierFormSuggestions, setSupplierFormSuggestions] = useState<
+  const [purchaseOrderSuggestions, setPurchaseOrderSuggestions] = useState<
     string[]
   >([]);
-  const [isSupplierFormDropdownVisible, setSupplierFormDropdownVisible] =
+  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  const [isPurchaseOrderDropdownVisible, setPurchaseOrderDropdownVisible] =
     useState(false);
-
+  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  const dropdownRefPurchaseOrder = useRef<HTMLDivElement>(null);
+  const dropdownRefItem = useRef<HTMLDivElement>(null);
   const [itemInputValue, setItemInputValue] = useState("");
   const [itemFormSuggestions, setItemFormSuggestions] = useState<string[]>([]);
   const [isItemFormDropdownVisible, setItemFormDropdownVisible] =
     useState(false);
-
-  // const [successItem, setSuccessItem] = useState<Transaction | null>(null);
-  // const [successAction, setSuccessAction] = useState("");
-  // const [showSuccessTI, setShowSuccessTI] = useState(false);
-  // const [successTransactionItem, setSuccessTransactionItem] =
-  //   useState<TransactionItemOnly | null>(null);
-  // const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
-  // const [showDeletedTransaction, setShowDeletedTransaction] =
-  //   useState<TransactionTable | null>(null);
 
   const toggleFilter = () => {
     setShowFilter(!showFilter);
@@ -163,9 +140,8 @@ export default function Component() {
 
   const filteredTransactions = useMemo(() => {
     return purchases.filter((purchase) => {
-      const invoiceNo =
-        purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
-      const supplierName = purchase.Entity.name.toLowerCase();
+      const purordno =
+        purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
 
       const statusMatches =
         filters.status === "all" || purchase.status === filters.status;
@@ -204,12 +180,9 @@ export default function Component() {
 
       console.log("Filtering Purchase:", purchase);
       console.log("Matches:", {
-        invoiceNoMatches:
-          !filters.invoiceno ||
-          invoiceNo.includes(filters.invoiceno.toLowerCase()),
-        supplierNameMatches:
-          !filters.supplier ||
-          supplierName.includes(filters.supplier.toLowerCase()),
+        purordnoMatches:
+          !filters.purordno ||
+          purordno.includes(filters.purordno.toLowerCase()),
         statusMatches,
 
         frommillingMatches,
@@ -218,10 +191,8 @@ export default function Component() {
       });
 
       return (
-        (!filters.invoiceno ||
-          invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
-        (!filters.supplier ||
-          supplierName.includes(filters.supplier.toLowerCase())) &&
+        (!filters.purordno ||
+          purordno.includes(filters.purordno.toLowerCase())) &&
         statusMatches &&
         frommillingMatches &&
         itemNameMatches &&
@@ -232,7 +203,7 @@ export default function Component() {
 
   const handleClearFilters = () => {
     setFilters({
-      invoiceno: "",
+      purordno: "",
       name: "",
       supplier: "",
       frommilling: "all",
@@ -249,15 +220,9 @@ export default function Component() {
       status: "pending",
       walkin: false,
       frommilling: false,
-      taxpercentage: 0,
-      Entity: {
-        entityid: 0,
-        name: "",
-        contactnumber: "",
-      },
-      InvoiceNumber: {
-        invoicenumberid: 0,
-        invoicenumber: "",
+      DocumentNumber: {
+        documentnumberid: 0,
+        documentnumber: "",
       },
       TransactionItem: [
         {
@@ -301,15 +266,9 @@ export default function Component() {
       status: "pending",
       walkin: false,
       frommilling: false,
-      taxpercentage: 0,
-      Entity: {
-        entityid: 0,
-        name: "",
-        contactnumber: "",
-      },
-      InvoiceNumber: {
-        invoicenumberid: 0,
-        invoicenumber: "",
+      DocumentNumber: {
+        documentnumberid: 0,
+        documentnumber: "",
       },
     },
   });
@@ -426,15 +385,9 @@ export default function Component() {
       status: "pending",
       walkin: false,
       frommilling: false,
-      taxpercentage: 0,
-      Entity: {
-        entityid: 0,
-        name: "",
-        contactnumber: "",
-      },
-      InvoiceNumber: {
-        invoicenumberid: 0,
-        invoicenumber: "",
+      DocumentNumber: {
+        documentnumberid: 0,
+        documentnumber: "",
       },
       TransactionItem: [
         {
@@ -501,15 +454,9 @@ export default function Component() {
       status: purchase.status,
       walkin: purchase.walkin,
       frommilling: purchase.frommilling,
-      taxpercentage: purchase.taxpercentage,
-      Entity: {
-        entityid: purchase.Entity.entityid,
-        name: purchase.Entity.name,
-        contactnumber: purchase.Entity?.contactnumber || "",
-      },
-      InvoiceNumber: {
-        invoicenumberid: purchase.InvoiceNumber.invoicenumberid,
-        invoicenumber: purchase.InvoiceNumber.invoicenumber,
+      DocumentNumber: {
+        documentnumberid: purchase.DocumentNumber.documentnumberid,
+        documentnumber: purchase.DocumentNumber.documentnumber,
       },
     });
   };
@@ -518,7 +465,6 @@ export default function Component() {
     setShowModal(false);
     setShowModalPurchaseItem(false);
     setShowModalEditPurchase(false);
-    setSupplierInputValue("");
     setItemInputValue("");
 
     form.reset({
@@ -527,15 +473,9 @@ export default function Component() {
       status: "pending",
       walkin: false,
       frommilling: false,
-      taxpercentage: 0,
-      Entity: {
-        entityid: 0,
-        name: "",
-        contactnumber: "",
-      },
-      InvoiceNumber: {
-        invoicenumberid: 0,
-        invoicenumber: "",
+      DocumentNumber: {
+        documentnumberid: 0,
+        documentnumber: "",
       },
       TransactionItem: [
         {
@@ -572,15 +512,9 @@ export default function Component() {
       status: "pending",
       walkin: false,
       frommilling: false,
-      taxpercentage: 0,
-      Entity: {
-        entityid: 0,
-        name: "",
-        contactnumber: "",
-      },
-      InvoiceNumber: {
-        invoicenumberid: 0,
-        invoicenumber: "",
+      DocumentNumber: {
+        documentnumberid: 0,
+        documentnumber: "",
       },
     });
   };
@@ -604,15 +538,9 @@ export default function Component() {
     formData.append("walkin", values.walkin.toString());
     formData.append("frommilling", values.frommilling.toString());
     formData.append(
-      "taxpercentage",
-      values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
+      "documentnumber",
+      values.DocumentNumber.documentnumber || ""
     );
-    formData.append("Entity[name]", values.Entity.name);
-    formData.append(
-      "Entity[contactnumber]",
-      values.Entity?.contactnumber?.toString() ?? ""
-    );
-    formData.append("invoicenumber", values.InvoiceNumber.invoicenumber || "");
 
     values.TransactionItem !== undefined
       ? values.TransactionItem.forEach((item, index) => {
@@ -662,9 +590,9 @@ export default function Component() {
         const uploadResult = await uploadRes.json();
         if (values.transactionid) {
           toast.success(
-            `Purchase with invoice number ${formPurchaseOnly.getValues(
-              "InvoiceNumber.invoicenumber"
-            )} has been updated`,
+            `Purchase Order No. ${""} ${formPurchaseOnly.getValues(
+              "DocumentNumber.documentnumber"
+            )} ${""} has been updated`,
             {
               description: "You have successfully edited the purchase.",
             }
@@ -672,9 +600,9 @@ export default function Component() {
           console.log("Purchase updated successfully");
         } else {
           toast.success(
-            `Purchase with invoice number ${form.getValues(
-              "InvoiceNumber.invoicenumber"
-            )} has been added`,
+            `Purchase Order No. ${""} ${form.getValues(
+              "DocumentNumber.documentnumber"
+            )} ${""} has been added`,
             {
               description: "You have successfully added the purchase.",
             }
@@ -692,10 +620,6 @@ export default function Component() {
         setShowModal(false);
         setShowModalEditPurchase(false);
         refreshPurchases();
-        // setSuccessAction(values.transactionid ? "edited" : "added");
-        // setSuccessItem(values);
-        setShowSuccess(true);
-        setSupplierInputValue("");
         setItemInputValue("");
         form.reset();
       } else {
@@ -761,11 +685,7 @@ export default function Component() {
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
         refreshPurchases();
-        // setSuccessAction(values.transactionitemid ? "edited" : "added");
-        // setSuccessTransactionItem(values);
-        // setShowSuccessTI(true);
         formPurchaseItemOnly.reset();
-        setSupplierInputValue("");
         setItemInputValue("");
       } else {
         console.error("Operation failed", await uploadRes.text());
@@ -802,15 +722,20 @@ export default function Component() {
     purchaseItem: TransactionItem
   ) => {
     handleDeletePurchaseItemConfirm(purchaseItem);
-    toast.success(`Purchase item ${purchaseItem.Item.name} has been deleted`, {
-      description: "You can now continue with what you are doing.",
-    });
+    toast.success(
+      `Purchase item ${""} ${purchaseItem.Item.name} ${""} has been deleted`,
+      {
+        description: "You can now continue with what you are doing.",
+      }
+    );
   };
 
   const handleDeleteWithToast = (itemid: number | undefined) => {
     handleDelete(itemid);
     toast.success(
-      `Purchase with invoice number ${purchaseToDelete?.InvoiceNumber.invoicenumber} has been deleted`,
+      `Purchase Order No. ${""} ${
+        purchaseToDelete?.DocumentNumber.documentnumber
+      } ${""} has been deleted`,
       {
         description: "You can now continue with what you are doing.",
       }
@@ -847,8 +772,6 @@ export default function Component() {
         setShowAlert(false);
         setPurchaseToDelete(null);
         refreshPurchases();
-        // setShowDeletionSuccess(true);
-        // setShowDeletedTransaction(data);
       } else {
         console.error("Error deleting Purchase:", response.status);
       }
@@ -909,17 +832,12 @@ export default function Component() {
     status: formPurchaseOnly.getValues("status") || "pending",
     walkin: formPurchaseOnly.getValues("walkin") || false,
     frommilling: formPurchaseOnly.getValues("frommilling") || false,
-    Entity: {
-      entityid: formPurchaseOnly.getValues("Entity.entityid") || null,
-      name: formPurchaseOnly.getValues("Entity.name") || "",
-      contactnumber: formPurchaseOnly.getValues("Entity.contactnumber"),
-    },
-    InvoiceNumber: {
-      invoicenumberid: formPurchaseOnly.getValues(
-        "InvoiceNumber.invoicenumberid"
+    DocumentNumber: {
+      documentnumberid: formPurchaseOnly.getValues(
+        "DocumentNumber.documentnumberid"
       ),
-      invoicenumber:
-        formPurchaseOnly.getValues("InvoiceNumber.invoicenumber") || "",
+      documentnumber:
+        formPurchaseOnly.getValues("DocumentNumber.documentnumber") || "",
     },
   };
 
@@ -980,27 +898,6 @@ export default function Component() {
     setCurrentPage(page);
   };
 
-  const handleFormSupplierInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setSupplierInputValue(value);
-    setSupplierFormDropdownVisible(e.target.value.length > 0);
-
-    const filtered = purchases
-      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
-
-    setSupplierFormSuggestions(Array.from(new Set(filtered)));
-  };
-
-  const handleFormSupplierClick = (itemName: string) => {
-    setSupplierInputValue(itemName);
-    form.setValue("Entity.name", itemName);
-    formPurchaseOnly.setValue("Entity.name", itemName);
-    setSupplierFormDropdownVisible(false);
-  };
-
   const handleFormItemInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -1027,32 +924,21 @@ export default function Component() {
     setItemFormDropdownVisible(false);
   };
 
-  const handleSupplierChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePurchaseOrderChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
-    setFilters((prev) => ({ ...prev, supplier: value }));
-    setSupplierDropdownVisible(e.target.value.length > 0);
+    setFilters((prev) => ({ ...prev, purordno: value }));
+    setPurchaseOrderDropdownVisible(e.target.value.length > 0);
 
     const filtered = purchases
-      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
-
-    setSupplierSuggestions(Array.from(new Set(filtered)));
-  };
-
-  const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFilters((prev) => ({ ...prev, invoiceno: value }));
-    setInvoiceDropdownVisible(e.target.value.length > 0);
-
-    const filtered = purchases
-      .map((p) => p.InvoiceNumber?.invoicenumber) // Use optional chaining to avoid undefined
+      .map((p) => p.DocumentNumber?.documentnumber) // Use optional chaining to avoid undefined
       .filter(
-        (invoice): invoice is string =>
-          invoice !== undefined &&
-          invoice.toLowerCase().includes(value.toLowerCase())
-      ); // Type guard
-
-    setInvoiceSuggestions(filtered);
+        (purordno): purordno is string =>
+          purordno !== undefined &&
+          purordno.toLowerCase().includes(value.toLowerCase())
+      );
+    setPurchaseOrderSuggestions(filtered);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1073,10 +959,10 @@ export default function Component() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRefInvoice.current &&
-        !dropdownRefInvoice.current.contains(event.target as Node)
+        dropdownRefPurchaseOrder.current &&
+        !dropdownRefPurchaseOrder.current.contains(event.target as Node)
       ) {
-        setInvoiceDropdownVisible(false);
+        setPurchaseOrderDropdownVisible(false);
       }
       if (
         dropdownRefItem.current &&
@@ -1084,13 +970,6 @@ export default function Component() {
       ) {
         setItemDropdownVisible(false);
         setItemFormDropdownVisible(false);
-      }
-      if (
-        dropdownRefSupplier.current &&
-        !dropdownRefSupplier.current.contains(event.target as Node)
-      ) {
-        setSupplierDropdownVisible(false);
-        setSupplierFormDropdownVisible(false);
       }
     };
 
@@ -1127,51 +1006,6 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
-        {/* {showSuccess && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              {successAction === "added"
-                ? "Purchase Order Added Successfully"
-                : "Purchase Order Edited Successfully"}
-            </AlertTitle>
-            <AlertDescription>
-              Purchase Order from supplier {""} {successItem?.Entity.name} {""}
-              with Invoice number {""}
-              {successItem?.InvoiceNumber.invoicenumber} {""} successfully {""}
-              {successAction === "added" ? "added" : "Edited"}
-            </AlertDescription>
-          </Alert>
-        )}
-        {showSuccessTI && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              {successAction === "added"
-                ? "Item Added Successfully"
-                : "Item Edited Successfully"}
-            </AlertTitle>
-            <AlertDescription>
-              Item {successTransactionItem?.Item.name} successfully{" "}
-              {successAction === "added"
-                ? "added to the purchase order."
-                : "edited successfully in the purchase order"}
-            </AlertDescription>
-          </Alert>
-        )}
-        {showDeletionSuccess && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              Transaction Deleted Successfully
-            </AlertTitle>
-            <AlertDescription>
-              Transaction with Invoice Number {""}{" "}
-              {showDeletedTransaction?.InvoiceNumber.invoicenumber} is deleted
-              successfully.
-            </AlertDescription>
-          </Alert>
-        )} */}
         <div className="container mx-auto px-4 md:px-6 py-8">
           <div
             className={`grid gap-6 ${
@@ -1188,7 +1022,7 @@ export default function Component() {
                 <div className="flex flex-row gap-2">
                   <Input
                     type="text"
-                    placeholder="Search invoice no. or supplier name..."
+                    placeholder="Search purchase order no. ..."
                     value={searchTerm}
                     onChange={handleSearch}
                     className="w-full md:w-auto mb-4"
@@ -1217,9 +1051,7 @@ export default function Component() {
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                         <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                          <TableHead>Invoice No.</TableHead>
-                          <TableHead>Supplier Name</TableHead>
-                          <TableHead>Contact No.</TableHead>
+                          <TableHead>Purchase Order No.</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>From Milling</TableHead>
                           <TableHead>Tax %</TableHead>
@@ -1240,11 +1072,7 @@ export default function Component() {
                           {paginatedPurchases.map((purchase) => (
                             <TableRow key={purchase.transactionid}>
                               <TableCell>
-                                {purchase.InvoiceNumber.invoicenumber}
-                              </TableCell>
-                              <TableCell>{purchase.Entity.name}</TableCell>
-                              <TableCell>
-                                {purchase.Entity?.contactnumber || "N/A"}
+                                {purchase.DocumentNumber.documentnumber}
                               </TableCell>
                               <TableCell>
                                 <Badge
@@ -1263,10 +1091,6 @@ export default function Component() {
                               </TableCell>
                               <TableCell>
                                 {purchase.frommilling ? "Yes" : "No"}
-                              </TableCell>
-                              <TableCell>{purchase.taxpercentage}</TableCell>
-                              <TableCell>
-                                {formatPrice(purchase.taxamount ?? 0)}
                               </TableCell>
                               <TableCell>
                                 {formatPrice(purchase.totalamount ?? 0)}
@@ -1800,8 +1624,8 @@ export default function Component() {
                       </AlertDialogTitle>
                       <AlertDialogDescription>
                         This action cannot be undone. This will permanently
-                        delete Invoice No.{" "}
-                        {purchaseToDelete.InvoiceNumber.invoicenumber} and all
+                        delete Purchase Order No.{" "}
+                        {purchaseToDelete.DocumentNumber.documentnumber} and all
                         of its contents from the database. Please confirm you
                         want to proceed with this action.
                       </AlertDialogDescription>
@@ -1847,95 +1671,20 @@ export default function Component() {
                           <div className="space-y-2">
                             <FormField
                               control={form.control}
-                              name="InvoiceNumber.invoicenumber"
+                              name="DocumentNumber.documentnumber"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel htmlFor="invoicenumber">
-                                    Invoice Number
+                                  <FormLabel htmlFor="documentnumber">
+                                    Purchase Order No.
                                   </FormLabel>
                                   <FormControl>
                                     <Input
                                       {...field}
-                                      id="invoicenumber"
+                                      id="documentnumber"
                                       type="text"
                                     />
                                   </FormControl>
                                   <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="Entity.name"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="name">
-                                    Supplier Name
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="name"
-                                      type="text"
-                                      value={supplierInputValue}
-                                      onChange={(e) => {
-                                        handleFormSupplierInputChange(e);
-                                        field.onChange(e); // Call the original onChange
-                                      }}
-                                      onFocus={() =>
-                                        setSupplierFormDropdownVisible(
-                                          supplierInputValue.length > 0 &&
-                                            !form.getValues("transactionid")
-                                        )
-                                      }
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                  {isSupplierFormDropdownVisible &&
-                                    supplierInputValue.length > 0 && (
-                                      <div
-                                        ref={dropdownRefSupplier} // Attach ref to the dropdown
-                                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                      >
-                                        {supplierFormSuggestions.map(
-                                          (supplier) => (
-                                            <div
-                                              key={supplier}
-                                              className="p-2 cursor-pointer hover:bg-gray-200"
-                                              onClick={() =>
-                                                handleFormSupplierClick(
-                                                  supplier
-                                                )
-                                              }
-                                            >
-                                              {supplier}
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    )}
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="Entity.contactnumber"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="contactnumber">
-                                    Contact Number
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="contactnumber"
-                                      type="number"
-                                    />
-                                  </FormControl>
                                 </FormItem>
                               )}
                             />
@@ -2007,26 +1756,6 @@ export default function Component() {
                                         </SelectItem>
                                       </SelectContent>
                                     </Select>
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="taxpercentage"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="taxpercentage">
-                                    Tax Percentage
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="taxpercentage"
-                                      type="number"
-                                    />
                                   </FormControl>
                                 </FormItem>
                               )}
@@ -2336,108 +2065,20 @@ ${
                             <div className="space-y-2">
                               <FormField
                                 control={formPurchaseOnly.control}
-                                name="InvoiceNumber.invoicenumber"
+                                name="DocumentNumber.documentnumber"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel htmlFor="invoicenumber">
-                                      Invoice Number
+                                    <FormLabel htmlFor="documentnumber">
+                                      Purchase Order Number
                                     </FormLabel>
                                     <FormControl>
                                       <Input
                                         {...field}
-                                        id="invoicenumber"
+                                        id="documentnumber"
                                         type="text"
                                       />
                                     </FormControl>
                                     <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          )}
-                          {(action === "add" ||
-                            (action === "edit" &&
-                              user?.role === ROLES.ADMIN)) && (
-                            <div className="space-y-2">
-                              <FormField
-                                control={formPurchaseOnly.control}
-                                name="Entity.name"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="name">
-                                      Supplier Name
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        id="name"
-                                        type="text"
-                                        value={
-                                          supplierInputValue ||
-                                          formPurchaseOnly.getValues(
-                                            "Entity.name"
-                                          )
-                                        }
-                                        onChange={(e) => {
-                                          handleFormSupplierInputChange(e);
-                                          field.onChange(e); // Call the original onChange
-                                        }}
-                                        onFocus={() =>
-                                          setSupplierFormDropdownVisible(
-                                            supplierInputValue.length > 0 &&
-                                              !form.getValues("transactionid")
-                                          )
-                                        }
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                    {isSupplierFormDropdownVisible &&
-                                      supplierInputValue.length > 0 && (
-                                        <div
-                                          ref={dropdownRefSupplier} // Attach ref to the dropdown
-                                          className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                        >
-                                          {supplierFormSuggestions.map(
-                                            (supplier) => (
-                                              <div
-                                                key={supplier}
-                                                className="p-2 cursor-pointer hover:bg-gray-200"
-                                                onClick={() =>
-                                                  handleFormSupplierClick(
-                                                    supplier
-                                                  )
-                                                }
-                                              >
-                                                {supplier}
-                                              </div>
-                                            )
-                                          )}
-                                        </div>
-                                      )}
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          )}
-                          {(action === "add" ||
-                            (action === "edit" &&
-                              user?.role === ROLES.ADMIN)) && (
-                            <div className="space-y-2">
-                              <FormField
-                                control={formPurchaseOnly.control}
-                                name="Entity.contactnumber"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="contactnumber">
-                                      Contact Number
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        id="contactnumber"
-                                        type="number"
-                                      />
-                                    </FormControl>
                                   </FormItem>
                                 )}
                               />
@@ -2519,30 +2160,6 @@ ${
                               />
                             </div>
                           )}
-                          {(action === "add" ||
-                            (action === "edit" &&
-                              user?.role === ROLES.ADMIN)) && (
-                            <div className="space-y-2">
-                              <FormField
-                                control={formPurchaseOnly.control}
-                                name="taxpercentage"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="taxpercentage">
-                                      Tax Percentage
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        id="taxpercentage"
-                                        type="number"
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          )}
                         </div>
                         <DialogFooter className="pt-2 lg:pt-1">
                           <div className="flex justify-end space-x-2">
@@ -2569,32 +2186,32 @@ ${
                   <Button onClick={handleClearFilters}>Clear Filters</Button>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="invoice-number">Invoice Number</Label>
+                  <Label htmlFor="document-number">Purchase Order No.</Label>
                   <Input
-                    id="invoice-number"
+                    id="document-number"
                     type="text"
-                    placeholder="Enter Invoice Number"
-                    value={filters.invoiceno}
-                    onChange={handleInvoiceChange}
+                    placeholder="Enter Purchase Order No."
+                    value={filters.purordno}
+                    onChange={handlePurchaseOrderChange}
                   />
-                  {isInvoiceDropdownVisible &&
-                    invoiceSuggestions.length > 0 && (
+                  {isPurchaseOrderDropdownVisible &&
+                    purchaseOrderSuggestions.length > 0 && (
                       <div
-                        ref={dropdownRefInvoice} // Attach ref to the dropdown
+                        ref={dropdownRefPurchaseOrder} // Attach ref to the dropdown
                         className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
                       >
-                        {invoiceSuggestions.map((invoice) => (
+                        {purchaseOrderSuggestions.map((purordno) => (
                           <div
-                            key={invoice}
+                            key={purordno}
                             className="p-2 cursor-pointer hover:bg-gray-200"
                             onClick={() =>
                               setFilters((prev) => ({
                                 ...prev,
-                                invoiceno: invoice,
+                                purordno: purordno,
                               }))
                             }
                           >
-                            {invoice}
+                            {purordno}
                           </div>
                         ))}
                       </div>
@@ -2627,35 +2244,6 @@ ${
                       ))}
                     </div>
                   )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="supplier">Supplierr</Label>
-                  <Input
-                    id="supplierr"
-                    type="text"
-                    placeholder="Enter supplier name"
-                    value={filters.supplier}
-                    onChange={handleSupplierChange}
-                  />
-                  {isSupplierDropdownVisible &&
-                    supplierSuggestions.length > 0 && (
-                      <div
-                        ref={dropdownRefSupplier} // Attach ref to the dropdown
-                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                      >
-                        {supplierSuggestions.map((supplier) => (
-                          <div
-                            key={supplier}
-                            className="p-2 cursor-pointer hover:bg-gray-200"
-                            onClick={() =>
-                              setFilters((prev) => ({ ...prev, supplier }))
-                            }
-                          >
-                            {supplier}
-                          </div>
-                        ))}
-                      </div>
-                    )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="frommilling">From Milling</Label>

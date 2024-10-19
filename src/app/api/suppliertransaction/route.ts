@@ -11,22 +11,15 @@ export async function GET(req: NextRequest) {
         deleted: false,
       },
       include: {
-        Entity: {
-          select: {
-            entityid: true,
-            name: true,
-            contactnumber: true,
-          },
-        },
         User: {
           select: {
             firstname: true,
             lastname: true,
           },
         },
-        InvoiceNumber: {
+        DocumentNumber: {
           select: {
-            invoicenumber: true,
+            documentnumber: true,
           },
         },
         TransactionItem: {

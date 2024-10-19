@@ -30,16 +30,11 @@ import Table, {
   TableRow,
 } from "@/components/ui/table";
 import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
-import { AlertCircle, CheckCircle, TrashIcon } from "@/components/icons/Icons";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Entity } from "@/schemas/entity.schema";
+import { TrashIcon } from "@/components/icons/Icons";
 import { toast } from "sonner";
-import { TransactionTable } from "@/schemas/transaction.schema";
 
 export default function Component() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
-  const [customers, setCustomers] = useState<Entity[]>([]);
-  const [sales, setSales] = useState<TransactionTable[]>([]);
   const [cart, setCart] = useState<
     {
       id: number;
@@ -52,73 +47,6 @@ export default function Component() {
       imagepath: string;
     }[]
   >([]);
-  // const [showSuccess, setShowSuccess] = useState(false);
-  const [successItem, setSuccessItem] = useState<AddSales | null>(null);
-  const [invoiceExists, setInvoiceExists] = useState(false);
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [emptyCart, setEmptyCart] = useState(false);
-  const [insufficientStock, setInsufficientStock] = useState(false);
-
-  useEffect(() => {
-    const getPurchases = async () => {
-      try {
-        const response = await fetch("/api/customertransaction");
-        const text = await response.text();
-        // console.log("Raw Response Text:", text);
-
-        const data = JSON.parse(text);
-
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
-
-        // console.log("Parsed Data with Date Conversion:", parsedData);
-
-        // console.log("Parsed Data:", parsedData);
-        setSales(parsedData);
-      } catch (error) {
-        console.error("Error in getSales:", error);
-      }
-    };
-
-    getPurchases();
-  }, []);
-
-  const [customerInputValue, setCustomerInputValue] = useState("");
-  const [customerFormSuggestions, setCustomerFormSuggestions] = useState<
-    string[]
-  >([]);
-  const [isCustomerFormDropdownVisible, setCustomerFormDropdownVisible] =
-    useState(false);
-
-  const dropdownRefCustomer = useRef<HTMLDivElement>(null);
-
-  const handleFormCustomerInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setCustomerInputValue(value);
-    setCustomerFormDropdownVisible(e.target.value.length > 0);
-
-    const filtered = sales
-      .flatMap((p) => p.Entity.name) // Adjust according to your data structure
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
-
-    setCustomerFormSuggestions(Array.from(new Set(filtered)));
-  };
-
-  const handleFormSupplierClick = (itemName: string) => {
-    setCustomerInputValue(itemName);
-    form.setValue("Customer.name", itemName);
-    setCustomerFormDropdownVisible(false);
-  };
 
   const form = useForm<AddSales>({
     resolver: zodResolver(salesTransactionSchema),
@@ -129,14 +57,9 @@ export default function Component() {
       walkin: false,
       frommilling: false,
       taxpercentage: 0,
-      Customer: {
-        entityid: 0,
-        name: "",
-        contactnumber: "",
-      },
-      InvoiceNumber: {
-        invoicenumberid: 0,
-        invoicenumber: "",
+      DocumentNumber: {
+        documentnumberid: 0,
+        documentnumber: "",
       },
       TransactionItem: cart.map((item) => ({
         transactionitemid: 0,
@@ -152,38 +75,6 @@ export default function Component() {
       })),
     },
   });
-
-  useEffect(() => {
-    const getCustomers = async () => {
-      try {
-        const response = await fetch("/api/customer");
-        const text = await response.text();
-        console.log("Raw Response Text:", text);
-
-        const data = JSON.parse(text);
-
-        // Convert date strings to Date objects
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
-
-        console.log("Parsed Data with Date Conversion:", parsedData);
-
-        setCustomers(parsedData);
-      } catch (error) {
-        console.error("Error in getPurchases:", error);
-      }
-    };
-
-    getCustomers();
-  }, []);
 
   useEffect(() => {
     async function getItems() {
@@ -253,34 +144,33 @@ export default function Component() {
   //   }
   // }, [showSuccess]);
 
-  useEffect(() => {
-    if (invoiceExists) {
-      const timer = setTimeout(() => {
-        setInvoiceExists(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [invoiceExists]);
+  // useEffect(() => {
+  //   if (invoiceExists) {
+  //     const timer = setTimeout(() => {
+  //       setInvoiceExists(false);
+  //     }, 5000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [invoiceExists]);
 
-  useEffect(() => {
-    if (emptyCart) {
-      const timer = setTimeout(() => {
-        setEmptyCart(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [emptyCart]);
+  // useEffect(() => {
+  //   if (emptyCart) {
+  //     const timer = setTimeout(() => {
+  //       setEmptyCart(false);
+  //     }, 5000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [emptyCart]);
 
   const addToCart = (item: ViewItem, quantity: number = 1) => {
-    // Transform the item to match the cart structure
     const cartItem = {
-      id: item.itemid, // Assuming itemid is the unique identifier
+      id: item.itemid,
       name: item.name,
       price: item.unitprice,
       type: item.type,
       sackweight: item.sackweight,
       unitofmeasurement: item.unitofmeasurement,
-      quantity, // Use the provided quantity here
+      quantity,
       imagepath: item.itemimage[0]?.imagepath ?? "",
     };
 
@@ -289,12 +179,10 @@ export default function Component() {
     );
 
     if (existingItemIndex > -1) {
-      // Update quantity if item already exists in the cart
       const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity += quantity; // Increment by the specified quantity
+      updatedCart[existingItemIndex].quantity += quantity;
       setCart(updatedCart);
     } else {
-      // Add new item to cart
       setCart([...cart, cartItem]);
     }
   };
@@ -315,7 +203,7 @@ export default function Component() {
 
   const checkInvoiceExists = async (invoicenumber: string) => {
     try {
-      const response = await fetch(`/api/invoicenumber/${invoicenumber}`);
+      const response = await fetch(`/api/documentnumber/${invoicenumber}`);
       if (response.ok) {
         const data = await response.json();
         return data.exists;
@@ -339,7 +227,7 @@ export default function Component() {
     }
 
     const invoiceExists = await checkInvoiceExists(
-      values.InvoiceNumber.invoicenumber
+      values.DocumentNumber.documentnumber
     );
     // if (invoiceExists) {
     //   // setInvoiceExists(true);
@@ -422,15 +310,9 @@ export default function Component() {
       values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
     );
 
-    formData.append("Entity[name]", values.Customer.name);
     formData.append(
-      "Entity[contactnumber]",
-      values.Customer.contactnumber ?? ""
-    );
-
-    formData.append(
-      "InvoiceNumber[invoicenumber]",
-      values.InvoiceNumber.invoicenumber || ""
+      "DocumentNumber[documentnumber]",
+      values.DocumentNumber.documentnumber || ""
     );
 
     values.TransactionItem?.forEach((item, index) => {
@@ -462,15 +344,12 @@ export default function Component() {
       if (uploadRes.ok) {
         toast.success(
           `Sales with invoice number ${form.getValues(
-            "InvoiceNumber.invoicenumber"
+            "DocumentNumber.documentnumber"
           )} has been created`,
           { description: "You have successfully added a sale." }
         );
 
         console.log("Sales added successfully");
-        setSuccessItem(values);
-        // setShowSuccess(true);
-        setCustomerInputValue("");
         form.reset();
         setCart([]);
         refreshItems();
@@ -485,9 +364,6 @@ export default function Component() {
   };
 
   const [inputValue, setInputValue] = useState("");
-  const filteredCustomersName = customers.filter((item) =>
-    item.name.toLowerCase().includes(inputValue.toLowerCase())
-  );
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -524,52 +400,6 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* {showSuccess && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              Sales added successfully.
-            </AlertTitle>
-            <AlertDescription>
-              Invoice Number {successItem?.InvoiceNumber.invoicenumber} {""}
-              for {""} {successItem?.Customer.name} {""} has been successfully
-              added to the system.
-            </AlertDescription>
-          </Alert>
-        )} */}
-        {invoiceExists && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-6 w-6" />
-              Invoice Number already exists.
-            </AlertTitle>
-            <AlertDescription>
-              Invoice Number {invoiceNumber} already exists in the system.
-            </AlertDescription>
-          </Alert>
-        )}
-        {emptyCart && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-6 w-6" />
-              Empty Cart Detected
-            </AlertTitle>
-            <AlertDescription>
-              Please add items to the cart before checkout.
-            </AlertDescription>
-          </Alert>
-        )}
-        {insufficientStock && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-6 w-6" />
-              Insufficient Stock
-            </AlertTitle>
-            <AlertDescription>
-              One or more items in the cart have insufficient stock.
-            </AlertDescription>
-          </Alert>
-        )}
         <div className="flex-1 overflow-y-auto p-4">
           <div className="grid gap-2 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_400px]">
             <div className="flex-1 overflow-auto p-4 md:p-8">
@@ -639,135 +469,20 @@ export default function Component() {
                     <div className="space-y-2">
                       <FormField
                         control={form.control}
-                        name="InvoiceNumber.invoicenumber"
+                        name="DocumentNumber.documentnumber"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel htmlFor="invoicenumber">
+                            <FormLabel htmlFor="documentnumber">
                               Invoice Number
                             </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
-                                id="invoicenumber"
+                                id="documentnumber"
                                 type="text"
                               />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    {/* <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="Customer.name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="name">Customer Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                id="name"
-                                type="text"
-                                value={inputValue}
-                                onChange={(e) => {
-                                  handleInputChange(e);
-                                  field.onChange(e); // Call the original onChange
-                                }}
-                                onFocus={() =>
-                                  setDropdownVisible(inputValue.length > 0)
-                                } // Show dropdown on focus
-                              />
-                            </FormControl>
-                            <FormMessage />
-                            {dropdownVisible &&
-                              filteredCustomersName.length > 0 && (
-                                <div
-                                  ref={dropdownRef} // Attach ref to the dropdown
-                                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-40 max-h-60 overflow-y-auto"
-                                >
-                                  {filteredCustomersName.map((customer) => (
-                                    <div
-                                      key={customer.entityid}
-                                      className="p-2 cursor-pointer hover:bg-gray-200"
-                                      onClick={() =>
-                                        handleItemClick(customer.name)
-                                      } // Call the function on item click
-                                    >
-                                      {customer.name}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                          </FormItem>
-                        )}
-                      />
-                    </div> */}
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="Customer.name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="name">Customer Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                id="name"
-                                type="text"
-                                value={customerInputValue}
-                                onChange={(e) => {
-                                  handleFormCustomerInputChange(e);
-                                  field.onChange(e); // Call the original onChange
-                                }}
-                                onFocus={() =>
-                                  setCustomerFormDropdownVisible(
-                                    customerInputValue.length > 0 &&
-                                      !form.getValues("transactionid")
-                                  )
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                            {isCustomerFormDropdownVisible &&
-                              customerInputValue.length > 0 && (
-                                <div
-                                  ref={dropdownRefCustomer} // Attach ref to the dropdown
-                                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                >
-                                  {customerFormSuggestions.map((customer) => (
-                                    <div
-                                      key={customer}
-                                      className="p-2 cursor-pointer hover:bg-gray-200"
-                                      onClick={() =>
-                                        handleFormSupplierClick(customer)
-                                      }
-                                    >
-                                      {customer}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="Customer.contactnumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="contactnumber">
-                              Contact Number
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                id="contactnumber"
-                                type="text"
-                              />
-                            </FormControl>
                           </FormItem>
                         )}
                       />
@@ -828,26 +543,6 @@ export default function Component() {
                                   <SelectItem value="false">No</SelectItem>
                                 </SelectContent>
                               </Select>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <FormField
-                        control={form.control}
-                        name="taxpercentage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel htmlFor="taxpercentage">
-                              Tax Percentage
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                id="taxpercentage"
-                                type="number"
-                              />
                             </FormControl>
                           </FormItem>
                         )}

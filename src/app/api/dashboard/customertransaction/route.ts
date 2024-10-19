@@ -12,24 +12,6 @@ export async function GET(req: NextRequest) {
         status: "paid",
       },
       include: {
-        Entity: {
-          select: {
-            entityid: true,
-            name: true,
-            contactnumber: true,
-          },
-        },
-        User: {
-          select: {
-            firstname: true,
-            lastname: true,
-          },
-        },
-        InvoiceNumber: {
-          select: {
-            invoicenumber: true,
-          },
-        },
         TransactionItem: {
           where: {
             deleted: false, // Add condition to filter only non-deleted TransactionItems
