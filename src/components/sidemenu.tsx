@@ -170,22 +170,6 @@ export default function SideMenu() {
                     </Link>
                     <Link
                       className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/customer"
-                      prefetch={false}
-                    >
-                      <UserIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Customer</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/supplier"
-                      prefetch={false}
-                    >
-                      <TruckIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Supplier</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
                       href="/user"
                       prefetch={false}
                     >
@@ -253,22 +237,6 @@ export default function SideMenu() {
                       <CalendarIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Purchase History</span>
                     </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/customer"
-                      prefetch={false}
-                    >
-                      <UserIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Customer</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/supplier"
-                      prefetch={false}
-                    >
-                      <TruckIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Supplier</span>
-                    </Link>
                   </>
                 )}
                 {user?.role === ROLES.SALES && (
@@ -289,14 +257,6 @@ export default function SideMenu() {
                       <CalendarIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Sales History</span>
                     </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/customer"
-                      prefetch={false}
-                    >
-                      <UserIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Customer</span>
-                    </Link>
                   </>
                 )}
                 {user?.role === ROLES.INVENTORY && (
@@ -309,14 +269,6 @@ export default function SideMenu() {
                       <BoxIcon className="inline-block w-4 h-4 mr-3" />
                       <span>Product</span>
                     </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/supplier"
-                      prefetch={false}
-                    >
-                      <TruckIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Supplier</span>
-                    </Link>
                   </>
                 )}
               </nav>
@@ -328,10 +280,12 @@ export default function SideMenu() {
             }  mt-auto`}
           >
             <div className="flex items-center space-x-3">
-              <Avatar>
-                <AvatarImage src={user?.imagepath} />
-                <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
-              </Avatar>
+              <div className="pl-2 lg:pl-2">
+                <Avatar>
+                  <AvatarImage src={user?.imagepath} />
+                  <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
+                </Avatar>
+              </div>
               <div
                 className={`flex flex-col lg:flex ${
                   isMenuOpen ? "block" : "hidden"
@@ -349,10 +303,7 @@ export default function SideMenu() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="ml-auto h-8 rounded-md px-3 text-xs"
-                >
+                <Button variant="ghost" size="icon">
                   <EllipsisIcon className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

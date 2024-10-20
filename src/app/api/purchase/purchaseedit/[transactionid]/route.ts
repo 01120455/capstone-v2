@@ -140,31 +140,19 @@ export const PUT = async (req: NextRequest) => {
       req,
       NextResponse.next(),
       sessionOptions
-    );
+    ); // @ts-ignore
     const userid = session.user.userid;
     const formData = await req.formData();
 
-    const invoicenumber = formData.get("invoicenumber") as string;
+    const invoicenumber = formData.get("documentnumber") as string;
     const frommilling = formData.get("frommilling") === "true";
-    const name = formData.get("Entity[name]") as string;
-    const contactnumber = formData.get("Entity[contactnumber]") as string;
     const statusString = formData.get("status") as string;
     const status = statusString as Status;
     const walkin = formData.get("walkin") === "true";
-    const taxpercentage =
-      parseFloat(formData.get("taxpercentage") as string) || 0;
 
     if (isNaN(transactionId)) {
       return NextResponse.json(
         { error: "Invalid transaction ID" },
-        { status: 400 }
-      );
-    }
-
-    // Validate Supplier Information
-    if (!name) {
-      return NextResponse.json(
-        { error: "Supplier name are required" },
         { status: 400 }
       );
     }
@@ -176,14 +164,11 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    // Ensure status is valid
     if (!Object.values(Status).includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // Execute Prisma transaction
     const updatedPurchase = await prisma.$transaction(async (tx) => {
-      // Find existing purchase
       const existingPurchase = await tx.transaction.findUnique({
         where: { transactionid: transactionId },
       });
@@ -193,90 +178,32 @@ export const PUT = async (req: NextRequest) => {
       }
 
       const totalAmount = existingPurchase.totalamount ?? 0;
-      const taxAmount = totalAmount * (taxpercentage / 100);
-      const totalAmountMinusTax = totalAmount - taxAmount;
-
-      // Find or create supplier entity with the appropriate role
-      let entityId;
-      const existingEntity = await tx.entity.findFirst({
-        where: {
-          name: name,
-        },
-        include: { roles: true },
-      });
-
-      const contactNumberIfNull =
-        contactnumber || existingEntity?.contactnumber || "";
-
-      if (existingEntity) {
-        entityId = existingEntity.entityid;
-        // Check if the entity has the correct role
-        await tx.entity.update({
-          where: { entityid: entityId },
-          data: {
-            contactnumber: contactNumberIfNull,
-          },
-        });
-
-        // Check if the entity has the correct role
-        const hasRole = existingEntity.roles.some((r) => r.role === "supplier");
-        if (!hasRole) {
-          // Add the role if it doesn't exist
-          await tx.entityRole.create({
-            data: {
-              entityid: entityId,
-              role: "supplier",
-            },
-          });
-        }
-      } else {
-        // If the entity does not exist, create a new entity and role
-        const newEntity = await tx.entity.create({
-          data: {
-            name,
-            contactnumber: contactNumberIfNull,
-            roles: {
-              create: [
-                {
-                  role: "supplier",
-                },
-              ], // Create the role along with the entity
-            },
-          },
-        });
-        entityId = newEntity.entityid;
-      }
 
       let invoiceNumberId;
-      const existingInvoiceNumber = await tx.invoiceNumber.findFirst({
-        where: { invoicenumber: invoicenumber },
+      const existingInvoiceNumber = await tx.documentNumber.findFirst({
+        where: { documentnumber: invoicenumber },
       });
 
       if (existingInvoiceNumber) {
-        invoiceNumberId = existingInvoiceNumber.invoicenumberid;
+        invoiceNumberId = existingInvoiceNumber.documentnumberid;
       } else {
-        const newInvoiceNumber = await tx.invoiceNumber.update({
-          where: { invoicenumberid: existingPurchase.invoicenumberid || 0 },
+        const newInvoiceNumber = await tx.documentNumber.update({
+          where: { documentnumberid: existingPurchase.documentnumberid || 0 },
           data: {
-            invoicenumber: invoicenumber,
+            documentnumber: invoicenumber,
           },
         });
-        invoiceNumberId = newInvoiceNumber.invoicenumberid;
+        invoiceNumberId = newInvoiceNumber.documentnumberid;
       }
 
-      // Update purchase
       const updatedPurchase = await tx.transaction.update({
         where: { transactionid: transactionId },
         data: {
           lastmodifiedby: userid,
-          entityid: entityId,
-          invoicenumberid: invoiceNumberId,
+          documentnumberid: invoiceNumberId,
           status: status,
           walkin: walkin,
           frommilling: frommilling,
-          taxpercentage: taxpercentage,
-          taxamount: taxAmount,
-          totalamount: totalAmountMinusTax,
         },
       });
 

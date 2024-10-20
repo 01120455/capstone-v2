@@ -7,21 +7,12 @@ export async function GET(req: NextRequest) {
   try {
     const transaction = await prisma.transaction.findMany({
       where: {
-        type: "sales",
+        type: "purchase",
+        status: "paid",
+        frommilling: true,
         recentdelete: false,
       },
       include: {
-        User: {
-          select: {
-            firstname: true,
-            lastname: true,
-          },
-        },
-        DocumentNumber: {
-          select: {
-            documentnumber: true,
-          },
-        },
         TransactionItem: {
           where: {
             recentdelete: false,
@@ -36,6 +27,8 @@ export async function GET(req: NextRequest) {
               },
             },
             transactionitemid: true,
+            type: true,
+            sackweight: true,
             unitofmeasurement: true,
             measurementvalue: true,
             unitprice: true,
@@ -46,7 +39,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: [
         {
-          createdat: "desc",
+          createdat: "desc", // First sort by createdat in descending order
         },
       ],
     });

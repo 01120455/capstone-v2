@@ -444,15 +444,6 @@ export default function Component() {
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            className="px-4 py-2"
-                            onClick={() => addToCart(item)}
-                          >
-                            Add to Cart
-                          </Button>
-                        </div>
                       </div>
                     ))}
                 </div>

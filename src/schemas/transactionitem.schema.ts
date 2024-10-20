@@ -20,6 +20,16 @@ const transactionItemSchema = z.object({
       })
       .default("bag25kg"),
   }),
+  type: z
+    .enum(["bigas", "palay", "resico"], {
+      invalid_type_error: "Invalid Type Received",
+    })
+    .default("palay"),
+  sackweight: z
+    .enum(["bag25kg", "cavan50kg"], {
+      invalid_type_error: "Invalid Type Received",
+    })
+    .default("bag25kg"),
   unitofmeasurement: z
     .string()
     .min(1, "Unit of Measurement is required")

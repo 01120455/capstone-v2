@@ -7,7 +7,8 @@ export async function GET(req: NextRequest) {
   try {
     const transaction = await prisma.transaction.findMany({
       where: {
-        type: "sales",
+        type: "purchase",
+        status: "paid",
         recentdelete: false,
       },
       include: {
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: [
         {
-          createdat: "desc",
+          createdat: "desc", // First sort by createdat in descending order
         },
       ],
     });

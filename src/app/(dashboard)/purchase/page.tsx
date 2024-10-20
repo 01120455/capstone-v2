@@ -321,28 +321,6 @@ export default function Component() {
     fetchItems();
   }, []);
 
-  // useEffect(() => {
-  //   if (showSuccess) {
-  //     setShowSuccessTI(false);
-  //     const timer = setTimeout(() => {
-  //       setShowSuccess(false);
-  //     }, 8000);
-
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [showSuccess]);
-
-  // useEffect(() => {
-  //   if (showSuccessTI) {
-  //     setShowSuccess(false);
-  //     const timer = setTimeout(() => {
-  //       setShowSuccessTI(false);
-  //     }, 8000);
-
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [showSuccessTI]);
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -955,7 +933,6 @@ export default function Component() {
     setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
-  // Hide dropdown when clicking outside of it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -1054,8 +1031,6 @@ export default function Component() {
                           <TableHead>Purchase Order No.</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>From Milling</TableHead>
-                          <TableHead>Tax %</TableHead>
-                          <TableHead>Tax Amount</TableHead>
                           <TableHead>Total Amount</TableHead>
                           <TableHead>Created at</TableHead>
                           {canAccessButton(ROLES.ADMIN) && (
@@ -1273,10 +1248,10 @@ export default function Component() {
                                           {purchaseItem.Item.name}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.Item.type}
+                                          {purchaseItem.type}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.Item.sackweight}
+                                          {purchaseItem.sackweight}
                                         </TableCell>
                                         <TableCell>
                                           {purchaseItem.unitofmeasurement}
@@ -1987,6 +1962,8 @@ export default function Component() {
                               <Button
                                 onClick={() =>
                                   append({
+                                    type: "palay",
+                                    sackweight: "bag25kg",
                                     Item: {
                                       type: "palay",
                                       name: "",

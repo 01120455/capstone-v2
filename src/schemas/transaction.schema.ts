@@ -40,6 +40,16 @@ const transactionSchema = z.object({
             })
             .default("bag25kg"),
         }),
+        type: z
+          .enum(["bigas", "palay", "resico"], {
+            invalid_type_error: "Invalid Type Received",
+          })
+          .default("palay"),
+        sackweight: z
+          .enum(["bag25kg", "cavan50kg"], {
+            invalid_type_error: "Invalid Type Received",
+          })
+          .default("bag25kg"),
         unitofmeasurement: z
           .string()
           .min(1, "Unit of Measurement is required")
@@ -80,6 +90,16 @@ const TransactionItem = z.object({
       })
       .default("bag25kg"),
   }),
+  type: z
+    .enum(["bigas", "palay", "resico"], {
+      invalid_type_error: "Invalid Type Received",
+    })
+    .default("palay"),
+  sackweight: z
+    .enum(["bag25kg", "cavan50kg"], {
+      invalid_type_error: "Invalid Type Received",
+    })
+    .default("bag25kg"),
   unitofmeasurement: z
     .string()
     .min(1, "Unit of Measurement is required")
@@ -113,9 +133,9 @@ const transactionTableSchema = z.object({
     lastname: z.string(),
   }),
   lastmodifiedat: date().optional(),
-  InvoiceNumber: z.object({
-    invoicenumberid: z.number().optional(),
-    invoicenumber: z.string().optional(),
+  DocumentNumber: z.object({
+    documentnumberid: z.number().optional(),
+    documentnumber: z.string().optional(),
   }),
   TransactionItem: z.array(TransactionItem),
 });

@@ -146,7 +146,7 @@ export async function GET(req: NextRequest) {
   try {
     const users = await prisma.user.findMany({
       where: {
-        deleted: false,
+        recentdelete: false,
       },
       select: {
         userid: true,

@@ -369,9 +369,9 @@ export default function Component() {
                                 (item, index) => (
                                   <TableRow key={index}>
                                     <TableCell>{item.Item.name}</TableCell>
-                                    <TableCell>{item.Item.type}</TableCell>
+                                    <TableCell>{item.type}</TableCell>
                                     <TableCell>
-                                      {item.Item.sackweight}
+                                      {item.sackweight}
                                     </TableCell>
                                     <TableCell>
                                       {item.unitofmeasurement}

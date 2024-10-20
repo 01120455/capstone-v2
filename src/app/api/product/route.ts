@@ -40,7 +40,7 @@ export const POST = async (req: NextRequest) => {
       req,
       NextResponse.next(),
       sessionOptions
-    );
+    ); // @ts-ignore
     const userid = session.user.userid;
 
     const formData = await req.formData();
@@ -50,12 +50,7 @@ export const POST = async (req: NextRequest) => {
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
     const stock = parseFloat(formData.get("stock") as string);
     const unitprice = parseFloat(formData.get("unitprice") as string);
-    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
     const image = formData.get("image") as File | null;
-
-    const finalReorderLevel = reorderlevel === 0 ? null : reorderlevel;
-    const finalCriticalLevel = criticallevel === 0 ? null : criticallevel;
 
     if (!Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
@@ -87,14 +82,12 @@ export const POST = async (req: NextRequest) => {
 
     if (
       isNaN(stock) ||
-      isNaN(unitprice) ||
-      isNaN(reorderlevel) ||
-      isNaN(criticallevel)
+      isNaN(unitprice)
     ) {
       return NextResponse.json(
         {
           error:
-            "Stock, unit price, reorder level, and critical level must be valid numbers and not negative values",
+            "Stock and unit price must be valid numbers and not negative values",
         },
         { status: 400 }
       );
@@ -153,19 +146,17 @@ export const POST = async (req: NextRequest) => {
       fileUrl = `${relativeUploadDir}/${filename}`;
     }
 
-    // Start transaction
     const [existingItem, result] = await prisma.$transaction(async (tx) => {
-      // Check if the item exists by matching name, type, and unit of measurement
       const existingItem = await tx.item.findFirst({
         where: {
           name,
           type,
           unitofmeasurement,
+          sackweight,
         },
       });
 
       if (existingItem) {
-        // Update the existing item
         const existingItemStock = existingItem.stock ?? 0;
         const newStock = existingItemStock + stock;
         const updatedItem = await tx.item.update({
@@ -174,13 +165,11 @@ export const POST = async (req: NextRequest) => {
             sackweight,
             stock: newStock,
             unitprice,
-            reorderlevel,
-            criticallevel,
             lastmodifiedby: userid,
-            deleted: false, // Ensure the item is marked as not deleted
+            recentdelete: false, 
             itemimage: fileUrl
               ? {
-                  deleteMany: {}, // delete all existing images
+                  deleteMany: {}, 
                   create: {
                     imagepath: fileUrl,
                   },
@@ -193,7 +182,6 @@ export const POST = async (req: NextRequest) => {
         });
         return [existingItem, updatedItem];
       } else {
-        // Create a new item if not found
         const newItem = await tx.item.create({
           data: {
             name,
@@ -202,8 +190,6 @@ export const POST = async (req: NextRequest) => {
             unitofmeasurement,
             stock,
             unitprice,
-            reorderlevel: finalReorderLevel,
-            criticallevel: finalCriticalLevel,
             lastmodifiedby: userid,
             itemimage: fileUrl
               ? {
@@ -240,7 +226,7 @@ export async function GET(req: NextRequest) {
   try {
     const items = await prisma.item.findMany({
       where: {
-        deleted: false,
+        recentdelete: false,
       },
       select: {
         itemid: true,
@@ -250,8 +236,6 @@ export async function GET(req: NextRequest) {
         unitofmeasurement: true,
         stock: true,
         unitprice: true,
-        reorderlevel: true,
-        criticallevel: true,
         itemimage: {
           select: {
             imagepath: true,
@@ -514,7 +498,7 @@ export const PUT = async (req: NextRequest) => {
       req,
       NextResponse.next(),
       sessionOptions
-    );
+    ); // @ts-ignore
     const userid = session.user.userid;
 
     const formData = await req.formData();
@@ -525,12 +509,7 @@ export const PUT = async (req: NextRequest) => {
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
     const stock = parseFloat(formData.get("stock") as string);
     const unitprice = parseFloat(formData.get("unitprice") as string);
-    const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-    const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
     const image = formData.get("image") as File | null;
-
-    const finalReorderLevel = reorderlevel === 0 ? null : reorderlevel;
-    const finalCriticalLevel = criticallevel === 0 ? null : criticallevel;
 
     if (!Object.values(SackWeight).includes(sackweightString as SackWeight)) {
       return NextResponse.json(
@@ -564,15 +543,6 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    if (isNaN(reorderlevel) || isNaN(criticallevel)) {
-      return NextResponse.json(
-        {
-          error:
-            "Reorder level and critical level must be valid numbers and not negative values",
-        },
-        { status: 400 }
-      );
-    }
 
     if (!Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
@@ -658,8 +628,6 @@ export const PUT = async (req: NextRequest) => {
             unitofmeasurement,
             stock,
             unitprice,
-            reorderlevel: finalReorderLevel,
-            criticallevel: finalCriticalLevel,
             lastmodifiedby: userid,
             itemimage: fileUrl
               ? {

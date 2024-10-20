@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 // Define the type for the params
 interface Params {
-  invoicenumber: string;
+  documentnumber: string;
 }
 
 export async function GET(req: NextRequest, { params }: { params: Params }) {

@@ -48,9 +48,9 @@ export const ArrowRightIcon = (props) => {
 //       viewBox="0 0 24 24"
 //       fill="none"
 //       stroke="currentColor"
-//       stroke-width="2"
-//       stroke-linecap="round"
-//       stroke-linejoin="round"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
 //     >
 //       <path d="M3 6h18" />
 //       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
@@ -70,9 +70,9 @@ export const ArrowRightIcon = (props) => {
 //       viewBox="0 0 24 24"
 //       fill="none"
 //       stroke="currentColor"
-//       stroke-width="2"
-//       stroke-linecap="round"
-//       stroke-linejoin="round"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
 //     >
 //       <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
 //       <path d="m15 5 4 4" />
@@ -89,9 +89,9 @@ export const PlusIcon = (props) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
       <path d="M5 12h14" />
       <path d="M12 5v14" />
@@ -269,7 +269,7 @@ export const EllipsisIcon = (props) => {
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#374151"
+      stroke="#0f172a"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -482,9 +482,9 @@ export const AlertCircle = (props) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       class="lucide lucide-circle-alert"
     >
       <circle cx="12" cy="12" r="10" />
@@ -503,9 +503,9 @@ export const CheckCircle = (props) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       class="lucide lucide-circle-check"
     >
       <circle cx="12" cy="12" r="10" />
@@ -523,9 +523,9 @@ export const Search = (props) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       class="lucide lucide-search"
     >
       <circle cx="11" cy="11" r="8" />
@@ -593,9 +593,9 @@ export const ArchiveIcon = (props) => {
 //       viewBox="0 0 24 24"
 //       fill="none"
 //       stroke="#0f172a"
-//       stroke-width="2"
-//       stroke-linecap="round"
-//       stroke-linejoin="round"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
 //       class="lucide lucide-wheat"
 //     >
 //       <path d="M2 22 16 8" />
@@ -620,9 +620,9 @@ export const ArchiveIcon = (props) => {
 //       viewBox="0 0 24 24"
 //       fill="none"
 //       stroke="#0f172a"
-//       stroke-width="2"
-//       stroke-linecap="round"
-//       stroke-linejoin="round"
+//       strokeWidth="2"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
 //       class="lucide lucide-user"
 //     >
 //       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
@@ -690,7 +690,7 @@ export const DotsHorizontalIcon = (props) => {
       <path
         d="M5 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2ZM19 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2ZM12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2Z"
         stroke="#0f172a"
-        stroke-width="1.5"
+        strokeWidth="1.5"
       ></path>
     </svg>
   );
@@ -708,10 +708,10 @@ export const ChevronLeftIcon = (props) => {
     >
       <path
         stroke="#0f172a"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-miterlimit="10"
-        stroke-width="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeMiterlimit="10"
+        strokeWidth="1.5"
         d="M15 19.92L8.48 13.4c-.77-.77-.77-2.03 0-2.8L15 4.08"
       ></path>
     </svg>
@@ -730,10 +730,10 @@ export const ChevronRightIcon = (props) => {
     >
       <path
         stroke="#0f172a"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-miterlimit="10"
-        stroke-width="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeMiterlimit="10"
+        strokeWidth="1.5"
         d="M8.91 19.92l6.52-6.52c.77-.77.77-2.03 0-2.8L8.91 4.08"
       ></path>
     </svg>
@@ -750,9 +750,9 @@ export const ChevronsUpDown = (props) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       class="lucide lucide-chevrons-up-down"
     >
       <path d="m7 15 5 5 5-5" />
@@ -771,9 +771,9 @@ export const Check = (props) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       class="lucide lucide-check"
     >
       <path d="M20 6 9 17l-5-5" />

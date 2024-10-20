@@ -34,232 +34,152 @@ export const POST = async (req: NextRequest) => {
       req,
       NextResponse.next(),
       sessionOptions
-    );
+    ); //@ts-ignore
     const userid = session.user.userid;
 
     const formData = await req.formData();
 
-    const invoicenumber = formData.get("invoicenumber") as string;
+    const invoicenumber = formData.get("documentnumber") as string;
     const frommilling = formData.get("frommilling") === "true";
-    const name = formData.get("Entity[name]") as string;
-    const contactnumber = formData.get("Entity[contactnumber]") as string;
     const statusString = formData.get("status") as string;
     const status = statusString as Status;
     const walkin = formData.get("walkin") === "true";
-    const taxpercentage =
-      parseFloat(formData.get("taxpercentage") as string) || 0;
 
-    // Validate Supplier Information
-    if (!name) {
-      return NextResponse.json(
-        { error: "Entity name are required" },
-        { status: 400 }
-      );
-    }
-
-    // Ensure status is valid
     if (!Object.values(Status).includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    const [newPurchase, newInvoice] = await prisma.$transaction(async (tx) => {
-      // Check or Create Entity with the appropriate role
-      let entityId;
-      const existingEntity = await tx.entity.findFirst({
-        where: {
-          name,
-        },
-        include: {
-          roles: true, // Assuming you have a relation with roles
-        },
-      });
+    const [newPurchase, newPurchaseOrderNo] = await prisma.$transaction(
+      async (tx) => {
+        let totalAmount = 0;
 
-      const contactNumberIfNull =
-        contactnumber || existingEntity?.contactnumber || "";
+        const items: any[] = [];
+        let index = 0;
 
-      if (existingEntity) {
-        entityId = existingEntity.entityid;
-        // Check if the entity has the correct role
-        await tx.entity.update({
-          where: { entityid: entityId },
+        while (formData.has(`TransactionItem[${index}][item][name]`)) {
+          const name = formData.get(
+            `TransactionItem[${index}][item][name]`
+          ) as string;
+          const typeString = formData.get(
+            `TransactionItem[${index}][item][type]`
+          ) as string;
+          const sackweightString = formData.get(
+            `TransactionItem[${index}][item][sackweight]`
+          ) as string;
+          const unitpriceString = formData.get(
+            `TransactionItem[${index}][unitprice]`
+          ) as string;
+          const unitofmeasurementstring = formData.get(
+            `TransactionItem[${index}][unitofmeasurement]`
+          ) as string;
+          const unitofmeasurement =
+            unitofmeasurementstring as UnitOfMeasurement;
+          const measurementvalueString = formData.get(
+            `TransactionItem[${index}][measurementvalue]`
+          ) as string;
+          const measurementvalue = parseFloat(measurementvalueString);
+          const unitprice = parseFloat(unitpriceString);
+
+          if (
+            !name ||
+            !Object.values(ItemType).includes(typeString as ItemType)
+          ) {
+            throw new Error("Invalid item details");
+          }
+
+          if (isNaN(unitprice) || isNaN(measurementvalue)) {
+            throw new Error("Number fields must be valid numbers");
+          }
+
+          if (!unitofmeasurement) {
+            throw new Error("Unit of measurement is required");
+          }
+
+          const type = typeString as ItemType;
+          const sackweight = sackweightString as SackWeight;
+
+          let itemId;
+          const existingItem = await tx.item.findFirst({
+            where: { name, type, unitofmeasurement },
+          });
+
+          if (existingItem) {
+            itemId = existingItem.itemid;
+
+            const currentStock = existingItem.stock ?? 0;
+            const newStock = currentStock + measurementvalue;
+
+            await tx.item.update({
+              where: { itemid: itemId },
+              data: { stock: newStock },
+            });
+          } else {
+            const newItem = await tx.item.create({
+              data: {
+                name,
+                type,
+                sackweight,
+                unitofmeasurement,
+                stock: measurementvalue,
+                lastmodifiedby: userid,
+              },
+            });
+            itemId = newItem.itemid;
+          }
+
+          const amount = measurementvalue * unitprice;
+          if (isNaN(amount)) {
+            throw new Error("Calculated amount is invalid");
+          }
+
+          totalAmount += amount;
+
+          items.push({
+            itemid: itemId,
+            type: type,
+            sackweight: sackweight,
+            unitofmeasurement: unitofmeasurement,
+            measurementvalue: measurementvalue,
+            unitprice: unitprice,
+            lastmodifiedby: userid,
+            totalamount: amount,
+          });
+
+          index++;
+        }
+
+        const newPurchaseOrderNo = await tx.documentNumber.create({
           data: {
-            contactnumber: contactNumberIfNull,
+            documentnumber: invoicenumber,
           },
         });
 
-        const hasRole = existingEntity.roles.some((r) => r.role === "supplier");
-
-        if (!hasRole) {
-          // Add the role if it doesn't exist
-          await tx.entityRole.create({
-            data: {
-              entityid: entityId,
-              role: "supplier", // Add the new role
-            },
-          });
-        }
-      } else {
-        const newEntity = await tx.entity.create({
+        const newPurchase = await tx.transaction.create({
           data: {
-            name,
-            contactnumber: contactNumberIfNull,
-            roles: {
-              create: [
-                {
-                  role: "supplier",
-                },
-              ], // Create the role along with the entity
-            },
+            lastmodifiedby: userid,
+            type: "purchase",
+            documentnumberid: newPurchaseOrderNo.documentnumberid,
+            status,
+            walkin,
+            frommilling,
+            totalamount: totalAmount,
           },
         });
-        entityId = newEntity.entityid;
-      }
 
-      // Initialize total amount for purchase
-      let totalAmount = 0;
+        const purchaseItemsData = items.map((item) => ({
+          ...item,
+          transactionid: newPurchase.transactionid,
+        }));
 
-      // Process Items
-      const items: any[] = [];
-      let index = 0;
-
-      while (formData.has(`TransactionItem[${index}][item][name]`)) {
-        const name = formData.get(
-          `TransactionItem[${index}][item][name]`
-        ) as string;
-        const typeString = formData.get(
-          `TransactionItem[${index}][item][type]`
-        ) as string;
-        const sackweightString = formData.get(
-          `TransactionItem[${index}][item][sackweight]`
-        ) as string;
-        const unitpriceString = formData.get(
-          `TransactionItem[${index}][unitprice]`
-        ) as string;
-        const unitofmeasurementstring = formData.get(
-          `TransactionItem[${index}][unitofmeasurement]`
-        ) as string;
-        const unitofmeasurement = unitofmeasurementstring as UnitOfMeasurement;
-        const measurementvalueString = formData.get(
-          `TransactionItem[${index}][measurementvalue]`
-        ) as string;
-        const measurementvalue = parseFloat(measurementvalueString);
-        const unitprice = parseFloat(unitpriceString);
-
-        // Validate Item Information
-        if (
-          !name ||
-          !Object.values(ItemType).includes(typeString as ItemType)
-        ) {
-          throw new Error("Invalid item details");
-        }
-
-        if (isNaN(unitprice) || isNaN(measurementvalue)) {
-          throw new Error("Number fields must be valid numbers");
-        }
-
-        if (!unitofmeasurement) {
-          throw new Error("Unit of measurement is required");
-        }
-
-        const type = typeString as ItemType;
-        const sackweight = sackweightString as SackWeight;
-
-        // Check or Create Item
-        let itemId;
-        const existingItem = await tx.item.findFirst({
-          where: { name, type, unitofmeasurement },
-        });
-
-        if (existingItem) {
-          itemId = existingItem.itemid;
-
-          const currentStock = existingItem.stock ?? 0;
-          const newStock = currentStock + measurementvalue;
-
-          await tx.item.update({
-            where: { itemid: itemId },
-            data: { stock: newStock },
+        if (purchaseItemsData.length > 0) {
+          await tx.transactionItem.createMany({
+            data: purchaseItemsData,
           });
-        } else {
-          const newItem = await tx.item.create({
-            data: {
-              name,
-              type,
-              sackweight,
-              unitofmeasurement,
-              stock: measurementvalue,
-              lastmodifiedby: userid,
-            },
-          });
-          itemId = newItem.itemid;
         }
 
-        // Calculate total amount for each purchase item
-        const amount = measurementvalue * unitprice;
-        if (isNaN(amount)) {
-          throw new Error("Calculated amount is invalid");
-        }
-
-        totalAmount += amount;
-
-        items.push({
-          itemid: itemId,
-          unitofmeasurement: unitofmeasurement,
-          measurementvalue: measurementvalue,
-          unitprice: unitprice,
-          lastmodifiedby: userid,
-          totalamount: amount,
-        });
-
-        index++;
+        return [newPurchase, newPurchaseOrderNo];
       }
-
-      // Create Invoice
-      const newInvoice = await tx.invoiceNumber.create({
-        data: {
-          invoicenumber,
-        },
-      });
-
-      const taxAmount = totalAmount * (taxpercentage / 100);
-      const totalAmountAfterTax = totalAmount - taxAmount;
-
-      // Create Purchase
-      const newPurchase = await tx.transaction.create({
-        data: {
-          lastmodifiedby: userid,
-          type: "purchase",
-          entityid: entityId,
-          invoicenumberid: newInvoice.invoicenumberid,
-          status,
-          walkin,
-          frommilling,
-          taxpercentage,
-          taxamount: taxAmount,
-        },
-      });
-
-      // Add transactionid to each item
-      const purchaseItemsData = items.map((item) => ({
-        ...item,
-        transactionid: newPurchase.transactionid,
-      }));
-
-      // Create Purchase Items
-      if (purchaseItemsData.length > 0) {
-        await tx.transactionItem.createMany({
-          data: purchaseItemsData,
-        });
-      }
-
-      // Update total amount of the purchase transaction
-      await tx.transaction.update({
-        where: { transactionid: newPurchase.transactionid },
-        data: { totalamount: totalAmountAfterTax },
-      });
-
-      return [newPurchase, newInvoice];
-    });
+    );
 
     return NextResponse.json(
       { message: "Purchase and items created successfully" },
@@ -279,30 +199,23 @@ export async function GET(req: NextRequest) {
     const transaction = await prisma.transaction.findMany({
       where: {
         type: "purchase",
-        deleted: false,
+        recentdelete: false,
       },
       include: {
-        Entity: {
-          select: {
-            entityid: true,
-            name: true,
-            contactnumber: true,
-          },
-        },
         User: {
           select: {
             firstname: true,
             lastname: true,
           },
         },
-        InvoiceNumber: {
+        DocumentNumber: {
           select: {
-            invoicenumber: true,
+            documentnumber: true,
           },
         },
         TransactionItem: {
           where: {
-            deleted: false, // Add condition to filter only non-deleted TransactionItems
+            recentdelete: false,
           },
           select: {
             transactionid: true,
@@ -314,6 +227,8 @@ export async function GET(req: NextRequest) {
               },
             },
             transactionitemid: true,
+            type: true,
+            sackweight: true,
             unitofmeasurement: true,
             measurementvalue: true,
             unitprice: true,
@@ -324,10 +239,10 @@ export async function GET(req: NextRequest) {
       },
       orderBy: [
         {
-          lastmodifiedat: "desc", // Then sort by lastmodifiedby in ascending order
+          lastmodifiedat: "desc",
         },
         {
-          createdat: "asc", // First sort by createdat in descending order
+          createdat: "asc",
         },
       ],
     });

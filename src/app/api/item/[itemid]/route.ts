@@ -23,8 +23,6 @@ export async function GET(
         unitofmeasurement: true,
         stock: true,
         unitprice: true,
-        reorderlevel: true,
-        criticallevel: true,
         itemimage: {
           select: {
             imagepath: true,

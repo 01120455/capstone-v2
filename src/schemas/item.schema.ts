@@ -26,8 +26,6 @@ export const item = z.object({
     .number()
     .multipleOf(0.01)
     .min(0, "Quantity cannot be negative"),
-  reorderlevel: z.coerce.number().min(0, "Reorder level cannot be negative"),
-  criticallevel: z.coerce.number().min(0, "Critical level cannot be negative"),
   imagepath: z.string().optional(),
   image: z.any().optional(),
 });
@@ -40,8 +38,6 @@ export const viewItem = z.object({
   unitofmeasurement: z.enum(["quantity", "weight"]),
   stock: z.number().multipleOf(0.01),
   unitprice: z.number().multipleOf(0.01),
-  reorderlevel: z.number(),
-  criticallevel: z.number(),
   User: z.object({
     userid: z.number(),
     firstname: z.string(),

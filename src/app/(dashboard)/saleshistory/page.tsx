@@ -96,7 +96,7 @@ export default function Component() {
   const filteredTransactions = useMemo(() => {
     return purchases.filter((purchase) => {
       const invoiceNo =
-        purchase.InvoiceNumber?.invoicenumber?.toLowerCase() || "";
+        purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
       const statusMatches =
         filters.status === "all" || purchase.status === filters.status;
       const walkinMatches =
@@ -197,7 +197,7 @@ export default function Component() {
     setInvoiceDropdownVisible(e.target.value.length > 0);
 
     const filtered = purchases
-      .map((p) => p.InvoiceNumber?.invoicenumber)
+      .map((p) => p.DocumentNumber?.documentnumber)
       .filter(
         (invoice): invoice is string =>
           invoice !== undefined &&
@@ -295,7 +295,7 @@ export default function Component() {
                   <div className="grid gap-1">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-1 p-2">
                       <div className="font-medium text-muted-foreground">
-                        Purchase Date:
+                        Sales Date:
                       </div>
                       <div>
                         {selectedTransaction.createdat
@@ -343,10 +343,8 @@ export default function Component() {
                                 (item, index) => (
                                   <TableRow key={index}>
                                     <TableCell>{item.Item.name}</TableCell>
-                                    <TableCell>{item.Item.type}</TableCell>
-                                    <TableCell>
-                                      {item.Item.sackweight}
-                                    </TableCell>
+                                    <TableCell>{item.type}</TableCell>
+                                    <TableCell>{item.sackweight}</TableCell>
                                     <TableCell>
                                       {item.unitofmeasurement}
                                     </TableCell>
@@ -435,7 +433,7 @@ export default function Component() {
                                   className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                                 >
                                   <TableCell>
-                                    {transaction.InvoiceNumber.invoicenumber}
+                                    {transaction.DocumentNumber.documentnumber}
                                   </TableCell>
                                   <TableCell>
                                     {transaction.walkin ? "True" : "False"}

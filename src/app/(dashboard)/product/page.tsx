@@ -111,40 +111,6 @@ export default function Component() {
   const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
   const dropdownRefItem = useRef<HTMLDivElement>(null);
 
-  // const [showSuccess, setShowSuccess] = useState(false);
-  // const [successItem, setSuccessItem] = useState<ViewItem | null>(null);
-  // const [successAction, setSuccessAction] = useState("");
-  // const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
-  // const [showDeletedItem, setShowDeletedItem] = useState<ViewItem | null>(null);
-
-  // useEffect(() => {
-  //   if (showSuccess) {
-  //     setShowAlertItem(false);
-  //     const timer = setTimeout(() => {
-  //       setShowSuccess(false);
-  //     }, 5000);
-
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [showSuccess]);
-
-  // const filteredItems = items.filter((item) => {
-  //   const searchTermLower = searchTerm.toLowerCase();
-
-  //   const nameMatches = item.name.toLowerCase().includes(searchTermLower);
-
-  //   const typeMatches = item.type.toLowerCase().includes(searchTermLower);
-
-  //   const sackweightMatches = item.sackweight
-  //     .toString()
-  //     .includes(searchTermLower);
-  //   const unitMatches = item.unitofmeasurement
-  //     .toLowerCase()
-  //     .includes(searchTermLower);
-
-  //   return nameMatches || typeMatches || sackweightMatches || unitMatches;
-  // });
-
   const toggleFilter = () => {
     setShowFilter(!showFilter);
   };
@@ -190,20 +156,6 @@ export default function Component() {
     setSearchTerm(""); // Clear the search term as well
   };
 
-  const checkItemLevels = (items: ViewItem[]) => {
-    items.forEach((item) => {
-      if (item.stock <= item.reorderlevel) {
-        setAlertItem(item);
-        setAlertType("reorder");
-        setShowAlertItem(true);
-      } else if (item.stock <= item.criticallevel) {
-        setAlertItem(item);
-        setAlertType("critical");
-        setShowAlertItem(true);
-      }
-    });
-  };
-
   useEffect(() => {
     if (showAlertItem) {
       const timer = setTimeout(() => {
@@ -238,7 +190,6 @@ export default function Component() {
         const response = await fetch("/api/product");
         const data = await response.json();
         setItems(data);
-        checkItemLevels(data);
       } catch (error) {
         console.error("Error fetching items:", error);
       }
@@ -256,8 +207,6 @@ export default function Component() {
       unitofmeasurement: "quantity",
       stock: 0,
       unitprice: 0,
-      reorderlevel: 0,
-      criticallevel: 0,
       imagepath: "",
       itemid: 0,
       image: undefined,
@@ -309,8 +258,6 @@ export default function Component() {
       unitofmeasurement: "quantity",
       stock: 0,
       unitprice: 0,
-      reorderlevel: 0,
-      criticallevel: 0,
       itemid: 0,
     });
   };
@@ -328,8 +275,6 @@ export default function Component() {
       unitofmeasurement: item.unitofmeasurement,
       stock: item.stock,
       unitprice: item.unitprice,
-      reorderlevel: item.reorderlevel,
-      criticallevel: item.criticallevel,
       imagepath: item.itemimage[0]?.imagepath ?? "",
     });
   };
@@ -346,8 +291,6 @@ export default function Component() {
       unitofmeasurement: "quantity",
       stock: 0,
       unitprice: 0,
-      reorderlevel: 0,
-      criticallevel: 0,
       itemid: 0,
     });
   };
@@ -364,8 +307,6 @@ export default function Component() {
     formData.append("unitofmeasurement", values.unitofmeasurement);
     formData.append("stock", values.stock.toString());
     formData.append("unitprice", values.unitprice.toString());
-    formData.append("reorderlevel", values.reorderlevel.toString());
-    formData.append("criticallevel", values.criticallevel.toString());
 
     if (selectedFile) {
       formData.append("image", selectedFile);
@@ -530,8 +471,6 @@ export default function Component() {
     unitofmeasurement: form.getValues("unitofmeasurement") || "",
     stock: form.getValues("stock") || 0,
     unitprice: form.getValues("unitprice") || 0,
-    reorderlevel: form.getValues("reorderlevel") || null,
-    criticallevel: form.getValues("criticallevel") || null,
   };
 
   const userActionWithAccess = (id: number, role: string, itemData: any) => {
@@ -593,7 +532,7 @@ export default function Component() {
   };
 
   const [inputValue, setInputValue] = useState("");
-  console.log(inputValue);
+  console.log("Input Value: ", inputValue);
   const filteredItemsName = items.filter((item) =>
     item.name.toLowerCase().includes(inputValue.toLowerCase())
   );
@@ -636,25 +575,6 @@ export default function Component() {
     };
   }, []);
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     if (
-  //       dropdownRef.current &&
-  //       !dropdownRef.current.contains(event.target as Node)
-  //     ) {
-  //       setDropdownVisible(false);
-  //     }
-  //   };
-
-  //   document.addEventListener("mousedown", handleClickOutside as EventListener);
-  //   return () => {
-  //     document.removeEventListener(
-  //       "mousedown",
-  //       handleClickOutside as EventListener
-  //     );
-  //   };
-  // }, []);
-
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
@@ -685,48 +605,6 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
-        {/* {showSuccess && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              {successAction === "added"
-                ? "Item Added Successfully"
-                : "Item Edited Successfully"}
-            </AlertTitle>
-            <AlertDescription>
-              Item {successItem?.name} with stocks of {successItem?.stock}{" "}
-              {successAction === "added" ? "added" : "edited"} successfully.
-            </AlertDescription>
-          </Alert>
-        )} */}
-        {/* {showDeletionSuccess && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              Item Deleted Successfully
-            </AlertTitle>
-            <AlertDescription>
-              Item {showDeletedItem?.name} with stocks of{" "}
-              {showDeletedItem?.stock} deleted successfully.
-            </AlertDescription>
-          </Alert>
-        )} */}
-        {showAlertItem && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-6 w-6" />
-              {alertType === "reorder"
-                ? "Reorder Level Reached"
-                : "Critical Level Reached"}
-            </AlertTitle>
-            <AlertDescription>
-              The stock level Item {alertItem?.name} Type {alertItem?.type} {""}{" "}
-              {alertItem?.unitofmeasurement} has reached the{" "}
-              {alertType === "reorder" ? "reorder" : "critical"} level. Please
-              take necessary action.
-            </AlertDescription>
-          </Alert>
-        )}
         <div className="container mx-auto px-4 md:px-6 py-8">
           <div className="flex items-center justify-between mb-6 -mr-6">
             <h1 className="text-2xl font-bold text-customColors-darkKnight">
@@ -785,8 +663,6 @@ export default function Component() {
                           <TableHead>Unit of Measurement</TableHead>
                           <TableHead>Available Stocks</TableHead>
                           <TableHead>Unit Price</TableHead>
-                          <TableHead>Reorder Level</TableHead>
-                          <TableHead>Critical Level</TableHead>
                           {canAccessButton(ROLES.ADMIN) && (
                             <TableHead>Last Modified by</TableHead>
                           )}
@@ -814,8 +690,6 @@ export default function Component() {
                             <TableCell>{item.unitofmeasurement}</TableCell>
                             <TableCell>{formatStock(item.stock)}</TableCell>
                             <TableCell>{formatPrice(item.unitprice)}</TableCell>
-                            <TableCell>{item.reorderlevel}</TableCell>
-                            <TableCell>{item.criticallevel}</TableCell>
                             {canAccessButton(ROLES.ADMIN) && (
                               <TableCell>
                                 {item.User.firstname} {item.User.lastname}
@@ -826,7 +700,13 @@ export default function Component() {
                                 {item.lastmodifiedat
                                   ? new Date(
                                       item.lastmodifiedat
-                                    ).toLocaleDateString("en-US")
+                                    ).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
                                   : "N/A"}
                               </TableCell>
                             )}
@@ -866,16 +746,6 @@ export default function Component() {
                               }
                             />
                           </PaginationItem>
-                          {/* {[...Array(totalPages)].map((_, index) => (
-                        <PaginationItem key={index}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(index + 1)}
-                            isActive={currentPage === index + 1}
-                          >
-                            {index + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))} */}
                           {currentPage > 3 && (
                             <>
                               <PaginationItem>
@@ -965,7 +835,7 @@ export default function Component() {
                   />
                   {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
                     <div
-                      ref={dropdownRefItem} // Attach ref to the dropdown
+                      ref={dropdownRefItem}
                       className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
                     >
                       {itemNameSuggestions.map((item) => (
@@ -993,7 +863,6 @@ export default function Component() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>{" "}
-                      {/* Keep "All" as the first option */}
                       <SelectItem value="palay">Palay</SelectItem>
                       <SelectItem value="bigas">Bigas</SelectItem>
                       <SelectItem value="resico">Resico</SelectItem>
@@ -1012,7 +881,6 @@ export default function Component() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>{" "}
-                      {/* Keep "All" as the first option */}
                       <SelectItem value="quantity">Quantity</SelectItem>
                       <SelectItem value="weight">Weight</SelectItem>
                     </SelectContent>
@@ -1021,7 +889,6 @@ export default function Component() {
               </div>
             </div>
           </div>
-
           <>
             {showImageModal && showImage && (
               <Dialog open={showImageModal} onOpenChange={closeImage}>
@@ -1127,22 +994,6 @@ export default function Component() {
                           )}
                         />
                       </div>
-                      {/* <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="name">Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} id="name" type="text" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div> */}
-                      {/* {action === "add" && ( */}
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
@@ -1158,7 +1009,7 @@ export default function Component() {
                                   value={inputValue || form.getValues("name")}
                                   onChange={(e) => {
                                     handleInputChange(e);
-                                    field.onChange(e); // Call the original onChange
+                                    field.onChange(e);
                                   }}
                                   onFocus={() =>
                                     setDropdownVisible(inputValue.length > 0)
@@ -1166,11 +1017,10 @@ export default function Component() {
                                 />
                               </FormControl>
                               <FormMessage />
-                              {/* Dropdown for filtered items */}
                               {dropdownVisible &&
                                 filteredItemsName.length > 0 && (
                                   <div
-                                    ref={dropdownRef} // Attach ref to the dropdown
+                                    ref={dropdownRef}
                                     className="absolute z-10 bg-white border border-gray-300 mt-1 max-h-60 overflow-y-auto"
                                   >
                                     {filteredItemsName.map((item) => (
@@ -1179,7 +1029,7 @@ export default function Component() {
                                         className="p-2 cursor-pointer hover:bg-gray-200"
                                         onClick={() =>
                                           handleItemClick(item.name)
-                                        } // Call the function on item click
+                                        }
                                       >
                                         {item.name}
                                       </div>
@@ -1190,59 +1040,6 @@ export default function Component() {
                           )}
                         />
                       </div>
-                      {/* )} */}
-
-                      {/* {action === "edit" && (
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="name">Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="name"
-                                    type="text"
-                                    value={inputValue || form.getValues("name")}
-                                    onChange={(e) => {
-                                      handleInputChange(e);
-                                      field.onChange(e); // Call the original onChange
-                                    }}
-                                    onFocus={() =>
-                                      setDropdownVisible(
-                                        inputValue.length > 0 &&
-                                          !form.getValues("itemid")
-                                      )
-                                    }
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                                {dropdownVisible &&
-                                  filteredItemsName.length > 0 && (
-                                    <div
-                                      ref={dropdownRef} // Attach ref to the dropdown
-                                      className="absolute z-10 bg-white border border-gray-300 mt-1 max-h-60 overflow-y-auto"
-                                    >
-                                      {filteredItemsName.map((item) => (
-                                        <div
-                                          key={item.itemid}
-                                          className="p-2 cursor-pointer hover:bg-gray-200"
-                                          onClick={() =>
-                                            handleItemClick(item.name)
-                                          } // Call the function on item click
-                                        >
-                                          {item.name}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      )} */}
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
@@ -1378,52 +1175,6 @@ export default function Component() {
                           )}
                         />
                       </div>
-                      {(action === "add" ||
-                        (action === "edit" && user?.role === ROLES.ADMIN)) && (
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="reorderlevel"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="reorderlevel">
-                                  Reorder Level
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="reorderlevel"
-                                    type="number"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      )}
-                      {(action === "add" ||
-                        (action === "edit" && user?.role === ROLES.ADMIN)) && (
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="criticallevel"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="criticallevel">
-                                  Critical Level
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="criticallevel"
-                                    type="number"
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      )}
                     </div>
                     <DialogFooter className="pt-2 lg:pt-1">
                       <div className="flex justify-end space-x-2">
