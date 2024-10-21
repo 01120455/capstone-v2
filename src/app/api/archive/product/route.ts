@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   try {
     const items = await prisma.item.findMany({
       where: {
-        deleted: true,
+        recentdelete: true,
       },
       select: {
         itemid: true,
@@ -16,8 +16,6 @@ export async function GET(req: NextRequest) {
         unitofmeasurement: true,
         stock: true,
         unitprice: true,
-        reorderlevel: true,
-        criticallevel: true,
         itemimage: {
           select: {
             imagepath: true,

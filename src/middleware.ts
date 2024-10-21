@@ -27,6 +27,7 @@ export async function middleware(req: NextRequest) {
       "/purchasehistory",
       "/user",
       "/archive",
+      "/purchase/frommillingtable",
     ],
     manager: [
       "/dashboard",
@@ -52,6 +53,7 @@ export async function middleware(req: NextRequest) {
     "/purchasehistory",
     "/user",
     "/archive",
+    "/purchase/frommillingtable",
   ];
 
   // Check if the request URL matches any of the protected paths

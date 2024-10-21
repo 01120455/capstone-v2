@@ -18,13 +18,13 @@ export const PUT = async (req: NextRequest) => {
       }
 
       const updateTransactionItem = await prisma.transactionItem.updateMany({
-        where: { transactionid: id, deleted: true },
-        data: { deleted: false },
+        where: { transactionid: id, recentdelete: true },
+        data: { recentdelete: false },
       });
 
       const updateTransaction = await prisma.transaction.update({
         where: { transactionid: id, type: "sales" },
-        data: { deleted: false },
+        data: { recentdelete: false },
       });
 
       return updateTransaction;

@@ -10,7 +10,7 @@ export const PUT = async (req: NextRequest) => {
 
     const updateUser = await prisma.$transaction(async (prisma) => {
       const existingUser = await prisma.user.findUnique({
-        where: { userid: id, deleted: true },
+        where: { userid: id, recentdelete: true },
       });
 
       if (!existingUser) {
@@ -19,7 +19,7 @@ export const PUT = async (req: NextRequest) => {
 
       const updateUser = await prisma.user.update({
         where: { userid: id },
-        data: { deleted: false, status: "active" },
+        data: { recentdelete: false },
       });
 
       return updateUser;

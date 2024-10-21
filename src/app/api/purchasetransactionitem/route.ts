@@ -5,24 +5,17 @@ const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
   try {
-    const users = await prisma.user.findMany({
+    const transactionItems = await prisma.transactionItem.findMany({
       where: {
-        recentdelete: true,
+        recentdelete: false, // Add condition to filter only non-deleted TransactionItems
       },
-      select: {
-        userid: true,
-        imagepath: true,
-        firstname: true,
-        middlename: true,
-        lastname: true,
-        role: true,
-        status: true,
-        username: true,
-        password: true,
+      include: {
+        Transaction: true,
+        Item: true,
       },
     });
 
-    return NextResponse.json(users, { status: 200 });
+    return NextResponse.json(transactionItems, { status: 200 });
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(

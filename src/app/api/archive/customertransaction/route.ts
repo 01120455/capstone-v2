@@ -8,30 +8,23 @@ export async function GET(req: NextRequest) {
     const transaction = await prisma.transaction.findMany({
       where: {
         type: "sales",
-        deleted: true,
+        recentdelete: true,
       },
       include: {
-        Entity: {
-          select: {
-            entityid: true,
-            name: true,
-            contactnumber: true,
-          },
-        },
         User: {
           select: {
             firstname: true,
             lastname: true,
           },
         },
-        InvoiceNumber: {
+        DocumentNumber: {
           select: {
-            invoicenumber: true,
+            documentnumber: true,
           },
         },
         TransactionItem: {
           where: {
-            deleted: true, // Add condition to filter only non-deleted TransactionItems
+            recentdelete: true, // Add condition to filter only non-deleted TransactionItems
           },
           select: {
             transactionid: true,

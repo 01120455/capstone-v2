@@ -17,6 +17,7 @@ import {
 import { useForm } from "react-hook-form";
 import { user, AddUser } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 export default function Component() {
   const [userSession, setUserSession] = useState<AddUser | null>(null);
@@ -145,6 +146,14 @@ export default function Component() {
           if (uploadResult.imagepath) {
             console.log("Image uploaded successfully:", uploadResult.imagepath);
           }
+          toast.success(
+            `User ${""} ${form.getValues(
+              "username"
+            )} ${""} your profile has been updated`,
+            {
+              description: "You have successfully updated your profile.",
+            }
+          );
 
           form.reset();
         } else {

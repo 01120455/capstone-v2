@@ -12,32 +12,21 @@ import {
   UsersIcon,
 } from "@/components/icons/Icons";
 import { AddUser, user } from "@/schemas/User.schema";
-import { Entity } from "@/schemas/entity.schema";
 import { TransactionTable } from "@/schemas/transaction.schema";
 import { ViewItem } from "@/schemas/item.schema";
 import { UserTable } from "./tables/usertable/page";
 import { ItemTable } from "./tables/itemtable/page";
 import { SalesTable } from "./tables/salestable/page";
 import { PurchaseTable } from "./tables/purchasetable/page";
-import { CustomersTable } from "./tables/customertable/page";
-import { SuppliersTable } from "./tables/suppliertable/page";
 import { get } from "lodash";
 import { PurchaseItemTable } from "./tables/purchaseitemtable/page";
 
-const tables = [
-  "Users",
-  "Items",
-  // "Sales",
-  "Purchases",
-  // "Customers",
-  "Purchase Items",
-  "Suppliers",
-];
+const tables = ["Users", "Items", "Sales", "Purchases", "Purchase Items"];
 
 const tableIcon = {
   Users: <UsersIcon />,
   Items: <BoxIcon />,
-  // Sales: <TagIcon />,
+  Sales: <TagIcon />,
   Purchases: <PurchaseIcon />,
   Customers: <UserIcon />,
   Suppliers: <TruckIcon />,
@@ -177,8 +166,6 @@ type ArchiveTableProps = {
 
 function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
   const [users, setUsers] = useState<AddUser[] | null>(null);
-  // const [customers, setCustomers] = useState<Entity[]>([]);
-  const [suppliers, setSuppliers] = useState<Entity[]>([]);
   const [sales, setSales] = useState<TransactionTable[]>([]);
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
   const [transactionItems, setTransactionItems] = useState<TransactionTable[]>(
@@ -201,68 +188,6 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
       }
     }
     getUsers();
-  }, []);
-
-  // useEffect(() => {
-  //   const getCustomers = async () => {
-  //     try {
-  //       const response = await fetch("/api/archive/customer");
-  //       const text = await response.text();
-  //       console.log("Raw Response Text:", text);
-
-  //       const data = JSON.parse(text);
-
-  //       const parsedData = data.map((item: any) => {
-  //         return {
-  //           ...item,
-  //           createdat: item.createdat ? new Date(item.createdat) : null,
-  //           lastmodifiedat: item.lastmodifiedat
-  //             ? new Date(item.lastmodifiedat)
-  //             : null,
-  //           taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-  //         };
-  //       });
-
-  //       console.log("Parsed Data with Date Conversion:", parsedData);
-
-  //       setCustomers(parsedData);
-  //     } catch (error) {
-  //       console.error("Error in getPurchases:", error);
-  //     }
-  //   };
-
-  //   getCustomers();
-  // }, []);
-
-  useEffect(() => {
-    const getSuppliers = async () => {
-      try {
-        const response = await fetch("/api/archive/supplier");
-        const text = await response.text();
-        console.log("Raw Response Text:", text);
-
-        const data = JSON.parse(text);
-
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
-
-        console.log("Parsed Data with Date Conversion:", parsedData);
-
-        setSuppliers(parsedData);
-      } catch (error) {
-        console.error("Error in getPurchases:", error);
-      }
-    };
-
-    getSuppliers();
   }, []);
 
   // useEffect(() => {
@@ -380,7 +305,6 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
     getItems();
   }, []);
 
-  // Render the corresponding table based on the type
   switch (type) {
     case "users":
       return (
@@ -414,26 +338,10 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
           onRestore={onRestore}
         />
       );
-    // case "customers":
-    //   return (
-    //     <CustomersTable
-    //       customers={customers}
-    //       searchTerm={searchTerm}
-    //       onRestore={onRestore}
-    //     />
-    //   );
     case "purchase items":
       return (
         <PurchaseItemTable
           purchases={transactionItems}
-          searchTerm={searchTerm}
-          onRestore={onRestore}
-        />
-      );
-    case "suppliers":
-      return (
-        <SuppliersTable
-          suppliers={suppliers}
           searchTerm={searchTerm}
           onRestore={onRestore}
         />

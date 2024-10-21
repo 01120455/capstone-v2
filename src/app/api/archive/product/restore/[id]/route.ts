@@ -10,7 +10,7 @@ export const PUT = async (req: NextRequest) => {
 
     const updateItem = await prisma.$transaction(async (prisma) => {
       const existingItem = await prisma.item.findUnique({
-        where: { itemid: id, deleted: true },
+        where: { itemid: id, recentdelete: true },
       });
 
       if (!existingItem) {
@@ -19,7 +19,7 @@ export const PUT = async (req: NextRequest) => {
 
       const updateItem = await prisma.item.update({
         where: { itemid: id },
-        data: { deleted: false },
+        data: { recentdelete: false },
       });
 
       return updateItem;

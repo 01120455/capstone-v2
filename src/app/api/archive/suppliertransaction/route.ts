@@ -8,30 +8,23 @@ export async function GET(req: NextRequest) {
     const transaction = await prisma.transaction.findMany({
       where: {
         type: "purchase",
-        deleted: true,
+        recentdelete: true,
       },
       include: {
-        Entity: {
-          select: {
-            entityid: true,
-            name: true,
-            contactnumber: true,
-          },
-        },
         User: {
           select: {
             firstname: true,
             lastname: true,
           },
         },
-        InvoiceNumber: {
+        DocumentNumber: {
           select: {
-            invoicenumber: true,
+            documentnumber: true,
           },
         },
         TransactionItem: {
           where: {
-            deleted: true,
+            recentdelete: true,
           },
           select: {
             transactionid: true,

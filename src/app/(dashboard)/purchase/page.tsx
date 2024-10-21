@@ -87,6 +87,26 @@ const ROLES = {
   ADMIN: "admin",
 };
 
+interface CombinedTransactionItem {
+  documentNumber?: string;
+  transactionitemid: number;
+  transactionid: number;
+  frommilling: boolean;
+  status: "pending" | "paid" | "cancelled";
+  Item: {
+    type: "bigas" | "palay" | "resico";
+    name: string;
+    sackweight: "bag25kg" | "cavan50kg";
+    itemid?: number;
+  };
+  type: "purchases" | "sales";
+  sackweight: "bag25kg" | "cavan50kg";
+  unitofmeasurement: string;
+  measurementvalue?: number;
+  unitprice?: number;
+  totalamount: number;
+}
+
 export default function Component() {
   const [user, setUser] = useState<User | null>(null);
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
@@ -143,12 +163,17 @@ export default function Component() {
       const purordno =
         purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
 
+      // Check if the purchase order number matches the search term
+      const purordnoMatches = purordno.includes(searchTerm.toLowerCase());
+
       const statusMatches =
         filters.status === "all" || purchase.status === filters.status;
+
       const frommillingMatches =
         filters.frommilling === "all" ||
         (filters.frommilling === "true" && purchase.frommilling) ||
         (filters.frommilling === "false" && !purchase.frommilling);
+
       const itemNameMatches = purchase.TransactionItem.some((item) => {
         const itemName = item?.Item?.name?.toLowerCase() || "";
         return itemName.includes(filters.name.toLowerCase());
@@ -157,9 +182,11 @@ export default function Component() {
       const createdAt = purchase.createdat
         ? new Date(purchase.createdat)
         : null;
+
       const start = filters.dateRange.start
         ? new Date(filters.dateRange.start)
         : null;
+
       const end = filters.dateRange.end
         ? new Date(filters.dateRange.end)
         : null;
@@ -180,26 +207,23 @@ export default function Component() {
 
       console.log("Filtering Purchase:", purchase);
       console.log("Matches:", {
-        purordnoMatches:
-          !filters.purordno ||
-          purordno.includes(filters.purordno.toLowerCase()),
+        purordnoMatches,
         statusMatches,
-
         frommillingMatches,
         itemNameMatches,
         dateRangeMatches,
       });
 
       return (
-        (!filters.purordno ||
-          purordno.includes(filters.purordno.toLowerCase())) &&
+        (!filters.purordno || purordnoMatches) &&
         statusMatches &&
         frommillingMatches &&
         itemNameMatches &&
-        dateRangeMatches
+        dateRangeMatches &&
+        (searchTerm === "" || purordnoMatches) // Include search term condition
       );
     });
-  }, [filters, purchases]);
+  }, [filters, purchases, searchTerm]);
 
   const handleClearFilters = () => {
     setFilters({
@@ -980,6 +1004,73 @@ export default function Component() {
     }));
   };
 
+  const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
+    const transactionsResponse = await fetch("/api/suppliertransaction");
+    const transactions: any[] = await transactionsResponse.json();
+    console.log("Transactions:", transactions);
+
+    const transactionItemsResponse = await fetch(
+      "/api/purchasetransactionitem"
+    );
+    const transactionItems: TransactionItem[] =
+      await transactionItemsResponse.json();
+    console.log("Transaction Items:", transactionItems);
+
+    const transactionMap = new Map<number, any>();
+    transactions.forEach((transaction) => {
+      transactionMap.set(transaction.transactionid, {
+        documentNumber: transaction.DocumentNumber?.documentnumber,
+        frommilling: transaction.frommilling,
+        type: transaction.type,
+        status: transaction.status,
+      });
+    });
+    console.log("Transaction Map:", Array.from(transactionMap.entries()));
+
+    const combinedData: CombinedTransactionItem[] = transactionItems.map(
+      (item) => {
+        const transactionInfo = transactionMap.get(item.transactionid) || {};
+
+        const combinedItem = {
+          ...item,
+          documentNumber: transactionInfo.documentNumber,
+          frommilling: transactionInfo.frommilling || false,
+          type: transactionInfo.type || "otherType",
+          status: transactionInfo.status || "otherStatus",
+        };
+
+        console.log("Combined Item:", combinedItem); // Log each combined item
+        return combinedItem;
+      }
+    );
+
+    // Filter out items with undefined documentNumber
+    const filteredData = combinedData.filter(
+      (item) => item.documentNumber !== undefined
+    );
+    console.log(
+      "Filtered Data (without undefined documentNumber):",
+      filteredData
+    ); // Log the filtered data
+
+    return filteredData;
+  };
+
+  const [transactionItem, setTransactionItem] = useState<
+    CombinedTransactionItem[]
+  >([]);
+
+  useEffect(() => {
+    const getData = async () => {
+      const combinedData = await fetchTransactionData();
+      setTransactionItem(combinedData);
+    };
+
+    getData();
+  }, []);
+
+  console.log("Transaction Item:", transactionItem);
+
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
@@ -1024,7 +1115,7 @@ export default function Component() {
                     <Table
                       style={{ width: "100%" }}
                       className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                      divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                      divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                         <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
@@ -1146,7 +1237,7 @@ export default function Component() {
                         </>
                       </TableBody>
                     </Table>
-                    <div className="flex items-center justify-center mt-2">
+                    <div className="flex items-center justify-center mt-4 mb-4">
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
@@ -1220,7 +1311,7 @@ export default function Component() {
                           <Table
                             style={{ width: "100%" }}
                             className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                            divClassname="min-h-[400px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                            divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
                           >
                             <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                               <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
@@ -2291,6 +2382,59 @@ ${
                 </div>
               </div>
             </div>
+          </div>
+          <div className="table-container relative">
+            <ScrollArea>
+              <Table
+                style={{ width: "100%" }}
+                className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
+                divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+              >
+                <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                  <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                    <TableHead>Invoice No.</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Item Name</TableHead>
+                    <TableHead>Item Type</TableHead>
+                    <TableHead>Sack Weight</TableHead>
+                    <TableHead>Unit of Measurement</TableHead>
+                    <TableHead>Measurement Value</TableHead>
+                    <TableHead>Unit Price</TableHead>
+                    <TableHead>Total Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactionItem.map((purchaseItem) => (
+                    <TableRow key={purchaseItem.transactionitemid}>
+                      <TableCell>{purchaseItem.documentNumber}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`px-2 py-1 rounded-full ${
+                            purchaseItem.status === "paid"
+                              ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                              : purchaseItem.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                              : purchaseItem.status === "cancelled"
+                              ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                          }`}
+                        >
+                          {purchaseItem.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{purchaseItem.Item.name}</TableCell>
+                      <TableCell>{purchaseItem.Item.type}</TableCell>
+                      <TableCell>{purchaseItem.sackweight}</TableCell>
+                      <TableCell>{purchaseItem.unitofmeasurement}</TableCell>
+                      <TableCell>{purchaseItem.measurementvalue}</TableCell>
+                      <TableCell>{purchaseItem.unitprice}</TableCell>
+                      <TableCell>{purchaseItem.totalamount}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
         </div>
       </div>
