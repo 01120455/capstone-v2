@@ -43,7 +43,7 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    if (existingPurchaseItem.deleted) {
+    if (existingPurchaseItem.recentdelete) {
       return NextResponse.json(
         { error: "Purchase Item is already marked as deleted" },
         { status: 400 }
@@ -57,7 +57,7 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    if (existingPurchase.deleted) {
+    if (existingPurchase.recentdelete) {
       return NextResponse.json(
         { error: "Purchase is already marked as deleted" },
         { status: 400 }
@@ -70,14 +70,14 @@ export const PUT = async (req: NextRequest) => {
         where: { transactionitemid: existingPurchaseItem.transactionitemid },
         data: {
           lastmodifiedby: userid,
-          deleted: true,
+          recentdelete: true,
         },
       }),
       prisma.transaction.update({
         where: { transactionid: existingPurchase.transactionid },
         data: {
           lastmodifiedby: userid,
-          deleted: true,
+          recentdelete: true,
         },
       }),
     ]);

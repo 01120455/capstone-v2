@@ -19,7 +19,7 @@ export const PUT = async (req: NextRequest) => {
       }),
       prisma.user.update({
         where: { userid: userId },
-        data: { deleted: true, status: "inactive" },
+        data: { recentdelete: true, status: "inactive" },
       }),
     ]);
 
@@ -27,7 +27,7 @@ export const PUT = async (req: NextRequest) => {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (existingUser.deleted) {
+    if (existingUser.recentdelete) {
       return NextResponse.json(
         { error: "User is already marked as deleted" },
         { status: 400 }

@@ -7,11 +7,14 @@ export async function GET(req: NextRequest) {
   try {
     const transactionItems = await prisma.transactionItem.findMany({
       where: {
-        recentdelete: false, // Add condition to filter only non-deleted TransactionItems
+        recentdelete: false,
       },
       include: {
         Transaction: true,
         Item: true,
+      },
+      orderBy: {
+        lastmodifiedat: "desc",
       },
     });
 

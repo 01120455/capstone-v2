@@ -112,6 +112,7 @@ const TransactionItem = z.object({
     .multipleOf(0.01)
     .min(0, "Price per unit cannot be negative"),
   totalamount: z.coerce.number().min(0, "Total amount cannot be negative"),
+  recentdelete: z.boolean().default(false).optional(),
 });
 
 const transactionTableSchema = z.object({

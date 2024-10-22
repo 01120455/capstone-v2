@@ -56,7 +56,6 @@ export default function Component() {
       status: "pending",
       walkin: false,
       frommilling: false,
-      taxpercentage: 0,
       DocumentNumber: {
         documentnumberid: 0,
         documentnumber: "",
@@ -305,10 +304,6 @@ export default function Component() {
     formData.append("status", values.status);
     formData.append("walkin", values.walkin.toString());
     formData.append("frommilling", values.frommilling.toString());
-    formData.append(
-      "taxpercentage",
-      values.taxpercentage !== undefined ? values.taxpercentage.toString() : ""
-    );
 
     formData.append(
       "DocumentNumber[documentnumber]",
@@ -401,7 +396,7 @@ export default function Component() {
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid gap-2 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_400px]">
+          <div className="grid gap-2 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_450px]">
             <div className="flex-1 overflow-auto p-4 md:p-8">
               <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] w-auto border rounded-lg p-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-8">
@@ -410,6 +405,7 @@ export default function Component() {
                       <div
                         key={item.itemid}
                         className="bg-white rounded-lg shadow-md p-4 flex flex-col"
+                        onClick={() => addToCart(item)}
                       >
                         <div className="flex items-center justify-center">
                           <Image
@@ -420,7 +416,6 @@ export default function Component() {
                             width={250}
                             height={250}
                             className="rounded-lg mb-4 object-cover sm:h-40 sm:w-40 md:h-32 md:w-32 lg:h-56 lg:w-56"
-                            onClick={() => addToCart(item)}
                           />
                         </div>
                         <h3 className="text-lg font-semibold mb-2">
@@ -562,7 +557,7 @@ export default function Component() {
                                   type="number"
                                   min={1}
                                   value={item.quantity}
-                                  className="w-14 text-right"
+                                  className="w-20 text-right"
                                   onChange={(e) =>
                                     updateQuantity(
                                       index,

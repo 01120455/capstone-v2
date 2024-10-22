@@ -19,7 +19,7 @@ export const PUT = async (req: NextRequest) => {
       }),
       prisma.item.update({
         where: { itemid: itemId },
-        data: { deleted: true },
+        data: { recentdelete: true },
       }),
     ]);
 

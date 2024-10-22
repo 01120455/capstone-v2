@@ -697,7 +697,6 @@ export default function Component() {
                                   {...field}
                                   id="firstname"
                                   placeholder="John"
-                                  defaultValue={field.value}
                                 />
                               </FormControl>
                             </FormItem>
@@ -718,7 +717,6 @@ export default function Component() {
                                   {...field}
                                   id="middlename"
                                   placeholder="Alcarra"
-                                  defaultValue={field.value}
                                 />
                               </FormControl>
                             </FormItem>
@@ -739,7 +737,6 @@ export default function Component() {
                                   {...field}
                                   id="lastname"
                                   placeholder="Doe"
-                                  defaultValue={field.value}
                                 />
                               </FormControl>
                             </FormItem>
@@ -828,7 +825,6 @@ export default function Component() {
                                   {...field}
                                   id="username"
                                   placeholder="JohnDoe@gmail.com"
-                                  defaultValue={field.value}
                                 />
                               </FormControl>
                             </FormItem>
@@ -847,7 +843,6 @@ export default function Component() {
                                   {...field}
                                   id="password"
                                   type="password"
-                                  defaultValue={field.value}
                                   placeholder={
                                     form.getValues("userid")
                                       ? "Leave blank if not changing"

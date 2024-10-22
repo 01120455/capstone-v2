@@ -79,7 +79,7 @@ export const PUT = async (req: NextRequest) => {
       req,
       NextResponse.next(),
       sessionOptions
-    );
+    ); // @ts-ignore
     const userid = session.user.userid;
 
     // Use a Prisma transaction
@@ -93,7 +93,7 @@ export const PUT = async (req: NextRequest) => {
         throw new Error("Purchase Item not found");
       }
 
-      if (existingPurchaseItem.deleted) {
+      if (existingPurchaseItem.recentdelete) {
         throw new Error("Purchase Item is already marked as deleted");
       }
 
@@ -102,7 +102,7 @@ export const PUT = async (req: NextRequest) => {
         where: { transactionitemid: purchaseId },
         data: {
           lastmodifiedby: userid,
-          deleted: true,
+          recentdelete: true,
         },
       });
 

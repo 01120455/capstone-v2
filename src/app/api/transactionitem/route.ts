@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
         Transaction: true,
         Item: true,
       },
+      orderBy: {
+        lastmodifiedat: "desc",
+      },
     });
 
     return NextResponse.json(transactionItems, { status: 200 });

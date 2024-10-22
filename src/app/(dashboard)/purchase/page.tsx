@@ -557,7 +557,7 @@ export default function Component() {
         setShowModal(false);
         setShowModalEditPurchase(false);
         refreshPurchases();
-        setItemInputValue("");
+        refreshTransactionItems();
         form.reset();
       } else {
         console.error("Upload failed", await uploadRes.text());
@@ -647,6 +647,7 @@ export default function Component() {
         console.log("Purchase Item deleted successfully");
         setShowAlertPurchaseItem(false);
         refreshPurchases();
+        refreshTransactionItems();
       } else {
         console.error("Error deleting Purchase Item:", response.status);
       }
@@ -709,6 +710,7 @@ export default function Component() {
         setShowAlert(false);
         setPurchaseToDelete(null);
         refreshPurchases();
+        refreshTransactionItems();
       } else {
         console.error("Error deleting Purchase:", response.status);
       }
@@ -934,9 +936,7 @@ export default function Component() {
     const transactions: any[] = await transactionsResponse.json();
     console.log("Transactions:", transactions);
 
-    const transactionItemsResponse = await fetch(
-      "/api/purchasetransactionitem"
-    );
+    const transactionItemsResponse = await fetch("/api/transactionitem");
     const transactionItems: TransactionItem[] =
       await transactionItemsResponse.json();
     console.log("Transaction Items:", transactionItems);
@@ -993,6 +993,11 @@ export default function Component() {
 
     getData();
   }, []);
+
+  const refreshTransactionItems = async () => {
+    const combinedData = await fetchTransactionData();
+    setTransactionItem(combinedData);
+  };
 
   console.log("Transaction Item:", transactionItem);
 
@@ -1117,10 +1122,7 @@ export default function Component() {
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
         <div className="container mx-auto px-4 md:px-6 py-8">
-          <div
-            className="grid gap-6 grid-cols-1
-            "
-          >
+          <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">
               <div className="flex  items-center justify-between mb-6 -mr-6">
                 <h1 className="text-2xl font-bold ">
@@ -1135,7 +1137,7 @@ export default function Component() {
                   onChange={handleSearch}
                   className="w-full md:w-auto"
                 />
-                <div className="flex flex-row gap-2 mt-6">
+                <div className="flex flex-row gap-2">
                   <Button onClick={handleAddPurchase}>
                     {isSmallScreen ? (
                       <PlusIcon className="w-6 h-6" />
@@ -2037,43 +2039,10 @@ export default function Component() {
                                               {...field}
                                               id="name"
                                               type="text"
-                                              value={itemInputValue}
-                                              onChange={(e) => {
-                                                handleFormItemInputChange(e);
-                                                field.onChange(e); // Call the original onChange
-                                              }}
-                                              onFocus={() => {
-                                                setItemFormDropdownVisible(
-                                                  itemInputValue.length > 0
-                                                );
-                                              }}
+                                              placeholder="Enter item name"
                                             />
                                           </FormControl>
                                           <FormMessage />
-                                          {isItemFormDropdownVisible &&
-                                            itemInputValue.length > 0 && (
-                                              <div
-                                                ref={dropdownRefItem} // Attach ref to the dropdown
-                                                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                              >
-                                                {itemFormSuggestions.map(
-                                                  (item) => (
-                                                    <div
-                                                      key={item}
-                                                      className="p-2 cursor-pointer hover:bg-gray-200"
-                                                      onClick={() =>
-                                                        handleFormItemClick(
-                                                          item,
-                                                          index
-                                                        )
-                                                      }
-                                                    >
-                                                      {item}
-                                                    </div>
-                                                  )
-                                                )}
-                                              </div>
-                                            )}
                                         </FormItem>
                                       )}
                                     />
@@ -2516,7 +2485,7 @@ ${
                                     onClick={() =>
                                       handleItemPageChange(index + 1)
                                     }
-                                    isActive={currentPage === index + 1}
+                                    isActive={currentItemPage === index + 1}
                                   >
                                     {index + 1}
                                   </PaginationLink>

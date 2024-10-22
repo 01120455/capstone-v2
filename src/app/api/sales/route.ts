@@ -42,7 +42,7 @@ export const POST = async (req: NextRequest) => {
     const invoicenumber = formData.get(
       "DocumentNumber[documentnumber]"
     ) as string;
-    const frommilling = formData.get("frommilling") === "true";
+    const frommilling = formData.get("frommilling") === "false";
     const statusString = formData.get("status") as string;
     const status = statusString as Status;
     const walkin = formData.get("walkin") === "true";
@@ -145,11 +145,19 @@ export const POST = async (req: NextRequest) => {
         index++;
       }
 
-      const newInvoice = await tx.documentNumber.create({
-        data: {
+      const existingInvoice = await tx.documentNumber.findUnique({
+        where: {
           documentnumber: invoicenumber,
         },
       });
+
+      const newInvoice =
+        existingInvoice ||
+        (await tx.documentNumber.create({
+          data: {
+            documentnumber: invoicenumber,
+          },
+        }));
 
       const newPurchase = await tx.transaction.create({
         data: {

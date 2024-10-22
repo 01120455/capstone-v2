@@ -32,7 +32,7 @@ export function PurchaseTable({
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
   const filteredPurchases = purchases?.filter((purchases) =>
-    `${purchases.InvoiceNumber.invoicenumber} ${purchases.Entity.name}`
+    `${purchases.DocumentNumber.documentnumber}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
@@ -79,11 +79,7 @@ export function PurchaseTable({
               <div className="font-medium text-muted-foreground">
                 Invoice Number:
               </div>
-              <div>{selectedTransaction.InvoiceNumber.invoicenumber}</div>
-              <div className="font-medium text-muted-foreground">
-                Customer Name:
-              </div>
-              <div>{selectedTransaction.Entity.name}</div>
+              <div>{selectedTransaction.DocumentNumber.documentnumber}</div>
               <div className="font-medium text-muted-foreground">
                 Purchase Date:
               </div>
@@ -150,10 +146,6 @@ export function PurchaseTable({
             <div className="grid grid-cols-2">
               <div className="font-medium">Total Items:</div>
               <div>{selectedTransaction.TransactionItem.length}</div>
-              <div className="font-medium">
-                Tax Amount {""} {selectedTransaction.taxpercentage}%:
-              </div>
-              <div>{formatPrice(selectedTransaction.taxamount ?? 0)}</div>
               <div className="font-medium">Total:</div>
               <div>{formatPrice(selectedTransaction.totalamount ?? 0)}</div>
             </div>
@@ -166,7 +158,6 @@ export function PurchaseTable({
               <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                 <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                   <TableHead>Invoice No.</TableHead>
-                  <TableHead>Customer Name</TableHead>
                   <TableHead>Walk-in</TableHead>
                   <TableHead>From Milling</TableHead>
                   <TableHead>Status</TableHead>
@@ -184,9 +175,8 @@ export function PurchaseTable({
                       className=" hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                     >
                       <TableCell>
-                        {transaction.InvoiceNumber.invoicenumber}
+                        {transaction.DocumentNumber.documentnumber}
                       </TableCell>
-                      <TableCell>{transaction.Entity.name}</TableCell>
                       <TableCell>
                         {transaction.walkin ? "True" : "False"}
                       </TableCell>

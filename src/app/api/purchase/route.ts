@@ -148,11 +148,19 @@ export const POST = async (req: NextRequest) => {
           index++;
         }
 
-        const newPurchaseOrderNo = await tx.documentNumber.create({
-          data: {
+        const existingPurchaseOrderNo = await tx.documentNumber.findUnique({
+          where: {
             documentnumber: invoicenumber,
           },
         });
+
+        const newPurchaseOrderNo =
+          existingPurchaseOrderNo ||
+          (await tx.documentNumber.create({
+            data: {
+              documentnumber: invoicenumber,
+            },
+          }));
 
         const newPurchase = await tx.transaction.create({
           data: {

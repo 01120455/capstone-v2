@@ -70,6 +70,11 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const ROLES = {
   SALES: "sales",
@@ -611,38 +616,109 @@ export default function Component() {
               Product Management
             </h1>
           </div>
-          <div
-            className={`grid gap-6 ${
-              showFilter ? "grid-cols-[1fr_220px]" : "auto-cols-fr"
-            }`}
-          >
+          <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between gap-4">
+                  <Input
+                    type="text"
+                    placeholder="Search item name..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full md:w-auto"
+                  />
                   <div className="flex flex-row gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Search item name..."
-                      value={searchTerm}
-                      onChange={handleSearch}
-                      className="w-full md:w-auto mb-4"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={toggleFilter}
-                    >
-                      <span className="sr-only">Filter</span>
-                      <FilterIcon className="w-6 h-6" />
+                    <Button onClick={handleAddProduct}>
+                      {isSmallScreen ? (
+                        <PlusIcon className="w-6 h-6" />
+                      ) : (
+                        "Add Product"
+                      )}
                     </Button>
+                    <Popover>
+                      <PopoverTrigger>
+                        <FilterIcon className="w-6 h-6" />
+                      </PopoverTrigger>
+                      <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
+                        <h2 className="text-lg font-bold mb-4">Filters</h2>
+                        <div className="grid gap-4">
+                          <div className="grid gap-2">
+                            <Button onClick={handleClearFilters}>
+                              Clear Filters
+                            </Button>
+                          </div>
+                          <div className="grid gap-2">
+                            <span className="text-sm">Item Name</span>
+                            <Input
+                              id="name"
+                              type="text"
+                              placeholder="Search item name..."
+                              value={filters.name}
+                              onChange={handleItemNameChange}
+                            />
+                            {isItemDropdownVisible &&
+                              itemNameSuggestions.length > 0 && (
+                                <div
+                                  ref={dropdownRefItem}
+                                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                                >
+                                  {itemNameSuggestions.map((item) => (
+                                    <div
+                                      key={item}
+                                      className="p-2 cursor-pointer hover:bg-gray-200"
+                                      onClick={() =>
+                                        setFilters((prev) => ({
+                                          ...prev,
+                                          name: item,
+                                        }))
+                                      }
+                                    >
+                                      {item}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                          </div>
+                          <div className="grid gap-2">
+                            <span className="text-sm">Item Type</span>
+                            <Select
+                              value={filters.type}
+                              onValueChange={handleItemTypeChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Item Type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="palay">Palay</SelectItem>
+                                <SelectItem value="bigas">Bigas</SelectItem>
+                                <SelectItem value="resico">Resico</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="grid gap-2">
+                            <span className="text-sm">Unit of Measurement</span>
+                            <Select
+                              value={filters.unitofmeasurement}
+                              onValueChange={handleUnitOfMeasurementChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Unit of Measurement" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="quantity">
+                                  Quantity
+                                </SelectItem>
+                                <SelectItem value="weight">Weight</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                  <Button onClick={handleAddProduct}>
-                    {isSmallScreen ? (
-                      <PlusIcon className="w-6 h-6" />
-                    ) : (
-                      "Add Product"
-                    )}
-                  </Button>
                 </div>
               </div>
 
@@ -811,80 +887,6 @@ export default function Component() {
                     </div>
                     <ScrollBar orientation="horizontal" />
                   </ScrollArea>
-                </div>
-              </div>
-            </div>
-            <div
-              className={`bg-customColors-offWhite rounded-lg shadow-lg p-6 ${
-                showFilter ? "block" : "hidden"
-              }`}
-            >
-              <h2 className="text-lg font-bold mb-4">Filters</h2>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Button onClick={handleClearFilters}>Clear Filters</Button>
-                </div>
-                <div className="grid gap-2">
-                  <span className="text-sm">Item Name</span>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Search item name..."
-                    value={filters.name}
-                    onChange={handleItemNameChange}
-                  />
-                  {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
-                    <div
-                      ref={dropdownRefItem}
-                      className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                    >
-                      {itemNameSuggestions.map((item) => (
-                        <div
-                          key={item}
-                          className="p-2 cursor-pointer hover:bg-gray-200"
-                          onClick={() =>
-                            setFilters((prev) => ({ ...prev, name: item }))
-                          }
-                        >
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <span className="text-sm">Item Type</span>
-                  <Select
-                    value={filters.type}
-                    onValueChange={handleItemTypeChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Item Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>{" "}
-                      <SelectItem value="palay">Palay</SelectItem>
-                      <SelectItem value="bigas">Bigas</SelectItem>
-                      <SelectItem value="resico">Resico</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <span className="text-sm">Unit of Measurement</span>
-                  <Select
-                    value={filters.unitofmeasurement}
-                    onValueChange={handleUnitOfMeasurementChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Unit of Measurement" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>{" "}
-                      <SelectItem value="quantity">Quantity</SelectItem>
-                      <SelectItem value="weight">Weight</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             </div>

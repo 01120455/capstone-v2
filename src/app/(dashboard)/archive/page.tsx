@@ -12,7 +12,10 @@ import {
   UsersIcon,
 } from "@/components/icons/Icons";
 import { AddUser, user } from "@/schemas/User.schema";
-import { TransactionTable } from "@/schemas/transaction.schema";
+import {
+  TransactionItem,
+  TransactionTable,
+} from "@/schemas/transaction.schema";
 import { ViewItem } from "@/schemas/item.schema";
 import { UserTable } from "./tables/usertable/page";
 import { ItemTable } from "./tables/itemtable/page";
@@ -20,17 +23,45 @@ import { SalesTable } from "./tables/salestable/page";
 import { PurchaseTable } from "./tables/purchasetable/page";
 import { get } from "lodash";
 import { PurchaseItemTable } from "./tables/purchaseitemtable/page";
+import { toast } from "sonner";
 
-const tables = ["Users", "Items", "Sales", "Purchases", "Purchase Items"];
+const tables = [
+  "Users",
+  "Items",
+  // "Sales",
+  "Purchases",
+  "Purchase Items",
+];
 
 const tableIcon = {
   Users: <UsersIcon />,
   Items: <BoxIcon />,
-  Sales: <TagIcon />,
+  // Sales: <TagIcon />,
   Purchases: <PurchaseIcon />,
-  Customers: <UserIcon />,
-  Suppliers: <TruckIcon />,
+  // Customers: <UserIcon />,
+  // Suppliers: <TruckIcon />,
 };
+
+interface CombinedTransactionItem {
+  documentNumber?: string;
+  transactionitemid: number;
+  transactionid: number;
+  status: "pending" | "paid" | "cancelled";
+  Item: {
+    type: "bigas" | "palay" | "resico";
+    name: string;
+    sackweight: "bag25kg" | "cavan50kg";
+    itemid?: number;
+  };
+  type: "purchases" | "sales";
+  sackweight: "bag25kg" | "cavan50kg";
+  unitofmeasurement: string;
+  measurementvalue?: number;
+  unitprice?: number;
+  totalamount: number;
+  lastmodifiedat?: Date;
+  recentdelete: boolean | undefined;
+}
 
 export default function ArchivePage() {
   const [activeTab, setActiveTab] = useState("Users");
@@ -53,21 +84,37 @@ export default function ArchivePage() {
     switch (activeTab) {
       case "Users":
         endpoint = `/api/archive/user/restore/${id}`;
+        toast.success(`Deleted user has been restored`, {
+          description: "You have successfully restore user data.",
+        });
         break;
       case "Items":
         endpoint = `/api/archive/product/restore/${id}`;
+        toast.success(`Deleted item has been restored`, {
+          description: "You have successfully restore item data.",
+        });
         break;
       // case "Sales":
       //   endpoint = `/api/archive/customertransaction/restore/${id}`;
       //   break;
       case "Purchases":
         endpoint = `/api/archive/suppliertransaction/restore/${id}`;
+        toast.success(`Deleted Purchase Order has been restored`, {
+          description: "You have successfully restore Purchase Order data.",
+        });
         break;
-      case "Customers":
-        endpoint = `/api/archive/customer/restore/${id}`;
-        break;
-      case "Suppliers":
-        endpoint = `/api/archive/supplier/restore/${id}`;
+      // case "Customers":
+      //   endpoint = `/api/archive/customer/restore/${id}`;
+      //   break;
+      // case "Suppliers":
+      //   endpoint = `/api/archive/supplier/restore/${id}`;
+      //   break;
+      case "Purchase Items":
+        endpoint = `/api/archive/suppliertransactionitem/restore/${id}`;
+        toast.success(`Deleted purchase order item has been restored`, {
+          description:
+            "You have successfully restore purchase order item data.",
+        });
         break;
       default:
         console.error("Invalid active tab");
@@ -78,6 +125,10 @@ export default function ArchivePage() {
       const response = await fetch(endpoint, {
         method: "PUT",
       });
+
+      if (response.ok) {
+        console.log("Item restored successfully");
+      }
 
       if (!response.ok) {
         throw new Error("Failed to restore item");
@@ -123,7 +174,7 @@ export default function ArchivePage() {
                 ))}
               </TabsList>
             ) : (
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 {tables.map((table) => (
                   <TabsTrigger key={table} value={table}>
                     {table}
@@ -166,11 +217,11 @@ type ArchiveTableProps = {
 
 function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
   const [users, setUsers] = useState<AddUser[] | null>(null);
-  const [sales, setSales] = useState<TransactionTable[]>([]);
+  // const [sales, setSales] = useState<TransactionTable[]>([]);
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
-  const [transactionItems, setTransactionItems] = useState<TransactionTable[]>(
-    []
-  );
+  const [transactionItem, setTransactionItem] = useState<
+    CombinedTransactionItem[]
+  >([]);
   const [items, setItems] = useState<ViewItem[]>([]);
 
   useEffect(() => {
@@ -256,37 +307,71 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
     getPurchases();
   }, []);
 
-  useEffect(() => {
-    const getTransactionItems = async () => {
-      try {
-        const response = await fetch("/api/archive/transactionitem");
-        const text = await response.text();
-        // console.log("Raw Response Text:", text);
+  const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
+    const transactionsResponse = await fetch(
+      "/api/archive/suppliertransactionitem"
+    );
+    if (!transactionsResponse.ok)
+      throw new Error("Failed to fetch transactions");
+    const transactions: any[] = await transactionsResponse.json();
+    console.log("Transactions:", transactions);
 
-        const data = JSON.parse(text);
+    const transactionItemsResponse = await fetch(
+      "/api/archive/transactionitem"
+    );
+    if (!transactionItemsResponse.ok)
+      throw new Error("Failed to fetch transaction items");
+    const transactionItems: TransactionItem[] =
+      await transactionItemsResponse.json();
+    console.log("Transaction Items:", transactionItems);
 
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
+    const transactionMap = new Map<number, any>();
+    transactions.forEach((transaction) => {
+      transactionMap.set(transaction.transactionid, {
+        documentNumber: transaction.DocumentNumber?.documentnumber,
+        type: transaction.type,
+        status: transaction.status,
+      });
+    });
+    console.log("Transaction Map:", Array.from(transactionMap.entries()));
 
-        // console.log("Parsed Data with Date Conversion:", parsedData);
+    const combinedData: CombinedTransactionItem[] = transactionItems.map(
+      (item) => {
+        const transactionInfo = transactionMap.get(item.transactionid) || {};
 
-        // console.log("Parsed Data:", parsedData);
-        setTransactionItems(parsedData);
-      } catch (error) {
-        console.error("Error in getPurchases:", error);
+        const combinedItem = {
+          ...item,
+          documentNumber: transactionInfo.documentNumber,
+          type: transactionInfo.type || "otherType",
+          status: transactionInfo.status || "otherStatus",
+          // Use the recentdelete attribute directly from the item
+          recentdelete: item.recentdelete,
+        };
+
+        console.log("Combined Item:", combinedItem); // Log each combined item
+        return combinedItem;
       }
+    );
+
+    // Filter out items with undefined documentNumber and only include recent deletes
+    const filteredData = combinedData.filter(
+      (item) => item.documentNumber !== undefined && item.recentdelete == true
+    );
+    console.log("Filtered Data (recent deletes only):", filteredData); // Log the filtered data
+
+    return filteredData;
+  };
+
+  useEffect(() => {
+    const getData = async () => {
+      const combinedData = await fetchTransactionData();
+      setTransactionItem(combinedData);
     };
 
-    getTransactionItems();
+    getData();
   }, []);
+
+  console.log("Transaction Item:", transactionItem);
 
   useEffect(() => {
     async function getItems() {
@@ -322,14 +407,14 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
           onRestore={onRestore}
         />
       );
-    case "sales":
-      return (
-        <SalesTable
-          sales={sales}
-          searchTerm={searchTerm}
-          onRestore={onRestore}
-        />
-      );
+    // case "sales":
+    //   return (
+    //     <SalesTable
+    //       sales={sales}
+    //       searchTerm={searchTerm}
+    //       onRestore={onRestore}
+    //     />
+    //   );
     case "purchases":
       return (
         <PurchaseTable
@@ -341,7 +426,7 @@ function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
     case "purchase items":
       return (
         <PurchaseItemTable
-          purchases={transactionItems}
+          purchases={transactionItem}
           searchTerm={searchTerm}
           onRestore={onRestore}
         />

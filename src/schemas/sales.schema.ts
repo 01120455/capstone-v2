@@ -1,7 +1,5 @@
 import { date, z } from "zod";
 
-const is11Digits = (val: string) => /^\d{10}$/.test(val);
-
 const salesTransactionSchema = z.object({
   transactionid: z.number().optional(),
   createdat: date().optional(),
@@ -13,7 +11,6 @@ const salesTransactionSchema = z.object({
   }),
   walkin: z.boolean(),
   frommilling: z.boolean(),
-  taxpercentage: z.coerce.number().optional(),
   totalamount: z.number().multipleOf(0.01).optional(),
   lastmodifiedat: date().optional(),
   DocumentNumber: z.object({
