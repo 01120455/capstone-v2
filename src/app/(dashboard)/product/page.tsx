@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent, useRef, useMemo } from "react";
+import {
+  useEffect,
+  useState,
+  ChangeEvent,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -81,128 +88,75 @@ const ROLES = {
   INVENTORY: "inventory",
   MANAGER: "manager",
   ADMIN: "admin",
-};
+} as const;
 
-export default function Component() {
+const ITEMS_PER_PAGE = 5;
+
+// Custom hooks
+const useUser = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [items, setItems] = useState<ViewItem[]>([]);
-  const [filters, setFilters] = useState({
-    name: "",
-    type: "all",
-    sackweight: "all",
-    unitofmeasurement: "all",
-  });
-  const [showFilter, setShowFilter] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File>();
-  const [showImage, setShowImage] = useState<ViewItem | null>(null);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [alertItem, setAlertItem] = useState<ViewItem | null>(null);
-  const [showAlertItem, setShowAlertItem] = useState(false);
-  const [alertType, setAlertType] = useState<"reorder" | "critical" | null>(
-    null
-  );
-  const [searchTerm, setSearchTerm] = useState("");
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    console.log("Search Input:", newValue);
-    setSearchTerm(newValue);
-  };
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  const dropdownRefItem = useRef<HTMLDivElement>(null);
-
-  const toggleFilter = () => {
-    setShowFilter(!showFilter);
-  };
-
-  const filteredItems = useMemo(() => {
-    const isEmptyFilters =
-      filters.name === "" &&
-      filters.type === "all" &&
-      filters.sackweight === "all" &&
-      filters.unitofmeasurement === "all" &&
-      searchTerm === "";
-
-    if (isEmptyFilters) {
-      return items;
-    }
-
-    return items.filter((item) => {
-      const nameMatches =
-        item.name.toLowerCase().includes(filters.name.toLowerCase()) &&
-        item.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const typeMatches =
-        filters.type === "all" ||
-        item.type.toLowerCase() === filters.type.toLowerCase();
-      const sackweightMatches =
-        filters.sackweight === "all" ||
-        item.sackweight.toString() === filters.sackweight;
-      const unitMatches =
-        filters.unitofmeasurement === "all" ||
-        item.unitofmeasurement.toLowerCase() ===
-          filters.unitofmeasurement.toLowerCase();
-
-      return nameMatches && typeMatches && sackweightMatches && unitMatches;
-    });
-  }, [filters, searchTerm, items]);
-
-  const handleClearFilters = () => {
-    setFilters({
-      name: "",
-      type: "all",
-      sackweight: "all",
-      unitofmeasurement: "all",
-    });
-    setSearchTerm(""); // Clear the search term as well
-  };
-
-  useEffect(() => {
-    if (showAlertItem) {
-      const timer = setTimeout(() => {
-        setShowAlertItem(false);
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showAlertItem]);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("/api/auth/session", {
-          method: "GET",
-        });
-        if (!response.ok) {
+        const response = await fetch("/api/auth/session");
+        if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
         const session = await response.json();
         setUser(session || null);
       } catch (error) {
-        console.error("Failed to fetch session", error);
+        console.error("Failed to fetch session:", error);
       }
     };
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const response = await fetch("/api/product");
-        const data = await response.json();
-        setItems(data);
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    };
+  return user;
+};
 
-    fetchItems();
+const useItems = () => {
+  const [items, setItems] = useState<ViewItem[]>([]);
+
+  const fetchItems = useCallback(async () => {
+    try {
+      const response = await fetch("/api/product");
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      setItems(data);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  return { items, refreshItems: fetchItems };
+};
+
+// Utility functions
+const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price);
+};
+
+const formatStock = (stock: number): string => {
+  return new Intl.NumberFormat("en-US", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(stock);
+};
+
+export default function ProductManagement() {
+  const user = useUser();
+  const { items, refreshItems } = useItems();
   const form = useForm<AddItem>({
     resolver: zodResolver(item),
     defaultValues: {
@@ -218,69 +172,296 @@ export default function Component() {
     },
   });
 
-  useEffect(() => {
-    console.log(form.formState.errors);
-  }, [form.formState.errors]);
+  // State
+  const [filters, setFilters] = useState({
+    name: "",
+    type: "all",
+    sackweight: "all",
+    unitofmeasurement: "all",
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File>();
+  const [showImage, setShowImage] = useState<ViewItem | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  useEffect(() => {
-    async function getItems() {
-      try {
-        const response = await fetch("/api/product");
-        if (response.ok) {
-          const items = await response.json();
-          setItems(items);
-        } else {
-          console.error("Error fetching items:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching items:", error);
+  // Refs
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const fileRef = form.register("image");
+
+  // Memoized values
+  const filteredItems = useMemo(() => {
+    const isEmptyFilters =
+      Object.values(filters).every((v) => v === "" || v === "all") &&
+      !searchTerm;
+    if (isEmptyFilters) return items;
+
+    return items.filter((item) => {
+      const nameMatches =
+        item.name.toLowerCase().includes(filters.name.toLowerCase()) &&
+        item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const typeMatches =
+        filters.type === "all" ||
+        item.type.toLowerCase() === filters.type.toLowerCase();
+      const sackweightMatches =
+        filters.sackweight === "all" || item.sackweight === filters.sackweight;
+      const unitMatches =
+        filters.unitofmeasurement === "all" ||
+        item.unitofmeasurement === filters.unitofmeasurement;
+
+      return nameMatches && typeMatches && sackweightMatches && unitMatches;
+    });
+  }, [filters, searchTerm, items]);
+
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Event handlers
+  const handleSubmit = async (values: AddItem) => {
+    const formData = new FormData();
+    Object.entries(values).forEach(([key, value]) => {
+      if (value !== undefined && key !== "image") {
+        formData.append(key, value.toString());
       }
+    });
+
+    if (selectedFile) {
+      formData.append("image", selectedFile);
     }
-    getItems();
+
+    try {
+      const method = values.itemid ? "PUT" : "POST";
+      const endpoint = "/api/product";
+
+      const response = await fetch(endpoint, {
+        method,
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to save item");
+
+      const result = await response.json();
+      const action = values.itemid ? "updated" : "added";
+
+      toast.success(`Item ${values.name} has been ${action}`, {
+        description: `You have successfully ${action} the item.`,
+      });
+
+      setShowModal(false);
+      refreshItems();
+      resetForm();
+    } catch (error) {
+      console.error("Error saving item:", error);
+      toast.error("Failed to save item");
+    }
+  };
+
+  const handleDelete = async (itemid: number | undefined) => {
+    if (!itemid) return;
+
+    try {
+      const response = await fetch(
+        `/api/product/product-soft-delete/${itemid}`,
+        {
+          method: "PUT",
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete item");
+
+      toast.success(`Item has been deleted`, {
+        description: "You can now add more items to the inventory.",
+      });
+
+      setShowAlert(false);
+      setItemToDelete(null);
+      refreshItems();
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast.error("Failed to delete item");
+    }
+  };
+
+  const resetForm = () => {
+    form.reset();
+    setSelectedFile(undefined);
+    setInputValue("");
+  };
+
+  // Effects
+  useEffect(() => {
+    const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const refreshItems = async () => {
-    try {
-      const response = await fetch("/api/product");
-      if (response.ok) {
-        const items = await response.json();
-        setItems(items);
-      } else {
-        console.error("Error fetching items:", response.status);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownVisible(false);
       }
-    } catch (error) {
-      console.error("Error fetching items:", error);
-    }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Access control
+  const canAccessButton = (role: string) => {
+    if (!user) return false;
+    if (user.role === ROLES.ADMIN) return true;
+    if (user.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+    return (
+      [ROLES.SALES, ROLES.INVENTORY].includes(user.role as any) &&
+      role !== ROLES.ADMIN
+    );
   };
 
-  const handleAddProduct = () => {
-    setShowModal(true);
+  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  const dropdownRefItem = useRef<HTMLDivElement>(null);
 
-    form.reset({
-      name: "",
-      type: "bigas",
-      sackweight: "bag25kg",
-      unitofmeasurement: "quantity",
-      stock: 0,
-      unitprice: 0,
-      itemid: 0,
-    });
+  const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, name: value }));
+    setItemDropdownVisible(e.target.value.length > 0);
+
+    const filtered = items
+      .map((i) => i.name)
+      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+    setItemNameSuggestions(filtered);
   };
 
-  const handleEdit = (item: ViewItem) => {
-    setShowModal(true);
+  const handleItemTypeChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, type: value }));
+  };
 
-    console.log(item);
+  const handleUnitOfMeasurementChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, unitofmeasurement: value }));
+  };
 
-    form.reset({
-      itemid: item.itemid,
-      name: item.name,
-      type: item.type,
-      sackweight: item.sackweight,
-      unitofmeasurement: item.unitofmeasurement,
-      stock: item.stock,
-      unitprice: item.unitprice,
-      imagepath: item.itemimage[0]?.imagepath ?? "",
+  // Render helper components
+  const renderFilters = () => (
+    <Popover>
+      <PopoverTrigger>
+        <FilterIcon className="w-6 h-6" />
+      </PopoverTrigger>
+      <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
+        <h2 className="text-lg font-bold mb-4">Filters</h2>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Button
+              onClick={() => {
+                setFilters({
+                  name: "",
+                  type: "all",
+                  sackweight: "all",
+                  unitofmeasurement: "all",
+                });
+                setSearchTerm("");
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm">Item Name</span>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Search item name..."
+              value={filters.name}
+              onChange={handleItemNameChange}
+            />
+            {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+              <div
+                ref={dropdownRefItem}
+                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+              >
+                {itemNameSuggestions.map((item) => (
+                  <div
+                    key={item}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        name: item,
+                      }))
+                    }
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm">Item Type</span>
+            <Select value={filters.type} onValueChange={handleItemTypeChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Item Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="palay">Palay</SelectItem>
+                <SelectItem value="bigas">Bigas</SelectItem>
+                <SelectItem value="resico">Resico</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <span className="text-sm">Unit of Measurement</span>
+            <Select
+              value={filters.unitofmeasurement}
+              onValueChange={handleUnitOfMeasurementChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Unit of Measurement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="quantity">Quantity</SelectItem>
+                <SelectItem value="weight">Weight</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  const closeImage = () => {
+    setShowImageModal(false);
+    setShowImage(null);
+  };
+
+  const handleDeleteCancel = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    setShowAlert(false);
+    setItemToDelete(null);
+    form.reset();
+  };
+
+  const handleDeleteWithToast = (itemid: number | undefined) => {
+    handleDelete(itemid);
+    toast.success(`Item ${form.getValues().name} has been deleted`, {
+      description: "You can now add more items to the inventory.",
     });
   };
 
@@ -300,101 +481,49 @@ export default function Component() {
     });
   };
 
-  const fileRef = form.register("image");
-
-  const handleSubmit = async (values: AddItem) => {
-    console.log("Form Values:", values);
-    const formData = new FormData();
-
-    formData.append("name", values.name);
-    formData.append("type", values.type);
-    formData.append("sackweight", values.sackweight);
-    formData.append("unitofmeasurement", values.unitofmeasurement);
-    formData.append("stock", values.stock.toString());
-    formData.append("unitprice", values.unitprice.toString());
-
-    if (selectedFile) {
-      formData.append("image", selectedFile);
-    }
-
-    try {
-      let method = "POST";
-      let endpoint = "/api/product";
-
-      if (values.itemid) {
-        method = "PUT";
-        endpoint = `/api/product/`;
-        formData.append("itemid", values.itemid.toString());
-      }
-
-      const uploadRes = await fetch(endpoint, {
-        method: method,
-        body: formData,
-      });
-
-      if (uploadRes.ok) {
-        const uploadResult = await uploadRes.json();
-        if (values.itemid) {
-          console.log("Item updated successfully");
-          toast.success(`Item ${form.getValues("name")} has been updated`, {
-            description: "You have successfully edited the item.",
-          });
-        } else {
-          console.log("Item added successfully");
-          toast.success(`Item ${form.getValues("name")} has been added`, {
-            description: "You have successfully added the item.",
-          });
-        }
-
-        if (uploadResult.itemimage && uploadResult.itemimage[0]) {
-          console.log("Image uploaded:", uploadResult.itemimage[0].imagepath);
-        }
-
-        setShowModal(false);
-        refreshItems();
-        // setSuccessAction(values.itemid ? "edited" : "added");
-        // setSuccessItem(uploadResult);
-        // setShowSuccess(true);
-        setInputValue("");
-        form.reset();
-      } else {
-        console.error("Upload failed", await uploadRes.text());
-      }
-    } catch (error) {
-      console.error("Error adding/updating item:", error);
+  const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
     }
   };
 
-  const handleDelete = async (itemid: number | undefined) => {
-    try {
-      const response = await fetch(
-        `/api/product/product-soft-delete/${itemid}`,
-        {
-          method: "PUT",
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Item deleted successfully");
-        setShowAlert(false);
-        setItemToDelete(null);
-        refreshItems();
-        // setShowDeletedItem(data);
-        // setShowDeletionSuccess(true);
-        form.reset();
-      } else {
-        console.error("Error deleting item:", response.status);
-      }
-    } catch (error) {
-      console.error("Error deleting item:", error);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    setDropdownVisible(value.length > 0);
   };
 
-  const handleDeleteWithToast = (itemid: number | undefined) => {
-    handleDelete(itemid);
-    toast.success(`Item ${form.getValues().name} has been deleted`, {
-      description: "You can now add more items to the inventory.",
+  console.log("Input Value: ", inputValue);
+  const filteredItemsName = items.filter((item) =>
+    item.name.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  const handleItemClick = (itemName: string) => {
+    setInputValue(itemName);
+    form.setValue("name", itemName);
+    setDropdownVisible(false); // Hide dropdown when an item is clicked
+  };
+
+  const handleShowImage = async (item: ViewItem) => {
+    setShowImage(item);
+    setShowImageModal(true);
+  };
+
+  const handleEdit = (item: ViewItem) => {
+    setShowModal(true);
+
+    console.log(item);
+
+    form.reset({
+      itemid: item.itemid,
+      name: item.name,
+      type: item.type,
+      sackweight: item.sackweight,
+      unitofmeasurement: item.unitofmeasurement,
+      stock: item.stock,
+      unitprice: item.unitprice,
+      imagepath: item.itemimage[0]?.imagepath ?? "",
     });
   };
 
@@ -403,494 +532,200 @@ export default function Component() {
     setShowAlert(true);
   };
 
-  const handleDeleteCancel = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    event.preventDefault();
-    setShowAlert(false);
-    setItemToDelete(null);
-    form.reset();
-  };
-
-  const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const handleShowImage = async (item: ViewItem) => {
-    setShowImage(item);
-    setShowImageModal(true);
-  };
-
-  const closeImage = () => {
-    setShowImageModal(false);
-    setShowImage(null);
-  };
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat("en-PH", {
-      style: "currency",
-      currency: "PHP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const formatStock = (stock: number): string => {
-    return new Intl.NumberFormat("en-US", {
-      style: "decimal",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(stock);
-  };
-
-  const canAccessButton = (role: String) => {
-    if (user?.role === ROLES.ADMIN) return true;
-    if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
-    if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
-    if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
-    return false;
-  };
-
-  const itemData = {
-    itemid: form.getValues("itemid") || 0,
-    name: form.getValues("name") || "",
-    sackweight: form.getValues("sackweight") || "",
-    unitofmeasurement: form.getValues("unitofmeasurement") || "",
-    stock: form.getValues("stock") || 0,
-    unitprice: form.getValues("unitprice") || 0,
-  };
-
-  const userActionWithAccess = (id: number, role: string, itemData: any) => {
-    if (!role) {
-      return "access denied";
-    }
-
-    const canAccessInput = () => {
-      if (user?.role === ROLES.ADMIN) return true;
-      if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
-      if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
-      if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
-      return false;
-    };
-
-    if (!canAccessInput()) {
-      return "access denied";
-    }
-
-    if (id === 0) {
-      return "add";
-    }
-
-    const parsedData = item.safeParse(itemData);
-
-    if (parsedData.success) {
-      const data = parsedData.data;
-      if (data.itemid === id) {
-        return "edit";
-      }
-    } else {
-      console.error("Validation failed:", parsedData.error);
-      return "error";
-    }
-
-    return "unknown action";
-  };
-
-  const itemId = form.getValues("itemid");
-
-  let action: string = "access denied";
-
-  if (itemId !== undefined) {
-    action = userActionWithAccess(itemId, user?.role || "", itemData);
-    // console.log("Action:", action);
-  } else {
-    // console.warn("Transaction ID is undefined");
-    action = userActionWithAccess(0, user?.role || "", itemData);
-  }
-
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const [inputValue, setInputValue] = useState("");
-  console.log("Input Value: ", inputValue);
-  const filteredItemsName = items.filter((item) =>
-    item.name.toLowerCase().includes(inputValue.toLowerCase())
-  );
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    setDropdownVisible(value.length > 0);
-  };
-
-  const handleItemClick = (itemName: string) => {
-    setInputValue(itemName);
-    form.setValue("name", itemName);
-    setDropdownVisible(false); // Hide dropdown when an item is clicked
-  };
-
-  useEffect(() => {
-    console.log("Current inputValue:", inputValue);
-  }, [inputValue]);
-
-  // Hide dropdown when clicking outside of it
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setDropdownVisible(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside as EventListener);
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside as EventListener
-      );
-    };
-  }, []);
-
-  const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFilters((prev) => ({ ...prev, name: value }));
-    setItemDropdownVisible(e.target.value.length > 0);
-
-    const filtered = items
-      .map((i) => i.name)
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
-    setItemNameSuggestions(filtered);
-  };
-
-  const handleDropdownItemClick = (itemName: string) => {
-    setInputValue(itemName);
-    setItemDropdownVisible(false); // Hide dropdown when an item is clicked
-  };
-  const handleSackWeightChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, sackweight: value }));
-  };
-
-  const handleUnitOfMeasurementChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, unitofmeasurement: value }));
-  };
-
-  const handleItemTypeChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, type: value }));
   };
 
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
         <div className="container mx-auto px-4 md:px-6 py-8">
-          <div className="flex items-center justify-between mb-6 -mr-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-customColors-darkKnight">
               Product Management
             </h1>
           </div>
-          <div className="grid gap-6 grid-cols-1">
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between gap-4">
-                  <Input
-                    type="text"
-                    placeholder="Search item name..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="w-full md:w-auto"
-                  />
-                  <div className="flex flex-row gap-2">
-                    <Button onClick={handleAddProduct}>
-                      {isSmallScreen ? (
-                        <PlusIcon className="w-6 h-6" />
-                      ) : (
-                        "Add Product"
-                      )}
-                    </Button>
-                    <Popover>
-                      <PopoverTrigger>
-                        <FilterIcon className="w-6 h-6" />
-                      </PopoverTrigger>
-                      <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
-                        <h2 className="text-lg font-bold mb-4">Filters</h2>
-                        <div className="grid gap-4">
-                          <div className="grid gap-2">
-                            <Button onClick={handleClearFilters}>
-                              Clear Filters
-                            </Button>
-                          </div>
-                          <div className="grid gap-2">
-                            <span className="text-sm">Item Name</span>
-                            <Input
-                              id="name"
-                              type="text"
-                              placeholder="Search item name..."
-                              value={filters.name}
-                              onChange={handleItemNameChange}
-                            />
-                            {isItemDropdownVisible &&
-                              itemNameSuggestions.length > 0 && (
-                                <div
-                                  ref={dropdownRefItem}
-                                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                >
-                                  {itemNameSuggestions.map((item) => (
-                                    <div
-                                      key={item}
-                                      className="p-2 cursor-pointer hover:bg-gray-200"
-                                      onClick={() =>
-                                        setFilters((prev) => ({
-                                          ...prev,
-                                          name: item,
-                                        }))
-                                      }
-                                    >
-                                      {item}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                          </div>
-                          <div className="grid gap-2">
-                            <span className="text-sm">Item Type</span>
-                            <Select
-                              value={filters.type}
-                              onValueChange={handleItemTypeChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Item Type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="palay">Palay</SelectItem>
-                                <SelectItem value="bigas">Bigas</SelectItem>
-                                <SelectItem value="resico">Resico</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
 
-                          <div className="grid gap-2">
-                            <span className="text-sm">Unit of Measurement</span>
-                            <Select
-                              value={filters.unitofmeasurement}
-                              onValueChange={handleUnitOfMeasurementChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Unit of Measurement" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="quantity">
-                                  Quantity
-                                </SelectItem>
-                                <SelectItem value="weight">Weight</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <div className="table-container relative ">
-                  <ScrollArea>
-                    <Table
-                      style={{ width: "100%" }}
-                      className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                      divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                    >
-                      <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                        <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                          <TableHead>Image</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Sack Weight</TableHead>
-                          <TableHead>Unit of Measurement</TableHead>
-                          <TableHead>Available Stocks</TableHead>
-                          <TableHead>Unit Price</TableHead>
-                          {canAccessButton(ROLES.ADMIN) && (
-                            <TableHead>Last Modified by</TableHead>
-                          )}
-                          {canAccessButton(ROLES.ADMIN) && (
-                            <TableHead>Last Modified at</TableHead>
-                          )}
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedItems.map((item) => (
-                          <TableRow key={item.itemid}>
-                            <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleShowImage(item)}
-                              >
-                                View Image
-                              </Button>
-                            </TableCell>
-                            <TableCell>{item.name}</TableCell>
-                            <TableCell>{item.type}</TableCell>
-                            <TableCell>{item.sackweight}</TableCell>
-                            <TableCell>{item.unitofmeasurement}</TableCell>
-                            <TableCell>{formatStock(item.stock)}</TableCell>
-                            <TableCell>{formatPrice(item.unitprice)}</TableCell>
-                            {canAccessButton(ROLES.ADMIN) && (
-                              <TableCell>
-                                {item.User.firstname} {item.User.lastname}
-                              </TableCell>
-                            )}
-                            {canAccessButton(ROLES.ADMIN) && (
-                              <TableCell>
-                                {item.lastmodifiedat
-                                  ? new Date(
-                                      item.lastmodifiedat
-                                    ).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })
-                                  : "N/A"}
-                              </TableCell>
-                            )}
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(item)}
-                                >
-                                  <FilePenIcon className="w-4 h-4" />
-                                  <span className="sr-only">Edit</span>
-                                </Button>
-                                {canAccessButton(ROLES.ADMIN) && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDeleteItem(item)}
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                    <span className="sr-only">Delete</span>
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    <div className="flex items-center justify-center mt-4">
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              onClick={() =>
-                                handlePageChange(Math.max(1, currentPage - 1))
-                              }
-                            />
-                          </PaginationItem>
-                          {currentPage > 3 && (
-                            <>
-                              <PaginationItem>
-                                <PaginationLink
-                                  onClick={() => handlePageChange(1)}
-                                  isActive={currentPage === 1}
-                                >
-                                  1
-                                </PaginationLink>
-                              </PaginationItem>
-                              {currentPage > 3 && <PaginationEllipsis />}
-                            </>
-                          )}
-
-                          {Array.from(
-                            { length: Math.min(3, totalPages) },
-                            (_, index) => {
-                              const pageIndex =
-                                Math.max(1, currentPage - 1) + index;
-                              if (pageIndex < 1 || pageIndex > totalPages)
-                                return null;
-
-                              return (
-                                <PaginationItem key={pageIndex}>
-                                  <PaginationLink
-                                    onClick={() => handlePageChange(pageIndex)}
-                                    isActive={currentPage === pageIndex}
-                                  >
-                                    {pageIndex}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            }
-                          )}
-
-                          {currentPage < totalPages - 2 && (
-                            <>
-                              {currentPage < totalPages - 3 && (
-                                <PaginationEllipsis />
-                              )}
-                              <PaginationItem>
-                                <PaginationLink
-                                  onClick={() => handlePageChange(totalPages)}
-                                  isActive={currentPage === totalPages}
-                                >
-                                  {totalPages}
-                                </PaginationLink>
-                              </PaginationItem>
-                            </>
-                          )}
-
-                          <PaginationItem>
-                            <PaginationNext
-                              onClick={() =>
-                                handlePageChange(
-                                  Math.min(totalPages, currentPage + 1)
-                                )
-                              }
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </div>
-              </div>
+          {/* Search and controls */}
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <Input
+              type="text"
+              placeholder="Search item name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-auto"
+            />
+            <div className="flex gap-2">
+              <Button onClick={() => setShowModal(true)}>
+                {isSmallScreen ? (
+                  <PlusIcon className="w-6 h-6" />
+                ) : (
+                  "Add Product"
+                )}
+              </Button>
+              {renderFilters()}
             </div>
           </div>
+
+          {/* Table */}
+          <ScrollArea>
+            <Table
+              style={{ width: "100%" }}
+              className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
+              divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+            >
+              <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                  <TableHead>Image</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Sack Weight</TableHead>
+                  <TableHead>Unit of Measurement</TableHead>
+                  <TableHead>Available Stocks</TableHead>
+                  <TableHead>Unit Price</TableHead>
+                  {canAccessButton(ROLES.ADMIN) && (
+                    <TableHead>Last Modified by</TableHead>
+                  )}
+                  {canAccessButton(ROLES.ADMIN) && (
+                    <TableHead>Last Modified at</TableHead>
+                  )}
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedItems.map((item) => (
+                  <TableRow key={item.itemid}>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShowImage(item)}
+                      >
+                        View Image
+                      </Button>
+                    </TableCell>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.type}</TableCell>
+                    <TableCell>{item.sackweight}</TableCell>
+                    <TableCell>{item.unitofmeasurement}</TableCell>
+                    <TableCell>{formatStock(item.stock)}</TableCell>
+                    <TableCell>{formatPrice(item.unitprice)}</TableCell>
+                    {canAccessButton(ROLES.ADMIN) && (
+                      <TableCell>
+                        {item.User.firstname} {item.User.lastname}
+                      </TableCell>
+                    )}
+                    {canAccessButton(ROLES.ADMIN) && (
+                      <TableCell>
+                        {item.lastmodifiedat
+                          ? new Date(item.lastmodifiedat).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )
+                          : "N/A"}
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <FilePenIcon className="w-4 h-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        {canAccessButton(ROLES.ADMIN) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteItem(item)}
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="flex items-center justify-center mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        handlePageChange(Math.max(1, currentPage - 1))
+                      }
+                    />
+                  </PaginationItem>
+                  {currentPage > 3 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => handlePageChange(1)}
+                          isActive={currentPage === 1}
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      {currentPage > 3 && <PaginationEllipsis />}
+                    </>
+                  )}
+
+                  {Array.from(
+                    { length: Math.min(3, totalPages) },
+                    (_, index) => {
+                      const pageIndex = Math.max(1, currentPage - 1) + index;
+                      if (pageIndex < 1 || pageIndex > totalPages) return null;
+
+                      return (
+                        <PaginationItem key={pageIndex}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(pageIndex)}
+                            isActive={currentPage === pageIndex}
+                          >
+                            {pageIndex}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                  )}
+
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && <PaginationEllipsis />}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => handlePageChange(totalPages)}
+                          isActive={currentPage === totalPages}
+                        >
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        handlePageChange(Math.min(totalPages, currentPage + 1))
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          </ScrollArea>
           <>
             {showImageModal && showImage && (
               <Dialog open={showImageModal} onOpenChange={closeImage}>
@@ -1183,20 +1018,7 @@ export default function Component() {
                         <Button variant="outline" onClick={handleCancel}>
                           Cancel
                         </Button>
-                        <Button
-                          type="submit"
-                          // onClick={() =>
-                          //   toast(
-                          //     `Item ${form.getValues().name} has been added`,
-                          //     {
-                          //       description:
-                          //         "You can now add more items to the inventory.",
-                          //     }
-                          //   )
-                          // }
-                        >
-                          Save
-                        </Button>
+                        <Button type="submit">Save</Button>
                       </div>
                     </DialogFooter>
                   </form>

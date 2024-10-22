@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   TransactionItem,
   TransactionTable,
@@ -39,14 +39,31 @@ import {
 } from "@/components/icons/Icons";
 import { ViewItem } from "@/schemas/item.schema";
 
+// Constants
+const SACK_WEIGHTS = {
+  bag25kg: 25,
+  cavan50kg: 50,
+} as const;
+
+const ALL_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+// Types
 type SalesChartData = {
   month: string;
   [itemName: string]: number | string;
-};
-
-const sackWeights = {
-  bag25kg: 25, // 25 kg per bag
-  cavan50kg: 50, // 50 kg per cavan
 };
 
 interface Totals {
@@ -62,248 +79,345 @@ interface Totals {
     items: number;
   };
 }
+interface StatCardProps {
+  title: string; // Title should be a string
+  value: number | string; // Value can be either a number or string
+  subValue?: number | string; // subValue is optional and can be a number or string
+  icon: React.ElementType; // Icon is a React component
+}
 
-export default function Dashboard() {
-  const [sales, setSales] = useState<TransactionTable[]>([]);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
+// Reusable Components
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  subValue,
+  icon: Icon,
+}) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value}</div>
+      <p className="text-xs text-muted-foreground">{subValue}</p>
+    </CardContent>
+  </Card>
+);
 
-  const [totalItemsSold, setTotalItemsSold] = useState<number>(0);
-  const [totalSales, setTotalSales] = useState<number>(0);
-  const [avgTransactionValue, setAvgTransactionValue] = useState<number>(0);
-  const [totalTransactions, setTotalTransactions] = useState<number>(0);
+interface VolumeCardProps {
+  title: string; // Title should be a string
+  volume: number; // Volume should be a number
+}
+
+const VolumeCard: React.FC<VolumeCardProps> = ({ title, volume }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>{title}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div>{volume} kg</div>
+    </CardContent>
+  </Card>
+);
+
+// Custom Hooks
+const useTransactionData = (endpoint: string) => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const getSales = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/dashboard/customertransaction");
+        const response = await fetch(endpoint);
         const text = await response.text();
-        // console.log("Raw Response Text:", text);
+        const parsedData = JSON.parse(text);
 
-        const data = JSON.parse(text);
-
-        const parsedData = data.map((item: any) => ({
+        // Convert dates if needed
+        const processedData = parsedData.map((item: any) => ({
           ...item,
           createdat: item.createdat ? new Date(item.createdat) : null,
           lastmodifiedat: item.lastmodifiedat
             ? new Date(item.lastmodifiedat)
             : null,
-          taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
         }));
 
-        // console.log("Parsed Data with Date Conversion:", parsedData);
-
-        const now = new Date();
-        const currentMonthStart = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          1
+        setData(processedData);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Unknown error occurred")
         );
-        const lastMonthStart = new Date(
-          now.getFullYear(),
-          now.getMonth() - 1,
-          1
-        );
-        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0); // Last day of last month
-
-        // Calculate totals
-        const totals: Totals = parsedData.reduce(
-          (acc: Totals, transaction: TransactionTable) => {
-            const transactionItems = transaction.TransactionItem || [];
-
-            const transactionTotalAmount = transactionItems.reduce(
-              (sum: number, item) => sum + (item.totalamount || 0),
-              0
-            );
-            const transactionTotalItems = transactionItems.reduce(
-              (sum: number, item) => sum + (item.measurementvalue || 0),
-              0
-            );
-
-            // Add to total sales and items sold
-            acc.totalSales += transactionTotalAmount;
-            acc.totalItemsSold += transactionTotalItems;
-
-            // Increment the total number of transactions
-            acc.totalTransactions += 1; // Count each transaction
-
-            // Current month totals
-            if (transaction.createdat >= currentMonthStart) {
-              acc.currentMonth.amount += transactionTotalAmount;
-              acc.currentMonth.items += transactionTotalItems;
-            }
-
-            // Last month totals
-            if (
-              transaction.createdat >= lastMonthStart &&
-              transaction.createdat <= lastMonthEnd
-            ) {
-              acc.lastMonth.amount += transactionTotalAmount;
-              acc.lastMonth.items += transactionTotalItems;
-            }
-
-            return acc;
-          },
-          {
-            totalSales: 0,
-            totalItemsSold: 0,
-            totalTransactions: 0, // Initialize total transactions
-            currentMonth: { amount: 0, items: 0 },
-            lastMonth: { amount: 0, items: 0 },
-          }
-        );
-
-        setTotalSales(totals.totalSales); // Set the total sales state
-        setTotalItemsSold(totals.totalItemsSold); // Set the total items sold state
-        setTotalTransactions(totals.totalTransactions); // Set the total transactions state
-
-        // Calculate average transaction value
-        const averageTransactionValue = totals.totalTransactions
-          ? totals.totalSales / totals.totalTransactions
-          : 0; // Avoid division by zero
-        setAvgTransactionValue(averageTransactionValue); // Set the average transaction value
-
-        // console.log("Parsed Data:", parsedData);
-        setSales(parsedData);
-      } catch (error) {
-        console.error("Error in getSales:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    getSales();
-  }, []);
+    fetchData();
+  }, [endpoint]);
 
-  const allMonths = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  return { data, loading, error };
+};
 
-  const allItems = new Set<string>();
+// Utility functions
+const formatters = {
+  number: new Intl.NumberFormat("en-PH", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }),
+  currency: new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }),
+};
 
-  sales.forEach((sales) => {
-    sales.TransactionItem.forEach((item) => {
-      if (item.Item?.name) {
-        allItems.add(item.Item.name);
+const calculateVolume = (transactions: TransactionTable[]) => {
+  return transactions
+    .filter((transaction) => transaction.frommilling)
+    .reduce(
+      (volume, transaction) => {
+        transaction.TransactionItem.forEach((item: TransactionItem) => {
+          const weightPerItem = SACK_WEIGHTS[item.sackweight] || 0;
+          const itemWeight =
+            item.unitofmeasurement === "weight"
+              ? item.measurementvalue
+              : item.measurementvalue * weightPerItem;
+
+          if (item.type === "palay") {
+            volume.palayPurchase += itemWeight;
+          } else if (item.type === "bigas") {
+            volume.bigasPurchase += itemWeight;
+            volume.bigasMilling += itemWeight;
+          } else if (item.type === "resico") {
+            volume.resicoPurchase += itemWeight;
+            volume.resicoMilling += itemWeight;
+          }
+        });
+        return volume;
+      },
+      {
+        palayPurchase: 0,
+        bigasPurchase: 0,
+        resicoPurchase: 0,
+        bigasMilling: 0,
+        resicoMilling: 0,
       }
-    });
-  });
+    );
+};
 
-  const itemNames = Array.from(allItems);
+export default function Dashboard() {
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  const salesData = sales.reduce((acc, sales) => {
-    const salesDate = new Date(sales.createdat);
-    const month = salesDate.toLocaleString("default", { month: "long" });
+  // Data fetching
+  const { data: sales, loading: salesLoading } = useTransactionData(
+    "/api/dashboard/customertransaction"
+  );
+  const { data: purchases, loading: purchasesLoading } = useTransactionData(
+    "/api/dashboard/suppliertransaction"
+  );
+  const { data: items, loading: itemsLoading } =
+    useTransactionData("/api/product");
+  const { data: millingPurchases, loading: millingLoading } =
+    useTransactionData("/api/dashboard/frommillingpurchases");
 
-    acc[month] = acc[month] || {};
+  // Memoized calculations
+  const totals = useMemo(() => {
+    if (!sales?.length) return null;
 
-    sales.TransactionItem.forEach((item) => {
-      const itemName = item.Item?.name;
-      const quantitySold = item.measurementvalue || 1;
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
-      if (itemName) {
-        acc[month][itemName] = (acc[month][itemName] || 0) + quantitySold;
+    // Assuming you have a way to access the items stock data.
+    const totalStock = items.reduce((acc: number, item: ViewItem) => {
+      if (item.unitofmeasurement === "weight") {
+        return acc + item.stock; // Assuming stock is already in kg
+      } else if (item.unitofmeasurement === "quantity") {
+        const weightPerItem = SACK_WEIGHTS[item.sackweight || "bag25kg"] || 0; // Default to bag25kg if undefined
+        return acc + item.stock * weightPerItem; // Convert quantity to kg
       }
-    });
-
-    return acc;
-  }, {} as Record<string, Record<string, number>>);
-
-  // console.log("sales data:", salesData);
-
-  const salesChartData: SalesChartData[] = allMonths.map((month) => {
-    const monthData = salesData[month] || {};
-
-    const dataForMonth = itemNames.reduce((acc, itemName) => {
-      acc[itemName] = monthData[itemName] || 0;
       return acc;
-    }, {} as Record<string, number>);
+    }, 0);
+
+    return sales.reduce(
+      (acc, transaction) => {
+        const items = transaction.TransactionItem || [];
+        const transactionTotal = items.reduce(
+          (sum: number, item: TransactionItem) => sum + (item.totalamount || 0),
+          0
+        );
+        const itemCount = items.reduce(
+          (sum: number, item: TransactionItem) =>
+            sum + (item.measurementvalue || 0),
+          0
+        );
+
+        return {
+          totalSales: acc.totalSales + transactionTotal,
+          totalItemsSold: acc.totalItemsSold + itemCount,
+          totalTransactions: acc.totalTransactions + 1,
+          currentMonth: {
+            amount:
+              acc.currentMonth.amount +
+              (transaction.createdat >= currentMonthStart
+                ? transactionTotal
+                : 0),
+            items:
+              acc.currentMonth.items +
+              (transaction.createdat >= currentMonthStart ? itemCount : 0),
+          },
+          lastMonth: {
+            amount:
+              acc.lastMonth.amount +
+              (transaction.createdat >= lastMonthStart &&
+              transaction.createdat <= lastMonthEnd
+                ? transactionTotal
+                : 0),
+            items:
+              acc.lastMonth.items +
+              (transaction.createdat >= lastMonthStart &&
+              transaction.createdat <= lastMonthEnd
+                ? itemCount
+                : 0),
+          },
+          totalStock, // Add totalStock to the return object
+        };
+      },
+      {
+        totalSales: 0,
+        totalItemsSold: 0,
+        totalTransactions: 0,
+        currentMonth: { amount: 0, items: 0 },
+        lastMonth: { amount: 0, items: 0 },
+        totalStock: 0, // Initialize totalStock
+      }
+    );
+  }, [sales, items]); // Ensure items are included in the dependency array
+
+  const averagePurchaseValue = useMemo(() => {
+    if (!purchases?.length) return 0;
+    const fromMillingPurchases = purchases.filter(
+      (purchase) => purchase.frommilling
+    );
+    const totalAmount = fromMillingPurchases.reduce(
+      (sum, purchase) => sum + (purchase.totalamount || 0),
+      0
+    );
+    return fromMillingPurchases.length
+      ? totalAmount / fromMillingPurchases.length
+      : 0;
+  }, [purchases]);
+
+  const volume = useMemo(() => {
+    if (!millingPurchases?.length) return null;
+    return calculateVolume(millingPurchases);
+  }, [millingPurchases]);
+
+  const { salesChartData, itemNames } = useMemo(() => {
+    if (!sales?.length) return { salesChartData: [], itemNames: [] };
+
+    const itemNamesSet = new Set<string>();
+    const salesByMonth: Record<string, Record<string, number>> = {};
+
+    sales.forEach((sale) => {
+      const month = new Date(sale.createdat).toLocaleString("default", {
+        month: "long",
+      });
+      if (!salesByMonth[month]) salesByMonth[month] = {};
+
+      sale.TransactionItem.forEach((item: TransactionItem) => {
+        if (item.Item?.name) {
+          itemNamesSet.add(item.Item.name);
+          salesByMonth[month][item.Item.name] =
+            (salesByMonth[month][item.Item.name] || 0) +
+            (item.measurementvalue || 1);
+        }
+      });
+    });
+
+    const chartData = ALL_MONTHS.map((month) => ({
+      month,
+      ...Array.from(itemNamesSet).reduce(
+        (acc, name) => ({
+          ...acc,
+          [name]: salesByMonth[month]?.[name] || 0,
+        }),
+        {}
+      ),
+    }));
 
     return {
-      month,
-      ...dataForMonth,
+      salesChartData: chartData,
+      itemNames: Array.from(itemNamesSet),
     };
-  });
+  }, [sales]);
 
-  // console.log("Chart Data:", salesChartData);
+  const transactionData = useMemo(() => {
+    if (!sales?.length && !purchases?.length) return [];
 
-  const salesChartConfig: ChartConfig = {
-    month: { label: "Month", color: "var(--chart-0)" },
-  };
+    const combinedData = ALL_MONTHS.map((month) => {
+      const salesAmount = sales
+        .filter(
+          (s) =>
+            new Date(s.createdat).toLocaleString("default", {
+              month: "long",
+            }) === month
+        )
+        .reduce((sum, s) => sum + (s.totalamount || 0), 0);
 
-  itemNames.forEach((itemName, index) => {
-    salesChartConfig[itemName] = {
-      label: itemName,
-      color: `hsl(var(--chart-${index + 1}))`,
-    };
-  });
+      const purchasesAmount = purchases
+        .filter(
+          (p) =>
+            new Date(p.createdat).toLocaleString("default", {
+              month: "long",
+            }) === month
+        )
+        .reduce((sum, p) => sum + (p.totalamount || 0), 0);
 
+      return {
+        name: month,
+        sales: salesAmount,
+        purchases: purchasesAmount,
+      };
+    });
+
+    return combinedData;
+  }, [sales, purchases]);
+
+  // Screen size effect
   useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 640);
-    };
-
+    const handleResize = () => setIsSmallScreen(window.innerWidth < 640);
     handleResize();
-
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [items, setItems] = useState<ViewItem[]>([]);
-  const [chartData, setChartData] = useState<{ name: string; stock: number }[]>(
-    []
-  );
-  const [totalStock, setTotalStock] = useState<number>(0);
-  const [totalItems, setTotalItems] = useState<number>(0);
+  // Loading state
+  if (salesLoading || purchasesLoading || itemsLoading || millingLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    async function getItems() {
-      try {
-        const response = await fetch("/api/product");
-        if (response.ok) {
-          const items: ViewItem[] = await response.json();
-          setItems(items);
-
-          // Calculate total stock
-          const total = items.reduce((acc: number, item: ViewItem) => {
-            if (item.unitofmeasurement === "weight") {
-              return acc + item.stock; // Assuming stock is already in kg
-            } else if (item.unitofmeasurement === "quantity") {
-              const weightPerItem =
-                sackWeights[item.sackweight || "bag25kg"] || 0; // Default to bag25kg if undefined
-              return acc + item.stock * weightPerItem; // Convert quantity to kg
-            }
-            return acc;
-          }, 0);
-          setTotalStock(total);
-
-          // Count total items (not unique, just count all)
-          setTotalItems(items.length); // Total number of items in the array
-
-          // Prepare data for the chart
-          const data = items.map((item) => ({
-            name: item.name,
-            stock: item.stock || 0, // Default to 0 if stock is undefined
-          }));
-          setChartData(data);
-        } else {
-          console.error("Error fetching items:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    }
-    getItems();
-  }, []);
+  // Chart configurations
+  const salesChartConfig: ChartConfig = {
+    month: { label: "Month", color: "var(--chart-0)" },
+    ...itemNames.reduce(
+      (acc, name, index) => ({
+        ...acc,
+        [name]: {
+          label: name,
+          color: `hsl(var(--chart-${index + 1}))`,
+        },
+      }),
+      {}
+    ),
+  };
 
   const stocksChartConfig = {
     desktop: {
@@ -312,114 +426,6 @@ export default function Dashboard() {
     },
   } satisfies ChartConfig;
 
-  const numberFormat = (price: number): string => {
-    return new Intl.NumberFormat("en-PH", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat("en-PH", {
-      style: "currency",
-      currency: "PHP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const [purchases, setPurchases] = useState<TransactionTable[]>([]);
-  const [averagePurchaseValue, setAveragePurchaseValue] = useState(0);
-
-  useEffect(() => {
-    async function getPurchases() {
-      try {
-        const response = await fetch("/api/dashboard/suppliertransaction");
-        if (response.ok) {
-          const data = await response.json();
-
-          setPurchases(data);
-
-          // Calculate average purchase value for frommilling transactions
-          const fromMillingPurchases = data.filter(
-            (purchase: TransactionTable) => purchase.frommilling
-          );
-          const totalFromMillingAmount = fromMillingPurchases.reduce(
-            (sum: number, purchase: TransactionTable) =>
-              sum + (purchase.totalamount || 0),
-            0
-          );
-          const average =
-            fromMillingPurchases.length > 0
-              ? totalFromMillingAmount / fromMillingPurchases.length
-              : 0;
-
-          setAveragePurchaseValue(average);
-        } else {
-          console.error("Error fetching purchase history:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching purchases:", error);
-      }
-    }
-    getPurchases();
-  }, []);
-
-  const [transactionData, setTransactionData] = useState<any[]>([]);
-
-  useEffect(() => {
-    const combineData = () => {
-      const salesData = sales.reduce(
-        (acc: any, transaction: TransactionTable) => {
-          const date = new Date(transaction.createdat).toLocaleDateString(
-            "en-US",
-            { month: "long", year: "numeric" }
-          );
-          const amount = transaction.totalamount || 0;
-
-          if (!acc[date]) {
-            acc[date] = { name: date, sales: 0, purchases: 0 };
-          }
-          acc[date].sales += amount;
-
-          return acc;
-        },
-        {}
-      );
-
-      const purchasesData = purchases.reduce(
-        (acc: any, transaction: TransactionTable) => {
-          const date = new Date(transaction.createdat).toLocaleDateString(
-            "en-US",
-            { month: "long", year: "numeric" }
-          );
-          const amount = transaction.totalamount || 0;
-
-          if (!acc[date]) {
-            acc[date] = { name: date, sales: 0, purchases: 0 };
-          }
-          acc[date].purchases += amount;
-
-          return acc;
-        },
-        {}
-      );
-
-      // Merge sales and purchases data
-      const combinedData = Object.keys(salesData).map((key) => ({
-        name: key,
-        sales: salesData[key].sales,
-        purchases: purchasesData[key] ? purchasesData[key].purchases : 0,
-      }));
-
-      setTransactionData(combinedData);
-    };
-
-    if (sales.length > 0 || purchases.length > 0) {
-      combineData();
-    }
-  }, [sales, purchases]);
-
   const transactionChartConfig = {
     desktop: {
       label: "transactions",
@@ -427,198 +433,65 @@ export default function Dashboard() {
     },
   } satisfies ChartConfig;
 
-  const [transactions, setTransactions] = useState<TransactionTable[]>([]);
-  const [volume, setVolume] = useState({
-    palayPurchase: 0,
-    bigasPurchase: 0,
-    resicoPurchase: 0,
-    bigasMilling: 0,
-    resicoMilling: 0,
-  });
-
-  useEffect(() => {
-    // Fetch transactions from your API (use your actual API here)
-    fetch("/api/dashboard/frommillingpurchases") // Replace with your actual API endpoint
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Fetched data:", data);
-        setTransactions(data);
-        calculateVolume(data); // Calculate volumes based on fetched data
-      });
-  }, []);
-
-  // console.log("Volume:", volume);
-
-  const calculateVolume = (transactions: TransactionTable[]) => {
-    const volume = {
-      palayPurchase: 0,
-      bigasPurchase: 0,
-      resicoPurchase: 0,
-      bigasMilling: 0,
-      resicoMilling: 0,
-    };
-
-    transactions
-      .filter((transaction) => transaction.frommilling) // Only transactions with frommilling true
-      .forEach((transaction) => {
-        transaction.TransactionItem.forEach((item: TransactionItem) => {
-          const weightPerItem = sackWeights[item.sackweight] || 0;
-
-          console.log(
-            "Weight per item:",
-            weightPerItem,
-            "for sackweight:",
-            item.sackweight
-          );
-
-          // Handle unit of measurement cases
-          if (item.unitofmeasurement === "weight") {
-            // Directly add to purchase volume if unit of measurement is weight
-            if (item.type === "palay") {
-              volume.palayPurchase += item.measurementvalue;
-            } else if (item.type === "bigas") {
-              volume.bigasPurchase += item.measurementvalue;
-              volume.bigasMilling += item.measurementvalue; // Also update milling volume
-            } else if (item.type === "resico") {
-              volume.resicoPurchase += item.measurementvalue;
-              volume.resicoMilling += item.measurementvalue; // Also update milling volume
-            }
-          } else if (item.unitofmeasurement === "quantity") {
-            // Convert quantity to weight using sack weight for purchase volume
-            if (item.type === "palay") {
-              volume.palayPurchase += item.measurementvalue * weightPerItem;
-            } else if (item.type === "bigas") {
-              volume.bigasPurchase += item.measurementvalue * weightPerItem;
-              volume.bigasMilling += item.measurementvalue * weightPerItem; // Update milling volume
-            } else if (item.type === "resico") {
-              volume.resicoPurchase += item.measurementvalue * weightPerItem;
-              volume.resicoMilling += item.measurementvalue * weightPerItem; // Update milling volume
-            }
-          }
-        });
-      });
-
-    setVolume(volume); // Update the state with calculated volumes
-  };
-
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Main content */}
       <div className="flex-1 p-8 overflow-auto">
         <h2 className="text-3xl font-bold mb-6">Dashboard Overview</h2>
 
-        {/* Quick stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Inventory
-              </CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {numberFormat(totalStock)} kg
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Total Items in Inventory: {totalItems}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-              <WalletMoney className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatPrice(totalSales)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Total Items Sold: {totalItemsSold}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Avg. Sales Transaction Value
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatPrice(avgTransactionValue)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Total Transactions: {totalTransactions}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Average Purchase Order Value From Milling
-              </CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatPrice(averagePurchaseValue)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Total of Purchase Orders from Milling:{" "}
-                {purchases.filter((p) => p.frommilling).length}
-              </p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Inventory"
+            value={`${formatters.number.format(totals?.totalStock || 0)} kg`}
+            subValue={`Total Items: ${items?.length || 0}`}
+            icon={Package}
+          />
+          <StatCard
+            title="Total Sales"
+            value={formatters.currency.format(totals?.totalSales || 0)}
+            subValue={`Total Items Sold: ${totals?.totalItemsSold || 0}`}
+            icon={WalletMoney}
+          />
+          <StatCard
+            title="Avg. Sales Transaction Value"
+            value={formatters.currency.format(
+              totals?.totalSales / totals?.totalTransactions || 0
+            )}
+            subValue={`Total Transactions: ${totals?.totalTransactions || 0}`}
+            icon={TrendingUp}
+          />
+          <StatCard
+            title="Average Purchase Order Value From Milling"
+            value={formatters.currency.format(averagePurchaseValue)}
+            subValue={`Total POs from Milling: ${
+              purchases?.filter((p) => p.frommilling).length || 0
+            }`}
+            icon={ShoppingCart}
+          />
         </div>
+
+        {/* Volume cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Palay Purchase Volume</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>{volume.palayPurchase} kg</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Bigas Purchase Volume</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>{volume.bigasPurchase} kg</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Resico Purchase Volume</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>{volume.resicoPurchase} kg</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Bigas Milling Volume</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>{volume.bigasMilling} kg</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Resico Milling Volume</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>{volume.resicoMilling} kg</div>
-            </CardContent>
-          </Card>
+          <VolumeCard
+            title="Palay Purchase Volume"
+            volume={volume?.palayPurchase || 0}
+          />
+          <VolumeCard
+            title="Bigas Purchase Volume"
+            volume={volume?.bigasPurchase || 0}
+          />
+          <VolumeCard
+            title="Resico Purchase Volume"
+            volume={volume?.resicoPurchase || 0}
+          />
+          <VolumeCard
+            title="Bigas Milling Volume"
+            volume={volume?.bigasMilling || 0}
+          />
+          <VolumeCard
+            title="Resico Milling Volume"
+            volume={volume?.resicoMilling || 0}
+          />
         </div>
 
         {/* Inventory Levels */}
@@ -632,7 +505,7 @@ export default function Dashboard() {
               config={stocksChartConfig}
               className="w-full h-[300px] md:h-[400px]"
             >
-              <BarChart data={chartData}>
+              <BarChart data={items}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="name"

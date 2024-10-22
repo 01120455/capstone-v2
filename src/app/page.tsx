@@ -1,24 +1,9 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect } from "react";
 import { WheatIcon } from "@/components/icons/Icons";
 
 export default function Component() {
-  // useEffect(() => {
-  //   async function createDummyUser() {
-  //     try {
-  //       const res = await fetch("/api/auth/cdu", { method: "POST" });
-  //       const data = await res.json();
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.error("Error creating dummy user:", error);
-  //     }
-  //   }
-
-  //   createDummyUser();
-  // }, []);
-
   return (
     <div className="flex flex-col min-h-[100dvh]">
       <header className="px-4 mt-4 lg:px-6 h-14 flex items-center">

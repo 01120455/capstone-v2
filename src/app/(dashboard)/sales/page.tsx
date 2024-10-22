@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent, useRef } from "react";
+import { useEffect, useState, ChangeEvent, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ViewItem } from "@/schemas/item.schema";
@@ -33,7 +33,7 @@ import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
 import { TrashIcon } from "@/components/icons/Icons";
 import { toast } from "sonner";
 
-export default function Component() {
+export default function Sales() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
   const [cart, setCart] = useState<
     {
@@ -123,80 +123,51 @@ export default function Component() {
         unitprice: item.price,
       }))
     );
-
-    // console.log("Cart updated:", cart);
   }, [cart, form]);
 
   useEffect(() => {
     console.log(form.formState.errors);
   }, [form.formState.errors]);
 
-  // useEffect(() => {
-  //   if (showSuccess) {
-  //     setInvoiceExists(false);
-  //     setEmptyCart(false);
-  //     const timer = setTimeout(() => {
-  //       setShowSuccess(false);
-  //     }, 5000);
+  const addToCart = useCallback((item: ViewItem, quantity: number = 1) => {
+    setCart((prevCart) => {
+      const existingItemIndex = prevCart.findIndex(
+        (cartItem) => cartItem.id === item.itemid
+      );
+      if (existingItemIndex > -1) {
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex].quantity += quantity;
+        return updatedCart;
+      }
+      const cartItem = {
+        id: item.itemid,
+        name: item.name,
+        type: item.type,
+        sackweight: item.sackweight,
+        unitofmeasurement: item.unitofmeasurement,
+        price: item.unitprice,
+        quantity,
+        imagepath: item.itemimage[0]?.imagepath ?? "",
+      };
+      return [...prevCart, cartItem];
+    });
+  }, []);
 
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [showSuccess]);
+  const removeFromCart = useCallback((index: number) => {
+    setCart((prevCart) => {
+      const updatedCart = [...prevCart];
+      updatedCart.splice(index, 1);
+      return updatedCart;
+    });
+  }, []);
 
-  // useEffect(() => {
-  //   if (invoiceExists) {
-  //     const timer = setTimeout(() => {
-  //       setInvoiceExists(false);
-  //     }, 5000);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [invoiceExists]);
-
-  // useEffect(() => {
-  //   if (emptyCart) {
-  //     const timer = setTimeout(() => {
-  //       setEmptyCart(false);
-  //     }, 5000);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [emptyCart]);
-
-  const addToCart = (item: ViewItem, quantity: number = 1) => {
-    const cartItem = {
-      id: item.itemid,
-      name: item.name,
-      price: item.unitprice,
-      type: item.type,
-      sackweight: item.sackweight,
-      unitofmeasurement: item.unitofmeasurement,
-      quantity,
-      imagepath: item.itemimage[0]?.imagepath ?? "",
-    };
-
-    const existingItemIndex = cart.findIndex(
-      (cartItem) => cartItem.id === item.itemid
-    );
-
-    if (existingItemIndex > -1) {
-      const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity += quantity;
-      setCart(updatedCart);
-    } else {
-      setCart([...cart, cartItem]);
-    }
-  };
-
-  const removeFromCart = (index: number) => {
-    const updatedCart = [...cart];
-    updatedCart.splice(index, 1);
-    setCart(updatedCart);
-  };
-
-  const updateQuantity = (index: number, quantity: number) => {
-    const updatedCart = [...cart];
-    updatedCart[index].quantity = quantity;
-    setCart(updatedCart);
-  };
+  const updateQuantity = useCallback((index: number, quantity: number) => {
+    setCart((prevCart) => {
+      const updatedCart = [...prevCart];
+      updatedCart[index].quantity = quantity;
+      return updatedCart;
+    });
+  }, []);
 
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 

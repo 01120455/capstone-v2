@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@/interfaces/user";
 import { ScrollArea } from "./ui/scroll-area";
+import { useAuth } from "../utils/hooks/auth";
 import {
   BoxIcon,
   CalendarIcon,
@@ -27,7 +28,6 @@ import {
   MenuIcon,
   ArchiveIcon,
 } from "@/components/icons/Icons";
-import { useAuth } from "../utils/hooks/auth";
 
 const ROLES = {
   SALES: "sales",
@@ -36,16 +36,35 @@ const ROLES = {
   ADMIN: "admin",
 };
 
+const MenuItem = ({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: any;
+  label: string;
+}) => (
+  <Link
+    className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
+    href={href}
+    prefetch={false}
+  >
+    <Icon className="inline-block w-4 h-4 mr-3" />
+    <span>{label}</span>
+  </Link>
+);
+
 export default function SideMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const { isAuthenticated, userRole } = useAuth();
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen((prev) => !prev);
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       if (response.ok) {
@@ -56,14 +75,12 @@ export default function SideMenu() {
     } catch (error) {
       console.error("Logout error:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("/api/auth/session", {
-          method: "GET",
-        });
+        const response = await fetch("/api/auth/session", { method: "GET" });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -73,20 +90,81 @@ export default function SideMenu() {
         console.error("Failed to fetch session", error);
       }
     };
-    fetchUser();
-  }, []);
 
-  const canAccessMenuItem = (role: String) => {
-    if (user?.role === ROLES.ADMIN) return true;
-    if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
-    if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
-    if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
-    return false;
-  };
+    if (isAuthenticated) {
+      fetchUser();
+    }
+  }, [isAuthenticated]);
 
-  const imageSrc = user?.imagepath
-    ? `${user.imagepath[0]}`
-    : "/path/to/default/image.png";
+  const canAccessMenuItem = useCallback(
+    (role: string) => {
+      switch (user?.role) {
+        case ROLES.ADMIN:
+          return true;
+        case ROLES.MANAGER:
+        case ROLES.SALES:
+        case ROLES.INVENTORY:
+          return role !== ROLES.ADMIN;
+        default:
+          return false;
+      }
+    },
+    [user?.role]
+  );
+
+  const menuItems = useMemo(() => {
+    if (!user) return null;
+
+    if (user.role === ROLES.ADMIN || user.role === ROLES.MANAGER) {
+      return (
+        <>
+          <MenuItem
+            href="/dashboard"
+            icon={LayoutDashboardIcon}
+            label="Dashboard"
+          />
+          <MenuItem href="/product" icon={BoxIcon} label="Product" />
+          <MenuItem href="/sales" icon={DollarSignIcon} label="Sales" />
+          <MenuItem
+            href="/saleshistory"
+            icon={CalendarIcon}
+            label="Sales History"
+          />
+          <MenuItem href="/purchase" icon={PurchaseIcon} label="Purchase" />
+          <MenuItem
+            href="/purchasehistory"
+            icon={CalendarIcon}
+            label="Purchase History"
+          />
+          {user.role === ROLES.ADMIN && (
+            <>
+              <MenuItem href="/user" icon={UsersIcon} label="Users" />
+              <MenuItem href="/archive" icon={ArchiveIcon} label="Archive" />
+            </>
+          )}
+        </>
+      );
+    }
+
+    if (user.role === ROLES.SALES) {
+      return (
+        <>
+          <MenuItem href="/sales" icon={DollarSignIcon} label="Sales" />
+          <MenuItem
+            href="/saleshistory"
+            icon={CalendarIcon}
+            label="Sales History"
+          />
+        </>
+      );
+    }
+
+    if (user.role === ROLES.INVENTORY) {
+      return <MenuItem href="/product" icon={BoxIcon} label="Product" />;
+    }
+
+    return null;
+  }, [user]);
 
   if (isAuthenticated === null) {
     return null;
@@ -117,172 +195,22 @@ export default function SideMenu() {
             }`}
           >
             <ScrollArea className="h-full">
-              <nav className="mt-4 space-y-1 px-4">
-                {canAccessMenuItem(ROLES.ADMIN) && (
-                  <>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/dashboard"
-                      prefetch={false}
-                    >
-                      <LayoutDashboardIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Dashboard</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/product"
-                      prefetch={false}
-                    >
-                      <BoxIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Product</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/sales"
-                      prefetch={false}
-                    >
-                      <DollarSignIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Sales</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/saleshistory"
-                      prefetch={false}
-                    >
-                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Sales History</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/purchase"
-                      prefetch={false}
-                    >
-                      <PurchaseIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Purchase</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/purchasehistory"
-                      prefetch={false}
-                    >
-                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Purchase History</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/user"
-                      prefetch={false}
-                    >
-                      <UsersIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Users</span>
-                    </Link>
-
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/archive"
-                      prefetch={false}
-                    >
-                      <ArchiveIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Archive</span>
-                    </Link>
-                  </>
-                )}
-                {user?.role === ROLES.MANAGER && (
-                  <>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/dashboard"
-                      prefetch={false}
-                    >
-                      <LayoutDashboardIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Dashboard</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/product"
-                      prefetch={false}
-                    >
-                      <BoxIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Product</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/sales"
-                      prefetch={false}
-                    >
-                      <DollarSignIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Sales</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/saleshistory"
-                      prefetch={false}
-                    >
-                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Sales History</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/purchase"
-                      prefetch={false}
-                    >
-                      <PurchaseIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Purchase</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/purchasehistory"
-                      prefetch={false}
-                    >
-                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Purchase History</span>
-                    </Link>
-                  </>
-                )}
-                {user?.role === ROLES.SALES && (
-                  <>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/sales"
-                      prefetch={false}
-                    >
-                      <DollarSignIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Sales</span>
-                    </Link>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/saleshistory"
-                      prefetch={false}
-                    >
-                      <CalendarIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Sales History</span>
-                    </Link>
-                  </>
-                )}
-                {user?.role === ROLES.INVENTORY && (
-                  <>
-                    <Link
-                      className="block p-3 text-sm font-medium text-gray-700 rounded-xl hover:bg-customColors-mercury"
-                      href="/product"
-                      prefetch={false}
-                    >
-                      <BoxIcon className="inline-block w-4 h-4 mr-3" />
-                      <span>Product</span>
-                    </Link>
-                  </>
-                )}
-              </nav>
+              <nav className="mt-4 space-y-1 px-4">{menuItems}</nav>
             </ScrollArea>
           </div>
+
+          {/* Footer Section */}
           <div
             className={`bg-customColors-ivoryWhite border-t border-gray-200 flex items-center justify-between ${
               isMenuOpen ? "p-4" : "pt-4 pb-4 pl-1"
-            }  mt-auto`}
+            } mt-auto`}
           >
             <div className="flex items-center space-x-3">
               <div className="pl-2 lg:pl-2">
                 <Avatar>
-                  <AvatarImage src={user?.imagepath} />
+                  <AvatarImage
+                    src={user?.imagepath || "/path/to/default/image.png"}
+                  />
                   <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
                 </Avatar>
               </div>
