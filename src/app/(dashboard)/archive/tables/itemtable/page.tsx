@@ -97,8 +97,6 @@ export function ItemTable({
             <TableHead>Unit of Measurement</TableHead>
             <TableHead>Available Stocks</TableHead>
             <TableHead>Unit Price</TableHead>
-            <TableHead>Reorder Level</TableHead>
-            <TableHead>Critical Level</TableHead>
             <TableHead>Last Modified by</TableHead>
             <TableHead>Last Modified at</TableHead>
             <TableHead>Actions</TableHead>
@@ -122,8 +120,6 @@ export function ItemTable({
               <TableCell>{item.unitofmeasurement}</TableCell>
               <TableCell>{formatStock(item.stock)}</TableCell>
               <TableCell>{formatPrice(item.unitprice)}</TableCell>
-              <TableCell>{item.reorderlevel}</TableCell>
-              <TableCell>{item.criticallevel}</TableCell>
               <TableCell>
                 {item.User.firstname} {item.User.lastname}
               </TableCell>
