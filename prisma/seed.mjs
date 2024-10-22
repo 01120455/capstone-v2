@@ -17,7 +17,7 @@ async function main() {
       status: "active",
       imagepath:
         "/uploads/user_image/Lucius_Fox/luciusfox_jpg-1727014234081-541908937.jpeg",
-      deleted: false,
+      recentdelete: false,
     },
   });
 }

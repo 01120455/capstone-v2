@@ -285,213 +285,206 @@ export default function PurchaseFromMillingTable() {
   };
 
   return (
-    <div className="flex-1 overflow-y-hidden p-5 w-full">
-      <div className="container mx-auto px-4 md:px-6 py-8">
-        <div
-          className={`grid gap-6 ${
-            showFilter ? "grid-cols-[1fr_220px]" : "auto-cols-fr"
-          }`}
-        >
-          <div className="flex flex-col gap-6">
-            <div className="flex  items-center justify-between mb-6 -mr-6">
-              <h1 className="text-2xl font-bold ">
-                List of Purchase Items from Milling
-              </h1>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-row gap-2">
-                <Input
-                  type="text"
-                  placeholder="Search purchase order no. ..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="w-full md:w-auto mb-4"
-                />
-                <Button variant="outline" size="icon" onClick={toggleFilter}>
-                  <span className="sr-only">Filter</span>
-                  <FilterIcon className="w-6 h-6" />
-                </Button>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <div className="table-container relative">
-                <ScrollArea>
-                  <Table
-                    style={{ width: "100%" }}
-                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
-                    divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                  >
-                    <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                        <TableHead>Purchase Order No.</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Item Name</TableHead>
-                        <TableHead>Item Type</TableHead>
-                        <TableHead>Sack Weight</TableHead>
-                        <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Measurement Value</TableHead>
-                        <TableHead>Unit Price</TableHead>
-                        <TableHead>Total Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactions.map((purchaseItem) => (
-                        <TableRow key={purchaseItem.transactionitemid}>
-                          <TableCell>{purchaseItem.documentNumber}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={`px-2 py-1 rounded-full ${
-                                purchaseItem.status === "paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                  : purchaseItem.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                  : purchaseItem.status === "cancelled"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
-                              }`}
-                            >
-                              {purchaseItem.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{purchaseItem.Item.name}</TableCell>
-                          <TableCell>{purchaseItem.Item.type}</TableCell>
-                          <TableCell>{purchaseItem.sackweight}</TableCell>
-                          <TableCell>
-                            {purchaseItem.unitofmeasurement}
-                          </TableCell>
-                          <TableCell>{purchaseItem.measurementvalue}</TableCell>
-                          <TableCell>{purchaseItem.unitprice}</TableCell>
-                          <TableCell>{purchaseItem.totalamount}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-              </div>
+    <div className="flex-1 overflow-y-hidden w-full">
+      <div
+        className={`grid gap-6 ${
+          showFilter ? "grid-cols-[1fr_220px]" : "auto-cols-fr"
+        }`}
+      >
+        <div className="flex flex-col gap-6">
+          <div className="flex  items-center justify-between mb-6 -mr-6">
+            <h1 className="text-2xl font-bold ">
+              List of Purchase Items from Milling
+            </h1>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-row gap-2">
+              <Input
+                type="text"
+                placeholder="Search purchase order no. ..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full md:w-auto mb-4"
+              />
+              <Button variant="outline" size="icon" onClick={toggleFilter}>
+                <span className="sr-only">Filter</span>
+                <FilterIcon className="w-6 h-6" />
+              </Button>
             </div>
           </div>
-          <div
-            className={`bg-customColors-offWhite rounded-lg shadow-lg p-6 ${
-              showFilter ? "block" : "hidden"
-            }`}
-          >
-            <h2 className="text-lg font-bold mb-4">Filters</h2>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Button onClick={handleClearFilters}>Clear Filters</Button>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="document-number">Purchase Order No.</Label>
-                <Input
-                  id="document-number"
-                  type="text"
-                  placeholder="Enter Purchase Order No."
-                  value={filters.purordno}
-                  onChange={handlePurchaseOrderChange}
-                />
-                {isPurchaseOrderDropdownVisible &&
-                  purchaseOrderSuggestions.length > 0 && (
-                    <div
-                      ref={dropdownRefPurchaseOrder} // Attach ref to the dropdown
-                      className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                    >
-                      {purchaseOrderSuggestions.map((purordno) => (
-                        <div
-                          key={purordno}
-                          className="p-2 cursor-pointer hover:bg-gray-200"
-                          onClick={() =>
-                            setFilters((prev) => ({
-                              ...prev,
-                              purordno: purordno,
-                            }))
-                          }
-                        >
-                          {purordno}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="item-name">Item Name</Label>
-                <Input
-                  id="item-name"
-                  type="text"
-                  placeholder="Enter Item name"
-                  value={filters.name}
-                  onChange={handleItemNameChange}
-                />
-                {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+          <div className="overflow-x-auto">
+            <div className="table-container relative">
+              <ScrollArea>
+                <Table
+                  style={{ width: "100%" }}
+                  className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
+                  divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                >
+                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                    <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                      <TableHead>Purchase Order No.</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead>Item Type</TableHead>
+                      <TableHead>Sack Weight</TableHead>
+                      <TableHead>Unit of Measurement</TableHead>
+                      <TableHead>Measurement Value</TableHead>
+                      <TableHead>Unit Price</TableHead>
+                      <TableHead>Total Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransactions.map((purchaseItem) => (
+                      <TableRow key={purchaseItem.transactionitemid}>
+                        <TableCell>{purchaseItem.documentNumber}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`px-2 py-1 rounded-full ${
+                              purchaseItem.status === "paid"
+                                ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                : purchaseItem.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                : purchaseItem.status === "cancelled"
+                                ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                            }`}
+                          >
+                            {purchaseItem.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{purchaseItem.Item.name}</TableCell>
+                        <TableCell>{purchaseItem.Item.type}</TableCell>
+                        <TableCell>{purchaseItem.sackweight}</TableCell>
+                        <TableCell>{purchaseItem.unitofmeasurement}</TableCell>
+                        <TableCell>{purchaseItem.measurementvalue}</TableCell>
+                        <TableCell>{purchaseItem.unitprice}</TableCell>
+                        <TableCell>{purchaseItem.totalamount}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </div>
+          </div>
+        </div>
+        <div
+          className={`bg-customColors-offWhite rounded-lg shadow-lg p-6 ${
+            showFilter ? "block" : "hidden"
+          }`}
+        >
+          <h2 className="text-lg font-bold mb-4">Filters</h2>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Button onClick={handleClearFilters}>Clear Filters</Button>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="document-number">Purchase Order No.</Label>
+              <Input
+                id="document-number"
+                type="text"
+                placeholder="Enter Purchase Order No."
+                value={filters.purordno}
+                onChange={handlePurchaseOrderChange}
+              />
+              {isPurchaseOrderDropdownVisible &&
+                purchaseOrderSuggestions.length > 0 && (
                   <div
-                    ref={dropdownRefItem} // Attach ref to the dropdown
+                    ref={dropdownRefPurchaseOrder} // Attach ref to the dropdown
                     className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
                   >
-                    {itemNameSuggestions.map((item) => (
+                    {purchaseOrderSuggestions.map((purordno) => (
                       <div
-                        key={item}
+                        key={purordno}
                         className="p-2 cursor-pointer hover:bg-gray-200"
                         onClick={() =>
-                          setFilters((prev) => ({ ...prev, name: item }))
+                          setFilters((prev) => ({
+                            ...prev,
+                            purordno: purordno,
+                          }))
                         }
                       >
-                        {item}
+                        {purordno}
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={filters.status}
-                  onValueChange={handleStatusChange}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="item-name">Item Name</Label>
+              <Input
+                id="item-name"
+                type="text"
+                placeholder="Enter Item name"
+                value={filters.name}
+                onChange={handleItemNameChange}
+              />
+              {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+                <div
+                  ref={dropdownRefItem} // Attach ref to the dropdown
+                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </SelectTrigger>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="start-date">Start Date</Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={filters.dateRange.start}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      dateRange: {
-                        ...prev.dateRange,
-                        start: e.target.value,
-                      },
-                    }))
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="end-date">End Date</Label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={filters.dateRange.end}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      dateRange: {
-                        ...prev.dateRange,
-                        end: e.target.value,
-                      },
-                    }))
-                  }
-                />
-              </div>
+                  {itemNameSuggestions.map((item) => (
+                    <div
+                      key={item}
+                      className="p-2 cursor-pointer hover:bg-gray-200"
+                      onClick={() =>
+                        setFilters((prev) => ({ ...prev, name: item }))
+                      }
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={filters.status} onValueChange={handleStatusChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </SelectTrigger>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="start-date">Start Date</Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={filters.dateRange.start}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    dateRange: {
+                      ...prev.dateRange,
+                      start: e.target.value,
+                    },
+                  }))
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="end-date">End Date</Label>
+              <Input
+                id="end-date"
+                type="date"
+                value={filters.dateRange.end}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    dateRange: {
+                      ...prev.dateRange,
+                      end: e.target.value,
+                    },
+                  }))
+                }
+              />
             </div>
           </div>
         </div>
