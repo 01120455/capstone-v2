@@ -28,7 +28,7 @@ model User {
 model DocumentNumber {
   documentnumberid Int           @id @default(autoincrement())
   documentnumber   String        @unique @db.VarChar(30)
-  recentlydelete         Boolean       @default(false)
+  recentdelete         Boolean       @default(false)
   transaction     Transaction[]
 }
 

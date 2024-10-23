@@ -114,29 +114,182 @@ const useUser = () => {
   return user;
 };
 
+// const useItems = () => {
+//   const [items, setItems] = useState<ViewItem[]>([]);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [totalPages, setTotalPages] = useState(0);
+
+//   const fetchItems = useCallback(async (page: number) => {
+//     if (isNaN(page) || page < 1) return; // Prevent invalid page numbers
+
+//     try {
+//       const response = await fetch(
+//         `/api/product/productpagination?limit=${ITEMS_PER_PAGE}&page=${page}`
+//       );
+//       if (!response.ok)
+//         throw new Error(`HTTP error! status: ${response.status}`);
+
+//       const data = await response.json();
+//       setItems(data);
+
+//       // To get the total number of items for pagination
+//       const totalItemsResponse = await fetch(`/api/product/productpagination`);
+//       const totalItemsData = await totalItemsResponse.json();
+//       setTotalPages(Math.ceil(totalItemsData.length / ITEMS_PER_PAGE)); // Assuming you receive an array
+//     } catch (error) {
+//       console.error("Error fetching items:", error);
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     fetchItems(currentPage);
+//   }, [fetchItems, currentPage]);
+
+//   const handlePageChange = (page: number) => {
+//     setCurrentPage(page);
+//   };
+
+//   // Adding the refreshItems function inside the hook for reuse
+//   const refreshItems = async (page: number) => {
+//     try {
+//       const response = await fetch(
+//         `/api/product/productpagination?limit=${ITEMS_PER_PAGE}&page=${page}`
+//       );
+//       if (!response.ok)
+//         throw new Error(`HTTP error! status: ${response.status}`);
+
+//       const data = await response.json();
+//       setItems(data);
+
+//       // To get the total number of items for pagination
+//       const totalItemsResponse = await fetch(`/api/product/productpagination`);
+//       const totalItemsData = await totalItemsResponse.json();
+//       setTotalPages(Math.ceil(totalItemsData.length / ITEMS_PER_PAGE)); // Assuming you receive an array
+//     } catch (error) {
+//       console.error("Error fetching items:", error);
+//     }
+//   };
+
+//   return { items, currentPage, totalPages, handlePageChange, refreshItems };
+// };
+
 const useItems = () => {
   const [items, setItems] = useState<ViewItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filters, setFilters] = useState({
+    name: "",
+    type: "",
+    sackweight: "",
+    unitofmeasurement: "",
+  });
 
-  const fetchItems = useCallback(async () => {
-    try {
-      const response = await fetch("/api/product");
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setItems(data);
-    } catch (error) {
-      console.error("Error fetching items:", error);
-    }
-  }, []);
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const fetchItems = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return; 
+
+      try {
+        const params = new URLSearchParams({
+          limit: ITEMS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (filters.name) {
+          params.append("name", filters.name);
+        }
+        if (filters.type) {
+          params.append("type", filters.type);
+        }
+        if (filters.sackweight) {
+          params.append("sackweight", filters.sackweight);
+        }
+        if (filters.unitofmeasurement) {
+          params.append("unitofmeasurement", filters.unitofmeasurement);
+        }
+
+        const response = await fetch(
+          `/api/product/productpagination?${params}`
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const totalItems = await fetch(`/api/product/productpagination`);
+
+        const data = await response.json();
+        setItems(data);
+        const totalRowsData = await totalItems.json();
+        setTotalPages(Math.ceil(totalRowsData.length / ITEMS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    },
+    [filters]
+  );
 
   useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
 
-  return { items, refreshItems: fetchItems };
+    if (filters.name) {
+      const timer = setTimeout(() => fetchItems(currentPage), 1000); 
+      setDebounceTimeout(timer);
+    } else {
+      fetchItems(currentPage);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [filters.name, currentPage, fetchItems]);
+
+  // useEffect(() => {
+  //   fetchItems(currentPage);
+  //   console.log("Current Page: ", currentPage);
+  // }, [fetchItems, currentPage]);
+
+  const refreshItems = () => {
+    setFilters({
+      name: "",
+      type: "",
+      sackweight: "",
+      unitofmeasurement: "",
+    });
+    fetchItems(currentPage); 
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      name: "",
+      type: "",
+      sackweight: "",
+      unitofmeasurement: "",
+    });
+    fetchItems(1); 
+  };
+
+  return {
+    items,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    clearFilters,
+    refreshItems,
+  };
 };
 
-// Utility functions
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -156,7 +309,16 @@ const formatStock = (stock: number): string => {
 
 export default function ProductManagement() {
   const user = useUser();
-  const { items, refreshItems } = useItems();
+  const {
+    items,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    clearFilters,
+    refreshItems,
+  } = useItems();
   const form = useForm<AddItem>({
     resolver: zodResolver(item),
     defaultValues: {
@@ -173,14 +335,14 @@ export default function ProductManagement() {
   });
 
   // State
-  const [filters, setFilters] = useState({
-    name: "",
-    type: "all",
-    sackweight: "all",
-    unitofmeasurement: "all",
-  });
+  // const [filters, setFilters] = useState({
+  //   name: "",
+  //   type: "all",
+  //   sackweight: "all",
+  //   unitofmeasurement: "all",
+  // });
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  // const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
@@ -197,33 +359,16 @@ export default function ProductManagement() {
 
   // Memoized values
   const filteredItems = useMemo(() => {
-    const isEmptyFilters =
-      Object.values(filters).every((v) => v === "" || v === "all") &&
-      !searchTerm;
-    if (isEmptyFilters) return items;
+    return items;
+  }, [items]);
 
-    return items.filter((item) => {
-      const nameMatches =
-        item.name.toLowerCase().includes(filters.name.toLowerCase()) &&
-        item.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const typeMatches =
-        filters.type === "all" ||
-        item.type.toLowerCase() === filters.type.toLowerCase();
-      const sackweightMatches =
-        filters.sackweight === "all" || item.sackweight === filters.sackweight;
-      const unitMatches =
-        filters.unitofmeasurement === "all" ||
-        item.unitofmeasurement === filters.unitofmeasurement;
+  console.log("Filtered Items: ", filteredItems);
 
-      return nameMatches && typeMatches && sackweightMatches && unitMatches;
-    });
-  }, [filters, searchTerm, items]);
-
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  // const paginatedItems = filteredItems.slice(
+  //   (currentPage - 1) * ITEMS_PER_PAGE,
+  //   currentPage * ITEMS_PER_PAGE
+  // );
 
   // Event handlers
   const handleSubmit = async (values: AddItem) => {
@@ -284,7 +429,7 @@ export default function ProductManagement() {
 
       setShowAlert(false);
       setItemToDelete(null);
-      refreshItems();
+      // refreshItems(currentPage);
     } catch (error) {
       console.error("Error deleting item:", error);
       toast.error("Failed to delete item");
@@ -337,20 +482,17 @@ export default function ProductManagement() {
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
-    setItemDropdownVisible(e.target.value.length > 0);
-
-    const filtered = items
-      .map((i) => i.name)
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
-    setItemNameSuggestions(filtered);
+    handlePageChange(1); // Reset to first page when filters change
   };
 
   const handleItemTypeChange = (value: string) => {
     setFilters((prev) => ({ ...prev, type: value }));
+    handlePageChange(1); // Reset to first page when filters change
   };
 
   const handleUnitOfMeasurementChange = (value: string) => {
     setFilters((prev) => ({ ...prev, unitofmeasurement: value }));
+    handlePageChange(1); // Reset to first page when filters change
   };
 
   // Render helper components
@@ -363,19 +505,7 @@ export default function ProductManagement() {
         <h2 className="text-lg font-bold mb-4">Filters</h2>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Button
-              onClick={() => {
-                setFilters({
-                  name: "",
-                  type: "all",
-                  sackweight: "all",
-                  unitofmeasurement: "all",
-                });
-                setSearchTerm("");
-              }}
-            >
-              Clear Filters
-            </Button>
+            <Button onClick={clearFilters}>Clear Filters</Button>
           </div>
           <div className="grid gap-2">
             <span className="text-sm">Item Name</span>
@@ -415,7 +545,6 @@ export default function ProductManagement() {
                 <SelectValue placeholder="Select Item Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="palay">Palay</SelectItem>
                 <SelectItem value="bigas">Bigas</SelectItem>
                 <SelectItem value="resico">Resico</SelectItem>
@@ -433,7 +562,6 @@ export default function ProductManagement() {
                 <SelectValue placeholder="Select Unit of Measurement" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="quantity">Quantity</SelectItem>
                 <SelectItem value="weight">Weight</SelectItem>
               </SelectContent>
@@ -495,7 +623,7 @@ export default function ProductManagement() {
   };
 
   console.log("Input Value: ", inputValue);
-  const filteredItemsName = items.filter((item) =>
+  const filteredItemsName = items?.filter((item) =>
     item.name.toLowerCase().includes(inputValue.toLowerCase())
   );
 
@@ -532,9 +660,9 @@ export default function ProductManagement() {
     setShowAlert(true);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  // const handlePageChange = (page: number) => {
+  //   setCurrentPage(page);
+  // };
 
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
@@ -552,8 +680,10 @@ export default function ProductManagement() {
             <Input
               type="text"
               placeholder="Search item name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              // value={searchTerm}
+              // onChange={(e) => setSearchTerm(e.target.value)}
+              value={filters.name}
+              onChange={handleItemNameChange}
               className="w-full md:w-auto"
             />
             <div className="flex gap-2">
@@ -594,71 +724,77 @@ export default function ProductManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedItems.map((item) => (
-                  <TableRow key={item.itemid}>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleShowImage(item)}
-                      >
-                        View Image
-                      </Button>
-                    </TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.type}</TableCell>
-                    <TableCell>{item.sackweight}</TableCell>
-                    <TableCell>{item.unitofmeasurement}</TableCell>
-                    <TableCell>{formatStock(item.stock)}</TableCell>
-                    <TableCell>{formatPrice(item.unitprice)}</TableCell>
-                    {canAccessButton(ROLES.ADMIN) && (
+                {filteredItems?.length > 0 ? (
+                  filteredItems.map((item) => (
+                    <TableRow key={item.itemid}>
                       <TableCell>
-                        {item.User.firstname} {item.User.lastname}
-                      </TableCell>
-                    )}
-                    {canAccessButton(ROLES.ADMIN) && (
-                      <TableCell>
-                        {item.lastmodifiedat
-                          ? new Date(item.lastmodifiedat).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )
-                          : "N/A"}
-                      </TableCell>
-                    )}
-                    <TableCell>
-                      <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(item)}
+                          onClick={() => handleShowImage(item)}
                         >
-                          <FilePenIcon className="w-4 h-4" />
-                          <span className="sr-only">Edit</span>
+                          View Image
                         </Button>
-                        {canAccessButton(ROLES.ADMIN) && (
+                      </TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.type}</TableCell>
+                      <TableCell>{item.sackweight}</TableCell>
+                      <TableCell>{item.unitofmeasurement}</TableCell>
+                      <TableCell>{formatStock(item.stock)}</TableCell>
+                      <TableCell>{formatPrice(item.unitprice)}</TableCell>
+                      {canAccessButton(ROLES.ADMIN) && (
+                        <TableCell>
+                          {item.User.firstname} {item.User.lastname}
+                        </TableCell>
+                      )}
+                      {canAccessButton(ROLES.ADMIN) && (
+                        <TableCell>
+                          {item.lastmodifiedat
+                            ? new Date(item.lastmodifiedat).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : "N/A"}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteItem(item)}
+                            onClick={() => handleEdit(item)}
                           >
-                            <TrashIcon className="w-4 h-4" />
-                            <span className="sr-only">Delete</span>
+                            <FilePenIcon className="w-4 h-4" />
+                            <span className="sr-only">Edit</span>
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
+                          {canAccessButton(ROLES.ADMIN) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteItem(item)}
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell>No items found</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
-            <div className="flex items-center justify-center mt-4">
+            <div className="flex items-center justify-center mt-4 mb-4">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
@@ -668,53 +804,16 @@ export default function ProductManagement() {
                       }
                     />
                   </PaginationItem>
-                  {currentPage > 3 && (
-                    <>
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => handlePageChange(1)}
-                          isActive={currentPage === 1}
-                        >
-                          1
-                        </PaginationLink>
-                      </PaginationItem>
-                      {currentPage > 3 && <PaginationEllipsis />}
-                    </>
-                  )}
-
-                  {Array.from(
-                    { length: Math.min(3, totalPages) },
-                    (_, index) => {
-                      const pageIndex = Math.max(1, currentPage - 1) + index;
-                      if (pageIndex < 1 || pageIndex > totalPages) return null;
-
-                      return (
-                        <PaginationItem key={pageIndex}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(pageIndex)}
-                            isActive={currentPage === pageIndex}
-                          >
-                            {pageIndex}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    }
-                  )}
-
-                  {currentPage < totalPages - 2 && (
-                    <>
-                      {currentPage < totalPages - 3 && <PaginationEllipsis />}
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => handlePageChange(totalPages)}
-                          isActive={currentPage === totalPages}
-                        >
-                          {totalPages}
-                        </PaginationLink>
-                      </PaginationItem>
-                    </>
-                  )}
-
+                  {[...Array(totalPages)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
                   <PaginationItem>
                     <PaginationNext
                       onClick={() =>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -88,31 +88,318 @@ interface CombinedTransactionItem {
   lastmodifiedat?: Date;
 }
 
-export default function Component() {
-  const [sales, setSales] = useState<TransactionTable[]>([]);
+const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price);
+};
+
+const ROWS_PER_PAGE = 5;
+
+const useFilters = () => {
   const [filters, setFilters] = useState({
     invoiceno: "",
     name: "",
-    customer: "",
-    walkin: "all",
-    frommilling: "all",
-    status: "all",
+    walkin: "",
+    status: "",
     dateRange: { start: "", end: "" },
   });
 
+  const clear = () => {
+    setFilters({
+      invoiceno: "",
+      name: "",
+      walkin: "",
+      status: "",
+      dateRange: { start: "", end: "" },
+    });
+  };
+
+  return {
+    filters,
+    setFilters,
+    clear,
+  };
+};
+
+const usePurchases = () => {
+  const { filters, setFilters, clear } = useFilters();
+  const [sales, setSales] = useState<TransactionTable[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const fetchSales = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (filters.invoiceno) {
+          params.append("documentnumber", filters.invoiceno);
+        }
+        if (filters.name) {
+          params.append("name", filters.name);
+        }
+        if (filters.walkin) {
+          params.append("walkin", filters.walkin);
+        }
+        if (filters.status) {
+          params.append("status", filters.status);
+        }
+        if (filters.dateRange.start) {
+          params.append("startdate", filters.dateRange.start);
+        }
+        if (filters.dateRange.end) {
+          params.append("enddate", filters.dateRange.end);
+        }
+
+        const response = await fetch(`/api/sales/salespagination?${params}`);
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        setSales(data);
+
+        const totalSalesResponse = await fetch(`/api/sales/salespagination`);
+        const totalRowsData = await totalSalesResponse.json();
+        setTotalPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching sales:", error);
+      }
+    },
+    [filters]
+  );
+
+  useEffect(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    const shouldDebounce = filters.invoiceno || filters.name;
+
+    if (shouldDebounce) {
+      const timer = setTimeout(() => fetchSales(currentPage), 2000);
+      setDebounceTimeout(timer);
+    } else {
+      fetchSales(currentPage);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [filters.invoiceno, filters.name, currentPage, fetchSales]);
+
+  // console.log(filters);
+
+  // useEffect(() => {
+  //   fetchSales(currentPage);
+  // }, [fetchSales, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const clearFilters = () => {
+    clear();
+    fetchSales(1);
+  };
+
+  return {
+    sales,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    clearFilters,
+  };
+};
+
+const useTransactionItems = () => {
+  const {
+    filters: filters2,
+    setFilters: setFilters2,
+    clear: clear2,
+  } = useFilters();
+  const [transactionItem, setTransactionItem] = useState<
+    CombinedTransactionItem[]
+  >([]);
+  const [currentTransactionItemsPage, setCurrentTransactionItemsPage] =
+    useState(1);
+  const [totalTransactionItemsPages, setTotalTransactionItemsPages] =
+    useState(0);
+
+  const fetchTransactionData = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        // Add filters to params
+        if (filters2.invoiceno) {
+          params.append("documentnumber", filters2.invoiceno);
+        }
+        if (filters2.name) {
+          params.append("name", filters2.name);
+        }
+        if (filters2.walkin) {
+          params.append("walkin", filters2.walkin);
+        }
+        if (filters2.status) {
+          params.append("status", filters2.status);
+        }
+        if (filters2.dateRange.start) {
+          params.append("startdate", filters2.dateRange.start);
+        }
+        if (filters2.dateRange.end) {
+          params.append("enddate", filters2.dateRange.end);
+        }
+
+        // Fetch filtered transactions
+        const transactionsResponse = await fetch(
+          `/api/customertransaction/customertransactionpagination?${params}`
+        );
+        if (!transactionsResponse.ok) {
+          throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
+        }
+        const transactions: any[] = await transactionsResponse.json();
+
+        // Fetch all transaction items
+        const transactionItemsResponse = await fetch("/api/transactionitem");
+        if (!transactionItemsResponse.ok) {
+          throw new Error(
+            `HTTP error! status: ${transactionItemsResponse.status}`
+          );
+        }
+        const allTransactionItems: TransactionItem[] =
+          await transactionItemsResponse.json();
+
+        // Create transaction map for quick lookups
+        const transactionMap = new Map<number, any>();
+        transactions.forEach((transaction) => {
+          transactionMap.set(transaction.transactionid, {
+            documentNumber: transaction.DocumentNumber?.documentnumber,
+            frommilling: transaction.frommilling,
+            type: transaction.type,
+            status: transaction.status,
+          });
+        });
+
+        // Combine and filter data
+        const combinedData: CombinedTransactionItem[] = allTransactionItems
+          .map((item) => {
+            const transactionInfo =
+              transactionMap.get(item.transactionid) || {};
+            return {
+              ...item,
+              documentNumber: transactionInfo.documentNumber,
+              frommilling: transactionInfo.frommilling || false,
+              type: transactionInfo.type || "otherType",
+              status: transactionInfo.status || "otherStatus",
+            };
+          })
+          .filter((item) => item.documentNumber !== undefined);
+
+        // Set state
+        setTransactionItem(combinedData);
+
+        // Fetch total count for pagination
+        const totalResponse = await fetch(
+          `/api/customertransaction/customertransactionpagination`
+        );
+        const totalData = await totalResponse.json();
+        setTotalTransactionItemsPages(
+          Math.ceil(totalData.length / ROWS_PER_PAGE)
+        );
+      } catch (error) {
+        console.error("Error fetching transaction data:", error);
+      }
+    },
+    [filters2]
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchTransactionData(currentTransactionItemsPage);
+    };
+
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 2000); // Debounce time
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [filters2, currentTransactionItemsPage, fetchTransactionData]);
+
+  const clearFilters2 = () => {
+    clear2();
+    fetchTransactionData(1);
+  };
+
+  const handleTransactionItemsPageChange = (page: number) => {
+    setCurrentTransactionItemsPage(page);
+  };
+
+  return {
+    transactionItem,
+    currentTransactionItemsPage,
+    totalTransactionItemsPages,
+    handleTransactionItemsPageChange,
+    filters: filters2,
+    setFilters: setFilters2,
+    clearFilters2,
+  };
+};
+
+export default function Component() {
+  const {
+    sales,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    clearFilters,
+  } = usePurchases();
+  const {
+    transactionItem,
+    currentTransactionItemsPage,
+    totalTransactionItemsPages,
+    handleTransactionItemsPageChange,
+    filters: filters2,
+    setFilters: setFilters2,
+    clearFilters2,
+  } = useTransactionItems();
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [currentItemPage, setCurrentItemPage] = useState(1);
-  const [transactionItemsPerPage, setTransactionItemsPerPage] = useState(5);
-  const [showFilter, setShowFilter] = useState(false);
-  const [invoiceSuggestions, setInvoiceSuggestions] = useState<string[]>([]);
-  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  const [isInvoiceDropdownVisible, setInvoiceDropdownVisible] = useState(false);
-  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  const dropdownRefInvoice = useRef<HTMLDivElement>(null);
-  const dropdownRefItem = useRef<HTMLDivElement>(null);
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [itemsPerPage, setItemsPerPage] = useState(5);
+  // const [currentItemPage, setCurrentItemPage] = useState(1);
+  // const [transactionItemsPerPage, setTransactionItemsPerPage] = useState(5);
+  // const [showFilter, setShowFilter] = useState(false);
+  // const [invoiceSuggestions, setInvoiceSuggestions] = useState<string[]>([]);
+  // const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  // const [isInvoiceDropdownVisible, setInvoiceDropdownVisible] = useState(false);
+  // const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  // const dropdownRefInvoice = useRef<HTMLDivElement>(null);
+  // const dropdownRefItem = useRef<HTMLDivElement>(null);
   const [showModalEditSales, setShowModalEditSales] = useState(false);
 
   const formSalesOnly = useForm<EditSales>({
@@ -198,219 +485,354 @@ export default function Component() {
     }
   };
 
-  useEffect(() => {
-    const getSales = async () => {
-      try {
-        const response = await fetch("/api/customertransaction");
-        const text = await response.text();
-        // console.log("Raw Response Text:", text);
+  // useEffect(() => {
+  //   const getSales = async () => {
+  //     try {
+  //       const response = await fetch("/api/customertransaction");
+  //       const text = await response.text();
+  //       // console.log("Raw Response Text:", text);
 
-        const data = JSON.parse(text);
+  //       const data = JSON.parse(text);
 
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
+  //       const parsedData = data.map((item: any) => {
+  //         return {
+  //           ...item,
+  //           createdat: item.createdat ? new Date(item.createdat) : null,
+  //           lastmodifiedat: item.lastmodifiedat
+  //             ? new Date(item.lastmodifiedat)
+  //             : null,
+  //           taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+  //         };
+  //       });
 
-        // console.log("Parsed Data with Date Conversion:", parsedData);
+  //       // console.log("Parsed Data with Date Conversion:", parsedData);
 
-        // console.log("Parsed Data:", parsedData);
-        setSales(parsedData);
-      } catch (error) {
-        console.error("Error in getSales:", error);
-      }
-    };
+  //       // console.log("Parsed Data:", parsedData);
+  //       setSales(parsedData);
+  //     } catch (error) {
+  //       console.error("Error in getSales:", error);
+  //     }
+  //   };
 
-    getSales();
-  }, []);
+  //   getSales();
+  // }, []);
 
-  const refreshSales = async () => {
-    try {
-      const response = await fetch("/api/customertransaction");
-      const text = await response.text();
-      // console.log("Raw Response Text:", text);
+  // const refreshSales = async () => {
+  //   try {
+  //     const response = await fetch("/api/customertransaction");
+  //     const text = await response.text();
+  //     // console.log("Raw Response Text:", text);
 
-      const data = JSON.parse(text);
+  //     const data = JSON.parse(text);
 
-      const parsedData = data.map((item: any) => {
-        return {
-          ...item,
-          createdat: item.createdat ? new Date(item.createdat) : null,
-          lastmodifiedat: item.lastmodifiedat
-            ? new Date(item.lastmodifiedat)
-            : null,
-          taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-        };
-      });
+  //     const parsedData = data.map((item: any) => {
+  //       return {
+  //         ...item,
+  //         createdat: item.createdat ? new Date(item.createdat) : null,
+  //         lastmodifiedat: item.lastmodifiedat
+  //           ? new Date(item.lastmodifiedat)
+  //           : null,
+  //         taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
+  //       };
+  //     });
 
-      // console.log("Parsed Data with Date Conversion:", parsedData);
+  //     // console.log("Parsed Data with Date Conversion:", parsedData);
 
-      // console.log("Parsed Data:", parsedData);
-      setSales(parsedData);
-    } catch (error) {
-      console.error("Error in getSales:", error);
-    }
-  };
+  //     // console.log("Parsed Data:", parsedData);
+  //     setSales(parsedData);
+  //   } catch (error) {
+  //     console.error("Error in getSales:", error);
+  //   }
+  // };
 
   const filteredTransactions = useMemo(() => {
-    return sales.filter((sales) => {
-      const invoiceNo =
-        sales.DocumentNumber?.documentnumber?.toLowerCase() || "";
-      const statusMatches =
-        filters.status === "all" || sales.status === filters.status;
-      const walkinMatches =
-        filters.walkin === "all" ||
-        (filters.walkin === "true" && sales.walkin) ||
-        (filters.walkin === "false" && !sales.walkin);
-      const frommillingMatches =
-        filters.frommilling === "all" ||
-        (filters.frommilling === "true" && sales.frommilling) ||
-        (filters.frommilling === "false" && !sales.frommilling);
-      const itemNameMatches = sales.TransactionItem.some((item) => {
-        const itemName = item?.Item?.name?.toLowerCase() || "";
-        return itemName.includes(filters.name.toLowerCase());
-      });
-
-      const createdAt = sales.createdat ? new Date(sales.createdat) : null;
-      const start = filters.dateRange.start
-        ? new Date(filters.dateRange.start)
-        : null;
-      const end = filters.dateRange.end
-        ? new Date(filters.dateRange.end)
-        : null;
-
-      const isWithinDateRange = (
-        createdAt: Date | null,
-        start: Date | null,
-        end: Date | null
-      ) => {
-        if (!createdAt) return false;
-        if (start && end) return createdAt >= start && createdAt <= end;
-        if (start) return createdAt >= start;
-        if (end) return createdAt <= end;
-        return true;
-      };
-
-      const dateRangeMatches = isWithinDateRange(createdAt, start, end);
-
-      console.log("Filtering sales:", sales);
-      console.log("Matches:", {
-        invoiceNoMatches:
-          !filters.invoiceno ||
-          invoiceNo.includes(filters.invoiceno.toLowerCase()),
-        statusMatches,
-        walkinMatches,
-        frommillingMatches,
-        itemNameMatches,
-        dateRangeMatches,
-      });
-
-      return (
-        (!filters.invoiceno ||
-          invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
-        statusMatches &&
-        walkinMatches &&
-        frommillingMatches &&
-        itemNameMatches &&
-        dateRangeMatches
-      );
-    });
+    return sales;
+    // return sales.filter((sales) => {
+    //   const invoiceNo =
+    //     sales.DocumentNumber?.documentnumber?.toLowerCase() || "";
+    //   const statusMatches =
+    //     filters.status === "all" || sales.status === filters.status;
+    //   const walkinMatches =
+    //     filters.walkin === "all" ||
+    //     (filters.walkin === "true" && sales.walkin) ||
+    //     (filters.walkin === "false" && !sales.walkin);
+    //   const frommillingMatches =
+    //     filters.frommilling === "all" ||
+    //     (filters.frommilling === "true" && sales.frommilling) ||
+    //     (filters.frommilling === "false" && !sales.frommilling);
+    //   const itemNameMatches = sales.TransactionItem.some((item) => {
+    //     const itemName = item?.Item?.name?.toLowerCase() || "";
+    //     return itemName.includes(filters.name.toLowerCase());
+    //   });
+    //   const createdAt = sales.createdat ? new Date(sales.createdat) : null;
+    //   const start = filters.dateRange.start
+    //     ? new Date(filters.dateRange.start)
+    //     : null;
+    //   const end = filters.dateRange.end
+    //     ? new Date(filters.dateRange.end)
+    //     : null;
+    //   const isWithinDateRange = (
+    //     createdAt: Date | null,
+    //     start: Date | null,
+    //     end: Date | null
+    //   ) => {
+    //     if (!createdAt) return false;
+    //     if (start && end) return createdAt >= start && createdAt <= end;
+    //     if (start) return createdAt >= start;
+    //     if (end) return createdAt <= end;
+    //     return true;
+    //   };
+    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
+    //   console.log("Filtering sales:", sales);
+    //   console.log("Matches:", {
+    //     invoiceNoMatches:
+    //       !filters.invoiceno ||
+    //       invoiceNo.includes(filters.invoiceno.toLowerCase()),
+    //     statusMatches,
+    //     walkinMatches,
+    //     frommillingMatches,
+    //     itemNameMatches,
+    //     dateRangeMatches,
+    //   });
+    //   return (
+    //     (!filters.invoiceno ||
+    //       invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
+    //     statusMatches &&
+    //     walkinMatches &&
+    //     frommillingMatches &&
+    //     itemNameMatches &&
+    //     dateRangeMatches
+    //   );
+    // });
   }, [filters, sales]);
-
-  const handleClearFilters = () => {
-    setFilters({
-      invoiceno: "",
-      name: "",
-      customer: "",
-      walkin: "all",
-      frommilling: "all",
-      status: "all",
-      dateRange: { start: "", end: "" },
-    });
-  };
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat("en-PH", {
-      style: "currency",
-      currency: "PHP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const paginatedTransactions = filteredTransactions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, invoiceno: value }));
-    setInvoiceDropdownVisible(e.target.value.length > 0);
+    setFilters2((prev) => ({ ...prev, invoiceno: value }));
+    // setInvoiceDropdownVisible(e.target.value.length > 0);
 
-    const filtered = sales
-      .map((p) => p.DocumentNumber?.documentnumber)
-      .filter(
-        (invoice): invoice is string =>
-          invoice !== undefined &&
-          invoice.toLowerCase().includes(value.toLowerCase())
-      );
+    // const filtered = sales
+    //   .map((p) => p.DocumentNumber?.documentnumber)
+    //   .filter(
+    //     (invoice): invoice is string =>
+    //       invoice !== undefined &&
+    //       invoice.toLowerCase().includes(value.toLowerCase())
+    //   );
 
-    setInvoiceSuggestions(filtered);
+    // setInvoiceSuggestions(filtered);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
-    setItemDropdownVisible(value.length > 0);
+    setFilters2((prev) => ({ ...prev, name: value }));
+    // setItemDropdownVisible(value.length > 0);
 
-    const filtered = sales
-      .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name))
-      .filter((itemName) =>
-        itemName?.toLowerCase().includes(value.toLowerCase())
-      );
+    // const filtered = sales
+    //   .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name))
+    //   .filter((itemName) =>
+    //     itemName?.toLowerCase().includes(value.toLowerCase())
+    //   );
 
-    setItemNameSuggestions(Array.from(new Set(filtered)));
+    // setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRefInvoice.current &&
-        !dropdownRefInvoice.current.contains(event.target as Node)
-      ) {
-        setInvoiceDropdownVisible(false);
-      }
-      if (
-        dropdownRefItem.current &&
-        !dropdownRefItem.current.contains(event.target as Node)
-      ) {
-        setItemDropdownVisible(false);
-      }
-    };
+  const clearAllFilters = () => {
+    clearFilters();
+    clearFilters2();
+    handlePageChange(1);
+    handleTransactionItemsPageChange(1);
+  };
 
-    document.addEventListener("mousedown", handleClickOutside as EventListener);
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside as EventListener
-      );
-    };
-  }, []);
+  const renderFilters = () => (
+    <Popover>
+      <PopoverTrigger>
+        <FilterIcon className="w-6 h-6" />
+      </PopoverTrigger>
+      <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
+        <h2 className="text-lg font-bold mb-4">Filters</h2>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Button onClick={clearAllFilters}>Clear Filters</Button>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="document-number">Invoice No.</Label>
+            <Input
+              id="document-number"
+              type="text"
+              placeholder="Enter Purchase Order No."
+              value={filters.invoiceno}
+              onChange={handleInvoiceChange}
+            />
+            {/* {isInvoiceDropdownVisible && invoiceSuggestions.length > 0 && (
+              <div
+                ref={dropdownRefInvoice} // Attach ref to the dropdown
+                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+              >
+                {invoiceSuggestions.map((invoiceno) => (
+                  <div
+                    key={invoiceno}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        invoiceno: invoiceno,
+                      }))
+                    }
+                  >
+                    {invoiceno}
+                  </div>
+                ))}
+              </div>
+            )} */}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="item-name">Item Name</Label>
+            <Input
+              id="item-name"
+              type="text"
+              placeholder="Enter Item name"
+              value={filters.name}
+              onChange={handleItemNameChange}
+            />
+            {/* {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+              <div
+                ref={dropdownRefItem} // Attach ref to the dropdown
+                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+              >
+                {itemNameSuggestions.map((item) => (
+                  <div
+                    key={item}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        name: item,
+                      }))
+                    }
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            )} */}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="walkin">Walk-in</Label>
+            <Select value={filters.walkin} onValueChange={handleWalkinChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+                <SelectContent>
+                  <SelectItem value="true">Yes</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </SelectTrigger>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="status">Status</Label>
+            <Select value={filters.status} onValueChange={handleStatusChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+                <SelectContent>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </SelectTrigger>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="start-date">Start Date</Label>
+            <Input
+              id="start-date"
+              type="date"
+              value={filters.dateRange.start}
+              onChange={(e) => {
+                const newValue = e.target.value;
+
+                setFilters((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    start: newValue,
+                  },
+                }));
+
+                setFilters2((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    start: newValue,
+                  },
+                }));
+              }}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="end-date">End Date</Label>
+            <Input
+              id="end-date"
+              type="date"
+              value={filters.dateRange.end}
+              onChange={(e) => {
+                const newValue = e.target.value;
+
+                setFilters((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    end: newValue,
+                  },
+                }));
+
+                setFilters2((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    end: newValue,
+                  },
+                }));
+              }}
+            />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (
+  //       dropdownRefInvoice.current &&
+  //       !dropdownRefInvoice.current.contains(event.target as Node)
+  //     ) {
+  //       setInvoiceDropdownVisible(false);
+  //     }
+  //     if (
+  //       dropdownRefItem.current &&
+  //       !dropdownRefItem.current.contains(event.target as Node)
+  //     ) {
+  //       setItemDropdownVisible(false);
+  //     }
+  //   };
+
+  //   document.addEventListener("mousedown", handleClickOutside as EventListener);
+  //   return () => {
+  //     document.removeEventListener(
+  //       "mousedown",
+  //       handleClickOutside as EventListener
+  //     );
+  //   };
+  // }, []);
 
   const handleStatusChange = (value: string) => {
     setFilters((prev) => ({
+      ...prev,
+      status: value,
+    }));
+    setFilters2((prev) => ({
       ...prev,
       status: value,
     }));
@@ -421,137 +843,131 @@ export default function Component() {
       ...prev,
       walkin: value,
     }));
-  };
-
-  const handleFromMillingChange = (value: string) => {
-    setFilters((prev) => ({
+    setFilters2((prev) => ({
       ...prev,
-      frommilling: value,
+      walkin: value,
     }));
   };
 
-  const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
-    const transactionsResponse = await fetch("/api/customertransaction");
-    const transactions: any[] = await transactionsResponse.json();
-    console.log("Transactions:", transactions);
+  // const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
+  //   const transactionsResponse = await fetch("/api/customertransaction");
+  //   const transactions: any[] = await transactionsResponse.json();
+  //   console.log("Transactions:", transactions);
 
-    const transactionItemsResponse = await fetch("/api/transactionitem");
-    const transactionItems: TransactionItem[] =
-      await transactionItemsResponse.json();
-    console.log("Transaction Items:", transactionItems);
+  //   const transactionItemsResponse = await fetch("/api/transactionitem");
+  //   const transactionItems: TransactionItem[] =
+  //     await transactionItemsResponse.json();
+  //   console.log("Transaction Items:", transactionItems);
 
-    const transactionMap = new Map<number, any>();
-    transactions.forEach((transaction) => {
-      transactionMap.set(transaction.transactionid, {
-        documentNumber: transaction.DocumentNumber?.documentnumber,
-        type: transaction.type,
-        status: transaction.status,
-      });
-    });
-    console.log("Transaction Map:", Array.from(transactionMap.entries()));
+  //   const transactionMap = new Map<number, any>();
+  //   transactions.forEach((transaction) => {
+  //     transactionMap.set(transaction.transactionid, {
+  //       documentNumber: transaction.DocumentNumber?.documentnumber,
+  //       type: transaction.type,
+  //       status: transaction.status,
+  //     });
+  //   });
+  //   console.log("Transaction Map:", Array.from(transactionMap.entries()));
 
-    const combinedData: CombinedTransactionItem[] = transactionItems.map(
-      (item) => {
-        const transactionInfo = transactionMap.get(item.transactionid) || {};
+  //   const combinedData: CombinedTransactionItem[] = transactionItems.map(
+  //     (item) => {
+  //       const transactionInfo = transactionMap.get(item.transactionid) || {};
 
-        const combinedItem = {
-          ...item,
-          documentNumber: transactionInfo.documentNumber,
-          type: transactionInfo.type || "otherType",
-          status: transactionInfo.status || "otherStatus",
-        };
+  //       const combinedItem = {
+  //         ...item,
+  //         documentNumber: transactionInfo.documentNumber,
+  //         type: transactionInfo.type || "otherType",
+  //         status: transactionInfo.status || "otherStatus",
+  //       };
 
-        console.log("Combined Item:", combinedItem); // Log each combined item
-        return combinedItem;
-      }
-    );
+  //       console.log("Combined Item:", combinedItem); // Log each combined item
+  //       return combinedItem;
+  //     }
+  //   );
 
-    // Filter out items with undefined documentNumber
-    const filteredData = combinedData.filter(
-      (item) => item.documentNumber !== undefined
-    );
-    console.log(
-      "Filtered Data (without undefined documentNumber):",
-      filteredData
-    ); // Log the filtered data
+  //   // Filter out items with undefined documentNumber
+  //   const filteredData = combinedData.filter(
+  //     (item) => item.documentNumber !== undefined
+  //   );
+  //   console.log(
+  //     "Filtered Data (without undefined documentNumber):",
+  //     filteredData
+  //   ); // Log the filtered data
 
-    return filteredData;
-  };
+  //   return filteredData;
+  // };
 
-  const [transactionItem, setTransactionItem] = useState<
-    CombinedTransactionItem[]
-  >([]);
+  // const [transactionItem, setTransactionItem] = useState<
+  //   CombinedTransactionItem[]
+  // >([]);
 
-  useEffect(() => {
-    const getData = async () => {
-      const combinedData = await fetchTransactionData();
-      setTransactionItem(combinedData);
-    };
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     const combinedData = await fetchTransactionData();
+  //     setTransactionItem(combinedData);
+  //   };
 
-    getData();
-  }, []);
+  //   getData();
+  // }, []);
 
-  const refreshTransactionItems = async () => {
-    const combinedData = await fetchTransactionData();
-    setTransactionItem(combinedData);
-  };
+  // const refreshTransactionItems = async () => {
+  //   const combinedData = await fetchTransactionData();
+  //   setTransactionItem(combinedData);
+  // };
 
-  console.log("Transaction Item:", transactionItem);
+  // console.log("Transaction Item:", transactionItem);
 
   const filteredTransactionItems = useMemo(() => {
-    return transactionItem.filter((item) => {
-      const invoiceno = item.documentNumber?.toLowerCase() || "";
-      const statusMatches =
-        filters.status === "all" || item.status === filters.status;
-      const itemNameMatches = item.Item?.name
-        ? item.Item.name.toLowerCase().includes(filters.name.toLowerCase())
-        : false;
-
-      const createdAt = item.lastmodifiedat
-        ? new Date(item.lastmodifiedat)
-        : null;
-      const start = filters.dateRange.start
-        ? new Date(filters.dateRange.start)
-        : null;
-      const end = filters.dateRange.end
-        ? new Date(filters.dateRange.end)
-        : null;
-
-      const isWithinDateRange = (
-        createdAt: Date | null,
-        start: Date | null,
-        end: Date | null
-      ) => {
-        if (!createdAt) return false;
-        if (start && end) return createdAt >= start && createdAt <= end;
-        if (start) return createdAt >= start;
-        if (end) return createdAt <= end;
-        return true;
-      };
-
-      const dateRangeMatches = isWithinDateRange(createdAt, start, end);
-
-      return (
-        (!filters.invoiceno ||
-          invoiceno.includes(filters.invoiceno.toLowerCase())) &&
-        statusMatches &&
-        itemNameMatches &&
-        dateRangeMatches
-      );
-    });
+    return transactionItem;
+    // return transactionItem.filter((item) => {
+    //   const invoiceno = item.documentNumber?.toLowerCase() || "";
+    //   const statusMatches =
+    //     filters.status === "all" || item.status === filters.status;
+    //   const itemNameMatches = item.Item?.name
+    //     ? item.Item.name.toLowerCase().includes(filters.name.toLowerCase())
+    //     : false;
+    //   const createdAt = item.lastmodifiedat
+    //     ? new Date(item.lastmodifiedat)
+    //     : null;
+    //   const start = filters.dateRange.start
+    //     ? new Date(filters.dateRange.start)
+    //     : null;
+    //   const end = filters.dateRange.end
+    //     ? new Date(filters.dateRange.end)
+    //     : null;
+    //   const isWithinDateRange = (
+    //     createdAt: Date | null,
+    //     start: Date | null,
+    //     end: Date | null
+    //   ) => {
+    //     if (!createdAt) return false;
+    //     if (start && end) return createdAt >= start && createdAt <= end;
+    //     if (start) return createdAt >= start;
+    //     if (end) return createdAt <= end;
+    //     return true;
+    //   };
+    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
+    //   return (
+    //     (!filters.invoiceno ||
+    //       invoiceno.includes(filters.invoiceno.toLowerCase())) &&
+    //     statusMatches &&
+    //     itemNameMatches &&
+    //     dateRangeMatches
+    //   );
+    // });
   }, [filters, transactionItem]);
 
-  const totalPagesTransactionItems = Math.ceil(
-    filteredTransactionItems.length / transactionItemsPerPage
-  );
-  const paginatedTransactionItems = filteredTransactionItems.slice(
-    (currentItemPage - 1) * transactionItemsPerPage,
-    currentItemPage * transactionItemsPerPage
-  );
+  // const totalPagesTransactionItems = Math.ceil(
+  //   filteredTransactionItems.length / transactionItemsPerPage
+  // );
+  // const paginatedTransactionItems = filteredTransactionItems.slice(
+  //   (currentItemPage - 1) * transactionItemsPerPage,
+  //   currentItemPage * transactionItemsPerPage
+  // );
 
-  const handleItemPageChange = (page: number) => {
-    setCurrentItemPage(page);
-  };
+  // const handleItemPageChange = (page: number) => {
+  //   setCurrentItemPage(page);
+  // };
 
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
@@ -662,158 +1078,7 @@ export default function Component() {
                 <div className="overflow-x-auto">
                   <div className="flex items-center justify-end">
                     <div className="flex items-center gap-4 mb-4">
-                      <Popover>
-                        <PopoverTrigger>
-                          <FilterIcon className="w-6 h-6" />
-                        </PopoverTrigger>
-                        <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
-                          <h2 className="text-lg font-bold mb-4">Filters</h2>
-                          <div className="grid gap-4">
-                            <div className="grid gap-2">
-                              <Button onClick={handleClearFilters}>
-                                Clear Filters
-                              </Button>
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="document-number">
-                                Invoice No.
-                              </Label>
-                              <Input
-                                id="document-number"
-                                type="text"
-                                placeholder="Enter Purchase Order No."
-                                value={filters.invoiceno}
-                                onChange={handleInvoiceChange}
-                              />
-                              {isInvoiceDropdownVisible &&
-                                invoiceSuggestions.length > 0 && (
-                                  <div
-                                    ref={dropdownRefInvoice} // Attach ref to the dropdown
-                                    className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                  >
-                                    {invoiceSuggestions.map((invoiceno) => (
-                                      <div
-                                        key={invoiceno}
-                                        className="p-2 cursor-pointer hover:bg-gray-200"
-                                        onClick={() =>
-                                          setFilters((prev) => ({
-                                            ...prev,
-                                            invoiceno: invoiceno,
-                                          }))
-                                        }
-                                      >
-                                        {invoiceno}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="item-name">Item Name</Label>
-                              <Input
-                                id="item-name"
-                                type="text"
-                                placeholder="Enter Item name"
-                                value={filters.name}
-                                onChange={handleItemNameChange}
-                              />
-                              {isItemDropdownVisible &&
-                                itemNameSuggestions.length > 0 && (
-                                  <div
-                                    ref={dropdownRefItem} // Attach ref to the dropdown
-                                    className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                  >
-                                    {itemNameSuggestions.map((item) => (
-                                      <div
-                                        key={item}
-                                        className="p-2 cursor-pointer hover:bg-gray-200"
-                                        onClick={() =>
-                                          setFilters((prev) => ({
-                                            ...prev,
-                                            name: item,
-                                          }))
-                                        }
-                                      >
-                                        {item}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="frommilling">From Milling</Label>
-                              <Select
-                                value={filters.frommilling}
-                                onValueChange={handleFromMillingChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select type" />
-                                  <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="true">Yes</SelectItem>
-                                    <SelectItem value="false">No</SelectItem>
-                                  </SelectContent>
-                                </SelectTrigger>
-                              </Select>
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="status">Status</Label>
-                              <Select
-                                value={filters.status}
-                                onValueChange={handleStatusChange}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select type" />
-                                  <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="pending">
-                                      Pending
-                                    </SelectItem>
-                                    <SelectItem value="cancelled">
-                                      Cancelled
-                                    </SelectItem>
-                                  </SelectContent>
-                                </SelectTrigger>
-                              </Select>
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="start-date">Start Date</Label>
-                              <Input
-                                id="start-date"
-                                type="date"
-                                value={filters.dateRange.start}
-                                onChange={(e) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    dateRange: {
-                                      ...prev.dateRange,
-                                      start: e.target.value,
-                                    },
-                                  }))
-                                }
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="end-date">End Date</Label>
-                              <Input
-                                id="end-date"
-                                type="date"
-                                value={filters.dateRange.end}
-                                onChange={(e) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    dateRange: {
-                                      ...prev.dateRange,
-                                      end: e.target.value,
-                                    },
-                                  }))
-                                }
-                              />
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                      {renderFilters()}
                     </div>
                   </div>
                   <div className="table-container relative  ">
@@ -827,7 +1092,7 @@ export default function Component() {
                           <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                             <TableHead>Invoice No.</TableHead>
                             <TableHead>Walk-in</TableHead>
-                            <TableHead>From Milling</TableHead>
+                            {/* <TableHead>From Milling</TableHead> */}
                             <TableHead>Status</TableHead>
                             <TableHead>Total Amount</TableHead>
                             <TableHead>Date</TableHead>
@@ -835,8 +1100,8 @@ export default function Component() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {paginatedTransactions.length > 0 ? (
-                            paginatedTransactions.map(
+                          {filteredTransactions.length > 0 ? (
+                            filteredTransactions.map(
                               (
                                 transaction: TransactionTable,
                                 index: number
@@ -851,9 +1116,9 @@ export default function Component() {
                                   <TableCell>
                                     {transaction.walkin ? "True" : "False"}
                                   </TableCell>
-                                  <TableCell>
+                                  {/* <TableCell>
                                     {transaction.frommilling ? "True" : "False"}
-                                  </TableCell>
+                                  </TableCell> */}
                                   <TableCell>
                                     <Badge
                                       className={`px-2 py-1 rounded-full ${
@@ -1107,7 +1372,7 @@ export default function Component() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {paginatedTransactionItems.map((purchaseItem) => (
+                          {filteredTransactionItems.map((purchaseItem) => (
                             <TableRow key={purchaseItem.transactionitemid}>
                               <TableCell>
                                 {purchaseItem.documentNumber}
@@ -1148,20 +1413,24 @@ export default function Component() {
                             <PaginationItem>
                               <PaginationPrevious
                                 onClick={() =>
-                                  handleItemPageChange(
-                                    Math.max(1, currentItemPage - 1)
+                                  handleTransactionItemsPageChange(
+                                    Math.max(1, currentTransactionItemsPage - 1)
                                   )
                                 }
                               />
                             </PaginationItem>
-                            {[...Array(totalPagesTransactionItems)].map(
+                            {[...Array(totalTransactionItemsPages)].map(
                               (_, index) => (
                                 <PaginationItem key={index}>
                                   <PaginationLink
                                     onClick={() =>
-                                      handleItemPageChange(index + 1)
+                                      handleTransactionItemsPageChange(
+                                        index + 1
+                                      )
                                     }
-                                    isActive={currentItemPage === index + 1}
+                                    isActive={
+                                      currentTransactionItemsPage === index + 1
+                                    }
                                   >
                                     {index + 1}
                                   </PaginationLink>
@@ -1171,10 +1440,10 @@ export default function Component() {
                             <PaginationItem>
                               <PaginationNext
                                 onClick={() =>
-                                  handleItemPageChange(
+                                  handleTransactionItemsPageChange(
                                     Math.min(
-                                      totalPagesTransactionItems,
-                                      currentItemPage + 1
+                                      totalTransactionItemsPages,
+                                      currentTransactionItemsPage + 1
                                     )
                                   )
                                 }

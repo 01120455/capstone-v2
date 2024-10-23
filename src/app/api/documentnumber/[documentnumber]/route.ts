@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
     const exists = await prisma.documentNumber.findUnique({
       where: {
         documentnumber,
-        deleted: false,
+        recentdelete: false,
       },
     });
 

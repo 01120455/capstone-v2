@@ -80,10 +80,7 @@ export const POST = async (req: NextRequest) => {
 
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
 
-    if (
-      isNaN(stock) ||
-      isNaN(unitprice)
-    ) {
+    if (isNaN(stock) || isNaN(unitprice)) {
       return NextResponse.json(
         {
           error:
@@ -166,10 +163,10 @@ export const POST = async (req: NextRequest) => {
             stock: newStock,
             unitprice,
             lastmodifiedby: userid,
-            recentdelete: false, 
+            recentdelete: false,
             itemimage: fileUrl
               ? {
-                  deleteMany: {}, 
+                  deleteMany: {},
                   create: {
                     imagepath: fileUrl,
                   },
@@ -542,7 +539,6 @@ export const PUT = async (req: NextRequest) => {
         { status: 400 }
       );
     }
-
 
     if (!Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });

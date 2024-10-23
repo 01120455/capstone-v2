@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -113,21 +113,365 @@ interface CombinedTransactionItem {
   lastmodifiedat?: Date;
 }
 
-export default function Component() {
-  const [user, setUser] = useState<User | null>(null);
-  const [purchases, setPurchases] = useState<TransactionTable[]>([]);
-  const [items, setItems] = useState<ViewItem[]>([]);
+const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price);
+};
+
+const ROWS_PER_PAGE = 5;
+
+const useFilters = () => {
   const [filters, setFilters] = useState({
     purordno: "",
     name: "",
-    supplier: "",
-    frommilling: "all",
-    status: "all",
+    frommilling: "",
+    status: "",
     dateRange: { start: "", end: "" },
   });
-  const [purchaseItems, setPurchaseItems] = useState<TransactionItem[] | null>(
+
+  const clear = () => {
+    setFilters({
+      purordno: "",
+      name: "",
+      frommilling: "",
+      status: "",
+      dateRange: { start: "", end: "" },
+    });
+  };
+
+  return {
+    filters,
+    setFilters,
+    clear,
+  };
+};
+
+const usePurchases = () => {
+  const { filters, setFilters, clear } = useFilters();
+  const [purchases, setPurchases] = useState<TransactionTable[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  // const [filters, setFilters] = useState({
+  //   purordno: "",
+  //   name: "",
+  //   frommilling: "",
+  //   status: "",
+  //   dateRange: { start: "", end: "" },
+  // });
+
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
     null
   );
+
+  const fetchPurchases = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (filters.purordno) {
+          params.append("documentnumber", filters.purordno);
+        }
+        if (filters.name) {
+          params.append("name", filters.name);
+        }
+        if (filters.frommilling) {
+          params.append("frommilling", filters.frommilling);
+        }
+        if (filters.status) {
+          params.append("status", filters.status);
+        }
+        if (filters.dateRange.start) {
+          params.append("startdate", filters.dateRange.start);
+        }
+        if (filters.dateRange.end) {
+          params.append("enddate", filters.dateRange.end);
+        }
+
+        const response = await fetch(
+          `/api/purchase/purchasepagination?${params}`
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        setPurchases(data);
+
+        const totalPurchasesResponse = await fetch(
+          `/api/purchase/purchasepagination`
+        );
+        const totalRowsData = await totalPurchasesResponse.json();
+        setTotalPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching purchases:", error);
+      }
+    },
+    [filters]
+  );
+
+  useEffect(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    const shouldDebounce = filters.purordno || filters.name;
+
+    if (shouldDebounce) {
+      const timer = setTimeout(() => fetchPurchases(currentPage), 2000);
+      setDebounceTimeout(timer);
+    } else {
+      fetchPurchases(currentPage);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [filters.purordno, filters.name, currentPage, fetchPurchases]);
+
+  // console.log(filters);
+
+  // useEffect(() => {
+  //   fetchPurchases(currentPage);
+  // }, [fetchPurchases, currentPage]);
+
+  const refreshPurchases = () => {
+    setFilters({
+      purordno: "",
+      name: "",
+      frommilling: "",
+      status: "",
+      dateRange: { start: "", end: "" },
+    });
+    fetchPurchases(currentPage);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const clearFilters = () => {
+    clear();
+    fetchPurchases(1);
+  };
+
+  return {
+    purchases,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    refreshPurchases,
+    clearFilters,
+  };
+};
+
+const usePurchaseItems = () => {
+  const [purchaseItems, setPurchaseItems] = useState<TransactionItem[]>([]);
+
+  const viewPurchaseItems = async (purchaseId: number) => {
+    try {
+      const response = await fetch(
+        `/api/transactionitem/purchaseitem/${purchaseId}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const items = await response.json();
+      // Assuming you have a setPurchaseItems function to set the items state
+      setPurchaseItems(items);
+    } catch (error) {
+      console.error("Error fetching purchase items:", error);
+    }
+  };
+
+  return {
+    purchaseItems,
+    setPurchaseItems,
+    viewPurchaseItems,
+  };
+};
+
+const useTransactionItems = () => {
+  const {
+    filters: filters2,
+    setFilters: setFilters2,
+    clear: clear2,
+  } = useFilters();
+  const [transactionItem, setTransactionItem] = useState<
+    CombinedTransactionItem[]
+  >([]);
+  const [currentTransactionItemsPage, setCurrentTransactionItemsPage] =
+    useState(1);
+  const [totalTransactionItemsPages, setTotalTransactionItemsPages] =
+    useState(0);
+
+  const fetchTransactionData = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        // Add filters to params
+        if (filters2.purordno) {
+          params.append("documentnumber", filters2.purordno);
+        }
+        if (filters2.name) {
+          params.append("name", filters2.name);
+        }
+        if (filters2.status) {
+          params.append("status", filters2.status);
+        }
+        if (filters2.dateRange.start) {
+          params.append("startdate", filters2.dateRange.start);
+        }
+        if (filters2.dateRange.end) {
+          params.append("enddate", filters2.dateRange.end);
+        }
+
+        // Fetch filtered transactions
+        const transactionsResponse = await fetch(
+          `/api/suppliertransaction/suppliertransactionpagination?${params}`
+        );
+        if (!transactionsResponse.ok) {
+          throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
+        }
+        const transactions: any[] = await transactionsResponse.json();
+
+        // Fetch all transaction items
+        const transactionItemsResponse = await fetch("/api/transactionitem");
+        if (!transactionItemsResponse.ok) {
+          throw new Error(
+            `HTTP error! status: ${transactionItemsResponse.status}`
+          );
+        }
+        const allTransactionItems: TransactionItem[] =
+          await transactionItemsResponse.json();
+
+        // Create transaction map for quick lookups
+        const transactionMap = new Map<number, any>();
+        transactions.forEach((transaction) => {
+          transactionMap.set(transaction.transactionid, {
+            documentNumber: transaction.DocumentNumber?.documentnumber,
+            frommilling: transaction.frommilling,
+            type: transaction.type,
+            status: transaction.status,
+          });
+        });
+
+        // Combine and filter data
+        const combinedData: CombinedTransactionItem[] = allTransactionItems
+          .map((item) => {
+            const transactionInfo =
+              transactionMap.get(item.transactionid) || {};
+            return {
+              ...item,
+              documentNumber: transactionInfo.documentNumber,
+              frommilling: transactionInfo.frommilling || false,
+              type: transactionInfo.type || "otherType",
+              status: transactionInfo.status || "otherStatus",
+            };
+          })
+          .filter((item) => item.documentNumber !== undefined);
+
+        // Set state
+        setTransactionItem(combinedData);
+
+        // Fetch total count for pagination
+        const totalResponse = await fetch(
+          `/api/suppliertransaction/suppliertransactionpagination`
+        );
+        const totalData = await totalResponse.json();
+        setTotalTransactionItemsPages(
+          Math.ceil(totalData.length / ROWS_PER_PAGE)
+        );
+      } catch (error) {
+        console.error("Error fetching transaction data:", error);
+      }
+    },
+    [filters2]
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchTransactionData(currentTransactionItemsPage);
+    };
+
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 2000); // Debounce time
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [filters2, currentTransactionItemsPage, fetchTransactionData]);
+
+  const clearFilters2 = () => {
+    clear2();
+    fetchTransactionData(1);
+  };
+
+  const handleTransactionItemsPageChange = (page: number) => {
+    setCurrentTransactionItemsPage(page);
+  };
+
+  const refreshTransactionItems = async () => {
+    await fetchTransactionData(currentTransactionItemsPage);
+  };
+
+  return {
+    transactionItem,
+    currentTransactionItemsPage,
+    totalTransactionItemsPages,
+    handleTransactionItemsPageChange,
+    filters: filters2,
+    setFilters: setFilters2,
+    refreshTransactionItems,
+    clearFilters2,
+  };
+};
+
+export default function Component() {
+  const [user, setUser] = useState<User | null>(null);
+  const {
+    purchases,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    refreshPurchases,
+    clearFilters,
+  } = usePurchases();
+  const { purchaseItems, setPurchaseItems, viewPurchaseItems } =
+    usePurchaseItems();
+  const {
+    transactionItem,
+    currentTransactionItemsPage,
+    totalTransactionItemsPages,
+    handleTransactionItemsPageChange,
+    filters: filters2,
+    setFilters: setFilters2,
+    refreshTransactionItems,
+    clearFilters2,
+  } = useTransactionItems();
+  const [items, setItems] = useState<ViewItem[]>([]);
+
   const [showModal, setShowModal] = useState(false);
   const [showModalEditPurchase, setShowModalEditPurchase] = useState(false);
   const [showModalPurchaseItem, setShowModalPurchaseItem] = useState(false);
@@ -138,38 +482,38 @@ export default function Component() {
     useState<TransactionItem | null>(null);
   const [purchaseToDelete, setPurchaseToDelete] =
     useState<TransactionTable | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [currentItemPage, setCurrentItemPage] = useState(1);
-  const [transactionItemsPerPage, setTransactionItemsPerPage] = useState(5);
-  const [purchaseOrderSuggestions, setPurchaseOrderSuggestions] = useState<
-    string[]
-  >([]);
-  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  const [isPurchaseOrderDropdownVisible, setPurchaseOrderDropdownVisible] =
-    useState(false);
-  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  const dropdownRefPurchaseOrder = useRef<HTMLDivElement>(null);
-  const dropdownRefItem = useRef<HTMLDivElement>(null);
-  const [itemInputValue, setItemInputValue] = useState("");
-  const [itemFormSuggestions, setItemFormSuggestions] = useState<string[]>([]);
-  const [isItemFormDropdownVisible, setItemFormDropdownVisible] =
-    useState(false);
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchTerm(e.target.value);
+  // };
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [itemsPerPage, setItemsPerPage] = useState(5);
+  // const [currentItemPage, setCurrentItemPage] = useState(1);
+  // const [transactionItemsPerPage, setTransactionItemsPerPage] = useState(5);
+  // const [purchaseOrderSuggestions, setPurchaseOrderSuggestions] = useState<
+  //   string[]
+  // >([]);
+  // const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  // const [isPurchaseOrderDropdownVisible, setPurchaseOrderDropdownVisible] =
+  //   useState(false);
+  // const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  // const dropdownRefPurchaseOrder = useRef<HTMLDivElement>(null);
+  // const dropdownRefItem = useRef<HTMLDivElement>(null);
+  // const [itemInputValue, setItemInputValue] = useState("");
+  // const [itemFormSuggestions, setItemFormSuggestions] = useState<string[]>([]);
+  // const [isItemFormDropdownVisible, setItemFormDropdownVisible] =
+  //   useState(false);
 
-  const handleClearFilters = () => {
-    setFilters({
-      purordno: "",
-      name: "",
-      supplier: "",
-      frommilling: "all",
-      status: "all",
-      dateRange: { start: "", end: "" },
-    });
-  };
+  // const handleClearFilters = () => {
+  //   setFilters({
+  //     purordno: "",
+  //     name: "",
+  //     supplier: "",
+  //     frommilling: "all",
+  //     status: "all",
+  //     dateRange: { start: "", end: "" },
+  //   });
+  // };
 
   const form = useForm<Transaction>({
     resolver: zodResolver(transactionSchema),
@@ -249,36 +593,36 @@ export default function Component() {
     console.log(formPurchaseItemOnly.formState.errors);
   }, [formPurchaseItemOnly.formState.errors]);
 
-  useEffect(() => {
-    async function getPurchase() {
-      try {
-        const response = await fetch("/api/purchase");
-        if (response.ok) {
-          const purchases = await response.json();
-          setPurchases(purchases);
-        } else {
-          console.error("Error fetching purchase history:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    }
-    getPurchase();
-  }, []);
+  // useEffect(() => {
+  //   async function getPurchase() {
+  //     try {
+  //       const response = await fetch("/api/purchase");
+  //       if (response.ok) {
+  //         const purchases = await response.json();
+  //         setPurchases(purchases);
+  //       } else {
+  //         console.error("Error fetching purchase history:", response.status);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching items:", error);
+  //     }
+  //   }
+  //   getPurchase();
+  // }, []);
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const response = await fetch("/api/product");
-        const data = await response.json();
-        setItems(data);
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchItems = async () => {
+  //     try {
+  //       const response = await fetch("/api/product");
+  //       const data = await response.json();
+  //       setItems(data);
+  //     } catch (error) {
+  //       console.error("Error fetching items:", error);
+  //     }
+  //   };
 
-    fetchItems();
-  }, []);
+  //   fetchItems();
+  // }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -298,20 +642,20 @@ export default function Component() {
     fetchUser();
   }, []);
 
-  const refreshPurchases = async () => {
-    try {
-      const response = await fetch("/api/purchase");
-      if (response.ok) {
-        const purchases = await response.json();
-        setPurchases(purchases);
-        setPurchaseItems(purchases.TransactionItem);
-      } else {
-        console.error("Error fetching purchases:", response.status);
-      }
-    } catch (error) {
-      console.error("Error fetching purchases:", error);
-    }
-  };
+  // const refreshPurchases = async () => {
+  //   try {
+  //     const response = await fetch("/api/purchase");
+  //     if (response.ok) {
+  //       const purchases = await response.json();
+  //       setPurchases(purchases);
+  //       setPurchaseItems(purchases.TransactionItem);
+  //     } else {
+  //       console.error("Error fetching purchases:", response.status);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching purchases:", error);
+  //   }
+  // };
 
   const handleAddPurchase = () => {
     setShowModal(true);
@@ -402,7 +746,7 @@ export default function Component() {
     setShowModal(false);
     setShowModalPurchaseItem(false);
     setShowModalEditPurchase(false);
-    setItemInputValue("");
+    // setItemInputValue("");
 
     form.reset({
       transactionid: 0,
@@ -462,7 +806,6 @@ export default function Component() {
   };
 
   const closeViewPurchaseItem = () => {
-    setPurchaseItems(null);
     setShowTablePurchaseItem(false);
   };
 
@@ -556,7 +899,7 @@ export default function Component() {
         console.log("Upload Result:", uploadResult);
         setShowModal(false);
         setShowModalEditPurchase(false);
-        refreshPurchases();
+        // refreshPurchases();
         refreshTransactionItems();
         form.reset();
       } else {
@@ -621,9 +964,9 @@ export default function Component() {
         }
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
-        refreshPurchases();
+        // refreshPurchases();
         formPurchaseItemOnly.reset();
-        setItemInputValue("");
+        // setItemInputValue("");
       } else {
         console.error("Operation failed", await uploadRes.text());
       }
@@ -646,7 +989,7 @@ export default function Component() {
       if (response.ok) {
         console.log("Purchase Item deleted successfully");
         setShowAlertPurchaseItem(false);
-        refreshPurchases();
+        // refreshPurchases();
         refreshTransactionItems();
       } else {
         console.error("Error deleting Purchase Item:", response.status);
@@ -709,7 +1052,7 @@ export default function Component() {
         console.log("Purchase deleted successfully");
         setShowAlert(false);
         setPurchaseToDelete(null);
-        refreshPurchases();
+        // refreshPurchases();
         refreshTransactionItems();
       } else {
         console.error("Error deleting Purchase:", response.status);
@@ -747,15 +1090,6 @@ export default function Component() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat("en-PH", {
-      style: "currency",
-      currency: "PHP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
 
   const canAccessButton = (role: String) => {
     if (user?.role === ROLES.ADMIN) return true;
@@ -827,94 +1161,262 @@ export default function Component() {
   );
   console.log(action);
 
-  const handleFormItemInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setItemInputValue(value);
-    setItemFormDropdownVisible(value.length > 0);
+  // const handleFormItemInputChange = (
+  //   e: React.ChangeEvent<HTMLInputElement>
+  // ) => {
+  //   const value = e.target.value;
+    // setItemInputValue(value);
+    // setItemFormDropdownVisible(value.length > 0);
 
-    const filtered = items
-      .flatMap((p) => p.name) // Adjust according to your data structure
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+    // const filtered = items
+    //   .flatMap((p) => p.name) // Adjust according to your data structure
+    //   .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
 
-    setItemFormSuggestions(Array.from(new Set(filtered)));
-  };
+    // setItemFormSuggestions(Array.from(new Set(filtered)));
+  // };
 
-  const handleFormItemClick = (itemName: string, index: number) => {
-    setItemInputValue(itemName);
-    form.setValue(`TransactionItem.${index}.Item.name`, itemName);
-    setItemFormDropdownVisible(false);
-  };
+  // const handleFormItemClick = (itemName: string, index: number) => {
+  //   setItemInputValue(itemName);
+  //   form.setValue(`TransactionItem.${index}.Item.name`, itemName);
+  //   setItemFormDropdownVisible(false);
+  // };
 
-  const handleFormTransactionItemClick = (itemName: string) => {
-    setItemInputValue(itemName);
-    formPurchaseItemOnly.setValue(`Item.name`, itemName);
-    setItemFormDropdownVisible(false);
-  };
+  // const handleFormTransactionItemClick = (itemName: string) => {
+  //   setItemInputValue(itemName);
+  //   formPurchaseItemOnly.setValue(`Item.name`, itemName);
+  //   setItemFormDropdownVisible(false);
+  // };
 
   const handlePurchaseOrderChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, purordno: value }));
-    setPurchaseOrderDropdownVisible(e.target.value.length > 0);
+    setFilters2((prev) => ({ ...prev, purordno: value }));
+    handlePageChange(1);
+    handleTransactionItemsPageChange(1);
 
-    const filtered = purchases
-      .map((p) => p.DocumentNumber?.documentnumber) // Use optional chaining to avoid undefined
-      .filter(
-        (purordno): purordno is string =>
-          purordno !== undefined &&
-          purordno.toLowerCase().includes(value.toLowerCase())
-      );
-    setPurchaseOrderSuggestions(filtered);
+    // setPurchaseOrderDropdownVisible(e.target.value.length > 0);
+    // const filtered = purchases
+    //   .map((p) => p.DocumentNumber?.documentnumber) // Use optional chaining to avoid undefined
+    //   .filter(
+    //     (purordno): purordno is string =>
+    //       purordno !== undefined &&
+    //       purordno.toLowerCase().includes(value.toLowerCase())
+    //   );
+    // setPurchaseOrderSuggestions(filtered);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
-    setItemDropdownVisible(e.target.value.length > 0);
+    setFilters2((prev) => ({ ...prev, name: value }));
+    handlePageChange(1);
 
-    const filtered = purchases
-      .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name)) // Adjust according to your data structure
-      .filter((itemName) =>
-        itemName?.toLowerCase().includes(value.toLowerCase())
-      );
+    // setItemDropdownVisible(e.target.value.length > 0);
+    // const filtered = purchases
+    //   .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name)) // Adjust according to your data structure
+    //   .filter((itemName) =>
+    //     itemName?.toLowerCase().includes(value.toLowerCase())
+    //   );
 
-    setItemNameSuggestions(Array.from(new Set(filtered)));
+    // setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRefPurchaseOrder.current &&
-        !dropdownRefPurchaseOrder.current.contains(event.target as Node)
-      ) {
-        setPurchaseOrderDropdownVisible(false);
-      }
-      if (
-        dropdownRefItem.current &&
-        !dropdownRefItem.current.contains(event.target as Node)
-      ) {
-        setItemDropdownVisible(false);
-        setItemFormDropdownVisible(false);
-      }
-    };
+  const renderFilters = () => (
+    <Popover>
+      <PopoverTrigger>
+        <FilterIcon className="w-6 h-6" />
+      </PopoverTrigger>
+      <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
+        <h2 className="text-lg font-bold mb-4">Filters</h2>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Button onClick={clearAllFilters}>Clear Filters</Button>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="document-number">Purchase Order No.</Label>
+            <Input
+              id="document-number"
+              type="text"
+              placeholder="Enter Purchase Order No."
+              value={filters.purordno}
+              onChange={handlePurchaseOrderChange}
+            />
+            {/* {isPurchaseOrderDropdownVisible &&
+              purchaseOrderSuggestions.length > 0 && (
+                <div
+                  ref={dropdownRefPurchaseOrder} // Attach ref to the dropdown
+                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+                >
+                  {purchaseOrderSuggestions.map((purordno) => (
+                    <div
+                      key={purordno}
+                      className="p-2 cursor-pointer hover:bg-gray-200"
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          purordno: purordno,
+                        }))
+                      }
+                    >
+                      {purordno}
+                    </div>
+                  ))}
+                </div>
+              )} */}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="item-name">Item Name</Label>
+            <Input
+              id="item-name"
+              type="text"
+              placeholder="Enter Item name"
+              value={filters.name}
+              onChange={handleItemNameChange}
+            />
+            {/* {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+              <div
+                ref={dropdownRefItem} // Attach ref to the dropdown
+                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
+              >
+                {itemNameSuggestions.map((item) => (
+                  <div
+                    key={item}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        name: item,
+                      }))
+                    }
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            )} */}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="frommilling">From Milling</Label>
+            <Select
+              value={filters.frommilling}
+              onValueChange={handleFromMillingChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+                <SelectContent>
+                  <SelectItem value="true">Yes</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </SelectTrigger>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="status">Status</Label>
+            <Select value={filters.status} onValueChange={handleStatusChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+                <SelectContent>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </SelectTrigger>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="start-date">Start Date</Label>
+            <Input
+              id="start-date"
+              type="date"
+              value={filters.dateRange.start}
+              onChange={(e) => {
+                const newValue = e.target.value;
+              
+                setFilters((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    start: newValue,
+                  },
+                }));
+              
+                setFilters2((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    start: newValue,
+                  },
+                }));
+              }}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="end-date">End Date</Label>
+            <Input
+              id="end-date"
+              type="date"
+              value={filters.dateRange.end}
+              onChange={(e) => {
+                const newValue = e.target.value;
+              
+                setFilters((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    end: newValue,
+                  },
+                }));
+              
+                setFilters2((prev) => ({
+                  ...prev,
+                  dateRange: {
+                    ...prev.dateRange,
+                    end: newValue,
+                  },
+                }));
+              }}
+            />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
-    document.addEventListener("mousedown", handleClickOutside as EventListener);
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside as EventListener
-      );
-    };
-  }, []);
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (
+  //       dropdownRefPurchaseOrder.current &&
+  //       !dropdownRefPurchaseOrder.current.contains(event.target as Node)
+  //     ) {
+  //       setPurchaseOrderDropdownVisible(false);
+  //     }
+  //     if (
+  //       dropdownRefItem.current &&
+  //       !dropdownRefItem.current.contains(event.target as Node)
+  //     ) {
+  //       setItemDropdownVisible(false);
+  //       setItemFormDropdownVisible(false);
+  //     }
+  //   };
+
+  //   document.addEventListener("mousedown", handleClickOutside as EventListener);
+  //   return () => {
+  //     document.removeEventListener(
+  //       "mousedown",
+  //       handleClickOutside as EventListener
+  //     );
+  //   };
+  // }, []);
 
   const handleStatusChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
       status: value,
     }));
+    setFilters2((prev) => ({ ...prev, status: value }));
+    handlePageChange(1);
   };
 
   const handleWalkinChange = (value: string) => {
@@ -922,6 +1424,8 @@ export default function Component() {
       ...prev,
       walkin: value,
     }));
+    setFilters2((prev) => ({ ...prev, walkin: value }));
+    handlePageChange(1);
   };
 
   const handleFromMillingChange = (value: string) => {
@@ -929,194 +1433,206 @@ export default function Component() {
       ...prev,
       frommilling: value,
     }));
+    handlePageChange(1);
   };
 
-  const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
-    const transactionsResponse = await fetch("/api/suppliertransaction");
-    const transactions: any[] = await transactionsResponse.json();
-    console.log("Transactions:", transactions);
-
-    const transactionItemsResponse = await fetch("/api/transactionitem");
-    const transactionItems: TransactionItem[] =
-      await transactionItemsResponse.json();
-    console.log("Transaction Items:", transactionItems);
-
-    const transactionMap = new Map<number, any>();
-    transactions.forEach((transaction) => {
-      transactionMap.set(transaction.transactionid, {
-        documentNumber: transaction.DocumentNumber?.documentnumber,
-        frommilling: transaction.frommilling,
-        type: transaction.type,
-        status: transaction.status,
-      });
-    });
-    console.log("Transaction Map:", Array.from(transactionMap.entries()));
-
-    const combinedData: CombinedTransactionItem[] = transactionItems.map(
-      (item) => {
-        const transactionInfo = transactionMap.get(item.transactionid) || {};
-
-        const combinedItem = {
-          ...item,
-          documentNumber: transactionInfo.documentNumber,
-          frommilling: transactionInfo.frommilling || false,
-          type: transactionInfo.type || "otherType",
-          status: transactionInfo.status || "otherStatus",
-        };
-
-        console.log("Combined Item:", combinedItem); // Log each combined item
-        return combinedItem;
-      }
-    );
-
-    // Filter out items with undefined documentNumber
-    const filteredData = combinedData.filter(
-      (item) => item.documentNumber !== undefined
-    );
-    console.log(
-      "Filtered Data (without undefined documentNumber):",
-      filteredData
-    ); // Log the filtered data
-
-    return filteredData;
+  const clearAllFilters = () => {
+    clearFilters();
+    clearFilters2();
+    handlePageChange(1);
+    handleTransactionItemsPageChange(1);
   };
 
-  const [transactionItem, setTransactionItem] = useState<
-    CombinedTransactionItem[]
-  >([]);
+  // const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
+  //   const transactionsResponse = await fetch("/api/suppliertransaction");
+  //   const transactions: any[] = await transactionsResponse.json();
+  //   console.log("Transactions:", transactions);
 
-  useEffect(() => {
-    const getData = async () => {
-      const combinedData = await fetchTransactionData();
-      setTransactionItem(combinedData);
-    };
+  //   const transactionItemsResponse = await fetch("/api/transactionitem");
+  //   const transactionItems: TransactionItem[] =
+  //     await transactionItemsResponse.json();
+  //   console.log("Transaction Items:", transactionItems);
 
-    getData();
-  }, []);
+  //   const transactionMap = new Map<number, any>();
+  //   transactions.forEach((transaction) => {
+  //     transactionMap.set(transaction.transactionid, {
+  //       documentNumber: transaction.DocumentNumber?.documentnumber,
+  //       frommilling: transaction.frommilling,
+  //       type: transaction.type,
+  //       status: transaction.status,
+  //     });
+  //   });
+  //   console.log("Transaction Map:", Array.from(transactionMap.entries()));
 
-  const refreshTransactionItems = async () => {
-    const combinedData = await fetchTransactionData();
-    setTransactionItem(combinedData);
-  };
+  //   const combinedData: CombinedTransactionItem[] = transactionItems.map(
+  //     (item) => {
+  //       const transactionInfo = transactionMap.get(item.transactionid) || {};
 
-  console.log("Transaction Item:", transactionItem);
+  //       const combinedItem = {
+  //         ...item,
+  //         documentNumber: transactionInfo.documentNumber,
+  //         frommilling: transactionInfo.frommilling || false,
+  //         type: transactionInfo.type || "otherType",
+  //         status: transactionInfo.status || "otherStatus",
+  //       };
+
+  //       console.log("Combined Item:", combinedItem); // Log each combined item
+  //       return combinedItem;
+  //     }
+  //   );
+
+  //   // Filter out items with undefined documentNumber
+  //   const filteredData = combinedData.filter(
+  //     (item) => item.documentNumber !== undefined
+  //   );
+  //   console.log(
+  //     "Filtered Data (without undefined documentNumber):",
+  //     filteredData
+  //   ); // Log the filtered data
+
+  //   return filteredData;
+  // };
+
+  // const [transactionItem, setTransactionItem] = useState<
+  //   CombinedTransactionItem[]
+  // >([]);
+
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     const combinedData = await fetchTransactionData();
+  //     setTransactionItem(combinedData);
+  //   };
+
+  //   getData();
+  // }, []);
+
+  // const refreshTransactionItems = async () => {
+  //   const combinedData = await fetchTransactionData();
+  //   setTransactionItem(combinedData);
+  // };
+
+  // console.log("Transaction Item:", transactionItem);
 
   // Filter purchases
   const filteredPurchases = useMemo(() => {
-    return purchases.filter((purchase) => {
-      // Your existing filtering logic for purchases
-      const purordno =
-        purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
-      const purordnoMatches = purordno.includes(searchTerm.toLowerCase());
-      const statusMatches =
-        filters.status === "all" || purchase.status === filters.status;
-      const frommillingMatches =
-        filters.frommilling === "all" ||
-        (filters.frommilling === "true" && purchase.frommilling) ||
-        (filters.frommilling === "false" && !purchase.frommilling);
+    return purchases;
+    // return purchases.filter((purchase) => {
+    //   // Your existing filtering logic for purchases
+    //   const purordno =
+    //     purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
+    //   const purordnoMatches = purordno.includes(searchTerm.toLowerCase());
+    //   const statusMatches =
+    //     filters.status === "all" || purchase.status === filters.status;
+    //   const frommillingMatches =
+    //     filters.frommilling === "all" ||
+    //     (filters.frommilling === "true" && purchase.frommilling) ||
+    //     (filters.frommilling === "false" && !purchase.frommilling);
 
-      const createdAt = purchase.createdat
-        ? new Date(purchase.createdat)
-        : null;
-      const start = filters.dateRange.start
-        ? new Date(filters.dateRange.start)
-        : null;
-      const end = filters.dateRange.end
-        ? new Date(filters.dateRange.end)
-        : null;
+    //   const createdAt = purchase.createdat
+    //     ? new Date(purchase.createdat)
+    //     : null;
+    //   const start = filters.dateRange.start
+    //     ? new Date(filters.dateRange.start)
+    //     : null;
+    //   const end = filters.dateRange.end
+    //     ? new Date(filters.dateRange.end)
+    //     : null;
 
-      const isWithinDateRange = (
-        createdAt: Date | null,
-        start: Date | null,
-        end: Date | null
-      ) => {
-        if (!createdAt) return false;
-        if (start && end) return createdAt >= start && createdAt <= end;
-        if (start) return createdAt >= start;
-        if (end) return createdAt <= end;
-        return true;
-      };
+    //   const isWithinDateRange = (
+    //     createdAt: Date | null,
+    //     start: Date | null,
+    //     end: Date | null
+    //   ) => {
+    //     if (!createdAt) return false;
+    //     if (start && end) return createdAt >= start && createdAt <= end;
+    //     if (start) return createdAt >= start;
+    //     if (end) return createdAt <= end;
+    //     return true;
+    //   };
 
-      const dateRangeMatches = isWithinDateRange(createdAt, start, end);
+    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
 
-      return (
-        (!filters.purordno ||
-          purordno.includes(filters.purordno.toLowerCase())) &&
-        statusMatches &&
-        frommillingMatches &&
-        dateRangeMatches &&
-        (searchTerm === "" || purordnoMatches)
-      );
-    });
-  }, [filters, purchases, searchTerm]);
+    //   return (
+    //     (!filters.purordno ||
+    //       purordno.includes(filters.purordno.toLowerCase())) &&
+    //     statusMatches &&
+    //     frommillingMatches &&
+    //     dateRangeMatches &&
+    //     (searchTerm === "" || purordnoMatches)
+    //   );
+    // });
+  }, [purchases]);
+
+  // console.log("Filtered Purchases:", filteredPurchases);
 
   // Filter transaction items
   const filteredTransactionItems = useMemo(() => {
-    return transactionItem.filter((item) => {
-      const purordno = item.documentNumber?.toLowerCase() || "";
-      const purordnoMatches = purordno.includes(searchTerm.toLowerCase());
-      const statusMatches =
-        filters.status === "all" || item.status === filters.status;
-      const itemNameMatches = item.Item?.name
-        ? item.Item.name.toLowerCase().includes(filters.name.toLowerCase())
-        : false;
+    return transactionItem;
+    // return transactionItem.filter((item) => {
+    //   const purordno = item.documentNumber?.toLowerCase() || "";
+    //   const purordnoMatches = purordno.includes(searchTerm.toLowerCase());
+    //   const statusMatches =
+    //     filters.status === "all" || item.status === filters.status;
+    //   const itemNameMatches = item.Item?.name
+    //     ? item.Item.name.toLowerCase().includes(filters.name.toLowerCase())
+    //     : false;
 
-      const createdAt = item.lastmodifiedat
-        ? new Date(item.lastmodifiedat)
-        : null;
-      const start = filters.dateRange.start
-        ? new Date(filters.dateRange.start)
-        : null;
-      const end = filters.dateRange.end
-        ? new Date(filters.dateRange.end)
-        : null;
+    //   const createdAt = item.lastmodifiedat
+    //     ? new Date(item.lastmodifiedat)
+    //     : null;
+    //   const start = filters.dateRange.start
+    //     ? new Date(filters.dateRange.start)
+    //     : null;
+    //   const end = filters.dateRange.end
+    //     ? new Date(filters.dateRange.end)
+    //     : null;
 
-      const isWithinDateRange = (
-        createdAt: Date | null,
-        start: Date | null,
-        end: Date | null
-      ) => {
-        if (!createdAt) return false;
-        if (start && end) return createdAt >= start && createdAt <= end;
-        if (start) return createdAt >= start;
-        if (end) return createdAt <= end;
-        return true;
-      };
+    //   const isWithinDateRange = (
+    //     createdAt: Date | null,
+    //     start: Date | null,
+    //     end: Date | null
+    //   ) => {
+    //     if (!createdAt) return false;
+    //     if (start && end) return createdAt >= start && createdAt <= end;
+    //     if (start) return createdAt >= start;
+    //     if (end) return createdAt <= end;
+    //     return true;
+    //   };
 
-      const dateRangeMatches = isWithinDateRange(createdAt, start, end);
+    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
 
-      return (
-        (!filters.purordno ||
-          purordno.includes(filters.purordno.toLowerCase())) &&
-        statusMatches &&
-        itemNameMatches &&
-        dateRangeMatches &&
-        (searchTerm === "" || purordnoMatches)
-      );
-    });
-  }, [filters, transactionItem, searchTerm]);
+    //   return (
+    //     (!filters.purordno ||
+    //       purordno.includes(filters.purordno.toLowerCase())) &&
+    //     statusMatches &&
+    //     itemNameMatches &&
+    //     dateRangeMatches &&
+    //     (searchTerm === "" || purordnoMatches)
+    //   );
+    // });
+  }, [transactionItem]);
 
-  const totalPages = Math.ceil(filteredPurchases.length / itemsPerPage);
-  const paginatedPurchases = filteredPurchases.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // const totalPages = Math.ceil(filteredPurchases.length / itemsPerPage);
+  // const paginatedPurchases = filteredPurchases.slice(
+  //   (currentPage - 1) * itemsPerPage,
+  //   currentPage * itemsPerPage
+  // );
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  // const handlePageChange = (page: number) => {
+  //   setCurrentPage(page);
+  // };
 
-  const totalPagesTransactionItems = Math.ceil(
-    filteredTransactionItems.length / transactionItemsPerPage
-  );
-  const paginatedTransactionItems = filteredTransactionItems.slice(
-    (currentItemPage - 1) * transactionItemsPerPage,
-    currentItemPage * transactionItemsPerPage
-  );
+  // const totalPagesTransactionItems = Math.ceil(
+  //   filteredTransactionItems.length / transactionItemsPerPage
+  // );
+  // const paginatedTransactionItems = filteredTransactionItems.slice(
+  //   (currentItemPage - 1) * transactionItemsPerPage,
+  //   currentItemPage * transactionItemsPerPage
+  // );
 
-  const handleItemPageChange = (page: number) => {
-    setCurrentItemPage(page);
-  };
+  // const handleItemPageChange = (page: number) => {
+  //   setCurrentItemPage(page);
+  // };
 
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
@@ -1133,8 +1649,8 @@ export default function Component() {
                 <Input
                   type="text"
                   placeholder="Search purchase order no. ..."
-                  value={searchTerm}
-                  onChange={handleSearch}
+                  value={filters.name}
+              onChange={handleItemNameChange}
                   className="w-full md:w-auto"
                 />
                 <div className="flex flex-row gap-2">
@@ -1145,156 +1661,7 @@ export default function Component() {
                       "Add Product"
                     )}
                   </Button>
-                  <Popover>
-                    <PopoverTrigger>
-                      <FilterIcon className="w-6 h-6" />
-                    </PopoverTrigger>
-                    <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
-                      <h2 className="text-lg font-bold mb-4">Filters</h2>
-                      <div className="grid gap-4">
-                        <div className="grid gap-2">
-                          <Button onClick={handleClearFilters}>
-                            Clear Filters
-                          </Button>
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="document-number">
-                            Purchase Order No.
-                          </Label>
-                          <Input
-                            id="document-number"
-                            type="text"
-                            placeholder="Enter Purchase Order No."
-                            value={filters.purordno}
-                            onChange={handlePurchaseOrderChange}
-                          />
-                          {isPurchaseOrderDropdownVisible &&
-                            purchaseOrderSuggestions.length > 0 && (
-                              <div
-                                ref={dropdownRefPurchaseOrder} // Attach ref to the dropdown
-                                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                              >
-                                {purchaseOrderSuggestions.map((purordno) => (
-                                  <div
-                                    key={purordno}
-                                    className="p-2 cursor-pointer hover:bg-gray-200"
-                                    onClick={() =>
-                                      setFilters((prev) => ({
-                                        ...prev,
-                                        purordno: purordno,
-                                      }))
-                                    }
-                                  >
-                                    {purordno}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="item-name">Item Name</Label>
-                          <Input
-                            id="item-name"
-                            type="text"
-                            placeholder="Enter Item name"
-                            value={filters.name}
-                            onChange={handleItemNameChange}
-                          />
-                          {isItemDropdownVisible &&
-                            itemNameSuggestions.length > 0 && (
-                              <div
-                                ref={dropdownRefItem} // Attach ref to the dropdown
-                                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                              >
-                                {itemNameSuggestions.map((item) => (
-                                  <div
-                                    key={item}
-                                    className="p-2 cursor-pointer hover:bg-gray-200"
-                                    onClick={() =>
-                                      setFilters((prev) => ({
-                                        ...prev,
-                                        name: item,
-                                      }))
-                                    }
-                                  >
-                                    {item}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="frommilling">From Milling</Label>
-                          <Select
-                            value={filters.frommilling}
-                            onValueChange={handleFromMillingChange}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                              <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="true">Yes</SelectItem>
-                                <SelectItem value="false">No</SelectItem>
-                              </SelectContent>
-                            </SelectTrigger>
-                          </Select>
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="status">Status</Label>
-                          <Select
-                            value={filters.status}
-                            onValueChange={handleStatusChange}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                              <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="paid">Paid</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="cancelled">
-                                  Cancelled
-                                </SelectItem>
-                              </SelectContent>
-                            </SelectTrigger>
-                          </Select>
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="start-date">Start Date</Label>
-                          <Input
-                            id="start-date"
-                            type="date"
-                            value={filters.dateRange.start}
-                            onChange={(e) =>
-                              setFilters((prev) => ({
-                                ...prev,
-                                dateRange: {
-                                  ...prev.dateRange,
-                                  start: e.target.value,
-                                },
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="end-date">End Date</Label>
-                          <Input
-                            id="end-date"
-                            type="date"
-                            value={filters.dateRange.end}
-                            onChange={(e) =>
-                              setFilters((prev) => ({
-                                ...prev,
-                                dateRange: {
-                                  ...prev.dateRange,
-                                  end: e.target.value,
-                                },
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  {renderFilters()}
                 </div>
               </div>
 
@@ -1324,7 +1691,7 @@ export default function Component() {
                       </TableHeader>
                       <TableBody>
                         <>
-                          {paginatedPurchases.map((purchase) => (
+                          {filteredPurchases.map((purchase) => (
                             <TableRow key={purchase.transactionid}>
                               <TableCell>
                                 {purchase.DocumentNumber.documentnumber}
@@ -1636,25 +2003,25 @@ export default function Component() {
                                       {...field}
                                       id="name"
                                       type="text"
-                                      value={
-                                        itemInputValue ||
-                                        formPurchaseItemOnly.getValues(
-                                          "Item.name"
-                                        )
-                                      }
-                                      onChange={(e) => {
-                                        handleFormItemInputChange(e);
-                                        field.onChange(e); // Call the original onChange
-                                      }}
-                                      onFocus={() => {
-                                        setItemFormDropdownVisible(
-                                          itemInputValue.length > 0
-                                        );
-                                      }}
+                                      // value={
+                                      //   itemInputValue ||
+                                      //   formPurchaseItemOnly.getValues(
+                                      //     "Item.name"
+                                      //   )
+                                      // }
+                                      // onChange={(e) => {
+                                      //   handleFormItemInputChange(e);
+                                      //   field.onChange(e); // Call the original onChange
+                                      // }}
+                                      // onFocus={() => {
+                                      //   setItemFormDropdownVisible(
+                                      //     itemInputValue.length > 0
+                                      //   );
+                                      // }}
                                     />
                                   </FormControl>
                                   <FormMessage />
-                                  {isItemFormDropdownVisible &&
+                                  {/* {isItemFormDropdownVisible &&
                                     itemInputValue.length > 0 && (
                                       <div
                                         ref={dropdownRefItem} // Attach ref to the dropdown
@@ -1674,7 +2041,7 @@ export default function Component() {
                                           </div>
                                         ))}
                                       </div>
-                                    )}
+                                    )} */}
                                 </FormItem>
                               )}
                             />
@@ -2431,7 +2798,7 @@ ${
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {paginatedTransactionItems.map((purchaseItem) => (
+                          {filteredTransactionItems.map((purchaseItem) => (
                             <TableRow key={purchaseItem.transactionitemid}>
                               <TableCell>
                                 {purchaseItem.documentNumber}
@@ -2472,20 +2839,24 @@ ${
                             <PaginationItem>
                               <PaginationPrevious
                                 onClick={() =>
-                                  handleItemPageChange(
-                                    Math.max(1, currentItemPage - 1)
+                                  handleTransactionItemsPageChange(
+                                    Math.max(1, currentTransactionItemsPage - 1)
                                   )
                                 }
                               />
                             </PaginationItem>
-                            {[...Array(totalPagesTransactionItems)].map(
+                            {[...Array(totalTransactionItemsPages)].map(
                               (_, index) => (
                                 <PaginationItem key={index}>
                                   <PaginationLink
                                     onClick={() =>
-                                      handleItemPageChange(index + 1)
+                                      handleTransactionItemsPageChange(
+                                        index + 1
+                                      )
                                     }
-                                    isActive={currentItemPage === index + 1}
+                                    isActive={
+                                      currentTransactionItemsPage === index + 1
+                                    }
                                   >
                                     {index + 1}
                                   </PaginationLink>
@@ -2495,10 +2866,10 @@ ${
                             <PaginationItem>
                               <PaginationNext
                                 onClick={() =>
-                                  handleItemPageChange(
+                                  handleTransactionItemsPageChange(
                                     Math.min(
-                                      totalPagesTransactionItems,
-                                      currentItemPage + 1
+                                      totalTransactionItemsPages,
+                                      currentTransactionItemsPage + 1
                                     )
                                   )
                                 }
