@@ -207,6 +207,17 @@ const usePurchases = () => {
   //   fetchSales(currentPage);
   // }, [fetchSales, currentPage]);
 
+  const refreshSales = () => {
+    setFilters({
+      invoiceno: "",
+      name: "",
+      walkin: "",
+      status: "",
+      dateRange: { start: "", end: "" },
+    });
+    fetchSales(currentPage);
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -221,6 +232,7 @@ const usePurchases = () => {
     currentPage,
     totalPages,
     handlePageChange,
+    refreshSales,
     filters,
     setFilters,
     clearFilters,
@@ -357,11 +369,16 @@ const useTransactionItems = () => {
     setCurrentTransactionItemsPage(page);
   };
 
+  const refreshTransactionItems = async () => {
+    await fetchTransactionData(currentTransactionItemsPage);
+  };
+
   return {
     transactionItem,
     currentTransactionItemsPage,
     totalTransactionItemsPages,
     handleTransactionItemsPageChange,
+    refreshTransactionItems,
     filters: filters2,
     setFilters: setFilters2,
     clearFilters2,
@@ -374,6 +391,7 @@ export default function Component() {
     currentPage,
     totalPages,
     handlePageChange,
+    refreshSales,
     filters,
     setFilters,
     clearFilters,
@@ -383,6 +401,7 @@ export default function Component() {
     currentTransactionItemsPage,
     totalTransactionItemsPages,
     handleTransactionItemsPageChange,
+    refreshTransactionItems,
     filters: filters2,
     setFilters: setFilters2,
     clearFilters2,

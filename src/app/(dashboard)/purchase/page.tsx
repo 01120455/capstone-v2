@@ -899,7 +899,7 @@ export default function Component() {
         console.log("Upload Result:", uploadResult);
         setShowModal(false);
         setShowModalEditPurchase(false);
-        // refreshPurchases();
+        refreshPurchases();
         refreshTransactionItems();
         form.reset();
       } else {
@@ -964,7 +964,8 @@ export default function Component() {
         }
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
-        // refreshPurchases();
+        refreshPurchases();
+        refreshTransactionItems();
         formPurchaseItemOnly.reset();
         // setItemInputValue("");
       } else {
@@ -989,7 +990,7 @@ export default function Component() {
       if (response.ok) {
         console.log("Purchase Item deleted successfully");
         setShowAlertPurchaseItem(false);
-        // refreshPurchases();
+        refreshPurchases();
         refreshTransactionItems();
       } else {
         console.error("Error deleting Purchase Item:", response.status);
@@ -1052,7 +1053,7 @@ export default function Component() {
         console.log("Purchase deleted successfully");
         setShowAlert(false);
         setPurchaseToDelete(null);
-        // refreshPurchases();
+        refreshPurchases();
         refreshTransactionItems();
       } else {
         console.error("Error deleting Purchase:", response.status);
