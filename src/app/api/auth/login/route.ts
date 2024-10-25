@@ -8,13 +8,10 @@ const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
-    // Parse the request body
     const { username, password } = await req.json();
 
-    // Fetch the user from the database
     const user = await prisma.user.findUnique({ where: { username } });
 
-    // Check if the user exists and if the password is correct
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json(
         { message: "Invalid username or password" },
@@ -22,19 +19,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if the user is marked as deleted
-    if (user.deleted) {
+    if (user.recentdelete) {
       return NextResponse.json({ message: "invalid account" }, { status: 403 });
     }
 
-    // Create a response object
     const res = NextResponse.json({
       message: "Logged in Successfully",
       role: user.role,
+      username: user.username,
     });
 
-    // Initialize the session
     const session = await getIronSession(req, res, sessionOptions);
+    // @ts-ignore
     session.user = {
       userid: user.userid,
       imagepath: user.imagepath,

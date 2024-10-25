@@ -90,7 +90,7 @@ const ROLES = {
   ADMIN: "admin",
 } as const;
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 // Custom hooks
 const useUser = () => {
@@ -113,8 +113,6 @@ const useUser = () => {
 
   return user;
 };
-
-// const useItems = () => {
 //   const [items, setItems] = useState<ViewItem[]>([]);
 //   const [currentPage, setCurrentPage] = useState(1);
 //   const [totalPages, setTotalPages] = useState(0);
@@ -190,7 +188,7 @@ const useItems = () => {
 
   const fetchItems = useCallback(
     async (page: number) => {
-      if (isNaN(page) || page < 1) return; 
+      if (isNaN(page) || page < 1) return;
 
       try {
         const params = new URLSearchParams({
@@ -236,7 +234,7 @@ const useItems = () => {
     }
 
     if (filters.name) {
-      const timer = setTimeout(() => fetchItems(currentPage), 1000); 
+      const timer = setTimeout(() => fetchItems(currentPage), 1000);
       setDebounceTimeout(timer);
     } else {
       fetchItems(currentPage);
@@ -249,11 +247,6 @@ const useItems = () => {
     };
   }, [filters.name, currentPage, fetchItems]);
 
-  // useEffect(() => {
-  //   fetchItems(currentPage);
-  //   console.log("Current Page: ", currentPage);
-  // }, [fetchItems, currentPage]);
-
   const refreshItems = () => {
     setFilters({
       name: "",
@@ -261,7 +254,7 @@ const useItems = () => {
       sackweight: "",
       unitofmeasurement: "",
     });
-    fetchItems(currentPage); 
+    fetchItems(currentPage);
   };
 
   const handlePageChange = (page: number) => {
@@ -275,7 +268,7 @@ const useItems = () => {
       sackweight: "",
       unitofmeasurement: "",
     });
-    fetchItems(1); 
+    fetchItems(1);
   };
 
   return {
@@ -333,16 +326,6 @@ export default function ProductManagement() {
       image: undefined,
     },
   });
-
-  // State
-  // const [filters, setFilters] = useState({
-  //   name: "",
-  //   type: "all",
-  //   sackweight: "all",
-  //   unitofmeasurement: "all",
-  // });
-  const [searchTerm, setSearchTerm] = useState("");
-  // const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
@@ -350,27 +333,17 @@ export default function ProductManagement() {
   const [showImage, setShowImage] = useState<ViewItem | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-
-  // Refs
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const fileRef = form.register("image");
+  // const [dropdownVisible, setDropdownVisible] = useState(false);
+  // const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Memoized values
   const filteredItems = useMemo(() => {
     return items;
   }, [items]);
 
   console.log("Filtered Items: ", filteredItems);
 
-  // const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  // const paginatedItems = filteredItems.slice(
-  //   (currentPage - 1) * ITEMS_PER_PAGE,
-  //   currentPage * ITEMS_PER_PAGE
-  // );
-
-  // Event handlers
   const handleSubmit = async (values: AddItem) => {
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => {
@@ -442,7 +415,6 @@ export default function ProductManagement() {
     setInputValue("");
   };
 
-  // Effects
   useEffect(() => {
     const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
     handleResize();
@@ -450,21 +422,20 @@ export default function ProductManagement() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setDropdownVisible(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (
+  //       dropdownRef.current &&
+  //       !dropdownRef.current.contains(event.target as Node)
+  //     ) {
+  //       setDropdownVisible(false);
+  //     }
+  //   };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  //   document.addEventListener("mousedown", handleClickOutside);
+  //   return () => document.removeEventListener("mousedown", handleClickOutside);
+  // }, []);
 
-  // Access control
   const canAccessButton = (role: string) => {
     if (!user) return false;
     if (user.role === ROLES.ADMIN) return true;
@@ -475,27 +446,26 @@ export default function ProductManagement() {
     );
   };
 
-  const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  const dropdownRefItem = useRef<HTMLDivElement>(null);
+  // const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
+  // const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
+  // const dropdownRefItem = useRef<HTMLDivElement>(null);
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
-    handlePageChange(1); // Reset to first page when filters change
+    handlePageChange(1);
   };
 
   const handleItemTypeChange = (value: string) => {
     setFilters((prev) => ({ ...prev, type: value }));
-    handlePageChange(1); // Reset to first page when filters change
+    handlePageChange(1);
   };
 
   const handleUnitOfMeasurementChange = (value: string) => {
     setFilters((prev) => ({ ...prev, unitofmeasurement: value }));
-    handlePageChange(1); // Reset to first page when filters change
+    handlePageChange(1);
   };
 
-  // Render helper components
   const renderFilters = () => (
     <Popover>
       <PopoverTrigger>
@@ -516,7 +486,7 @@ export default function ProductManagement() {
               value={filters.name}
               onChange={handleItemNameChange}
             />
-            {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
+            {/* {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
               <div
                 ref={dropdownRefItem}
                 className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
@@ -536,7 +506,7 @@ export default function ProductManagement() {
                   </div>
                 ))}
               </div>
-            )}
+            )} */}
           </div>
           <div className="grid gap-2">
             <span className="text-sm">Item Type</span>
@@ -619,7 +589,7 @@ export default function ProductManagement() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
-    setDropdownVisible(value.length > 0);
+    // setDropdownVisible(value.length > 0);
   };
 
   console.log("Input Value: ", inputValue);
@@ -630,7 +600,7 @@ export default function ProductManagement() {
   const handleItemClick = (itemName: string) => {
     setInputValue(itemName);
     form.setValue("name", itemName);
-    setDropdownVisible(false); // Hide dropdown when an item is clicked
+    // setDropdownVisible(false);
   };
 
   const handleShowImage = async (item: ViewItem) => {
@@ -660,28 +630,19 @@ export default function ProductManagement() {
     setShowAlert(true);
   };
 
-  // const handlePageChange = (page: number) => {
-  //   setCurrentPage(page);
-  // };
-
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-hidden p-5 w-full">
         <div className="container mx-auto px-4 md:px-6 py-8">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-customColors-darkKnight">
               Product Management
             </h1>
           </div>
-
-          {/* Search and controls */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <Input
               type="text"
               placeholder="Search item name..."
-              // value={searchTerm}
-              // onChange={(e) => setSearchTerm(e.target.value)}
               value={filters.name}
               onChange={handleItemNameChange}
               className="w-full md:w-auto"
@@ -697,8 +658,6 @@ export default function ProductManagement() {
               {renderFilters()}
             </div>
           </div>
-
-          {/* Table */}
           <ScrollArea>
             <Table
               style={{ width: "100%" }}
@@ -713,7 +672,9 @@ export default function ProductManagement() {
                   <TableHead>Sack Weight</TableHead>
                   <TableHead>Unit of Measurement</TableHead>
                   <TableHead>Available Stocks</TableHead>
-                  <TableHead>Unit Price</TableHead>
+                  {canAccessButton(ROLES.ADMIN || ROLES.MANAGER) && (
+                    <TableHead>Unit Price</TableHead>
+                  )}
                   {canAccessButton(ROLES.ADMIN) && (
                     <TableHead>Last Modified by</TableHead>
                   )}
@@ -741,7 +702,9 @@ export default function ProductManagement() {
                       <TableCell>{item.sackweight}</TableCell>
                       <TableCell>{item.unitofmeasurement}</TableCell>
                       <TableCell>{formatStock(item.stock)}</TableCell>
-                      <TableCell>{formatPrice(item.unitprice)}</TableCell>
+                      {canAccessButton(ROLES.ADMIN || ROLES.MANAGER) && (
+                        <TableCell>{formatPrice(item.unitprice)}</TableCell>
+                      )}
                       {canAccessButton(ROLES.ADMIN) && (
                         <TableCell>
                           {item.User.firstname} {item.User.lastname}
@@ -794,37 +757,81 @@ export default function ProductManagement() {
                 )}
               </TableBody>
             </Table>
-            <div className="flex items-center justify-center mt-4 mb-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() =>
-                        handlePageChange(Math.max(1, currentPage - 1))
-                      }
-                    />
-                  </PaginationItem>
-                  {[...Array(totalPages)].map((_, index) => (
-                    <PaginationItem key={index}>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+          <div className="flex items-center justify-center mt-4 mb-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      handlePageChange(Math.max(1, currentPage - 1))
+                    }
+                  />
+                </PaginationItem>
+                {/* {[...Array(totalPages)].map((_, index) => (
+                              <PaginationItem key={index}>
+                                <PaginationLink
+                                  onClick={() => handlePageChange(index + 1)}
+                                  isActive={currentPage === index + 1}
+                                >
+                                  {index + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))} */}
+                {currentPage > 3 && (
+                  <>
+                    <PaginationItem>
                       <PaginationLink
-                        onClick={() => handlePageChange(index + 1)}
-                        isActive={currentPage === index + 1}
+                        onClick={() => handlePageChange(1)}
+                        isActive={currentPage === 1}
                       >
-                        {index + 1}
+                        1
                       </PaginationLink>
                     </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        handlePageChange(Math.min(totalPages, currentPage + 1))
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </ScrollArea>
+                    {currentPage > 3 && <PaginationEllipsis />}
+                  </>
+                )}
+
+                {Array.from({ length: Math.min(3, totalPages) }, (_, index) => {
+                  const pageIndex = Math.max(1, currentPage - 1) + index;
+                  if (pageIndex < 1 || pageIndex > totalPages) return null;
+
+                  return (
+                    <PaginationItem key={pageIndex}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(pageIndex)}
+                        isActive={currentPage === pageIndex}
+                      >
+                        {pageIndex}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && <PaginationEllipsis />}
+                    <PaginationItem>
+                      <PaginationLink
+                        onClick={() => handlePageChange(totalPages)}
+                        isActive={currentPage === totalPages}
+                      >
+                        {totalPages}
+                      </PaginationLink>
+                    </PaginationItem>
+                  </>
+                )}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      handlePageChange(Math.min(totalPages, currentPage + 1))
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
           <>
             {showImageModal && showImage && (
               <Dialog open={showImageModal} onOpenChange={closeImage}>
@@ -942,18 +949,18 @@ export default function ProductManagement() {
                                   {...field}
                                   id="name"
                                   type="text"
-                                  value={inputValue || form.getValues("name")}
-                                  onChange={(e) => {
-                                    handleInputChange(e);
-                                    field.onChange(e);
-                                  }}
-                                  onFocus={() =>
-                                    setDropdownVisible(inputValue.length > 0)
-                                  }
+                                  // value={inputValue || form.getValues("name")}
+                                  // onChange={(e) => {
+                                  //   handleInputChange(e);
+                                  //   field.onChange(e);
+                                  // }}
+                                  // onFocus={() =>
+                                  //   setDropdownVisible(inputValue.length > 0)
+                                  // }
                                 />
                               </FormControl>
                               <FormMessage />
-                              {dropdownVisible &&
+                              {/* {dropdownVisible &&
                                 filteredItemsName.length > 0 && (
                                   <div
                                     ref={dropdownRef}
@@ -971,7 +978,7 @@ export default function ProductManagement() {
                                       </div>
                                     ))}
                                   </div>
-                                )}
+                                )} */}
                             </FormItem>
                           )}
                         />
@@ -1091,26 +1098,28 @@ export default function ProductManagement() {
                           )}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="unitprice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="unitprice">
-                                Unit Price
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="unitprice"
-                                  type="number"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      {canAccessButton(ROLES.ADMIN || ROLES.MANAGER) && (
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="unitprice"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="unitprice">
+                                  Unit Price
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="unitprice"
+                                    type="number"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
                     </div>
                     <DialogFooter className="pt-2 lg:pt-1">
                       <div className="flex justify-end space-x-2">

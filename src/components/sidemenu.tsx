@@ -21,8 +21,6 @@ import {
   ProfileIcon,
   LogoutIcon,
   PurchaseIcon,
-  TruckIcon,
-  UserIcon,
   UsersIcon,
   EllipsisIcon,
   MenuIcon,
@@ -160,7 +158,21 @@ export default function SideMenu() {
     }
 
     if (user.role === ROLES.INVENTORY) {
-      return <MenuItem href="/product" icon={BoxIcon} label="Product" />;
+      return (
+        <>
+          <MenuItem href="/product" icon={BoxIcon} label="Product" />
+          <MenuItem
+            href="/saleshistory"
+            icon={CalendarIcon}
+            label="Sales History"
+          />
+          <MenuItem
+            href="/purchasehistory"
+            icon={CalendarIcon}
+            label="Purchase History"
+          />
+        </>
+      );
     }
 
     return null;
@@ -177,7 +189,6 @@ export default function SideMenu() {
           isMenuOpen ? "w-48" : "w-14"
         } lg:w-52 bg-CustomColors-ivoryWhite shadow-lg transition-all duration-300 ease-in-out`}
       >
-        {/* Header Section */}
         <div className="flex items-center justify-between p-4 border-b">
           <button className="lg:hidden text-gray-500" onClick={toggleMenu}>
             <MenuIcon className="w-4 h-4" />
@@ -186,8 +197,6 @@ export default function SideMenu() {
             Point of Sale
           </span>
         </div>
-
-        {/* Scrollable Links Area */}
         <div className="flex flex-col flex-grow overflow-hidden">
           <div
             className={`flex flex-col flex-grow overflow-auto lg:block ${
@@ -198,8 +207,6 @@ export default function SideMenu() {
               <nav className="mt-4 space-y-1 px-4">{menuItems}</nav>
             </ScrollArea>
           </div>
-
-          {/* Footer Section */}
           <div
             className={`bg-customColors-ivoryWhite border-t border-gray-200 flex items-center justify-between ${
               isMenuOpen ? "p-4" : "pt-4 pb-4 pl-1"
@@ -208,9 +215,7 @@ export default function SideMenu() {
             <div className="flex items-center space-x-3">
               <div className="pl-2 lg:pl-2">
                 <Avatar>
-                  <AvatarImage
-                    src={user?.imagepath || "/path/to/default/image.png"}
-                  />
+                  <AvatarImage src={user?.imagepath} />
                   <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
                 </Avatar>
               </div>
@@ -219,7 +224,7 @@ export default function SideMenu() {
                   isMenuOpen ? "block" : "hidden"
                 } lg:block`}
               >
-                <span className="text-sm font-medium text-gray-800 text-customColors-darkKnight">
+                <span className="text-sm font-medium text-customColors-darkKnight">
                   {user?.firstname && user?.lastname
                     ? `${user.firstname} ${user.lastname}`
                     : "Guest"}
@@ -238,14 +243,14 @@ export default function SideMenu() {
               <DropdownMenuContent className="w-56">
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    className="w-full p-2 text-left text-sm text-gray-800 rounded-xl hover:bg-customColors-mercury"
+                    className="w-full p-2 text-left text-sm text-gray-800 rounded-xl "
                     onClick={() => (window.location.href = "/profile")}
                   >
                     <ProfileIcon className="inline-block mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="w-full p-2 text-left text-sm text-gray-800 rounded-xl hover:bg-customColors-mercury"
+                    className="w-full p-2 text-left text-sm text-gray-800 rounded-xl "
                     onClick={logout}
                   >
                     <LogoutIcon className="mr-2 h-4 w-4" />

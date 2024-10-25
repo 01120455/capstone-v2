@@ -40,6 +40,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { User } from "@/interfaces/user";
+
+const ROLES = {
+  SALES: "sales",
+  INVENTORY: "inventory",
+  MANAGER: "manager",
+  ADMIN: "admin",
+};
 
 interface CombinedTransactionItem {
   documentNumber?: string;
@@ -71,7 +79,7 @@ const formatPrice = (price: number): string => {
   }).format(price);
 };
 
-const ROWS_PER_PAGE = 5;
+const ROWS_PER_PAGE = 10;
 
 const useFilters = () => {
   const [filters, setFilters] = useState({
@@ -352,6 +360,7 @@ const useTransactionItems = () => {
 };
 
 export default function Component() {
+  const [user, setUser] = useState<User | null>(null);
   const {
     purchases,
     currentPage,
@@ -828,6 +837,32 @@ export default function Component() {
   //   setCurrentItemPage(page);
   // };
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/session", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const session = await response.json();
+        setUser(session || null);
+      } catch (error) {
+        console.error("Failed to fetch session", error);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const canAccessButton = (role: String) => {
+    if (user?.role === ROLES.ADMIN) return true;
+    if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+    if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+    return false;
+  };
+
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4 w-full">
@@ -917,8 +952,14 @@ export default function Component() {
                                 <TableHead>Sack Weight</TableHead>
                                 <TableHead>Unit of Measurement</TableHead>
                                 <TableHead>Measurement Value</TableHead>
-                                <TableHead>Unit Price</TableHead>
-                                <TableHead>Total Amount</TableHead>
+                                {canAccessButton(
+                                  ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                                ) && (
+                                  <>
+                                    <TableHead>Unit Price</TableHead>
+                                    <TableHead>Total Amount</TableHead>
+                                  </>
+                                )}
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -934,12 +975,20 @@ export default function Component() {
                                     <TableCell>
                                       {item.measurementvalue}
                                     </TableCell>
-                                    <TableCell>
-                                      {formatPrice(item.unitprice)}
-                                    </TableCell>
-                                    <TableCell>
-                                      {formatPrice(item.totalamount)}
-                                    </TableCell>
+                                    {canAccessButton(
+                                      ROLES.ADMIN ||
+                                        ROLES.MANAGER ||
+                                        ROLES.SALES
+                                    ) && (
+                                      <>
+                                        <TableCell>
+                                          {formatPrice(item.unitprice)}
+                                        </TableCell>
+                                        <TableCell>
+                                          {formatPrice(item.totalamount)}
+                                        </TableCell>
+                                      </>
+                                    )}
                                   </TableRow>
                                 )
                               )}
@@ -950,12 +999,20 @@ export default function Component() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2">
-                      <div className="font-medium">Total Items:</div>
-                      <div>{selectedTransaction.TransactionItem.length}</div>
-                      <div className="font-medium">Total:</div>
-                      <div>
-                        {formatPrice(selectedTransaction.totalamount ?? 0)}
+                      <div className="font-medium">
+                        Total Items:{" "}
+                        {selectedTransaction.TransactionItem.length}
                       </div>
+                      {canAccessButton(
+                        ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                      ) && (
+                        <>
+                          <div className="font-medium">
+                            Total:{" "}
+                            {formatPrice(selectedTransaction.totalamount ?? 0)}
+                          </div>
+                        </>
+                      )}
                     </div>
                     {/* <div className="flex justify-end space-x-2">
                       <Button variant={"secondary"}>
@@ -986,10 +1043,15 @@ export default function Component() {
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                           <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
                             <TableHead>Purchase Order No.</TableHead>
-                            {/* <TableHead>Walk-in</TableHead> */}
                             <TableHead>From Milling</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>Total Amount</TableHead>
+                            {canAccessButton(
+                              ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                            ) && (
+                              <>
+                                <TableHead>Total Amount</TableHead>
+                              </>
+                            )}
                             <TableHead>Date</TableHead>
                             <TableHead />
                           </TableRow>
@@ -1011,9 +1073,6 @@ export default function Component() {
                                   <TableCell>
                                     {transaction.DocumentNumber.documentnumber}
                                   </TableCell>
-                                  {/* <TableCell>
-                                      {transaction.walkin ? "Yes" : "No"}
-                                    </TableCell> */}
                                   <TableCell>
                                     {transaction.frommilling ? "Yes" : "No"}
                                   </TableCell>
@@ -1032,9 +1091,17 @@ export default function Component() {
                                       {transaction.status}
                                     </Badge>
                                   </TableCell>
-                                  <TableCell>
-                                    {formatPrice(transaction.totalamount ?? 0)}
-                                  </TableCell>
+                                  {canAccessButton(
+                                    ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                                  ) && (
+                                    <>
+                                      <TableCell>
+                                        {formatPrice(
+                                          transaction.totalamount ?? 0
+                                        )}
+                                      </TableCell>
+                                    </>
+                                  )}
                                   <TableCell>
                                     {transaction.createdat
                                       ? new Date(
@@ -1068,211 +1135,204 @@ export default function Component() {
                           )}
                         </TableBody>
                       </Table>
-                      <div className="flex items-center justify-center mt-4">
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() =>
-                                  handlePageChange(Math.max(1, currentPage - 1))
-                                }
-                              />
-                            </PaginationItem>
-                            {/* {[...Array(totalPages)].map((_, index) => (
-                              <PaginationItem key={index}>
-                                <PaginationLink
-                                  onClick={() => handlePageChange(index + 1)}
-                                  isActive={currentPage === index + 1}
-                                >
-                                  {index + 1}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ))} */}
-                            {currentPage > 3 && (
-                              <>
-                                <PaginationItem>
-                                  <PaginationLink
-                                    onClick={() => handlePageChange(1)}
-                                    isActive={currentPage === 1}
-                                  >
-                                    1
-                                  </PaginationLink>
-                                </PaginationItem>
-                                {currentPage > 3 && <PaginationEllipsis />}
-                              </>
-                            )}
 
-                            {Array.from(
-                              { length: Math.min(3, totalPages) },
-                              (_, index) => {
-                                const pageIndex =
-                                  Math.max(1, currentPage - 1) + index;
-                                if (pageIndex < 1 || pageIndex > totalPages)
-                                  return null;
-
-                                return (
-                                  <PaginationItem key={pageIndex}>
-                                    <PaginationLink
-                                      onClick={() =>
-                                        handlePageChange(pageIndex)
-                                      }
-                                      isActive={currentPage === pageIndex}
-                                    >
-                                      {pageIndex}
-                                    </PaginationLink>
-                                  </PaginationItem>
-                                );
-                              }
-                            )}
-
-                            {currentPage < totalPages - 2 && (
-                              <>
-                                {currentPage < totalPages - 3 && (
-                                  <PaginationEllipsis />
-                                )}
-                                <PaginationItem>
-                                  <PaginationLink
-                                    onClick={() => handlePageChange(totalPages)}
-                                    isActive={currentPage === totalPages}
-                                  >
-                                    {totalPages}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              </>
-                            )}
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() =>
-                                  handlePageChange(
-                                    Math.min(totalPages, currentPage + 1)
-                                  )
-                                }
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
                       <ScrollBar orientation="horizontal" />
                     </ScrollArea>
+                    <div className="flex items-center justify-center mt-4">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={() =>
+                                handlePageChange(Math.max(1, currentPage - 1))
+                              }
+                            />
+                          </PaginationItem>
+                          {currentPage > 3 && (
+                            <>
+                              <PaginationItem>
+                                <PaginationLink
+                                  onClick={() => handlePageChange(1)}
+                                  isActive={currentPage === 1}
+                                >
+                                  1
+                                </PaginationLink>
+                              </PaginationItem>
+                              {currentPage > 3 && <PaginationEllipsis />}
+                            </>
+                          )}
+
+                          {Array.from(
+                            { length: Math.min(3, totalPages) },
+                            (_, index) => {
+                              const pageIndex =
+                                Math.max(1, currentPage - 1) + index;
+                              if (pageIndex < 1 || pageIndex > totalPages)
+                                return null;
+
+                              return (
+                                <PaginationItem key={pageIndex}>
+                                  <PaginationLink
+                                    onClick={() => handlePageChange(pageIndex)}
+                                    isActive={currentPage === pageIndex}
+                                  >
+                                    {pageIndex}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                          )}
+
+                          {currentPage < totalPages - 2 && (
+                            <>
+                              {currentPage < totalPages - 3 && (
+                                <PaginationEllipsis />
+                              )}
+                              <PaginationItem>
+                                <PaginationLink
+                                  onClick={() => handlePageChange(totalPages)}
+                                  isActive={currentPage === totalPages}
+                                >
+                                  {totalPages}
+                                </PaginationLink>
+                              </PaginationItem>
+                            </>
+                          )}
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={() =>
+                                handlePageChange(
+                                  Math.min(totalPages, currentPage + 1)
+                                )
+                              }
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
-          <div className="flex-1 overflow-y-hidden w-full">
-            <div className="container">
-              <div className="flex flex-col gap-6">
-                <div className="flex  items-center justify-between mb-6 -mr-6">
-                  <h1 className="text-2xl font-bold ">
-                    List of Purchase Items from Milling
-                  </h1>
-                </div>
-                <div className="flex items-center justify-between"></div>
-                <div className="overflow-x-auto">
-                  <div className="table-container relative">
-                    <ScrollArea>
-                      <Table
-                        style={{ width: "100%" }}
-                        className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
-                        divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                      >
-                        <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                            <TableHead>Purchase Order No.</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Item Name</TableHead>
-                            <TableHead>Item Type</TableHead>
-                            <TableHead>Sack Weight</TableHead>
-                            <TableHead>Unit of Measurement</TableHead>
-                            <TableHead>Measurement Value</TableHead>
+
+          <div className="flex flex-col gap-6">
+            <div className="flex  items-center justify-between mb-6 -mr-6">
+              <h1 className="text-2xl font-bold ">
+                List of Purchase Items from Milling
+              </h1>
+            </div>
+            <div className="flex items-center justify-between"></div>
+            <div className="overflow-x-auto">
+              <div className="table-container relative">
+                <ScrollArea>
+                  <Table
+                    style={{ width: "100%" }}
+                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
+                    divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                  >
+                    <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                        <TableHead>Purchase Order No.</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Item Name</TableHead>
+                        <TableHead>Item Type</TableHead>
+                        <TableHead>Sack Weight</TableHead>
+                        <TableHead>Unit of Measurement</TableHead>
+                        <TableHead>Measurement Value</TableHead>
+                        {canAccessButton(
+                          ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                        ) && (
+                          <>
                             <TableHead>Unit Price</TableHead>
                             <TableHead>Total Amount</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredTransactionItems.map((purchaseItem) => (
-                            <TableRow key={purchaseItem.transactionitemid}>
-                              <TableCell>
-                                {purchaseItem.documentNumber}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  className={`px-2 py-1 rounded-full ${
-                                    purchaseItem.status === "paid"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                      : purchaseItem.status === "pending"
-                                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                      : purchaseItem.status === "cancelled"
-                                      ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
-                                  }`}
-                                >
-                                  {purchaseItem.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{purchaseItem.Item.name}</TableCell>
-                              <TableCell>{purchaseItem.Item.type}</TableCell>
-                              <TableCell>{purchaseItem.sackweight}</TableCell>
-                              <TableCell>
-                                {purchaseItem.unitofmeasurement}
-                              </TableCell>
-                              <TableCell>
-                                {purchaseItem.measurementvalue}
-                              </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactionItems.map((purchaseItem) => (
+                        <TableRow key={purchaseItem.transactionitemid}>
+                          <TableCell>{purchaseItem.documentNumber}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={`px-2 py-1 rounded-full ${
+                                purchaseItem.status === "paid"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                  : purchaseItem.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                  : purchaseItem.status === "cancelled"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                              }`}
+                            >
+                              {purchaseItem.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{purchaseItem.Item.name}</TableCell>
+                          <TableCell>{purchaseItem.Item.type}</TableCell>
+                          <TableCell>{purchaseItem.sackweight}</TableCell>
+                          <TableCell>
+                            {purchaseItem.unitofmeasurement}
+                          </TableCell>
+                          <TableCell>{purchaseItem.measurementvalue}</TableCell>
+                          {canAccessButton(
+                            ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                          ) && (
+                            <>
                               <TableCell>{purchaseItem.unitprice}</TableCell>
                               <TableCell>{purchaseItem.totalamount}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <div className="flex items-center justify-center mt-4 mb-4">
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() =>
-                                  handleTransactionItemsPageChange(
-                                    Math.max(1, currentTransactionItemsPage - 1)
-                                  )
-                                }
-                              />
-                            </PaginationItem>
-                            {[...Array(totalTransactionItemsPages)].map(
-                              (_, index) => (
-                                <PaginationItem key={index}>
-                                  <PaginationLink
-                                    onClick={() =>
-                                      handleTransactionItemsPageChange(
-                                        index + 1
-                                      )
-                                    }
-                                    isActive={
-                                      currentTransactionItemsPage === index + 1
-                                    }
-                                  >
-                                    {index + 1}
-                                  </PaginationLink>
-                                </PaginationItem>
+                            </>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+                <div className="flex items-center justify-center mt-4 mb-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            handleTransactionItemsPageChange(
+                              Math.max(1, currentTransactionItemsPage - 1)
+                            )
+                          }
+                        />
+                      </PaginationItem>
+                      {[...Array(totalTransactionItemsPages)].map(
+                        (_, index) => (
+                          <PaginationItem key={index}>
+                            <PaginationLink
+                              onClick={() =>
+                                handleTransactionItemsPageChange(index + 1)
+                              }
+                              isActive={
+                                currentTransactionItemsPage === index + 1
+                              }
+                            >
+                              {index + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      )}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            handleTransactionItemsPageChange(
+                              Math.min(
+                                totalTransactionItemsPages,
+                                currentTransactionItemsPage + 1
                               )
-                            )}
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() =>
-                                  handleTransactionItemsPageChange(
-                                    Math.min(
-                                      totalTransactionItemsPages,
-                                      currentTransactionItemsPage + 1
-                                    )
-                                  )
-                                }
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
-                      <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-                  </div>
+                            )
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               </div>
             </div>

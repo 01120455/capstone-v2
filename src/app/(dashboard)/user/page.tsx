@@ -85,8 +85,6 @@ export default function Component() {
   const [showImage, setShowImage] = useState<AddUser | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<AddUser | null>(null);
-  const [showDeletionSuccess, setShowDeletionSuccess] = useState(false);
-  const [showDeletedUser, setShowDeletedUser] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -288,8 +286,6 @@ export default function Component() {
         refreshUsers();
         setShowAlert(false);
         setUserToDelete(null);
-        // setShowDeletionSuccess(true);
-        setShowDeletedUser(data);
       } else {
         console.error("Error deleting user:", response.status);
       }
@@ -384,19 +380,6 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto p-6">
-        {/* {showDeletionSuccess && (
-          <Alert className="alert-center">
-            <AlertTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              Item Deleted Successfully
-            </AlertTitle>
-            <AlertDescription>
-              User {showDeletedUser?.firstname} {""}{" "}
-              {showDeletedUser?.middlename} {""} {showDeletedUser?.lastname}{" "}
-              deleted successfully.
-            </AlertDescription>
-          </Alert>
-        )} */}
         <div className="w-full max-w-screen-2xl mx-auto p-4">
           <div className="flex flex-col items-center">
             <div className="w-[1000px]">
@@ -510,17 +493,6 @@ export default function Component() {
                         }
                       />
                     </PaginationItem>
-                    {/* {[...Array(totalPages)].map((_, index) => (
-                      <PaginationItem key={index}>
-                        <PaginationLink
-                          onClick={() => handlePageChange(index + 1)}
-                          isActive={currentPage === index + 1}
-                        >
-                          {index + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))} */}
-
                     {currentPage > 3 && (
                       <>
                         <PaginationItem>

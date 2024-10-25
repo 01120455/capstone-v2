@@ -1,10 +1,8 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -25,15 +23,9 @@ import {
 import { useForm } from "react-hook-form";
 import { Login, loginSchema } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { useAuth } from "@/utils/hooks/auth";
+import { toast } from "sonner";
 
 export default function Home() {
-  const [alert, setAlert] = useState<{
-    message: string;
-    type: "error" | "success";
-  } | null>(null);
-  const [fadeOut, setFadeOut] = useState(false);
   const router = useRouter();
 
   const form = useForm<Login>({
@@ -43,36 +35,6 @@ export default function Home() {
       password: "",
     },
   });
-
-  const handleAlertDismiss = useCallback(() => {
-    setFadeOut(true);
-    setTimeout(() => {
-      setAlert(null);
-      setFadeOut(false); // Reset fadeOut for the next alert
-    }, 1000); // 1000ms matches the fade-out duration
-  }, []);
-
-  // useEffect(() => {
-  //   async function createDummyUser() {
-  //     try {
-  //       const res = await fetch("/api/auth/cdu", { method: "POST" });
-  //       const data = await res.json();
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.error("Error creating dummy user:", error);
-  //     }
-  //   }
-
-  //   createDummyUser();
-  // }, []);
-
-  useEffect(() => {
-    if (alert) {
-      const timer = setTimeout(() => handleAlertDismiss(), 10000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [alert, handleAlertDismiss]);
 
   const handleSubmit = async (values: Login) => {
     try {
@@ -87,29 +49,18 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        setAlert({
-          message: data.message || "Invalid username or password",
-          type: "error",
-        });
+        toast.error(`Error: ${data.message}`);
         return;
       }
 
       if (response.ok) {
-        setAlert({
-          message: data.message || "Login successful",
-          type: "success",
-        });
+        toast.success(`Welcome back, ${data.username}!`);
       }
-
-      // setAlert(null);
 
       switch (data.role) {
         case "admin":
         case "manager":
-          // setTimeout(() => {
-          //   router.push("/dashboard");
-          // }, 500000); // 20 seconds delay
-          router.push("/dashboard"); // Adjust the delay as needed
+          router.push("/dashboard");
           break;
         case "sales":
           router.push("/sales");
@@ -122,13 +73,12 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error authenticating user:", error);
-      setAlert({ message: "An unexpected error occurred", type: "error" });
     }
   };
 
   return (
     <div className="grid lg:grid-cols-2 min-h-screen w-full">
-      <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center hidden lg:flex">
+      <div className="bg-gray-100 dark:bg-gray-800 items-center justify-center hidden lg:flex">
         <Image
           src="/login.jpg"
           alt="Login Image"
@@ -144,139 +94,71 @@ export default function Home() {
           </div>
           <div className="flex justify-center">
             <Tabs defaultValue="login" className="w-[400px]">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className=" w-full grid-cols-1 hidden">
                 <TabsTrigger value="login">Login</TabsTrigger>
-                {/* <TabsTrigger value="register">Register</TabsTrigger> */}
               </TabsList>
-              <TabsContent value="login">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Login</CardTitle>
-                    <CardDescription>
-                      Login in to your account to continue
-                    </CardDescription>
-                  </CardHeader>
-                  <Form {...form}>
-                    <form
-                      className="w-full max-w-4xl mx-auto p-6"
-                      onSubmit={form.handleSubmit(handleSubmit)}
-                    >
-                      <CardContent className="space-y-2">
-                        <div className="space-y-1">
-                          <FormField
-                            control={form.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="username">
-                                  Username
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="username"
-                                    type="text"
-                                    required
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="password">
-                                  Password
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="password"
-                                    type="password"
-                                    required
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </CardContent>
-                      <CardFooter>
-                        <Button type="submit">Login</Button>
-                      </CardFooter>
-                    </form>
-                  </Form>
-                </Card>
-              </TabsContent>
-              {/* <TabsContent value="register">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Register</CardTitle>
-                    <CardDescription>
-                      Register to create an account
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="username">Username</Label>
-                      <Input id="username" type="text" required />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" required />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button>Register</Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent> */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Login</CardTitle>
+                  <CardDescription>
+                    Login in to your account to continue
+                  </CardDescription>
+                </CardHeader>
+                <Form {...form}>
+                  <form
+                    className="w-full max-w-4xl mx-auto p-6"
+                    onSubmit={form.handleSubmit(handleSubmit)}
+                  >
+                    <CardContent className="space-y-2">
+                      <div className="space-y-1">
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="username">Username</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="username"
+                                  type="text"
+                                  required
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="password">Password</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  id="password"
+                                  type="password"
+                                  required
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button type="submit">Login</Button>
+                    </CardFooter>
+                  </form>
+                </Form>
+              </Card>
             </Tabs>
           </div>
-          {alert && (
-            <div
-              className={`fixed-alert ${fadeOut ? "fade-out" : ""} ${
-                alert.type === "success" ? "alert-success" : "alert-error"
-              }`}
-            >
-              <Alert
-                variant={`${
-                  alert.type === "success" ? "default" : "destructive"
-                }`}
-              >
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>
-                  {alert.type === "success" ? "Success" : "Error"}
-                </AlertTitle>
-                <AlertDescription>{alert.message}</AlertDescription>
-              </Alert>
-            </div>
-          )}
         </div>
       </div>
     </div>
-  );
-}
-
-function Terminal(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <polyline points="4 17 10 11 4 5" />
-      <line x1="12" x2="20" y1="19" y2="19" />
-    </svg>
   );
 }

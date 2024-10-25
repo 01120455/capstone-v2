@@ -33,6 +33,15 @@ import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
 import { TrashIcon } from "@/components/icons/Icons";
 import { toast } from "sonner";
 
+const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price);
+};
+
 export default function Sales() {
   const [items, setItems] = useState<ViewItem[] | null>(null);
   const [cart, setCart] = useState<
@@ -329,48 +338,14 @@ export default function Sales() {
     }
   };
 
-  const [inputValue, setInputValue] = useState("");
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    setDropdownVisible(e.target.value.length > 0); // Show dropdown if there is input
-  };
-
-  const handleItemClick = (itemName: string) => {
-    setInputValue(itemName);
-    setDropdownVisible(false); // Hide dropdown when an item is clicked
-  };
-
-  // Hide dropdown when clicking outside of it
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setDropdownVisible(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside as EventListener);
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside as EventListener
-      );
-    };
-  }, []);
-
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid gap-2 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_450px]">
-            <div className="flex-1 overflow-auto p-4 md:p-8">
-              <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] w-auto border rounded-lg p-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-8">
+          <div className="grid gap-1 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_460px]">
+            <div className="flex-1 overflow-auto p-4 md:p-4">
+              <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] xl:h-[800px] w-auto border rounded-lg p-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-8">
                   {items &&
                     items.map((item) => (
                       <div
@@ -394,7 +369,7 @@ export default function Sales() {
                         </h3>
                         <div className="flex flex-row justify-between">
                           <p className="text-gray-500 mb-4">
-                            ₱{item.unitprice}
+                            {formatPrice(item.unitprice)}
                           </p>
                           <p className="text-gray-500 mb-4 text-right">
                             {item.type === "bigas" ? "Rice" : "Palay"}
@@ -436,7 +411,7 @@ export default function Sales() {
                               <Input
                                 {...field}
                                 id="documentnumber"
-                                type="text"
+                                type="text="
                               />
                             </FormControl>
                             <FormMessage />
@@ -510,7 +485,7 @@ export default function Sales() {
                     <h2 className="text-lg font-semibold mb-2">
                       Order Summary
                     </h2>
-                    <div className="overflow-y-auto h-[200px] w-auto border rounded-lg p-2">
+                    <div className="overflow-y-auto h-[500px] w-auto border rounded-lg p-2">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -528,7 +503,7 @@ export default function Sales() {
                                   type="number"
                                   min={1}
                                   value={item.quantity}
-                                  className="w-20 text-right"
+                                  className="w-24 text-right"
                                   onChange={(e) =>
                                     updateQuantity(
                                       index,
@@ -538,7 +513,7 @@ export default function Sales() {
                                 />
                               </TableCell>
                               <TableCell className="text-right">
-                                ₱{item.price.toFixed(2)}
+                                {formatPrice(item.price)}
                               </TableCell>
                               <TableCell>
                                 <Button
@@ -558,7 +533,7 @@ export default function Sales() {
                   </div>
                   <div className="mt-4 flex items-center justify-between">
                     <p className="text-lg font-semibold">
-                      Total: ₱{total.toFixed(2)}
+                      Total: {formatPrice(total)}
                     </p>
                     <div className="flex justify-end space-x-2">
                       <Button variant="outline">Cancel</Button>

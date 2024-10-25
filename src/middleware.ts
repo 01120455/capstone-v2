@@ -27,7 +27,6 @@ export async function middleware(req: NextRequest) {
       "/purchasehistory",
       "/user",
       "/archive",
-      "/purchase/frommillingtable",
     ],
     manager: [
       "/dashboard",
@@ -38,7 +37,7 @@ export async function middleware(req: NextRequest) {
       "/purchasehistory",
     ],
     sales: ["/sales", "/saleshistory"],
-    inventory: ["/product"],
+    inventory: ["/product", "/saleshistory", "/purchasehistory"],
   };
 
   const userSession = session as UserSession;
@@ -53,7 +52,6 @@ export async function middleware(req: NextRequest) {
     "/purchasehistory",
     "/user",
     "/archive",
-    "/purchase/frommillingtable",
   ];
 
   // Check if the request URL matches any of the protected paths

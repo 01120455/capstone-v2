@@ -122,7 +122,7 @@ const formatPrice = (price: number): string => {
   }).format(price);
 };
 
-const ROWS_PER_PAGE = 5;
+const ROWS_PER_PAGE = 10;
 
 const useFilters = () => {
   const [filters, setFilters] = useState({
@@ -470,8 +470,6 @@ export default function Component() {
     refreshTransactionItems,
     clearFilters2,
   } = useTransactionItems();
-  const [items, setItems] = useState<ViewItem[]>([]);
-
   const [showModal, setShowModal] = useState(false);
   const [showModalEditPurchase, setShowModalEditPurchase] = useState(false);
   const [showModalPurchaseItem, setShowModalPurchaseItem] = useState(false);
@@ -1166,14 +1164,14 @@ export default function Component() {
   //   e: React.ChangeEvent<HTMLInputElement>
   // ) => {
   //   const value = e.target.value;
-    // setItemInputValue(value);
-    // setItemFormDropdownVisible(value.length > 0);
+  // setItemInputValue(value);
+  // setItemFormDropdownVisible(value.length > 0);
 
-    // const filtered = items
-    //   .flatMap((p) => p.name) // Adjust according to your data structure
-    //   .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+  // const filtered = items
+  //   .flatMap((p) => p.name) // Adjust according to your data structure
+  //   .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
 
-    // setItemFormSuggestions(Array.from(new Set(filtered)));
+  // setItemFormSuggestions(Array.from(new Set(filtered)));
   // };
 
   // const handleFormItemClick = (itemName: string, index: number) => {
@@ -1334,7 +1332,7 @@ export default function Component() {
               value={filters.dateRange.start}
               onChange={(e) => {
                 const newValue = e.target.value;
-              
+
                 setFilters((prev) => ({
                   ...prev,
                   dateRange: {
@@ -1342,7 +1340,7 @@ export default function Component() {
                     start: newValue,
                   },
                 }));
-              
+
                 setFilters2((prev) => ({
                   ...prev,
                   dateRange: {
@@ -1361,7 +1359,7 @@ export default function Component() {
               value={filters.dateRange.end}
               onChange={(e) => {
                 const newValue = e.target.value;
-              
+
                 setFilters((prev) => ({
                   ...prev,
                   dateRange: {
@@ -1369,7 +1367,7 @@ export default function Component() {
                     end: newValue,
                   },
                 }));
-              
+
                 setFilters2((prev) => ({
                   ...prev,
                   dateRange: {
@@ -1637,7 +1635,7 @@ export default function Component() {
 
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
-      <div className="flex-1 overflow-y-hidden p-5 w-full">
+      <div className="flex-1 overflow-y-auto p-5 w-full">
         <div className="container mx-auto px-4 md:px-6 py-8">
           <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">
@@ -1651,7 +1649,7 @@ export default function Component() {
                   type="text"
                   placeholder="Search purchase order no. ..."
                   value={filters.name}
-              onChange={handleItemNameChange}
+                  onChange={handleItemNameChange}
                   className="w-full md:w-auto"
                 />
                 <div className="flex flex-row gap-2">
@@ -1794,40 +1792,40 @@ export default function Component() {
                         </>
                       </TableBody>
                     </Table>
-                    <div className="flex items-center justify-center mt-4 mb-4">
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              onClick={() =>
-                                handlePageChange(Math.max(1, currentPage - 1))
-                              }
-                            />
-                          </PaginationItem>
-                          {[...Array(totalPages)].map((_, index) => (
-                            <PaginationItem key={index}>
-                              <PaginationLink
-                                onClick={() => handlePageChange(index + 1)}
-                                isActive={currentPage === index + 1}
-                              >
-                                {index + 1}
-                              </PaginationLink>
-                            </PaginationItem>
-                          ))}
-                          <PaginationItem>
-                            <PaginationNext
-                              onClick={() =>
-                                handlePageChange(
-                                  Math.min(totalPages, currentPage + 1)
-                                )
-                              }
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    </div>
                     <ScrollBar orientation="horizontal" />
                   </ScrollArea>
+                  <div className="flex items-center justify-center mt-4 mb-4">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() =>
+                              handlePageChange(Math.max(1, currentPage - 1))
+                            }
+                          />
+                        </PaginationItem>
+                        {[...Array(totalPages)].map((_, index) => (
+                          <PaginationItem key={index}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(index + 1)}
+                              isActive={currentPage === index + 1}
+                            >
+                              {index + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              handlePageChange(
+                                Math.min(totalPages, currentPage + 1)
+                              )
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
                 </div>
               </div>
               {showTablePurchaseItem && purchaseItems && (
@@ -2768,120 +2766,110 @@ ${
               )}
             </div>
           </div>
-          <div className="flex-1 overflow-y-hidden w-full">
-            <div className="container">
-              <div className="flex flex-col gap-6">
-                <div className="flex  items-center justify-between mb-6 -mr-6">
-                  <h1 className="text-2xl font-bold ">
-                    List of Purchase Items from Milling
-                  </h1>
-                </div>
-                <div className="flex items-center justify-between"></div>
-                <div className="overflow-x-auto">
-                  <div className="table-container relative">
-                    <ScrollArea>
-                      <Table
-                        style={{ width: "100%" }}
-                        className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
-                        divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                      >
-                        <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                            <TableHead>Purchase Order No.</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Item Name</TableHead>
-                            <TableHead>Item Type</TableHead>
-                            <TableHead>Sack Weight</TableHead>
-                            <TableHead>Unit of Measurement</TableHead>
-                            <TableHead>Measurement Value</TableHead>
-                            <TableHead>Unit Price</TableHead>
-                            <TableHead>Total Amount</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredTransactionItems.map((purchaseItem) => (
-                            <TableRow key={purchaseItem.transactionitemid}>
-                              <TableCell>
-                                {purchaseItem.documentNumber}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  className={`px-2 py-1 rounded-full ${
-                                    purchaseItem.status === "paid"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                      : purchaseItem.status === "pending"
-                                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                      : purchaseItem.status === "cancelled"
-                                      ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
-                                  }`}
-                                >
-                                  {purchaseItem.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{purchaseItem.Item.name}</TableCell>
-                              <TableCell>{purchaseItem.Item.type}</TableCell>
-                              <TableCell>{purchaseItem.sackweight}</TableCell>
-                              <TableCell>
-                                {purchaseItem.unitofmeasurement}
-                              </TableCell>
-                              <TableCell>
-                                {purchaseItem.measurementvalue}
-                              </TableCell>
-                              <TableCell>{purchaseItem.unitprice}</TableCell>
-                              <TableCell>{purchaseItem.totalamount}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <div className="flex items-center justify-center mt-4 mb-4">
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() =>
-                                  handleTransactionItemsPageChange(
-                                    Math.max(1, currentTransactionItemsPage - 1)
-                                  )
-                                }
-                              />
-                            </PaginationItem>
-                            {[...Array(totalTransactionItemsPages)].map(
-                              (_, index) => (
-                                <PaginationItem key={index}>
-                                  <PaginationLink
-                                    onClick={() =>
-                                      handleTransactionItemsPageChange(
-                                        index + 1
-                                      )
-                                    }
-                                    isActive={
-                                      currentTransactionItemsPage === index + 1
-                                    }
-                                  >
-                                    {index + 1}
-                                  </PaginationLink>
-                                </PaginationItem>
+          <div className="flex flex-col gap-6">
+            <div className="flex  items-center justify-between mb-6 -mr-6">
+              <h1 className="text-2xl font-bold ">
+                List of Purchase Items from Milling
+              </h1>
+            </div>
+            <div className="flex items-center justify-between"></div>
+            <div className="overflow-x-auto">
+              <div className="table-container relative">
+                <ScrollArea>
+                  <Table
+                    style={{ width: "100%" }}
+                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
+                    divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                  >
+                    <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                        <TableHead>Purchase Order No.</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Item Name</TableHead>
+                        <TableHead>Item Type</TableHead>
+                        <TableHead>Sack Weight</TableHead>
+                        <TableHead>Unit of Measurement</TableHead>
+                        <TableHead>Measurement Value</TableHead>
+                        <TableHead>Unit Price</TableHead>
+                        <TableHead>Total Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactionItems.map((purchaseItem) => (
+                        <TableRow key={purchaseItem.transactionitemid}>
+                          <TableCell>{purchaseItem.documentNumber}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={`px-2 py-1 rounded-full ${
+                                purchaseItem.status === "paid"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                  : purchaseItem.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                  : purchaseItem.status === "cancelled"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                              }`}
+                            >
+                              {purchaseItem.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{purchaseItem.Item.name}</TableCell>
+                          <TableCell>{purchaseItem.Item.type}</TableCell>
+                          <TableCell>{purchaseItem.sackweight}</TableCell>
+                          <TableCell>
+                            {purchaseItem.unitofmeasurement}
+                          </TableCell>
+                          <TableCell>{purchaseItem.measurementvalue}</TableCell>
+                          <TableCell>{purchaseItem.unitprice}</TableCell>
+                          <TableCell>{purchaseItem.totalamount}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+                <div className="flex items-center justify-center mt-4 mb-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            handleTransactionItemsPageChange(
+                              Math.max(1, currentTransactionItemsPage - 1)
+                            )
+                          }
+                        />
+                      </PaginationItem>
+                      {[...Array(totalTransactionItemsPages)].map(
+                        (_, index) => (
+                          <PaginationItem key={index}>
+                            <PaginationLink
+                              onClick={() =>
+                                handleTransactionItemsPageChange(index + 1)
+                              }
+                              isActive={
+                                currentTransactionItemsPage === index + 1
+                              }
+                            >
+                              {index + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      )}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            handleTransactionItemsPageChange(
+                              Math.min(
+                                totalTransactionItemsPages,
+                                currentTransactionItemsPage + 1
                               )
-                            )}
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() =>
-                                  handleTransactionItemsPageChange(
-                                    Math.min(
-                                      totalTransactionItemsPages,
-                                      currentTransactionItemsPage + 1
-                                    )
-                                  )
-                                }
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
-                      <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-                  </div>
+                            )
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               </div>
             </div>
