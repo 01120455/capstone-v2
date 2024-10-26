@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+  useContext,
+} from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +48,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { User } from "@/interfaces/user";
+import { userSessionContext } from "@/components/sessionContext-provider";
 
 const ROLES = {
   SALES: "sales",
@@ -112,13 +120,6 @@ const usePurchases = () => {
   const [purchases, setPurchases] = useState<TransactionTable[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  // const [filters, setFilters] = useState({
-  //   purordno: "",
-  //   name: "",
-  //   frommilling: "",
-  //   status: "",
-  //   dateRange: { start: "", end: "" },
-  // });
 
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -360,7 +361,7 @@ const useTransactionItems = () => {
 };
 
 export default function Component() {
-  const [user, setUser] = useState<User | null>(null);
+  const user = useContext(userSessionContext);
   const {
     purchases,
     currentPage,
@@ -381,79 +382,10 @@ export default function Component() {
   } = useTransactionItems();
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
-  // const [purchaseOrderSuggestions, setPurchaseOrderSuggestions] = useState<
-  //   string[]
-  // >([]);
-  // const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  // const [isPurchaseOrderDropdownVisible, setPurchaseOrderDropdownVisible] =
-  //   useState(false);
-  // const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  // const dropdownRefPurchaseOrder = useRef<HTMLDivElement>(null);
-  // const dropdownRefItem = useRef<HTMLDivElement>(null);
 
   const filteredTransactions = useMemo(() => {
     return purchases;
-    // return purchases.filter((purchase) => {
-    //   const purordNo =
-    //     purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
-
-    //   const statusMatches =
-    //     filters.status === "all" || purchase.status === filters.status;
-    //   const frommillingMatches =
-    //     filters.frommilling === "all" ||
-    //     (filters.frommilling === "true" && purchase.frommilling) ||
-    //     (filters.frommilling === "false" && !purchase.frommilling);
-    //   const itemNameMatches = purchase.TransactionItem.some((item) => {
-    //     const itemName = item?.Item?.name?.toLowerCase() || "";
-    //     return itemName.includes(filters.name.toLowerCase());
-    //   });
-
-    //   const createdAt = purchase.createdat
-    //     ? new Date(purchase.createdat)
-    //     : null;
-    //   const start = filters.dateRange.start
-    //     ? new Date(filters.dateRange.start)
-    //     : null;
-    //   const end = filters.dateRange.end
-    //     ? new Date(filters.dateRange.end)
-    //     : null;
-
-    //   const isWithinDateRange = (
-    //     createdAt: Date | null,
-    //     start: Date | null,
-    //     end: Date | null
-    //   ) => {
-    //     if (!createdAt) return false;
-    //     if (start && end) return createdAt >= start && createdAt <= end;
-    //     if (start) return createdAt >= start;
-    //     if (end) return createdAt <= end;
-    //     return true;
-    //   };
-
-    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
-
-    //   console.log("Filtering Purchase:", purchase);
-    //   console.log("Matches:", {
-    //     purordNoMatches:
-    //       !filters.purordno ||
-    //       purordNo.includes(filters.purordno.toLowerCase()),
-    //     statusMatches,
-
-    //     frommillingMatches,
-    //     itemNameMatches,
-    //     dateRangeMatches,
-    //   });
-
-    //   return (
-    //     (!filters.purordno ||
-    //       purordNo.includes(filters.purordno.toLowerCase())) &&
-    //     statusMatches &&
-    //     frommillingMatches &&
-    //     itemNameMatches &&
-    //     dateRangeMatches
-    //   );
-    // });
-  }, [filters, purchases]);
+  }, [purchases]);
 
   const handlePurchaseOrderChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -656,32 +588,6 @@ export default function Component() {
     </Popover>
   );
 
-  // Hide dropdown when clicking outside of it
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     if (
-  //       dropdownRefPurchaseOrder.current &&
-  //       !dropdownRefPurchaseOrder.current.contains(event.target as Node)
-  //     ) {
-  //       setPurchaseOrderDropdownVisible(false);
-  //     }
-  //     if (
-  //       dropdownRefItem.current &&
-  //       !dropdownRefItem.current.contains(event.target as Node)
-  //     ) {
-  //       setItemDropdownVisible(false);
-  //     }
-  //   };
-
-  //   document.addEventListener("mousedown", handleClickOutside as EventListener);
-  //   return () => {
-  //     document.removeEventListener(
-  //       "mousedown",
-  //       handleClickOutside as EventListener
-  //     );
-  //   };
-  // }, []);
-
   const handleStatusChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
@@ -693,93 +599,12 @@ export default function Component() {
     }));
   };
 
-  // const handleWalkinChange = (value: string) => {
-  //   setFilters((prev) => ({
-  //     ...prev,
-  //     walkin: value,
-  //   }));
-  //   setFilters2((prev) => ({
-  //     ...prev,
-  //     walkin: value,
-  //   }));
-  // };
-
   const handleFromMillingChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
       frommilling: value,
     }));
   };
-
-  // const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
-  //   const transactionsResponse = await fetch("/api/suppliertransaction");
-  //   const transactions: any[] = await transactionsResponse.json();
-  //   console.log("Transactions:", transactions);
-
-  //   const transactionItemsResponse = await fetch("/api/transactionitem");
-  //   const transactionItems: TransactionItem[] =
-  //     await transactionItemsResponse.json();
-  //   console.log("Transaction Items:", transactionItems);
-
-  //   const transactionMap = new Map<number, any>();
-  //   transactions.forEach((transaction) => {
-  //     transactionMap.set(transaction.transactionid, {
-  //       documentNumber: transaction.DocumentNumber?.documentnumber,
-  //       frommilling: transaction.frommilling,
-  //       type: transaction.type,
-  //       status: transaction.status,
-  //     });
-  //   });
-  //   console.log("Transaction Map:", Array.from(transactionMap.entries()));
-
-  //   const combinedData: CombinedTransactionItem[] = transactionItems.map(
-  //     (item) => {
-  //       const transactionInfo = transactionMap.get(item.transactionid) || {};
-
-  //       const combinedItem = {
-  //         ...item,
-  //         documentNumber: transactionInfo.documentNumber,
-  //         frommilling: transactionInfo.frommilling || false,
-  //         type: transactionInfo.type || "otherType",
-  //         status: transactionInfo.status || "otherStatus",
-  //       };
-
-  //       console.log("Combined Item:", combinedItem); // Log each combined item
-  //       return combinedItem;
-  //     }
-  //   );
-
-  //   // Filter out items with undefined documentNumber
-  //   const filteredData = combinedData.filter(
-  //     (item) => item.documentNumber !== undefined
-  //   );
-  //   console.log(
-  //     "Filtered Data (without undefined documentNumber):",
-  //     filteredData
-  //   ); // Log the filtered data
-
-  //   return filteredData;
-  // };
-
-  // const [transactionItem, setTransactionItem] = useState<
-  //   CombinedTransactionItem[]
-  // >([]);
-
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     const combinedData = await fetchTransactionData();
-  //     setTransactionItem(combinedData);
-  //   };
-
-  //   getData();
-  // }, []);
-
-  // const refreshTransactionItems = async () => {
-  //   const combinedData = await fetchTransactionData();
-  //   setTransactionItem(combinedData);
-  // };
-
-  // console.log("Transaction Item:", transactionItem);
 
   const filteredTransactionItems = useMemo(() => {
     return transactionItem;
@@ -823,37 +648,7 @@ export default function Component() {
     //     dateRangeMatches
     //   );
     // });
-  }, [filters, transactionItem]);
-
-  // const totalPagesTransactionItems = Math.ceil(
-  //   filteredTransactionItems.length / transactionItemsPerPage
-  // );
-  // const paginatedTransactionItems = filteredTransactionItems.slice(
-  //   (currentItemPage - 1) * transactionItemsPerPage,
-  //   currentItemPage * transactionItemsPerPage
-  // );
-
-  // const handleItemPageChange = (page: number) => {
-  //   setCurrentItemPage(page);
-  // };
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session", {
-          method: "GET",
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const session = await response.json();
-        setUser(session || null);
-      } catch (error) {
-        console.error("Failed to fetch session", error);
-      }
-    };
-    fetchUser();
-  }, []);
+  }, [transactionItem]);
 
   const canAccessButton = (role: String) => {
     if (user?.role === ROLES.ADMIN) return true;
@@ -870,15 +665,7 @@ export default function Component() {
           <h1 className="text-2xl font-bold mb-6">Purchase Order History</h1>
           <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-4">
-                {/* <Input
-                  type="text"
-                  placeholder="Search Item name or Supplier Name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1"
-                /> */}
-              </div>
+              <div className="flex items-center gap-4"></div>
               {selectedTransaction ? (
                 <div className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
                   <div className="flex items-center justify-between">

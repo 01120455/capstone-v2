@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import {
+  useEffect,
+  useState,
+  ChangeEvent,
+  useContext,
+  useCallback,
+  useMemo,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -55,6 +62,7 @@ import {
   PlusIcon,
   AlertCircle,
   CheckCircle,
+  FilterIcon,
 } from "@/components/icons/Icons";
 import { User } from "@/interfaces/user";
 import SideMenu from "@/components/sidemenu";
@@ -69,6 +77,12 @@ import {
 } from "@/components/ui/pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { userSessionContext } from "@/components/sessionContext-provider";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const ROLES = {
   SALES: "sales",
@@ -77,9 +91,168 @@ const ROLES = {
   ADMIN: "admin",
 };
 
-export default function Component() {
-  const [user, setUser] = useState<User | null>(null);
+const USERS_PER_PAGE = 10;
+
+const useFilters = () => {
+  const [filters, setFilters] = useState({
+    username: "",
+    firstname: "",
+    middlename: "",
+    lastname: "",
+    role: "",
+    status: "",
+  });
+
+  const clear = () => {
+    setFilters({
+      username: "",
+      firstname: "",
+      middlename: "",
+      lastname: "",
+      role: "",
+      status: "",
+    });
+  };
+
+  return {
+    filters,
+    setFilters,
+    clear,
+  };
+};
+
+const useUsers = () => {
   const [users, setUsers] = useState<AddUser[] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const { filters, setFilters, clear } = useFilters();
+
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const fetchUsers = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: USERS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (filters.username) {
+          params.append("username", filters.username);
+        }
+        if (filters.firstname) {
+          params.append("firstname", filters.firstname);
+        }
+        if (filters.middlename) {
+          params.append("midlename", filters.middlename);
+        }
+        if (filters.lastname) {
+          params.append("lastname", filters.lastname);
+        }
+        if (filters.role) {
+          params.append("role", filters.role);
+        }
+        if (filters.status) {
+          params.append("status", filters.status);
+        }
+
+        const response = await fetch(`/api/user/userpagination?${params}`);
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const totalUsers = await fetch(`/api/user/userpagination`);
+
+        const data = await response.json();
+        setUsers(data);
+        const totalRowsData = await totalUsers.json();
+        setTotalPages(Math.ceil(totalRowsData.length / USERS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    },
+    [filters]
+  );
+
+  useEffect(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    if (
+      filters.username ||
+      filters.firstname ||
+      filters.middlename ||
+      filters.lastname
+    ) {
+      const timer = setTimeout(() => fetchUsers(currentPage), 1000);
+      setDebounceTimeout(timer);
+    } else {
+      fetchUsers(currentPage);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [
+    filters.username,
+    filters.firstname,
+    filters.middlename,
+    filters.lastname,
+    currentPage,
+    fetchUsers,
+  ]);
+
+  const refreshUsers = () => {
+    setFilters({
+      username: "",
+      firstname: "",
+      middlename: "",
+      lastname: "",
+      role: "",
+      status: "",
+    });
+    fetchUsers(currentPage);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const clearFilters = () => {
+    clear();
+    fetchUsers(1);
+  };
+
+  return {
+    users,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    clearFilters,
+    refreshUsers,
+  };
+};
+
+export default function Component() {
+  const user = useContext(userSessionContext);
+  const {
+    users,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    filters,
+    setFilters,
+    clearFilters,
+    refreshUsers,
+  } = useUsers();
   const [showModal, setShowModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [showImage, setShowImage] = useState<AddUser | null>(null);
@@ -91,8 +264,6 @@ export default function Component() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const currentUsers = users?.filter(
     (user) =>
@@ -120,41 +291,6 @@ export default function Component() {
   useEffect(() => {
     console.log(form.formState.errors);
   }, [form.formState.errors]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session", {
-          method: "GET",
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const session = await response.json();
-        setUser(session || null);
-      } catch (error) {
-        console.error("Failed to fetch session", error);
-      }
-    };
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    async function getUsers() {
-      try {
-        const response = await fetch("/api/user");
-        if (response.ok) {
-          const users = await response.json();
-          setUsers(users);
-        } else {
-          console.error("Error fetching users:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    }
-    getUsers();
-  }, []);
 
   const handleAddUser = () => {
     setShowModal(true);
@@ -320,20 +456,6 @@ export default function Component() {
     form.reset();
   };
 
-  const refreshUsers = async () => {
-    try {
-      const response = await fetch("/api/user");
-      if (response.ok) {
-        const users = await response.json();
-        setUsers(users);
-      } else {
-        console.error("Error fetching users:", response.status);
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   useEffect(() => {
@@ -367,15 +489,119 @@ export default function Component() {
     return false;
   };
 
-  const totalPages = Math.ceil((currentUsers?.length || 0) / itemsPerPage);
-  const paginatedUsers = (currentUsers || []).slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const filteredUsers = useMemo(() => {
+    return users;
+  }, [users]);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, username: value }));
+    handlePageChange(1);
   };
+
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, firstname: value }));
+    handlePageChange(1);
+  };
+
+  const handleMiddleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, middlename: value }));
+    handlePageChange(1);
+  };
+
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFilters((prev) => ({ ...prev, lastname: value }));
+    handlePageChange(1);
+  };
+
+  const handleUserRoleChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, role: value }));
+    handlePageChange(1);
+  };
+
+  const handleUserStatusChange = (value: string) => {
+    setFilters((prev) => ({ ...prev, status: value }));
+    handlePageChange(1);
+  };
+
+  const renderFilters = () => (
+    <Popover>
+      <PopoverTrigger>
+        <FilterIcon className="w-6 h-6" />
+      </PopoverTrigger>
+      <PopoverContent className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
+        <h2 className="text-lg font-bold mb-4">Filters</h2>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Button onClick={clearFilters}>Clear Filters</Button>
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm">User First Name</span>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Search user's first name..."
+              value={filters.firstname}
+              onChange={handleFirstNameChange}
+            />
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm">User Middle Name</span>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Search user's middle name..."
+              value={filters.middlename}
+              onChange={handleMiddleNameChange}
+            />
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm">User Last Name</span>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Search user's last name..."
+              value={filters.lastname}
+              onChange={handleLastNameChange}
+            />
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm">User Role</span>
+            <Select value={filters.role} onValueChange={handleUserRoleChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select user's role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="sales">Sales</SelectItem>
+                <SelectItem value="inventory">Inventory</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <span className="text-sm">User Status</span>
+            <Select
+              value={filters.status}
+              onValueChange={handleUserStatusChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select user's status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
@@ -387,22 +613,27 @@ export default function Component() {
                 <h1 className="text-2xl font-bold text-customColors-darkKnight">
                   User Management
                 </h1>
-                <Button onClick={handleAddUser}>
-                  {isSmallScreen ? (
-                    <PlusIcon className="w-6 h-6" />
-                  ) : (
-                    "Add User"
-                  )}
-                </Button>
               </div>
               <div className="mb-6">
-                <Input
-                  type="text"
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="w-full md:w-auto"
-                />
+                <div className="flex items-center justify-between gap-4 mb-6">
+                  <Input
+                    type="text"
+                    placeholder="Search by username..."
+                    value={filters.username}
+                    onChange={handleUsernameChange}
+                    className="w-full md:w-auto"
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={handleAddUser}>
+                      {isSmallScreen ? (
+                        <PlusIcon className="w-6 h-6" />
+                      ) : (
+                        "Add User"
+                      )}
+                    </Button>
+                    {renderFilters()}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -424,8 +655,8 @@ export default function Component() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedUsers &&
-                    paginatedUsers.map((user: AddUser, index: number) => (
+                  {filteredUsers &&
+                    filteredUsers.map((user: AddUser, index: number) => (
                       <TableRow key={index}>
                         <TableCell>
                           {/* <Image

@@ -7,6 +7,7 @@ import {
   useRef,
   useMemo,
   useCallback,
+  useContext,
 } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,6 +83,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { userSessionContext } from "@/components/sessionContext-provider";
 
 const ROLES = {
   SALES: "sales",
@@ -92,95 +94,35 @@ const ROLES = {
 
 const ITEMS_PER_PAGE = 10;
 
-// Custom hooks
-const useUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-        const session = await response.json();
-        setUser(session || null);
-      } catch (error) {
-        console.error("Failed to fetch session:", error);
-      }
-    };
-    fetchUser();
-  }, []);
-
-  return user;
-};
-//   const [items, setItems] = useState<ViewItem[]>([]);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [totalPages, setTotalPages] = useState(0);
-
-//   const fetchItems = useCallback(async (page: number) => {
-//     if (isNaN(page) || page < 1) return; // Prevent invalid page numbers
-
-//     try {
-//       const response = await fetch(
-//         `/api/product/productpagination?limit=${ITEMS_PER_PAGE}&page=${page}`
-//       );
-//       if (!response.ok)
-//         throw new Error(`HTTP error! status: ${response.status}`);
-
-//       const data = await response.json();
-//       setItems(data);
-
-//       // To get the total number of items for pagination
-//       const totalItemsResponse = await fetch(`/api/product/productpagination`);
-//       const totalItemsData = await totalItemsResponse.json();
-//       setTotalPages(Math.ceil(totalItemsData.length / ITEMS_PER_PAGE)); // Assuming you receive an array
-//     } catch (error) {
-//       console.error("Error fetching items:", error);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     fetchItems(currentPage);
-//   }, [fetchItems, currentPage]);
-
-//   const handlePageChange = (page: number) => {
-//     setCurrentPage(page);
-//   };
-
-//   // Adding the refreshItems function inside the hook for reuse
-//   const refreshItems = async (page: number) => {
-//     try {
-//       const response = await fetch(
-//         `/api/product/productpagination?limit=${ITEMS_PER_PAGE}&page=${page}`
-//       );
-//       if (!response.ok)
-//         throw new Error(`HTTP error! status: ${response.status}`);
-
-//       const data = await response.json();
-//       setItems(data);
-
-//       // To get the total number of items for pagination
-//       const totalItemsResponse = await fetch(`/api/product/productpagination`);
-//       const totalItemsData = await totalItemsResponse.json();
-//       setTotalPages(Math.ceil(totalItemsData.length / ITEMS_PER_PAGE)); // Assuming you receive an array
-//     } catch (error) {
-//       console.error("Error fetching items:", error);
-//     }
-//   };
-
-//   return { items, currentPage, totalPages, handlePageChange, refreshItems };
-// };
-
-const useItems = () => {
-  const [items, setItems] = useState<ViewItem[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+const useFilters = () => {
   const [filters, setFilters] = useState({
     name: "",
     type: "",
     sackweight: "",
     unitofmeasurement: "",
   });
+
+  const clear = () => {
+    setFilters({
+      name: "",
+      type: "",
+      sackweight: "",
+      unitofmeasurement: "",
+    });
+  };
+
+  return {
+    filters,
+    setFilters,
+    clear,
+  };
+};
+
+const useItems = () => {
+  const [items, setItems] = useState<ViewItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const { filters, setFilters, clear } = useFilters();
 
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -262,12 +204,7 @@ const useItems = () => {
   };
 
   const clearFilters = () => {
-    setFilters({
-      name: "",
-      type: "",
-      sackweight: "",
-      unitofmeasurement: "",
-    });
+    clear();
     fetchItems(1);
   };
 
@@ -301,7 +238,7 @@ const formatStock = (stock: number): string => {
 };
 
 export default function ProductManagement() {
-  const user = useUser();
+  const user = useContext(userSessionContext);
   const {
     items,
     currentPage,
@@ -332,11 +269,8 @@ export default function ProductManagement() {
   const [selectedFile, setSelectedFile] = useState<File>();
   const [showImage, setShowImage] = useState<ViewItem | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [inputValue, setInputValue] = useState("");
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const fileRef = form.register("image");
-  // const [dropdownVisible, setDropdownVisible] = useState(false);
-  // const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredItems = useMemo(() => {
     return items;
@@ -412,7 +346,6 @@ export default function ProductManagement() {
   const resetForm = () => {
     form.reset();
     setSelectedFile(undefined);
-    setInputValue("");
   };
 
   useEffect(() => {
@@ -566,7 +499,6 @@ export default function ProductManagement() {
   const handleCancel = () => {
     setShowModal(false);
     setSelectedFile(undefined);
-    setInputValue("");
 
     form.reset({
       name: "",
@@ -584,23 +516,6 @@ export default function ProductManagement() {
     if (file) {
       setSelectedFile(file);
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    // setDropdownVisible(value.length > 0);
-  };
-
-  console.log("Input Value: ", inputValue);
-  const filteredItemsName = items?.filter((item) =>
-    item.name.toLowerCase().includes(inputValue.toLowerCase())
-  );
-
-  const handleItemClick = (itemName: string) => {
-    setInputValue(itemName);
-    form.setValue("name", itemName);
-    // setDropdownVisible(false);
   };
 
   const handleShowImage = async (item: ViewItem) => {

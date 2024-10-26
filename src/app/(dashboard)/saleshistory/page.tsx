@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+  useContext,
+} from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,6 +75,7 @@ import salesTransactionEditSchema, {
   EditSales,
 } from "@/schemas/saleseditstatus.schema";
 import { User } from "@/interfaces/user";
+import { userSessionContext } from "@/components/sessionContext-provider";
 
 const ROLES = {
   SALES: "sales",
@@ -394,7 +402,7 @@ const useTransactionItems = () => {
 };
 
 export default function Component() {
-  const [user, setUser] = useState<User | null>(null);
+  const user = useContext(userSessionContext);
   const {
     sales,
     currentPage,
@@ -417,17 +425,6 @@ export default function Component() {
   } = useTransactionItems();
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const [itemsPerPage, setItemsPerPage] = useState(5);
-  // const [currentItemPage, setCurrentItemPage] = useState(1);
-  // const [transactionItemsPerPage, setTransactionItemsPerPage] = useState(5);
-  // const [showFilter, setShowFilter] = useState(false);
-  // const [invoiceSuggestions, setInvoiceSuggestions] = useState<string[]>([]);
-  // const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  // const [isInvoiceDropdownVisible, setInvoiceDropdownVisible] = useState(false);
-  // const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  // const dropdownRefInvoice = useRef<HTMLDivElement>(null);
-  // const dropdownRefItem = useRef<HTMLDivElement>(null);
   const [showModalEditSales, setShowModalEditSales] = useState(false);
 
   const formSalesOnly = useForm<EditSales>({
@@ -500,7 +497,6 @@ export default function Component() {
         );
         console.log("Purchase updated successfully");
         console.log("Upload Result:", uploadResult);
-        // Debugging statement
         console.log("Closing modal...");
         setShowModalEditSales(false);
         refreshSales();
@@ -513,69 +509,8 @@ export default function Component() {
     }
   };
 
-  // useEffect(() => {
-  //   const getSales = async () => {
-  //     try {
-  //       const response = await fetch("/api/customertransaction");
-  //       const text = await response.text();
-  //       // console.log("Raw Response Text:", text);
-
-  //       const data = JSON.parse(text);
-
-  //       const parsedData = data.map((item: any) => {
-  //         return {
-  //           ...item,
-  //           createdat: item.createdat ? new Date(item.createdat) : null,
-  //           lastmodifiedat: item.lastmodifiedat
-  //             ? new Date(item.lastmodifiedat)
-  //             : null,
-  //           taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-  //         };
-  //       });
-
-  //       // console.log("Parsed Data with Date Conversion:", parsedData);
-
-  //       // console.log("Parsed Data:", parsedData);
-  //       setSales(parsedData);
-  //     } catch (error) {
-  //       console.error("Error in getSales:", error);
-  //     }
-  //   };
-
-  //   getSales();
-  // }, []);
-
-  // const refreshSales = async () => {
-  //   try {
-  //     const response = await fetch("/api/customertransaction");
-  //     const text = await response.text();
-  //     // console.log("Raw Response Text:", text);
-
-  //     const data = JSON.parse(text);
-
-  //     const parsedData = data.map((item: any) => {
-  //       return {
-  //         ...item,
-  //         createdat: item.createdat ? new Date(item.createdat) : null,
-  //         lastmodifiedat: item.lastmodifiedat
-  //           ? new Date(item.lastmodifiedat)
-  //           : null,
-  //         taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-  //       };
-  //     });
-
-  //     // console.log("Parsed Data with Date Conversion:", parsedData);
-
-  //     // console.log("Parsed Data:", parsedData);
-  //     setSales(parsedData);
-  //   } catch (error) {
-  //     console.error("Error in getSales:", error);
-  //   }
-  // };
-
   const filteredTransactions = useMemo(() => {
     return sales;
-    // return sales.filter((sales) => {
     //   const invoiceNo =
     //     sales.DocumentNumber?.documentnumber?.toLowerCase() || "";
     //   const statusMatches =
@@ -632,38 +567,18 @@ export default function Component() {
     //     dateRangeMatches
     //   );
     // });
-  }, [filters, sales]);
+  }, [sales]);
 
   const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, invoiceno: value }));
     setFilters2((prev) => ({ ...prev, invoiceno: value }));
-    // setInvoiceDropdownVisible(e.target.value.length > 0);
-
-    // const filtered = sales
-    //   .map((p) => p.DocumentNumber?.documentnumber)
-    //   .filter(
-    //     (invoice): invoice is string =>
-    //       invoice !== undefined &&
-    //       invoice.toLowerCase().includes(value.toLowerCase())
-    //   );
-
-    // setInvoiceSuggestions(filtered);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
     setFilters2((prev) => ({ ...prev, name: value }));
-    // setItemDropdownVisible(value.length > 0);
-
-    // const filtered = sales
-    //   .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name))
-    //   .filter((itemName) =>
-    //     itemName?.toLowerCase().includes(value.toLowerCase())
-    //   );
-
-    // setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
   const clearAllFilters = () => {
@@ -830,31 +745,6 @@ export default function Component() {
     </Popover>
   );
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     if (
-  //       dropdownRefInvoice.current &&
-  //       !dropdownRefInvoice.current.contains(event.target as Node)
-  //     ) {
-  //       setInvoiceDropdownVisible(false);
-  //     }
-  //     if (
-  //       dropdownRefItem.current &&
-  //       !dropdownRefItem.current.contains(event.target as Node)
-  //     ) {
-  //       setItemDropdownVisible(false);
-  //     }
-  //   };
-
-  //   document.addEventListener("mousedown", handleClickOutside as EventListener);
-  //   return () => {
-  //     document.removeEventListener(
-  //       "mousedown",
-  //       handleClickOutside as EventListener
-  //     );
-  //   };
-  // }, []);
-
   const handleStatusChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
@@ -877,77 +767,8 @@ export default function Component() {
     }));
   };
 
-  // const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
-  //   const transactionsResponse = await fetch("/api/customertransaction");
-  //   const transactions: any[] = await transactionsResponse.json();
-  //   console.log("Transactions:", transactions);
-
-  //   const transactionItemsResponse = await fetch("/api/transactionitem");
-  //   const transactionItems: TransactionItem[] =
-  //     await transactionItemsResponse.json();
-  //   console.log("Transaction Items:", transactionItems);
-
-  //   const transactionMap = new Map<number, any>();
-  //   transactions.forEach((transaction) => {
-  //     transactionMap.set(transaction.transactionid, {
-  //       documentNumber: transaction.DocumentNumber?.documentnumber,
-  //       type: transaction.type,
-  //       status: transaction.status,
-  //     });
-  //   });
-  //   console.log("Transaction Map:", Array.from(transactionMap.entries()));
-
-  //   const combinedData: CombinedTransactionItem[] = transactionItems.map(
-  //     (item) => {
-  //       const transactionInfo = transactionMap.get(item.transactionid) || {};
-
-  //       const combinedItem = {
-  //         ...item,
-  //         documentNumber: transactionInfo.documentNumber,
-  //         type: transactionInfo.type || "otherType",
-  //         status: transactionInfo.status || "otherStatus",
-  //       };
-
-  //       console.log("Combined Item:", combinedItem); // Log each combined item
-  //       return combinedItem;
-  //     }
-  //   );
-
-  //   // Filter out items with undefined documentNumber
-  //   const filteredData = combinedData.filter(
-  //     (item) => item.documentNumber !== undefined
-  //   );
-  //   console.log(
-  //     "Filtered Data (without undefined documentNumber):",
-  //     filteredData
-  //   ); // Log the filtered data
-
-  //   return filteredData;
-  // };
-
-  // const [transactionItem, setTransactionItem] = useState<
-  //   CombinedTransactionItem[]
-  // >([]);
-
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     const combinedData = await fetchTransactionData();
-  //     setTransactionItem(combinedData);
-  //   };
-
-  //   getData();
-  // }, []);
-
-  // const refreshTransactionItems = async () => {
-  //   const combinedData = await fetchTransactionData();
-  //   setTransactionItem(combinedData);
-  // };
-
-  // console.log("Transaction Item:", transactionItem);
-
   const filteredTransactionItems = useMemo(() => {
     return transactionItem;
-    // return transactionItem.filter((item) => {
     //   const invoiceno = item.documentNumber?.toLowerCase() || "";
     //   const statusMatches =
     //     filters.status === "all" || item.status === filters.status;
@@ -983,37 +804,7 @@ export default function Component() {
     //     dateRangeMatches
     //   );
     // });
-  }, [filters, transactionItem]);
-
-  // const totalPagesTransactionItems = Math.ceil(
-  //   filteredTransactionItems.length / transactionItemsPerPage
-  // );
-  // const paginatedTransactionItems = filteredTransactionItems.slice(
-  //   (currentItemPage - 1) * transactionItemsPerPage,
-  //   currentItemPage * transactionItemsPerPage
-  // );
-
-  // const handleItemPageChange = (page: number) => {
-  //   setCurrentItemPage(page);
-  // };
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session", {
-          method: "GET",
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const session = await response.json();
-        setUser(session || null);
-      } catch (error) {
-        console.error("Failed to fetch session", error);
-      }
-    };
-    fetchUser();
-  }, []);
+  }, [transactionItem]);
 
   const canAccessButton = (role: String) => {
     if (user?.role === ROLES.ADMIN) return true;

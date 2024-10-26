@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useContext } from "react";
 import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -26,6 +26,7 @@ import {
   MenuIcon,
   ArchiveIcon,
 } from "@/components/icons/Icons";
+import { userSessionContext } from "./sessionContext-provider";
 
 const ROLES = {
   SALES: "sales",
@@ -55,7 +56,7 @@ const MenuItem = ({
 
 export default function SideMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const user = useContext(userSessionContext);
   const { isAuthenticated, userRole } = useAuth();
 
   const toggleMenu = useCallback(() => {
@@ -74,25 +75,6 @@ export default function SideMenu() {
       console.error("Logout error:", error);
     }
   }, []);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session", { method: "GET" });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const session = await response.json();
-        setUser(session || null);
-      } catch (error) {
-        console.error("Failed to fetch session", error);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchUser();
-    }
-  }, [isAuthenticated]);
 
   const canAccessMenuItem = useCallback(
     (role: string) => {
