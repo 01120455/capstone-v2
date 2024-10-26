@@ -37,7 +37,7 @@ interface CombinedTransactionItem {
   type: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
-  measurementvalue?: number;
+  stock?: number;
   unitprice?: number;
   totalamount: number;
   lastmodifiedat?: Date;
@@ -121,7 +121,7 @@ export function PurchaseItemTable({
                   <TableCell>{purchaseItem.Item.type}</TableCell>
                   <TableCell>{purchaseItem.sackweight}</TableCell>
                   <TableCell>{purchaseItem.unitofmeasurement}</TableCell>
-                  <TableCell>{purchaseItem.measurementvalue}</TableCell>
+                  <TableCell>{purchaseItem.stock}</TableCell>
                   <TableCell>{purchaseItem.unitprice}</TableCell>
                   <TableCell>{formatPrice(purchaseItem.totalamount)}</TableCell>
                   <TableCell>

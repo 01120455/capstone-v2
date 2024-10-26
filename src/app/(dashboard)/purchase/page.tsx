@@ -108,7 +108,7 @@ interface CombinedTransactionItem {
   type: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
-  measurementvalue?: number;
+  stock?: number;
   unitprice?: number;
   totalamount: number;
   lastmodifiedat?: Date;
@@ -491,7 +491,7 @@ export default function Component() {
             sackweight: "bag25kg",
           },
           unitofmeasurement: "",
-          measurementvalue: 0,
+          stock: 0,
           unitprice: 0,
         },
       ],
@@ -510,7 +510,7 @@ export default function Component() {
         sackweight: "bag25kg",
       },
       unitofmeasurement: "",
-      measurementvalue: 0,
+      stock: 0,
       unitprice: 0,
     },
   });
@@ -570,7 +570,7 @@ export default function Component() {
             sackweight: "bag25kg",
           },
           unitofmeasurement: "",
-          measurementvalue: 0,
+          stock: 0,
           unitprice: 0,
         },
       ],
@@ -591,7 +591,7 @@ export default function Component() {
         sackweight: purchaseItem.Item?.sackweight,
       },
       unitofmeasurement: purchaseItem?.unitofmeasurement,
-      measurementvalue: purchaseItem?.measurementvalue,
+      stock: purchaseItem?.stock,
       unitprice: purchaseItem?.unitprice,
     });
   };
@@ -610,7 +610,7 @@ export default function Component() {
         sackweight: "bag25kg",
       },
       unitofmeasurement: "",
-      measurementvalue: 0,
+      stock: 0,
       unitprice: 0,
     });
   };
@@ -658,7 +658,7 @@ export default function Component() {
             sackweight: "bag25kg",
           },
           unitofmeasurement: "",
-          measurementvalue: 0,
+          stock: 0,
           unitprice: 0,
         },
       ],
@@ -673,7 +673,7 @@ export default function Component() {
         sackweight: "bag25kg",
       },
       unitofmeasurement: "",
-      measurementvalue: 0,
+      stock: 0,
       unitprice: 0,
     });
 
@@ -731,8 +731,8 @@ export default function Component() {
             item.unitofmeasurement
           );
           formData.append(
-            `TransactionItem[${index}][measurementvalue]`,
-            item.measurementvalue.toString()
+            `TransactionItem[${index}][stock]`,
+            item.stock.toString()
           );
           formData.append(
             `TransactionItem[${index}][unitprice]`,
@@ -816,7 +816,7 @@ export default function Component() {
     formData.append("Item[type]", values.Item.type);
     formData.append("Item[sackweight]", values.Item.sackweight);
     formData.append("unitofmeasurement", values.unitofmeasurement);
-    formData.append("measurementvalue", values.measurementvalue.toString());
+    formData.append("stock", values.stock.toString());
     formData.append("unitprice", values.unitprice.toString());
     formData.append("transactionid", values.transactionid.toString());
 
@@ -1605,7 +1605,7 @@ export default function Component() {
                                           {purchaseItem.unitofmeasurement}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.measurementvalue}
+                                          {purchaseItem.stock}
                                         </TableCell>
                                         <TableCell>
                                           {purchaseItem.unitprice}
@@ -1856,16 +1856,16 @@ export default function Component() {
                           <div className="space-y-2">
                             <FormField
                               control={formPurchaseItemOnly.control}
-                              name="measurementvalue"
+                              name="stock"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel htmlFor="measurementvalue">
+                                  <FormLabel htmlFor="stock">
                                     Measurement Value
                                   </FormLabel>
                                   <FormControl>
                                     <Input
                                       {...field}
-                                      id="measurementvalue"
+                                      id="stock"
                                       type="number"
                                     />
                                   </FormControl>
@@ -2224,16 +2224,16 @@ export default function Component() {
                                   <div className="space-y-2">
                                     <FormField
                                       control={form.control}
-                                      name={`TransactionItem.${index}.measurementvalue`}
+                                      name={`TransactionItem.${index}.stock`}
                                       render={({ field }) => (
                                         <FormItem>
-                                          <FormLabel htmlFor="measurementvalue">
+                                          <FormLabel htmlFor="stock">
                                             Measurement Value
                                           </FormLabel>
                                           <FormControl>
                                             <Input
                                               {...field}
-                                              id="measurementvalue"
+                                              id="stock"
                                               type="number"
                                             />
                                           </FormControl>
@@ -2286,7 +2286,7 @@ export default function Component() {
                                       itemid: undefined,
                                     },
                                     unitofmeasurement: "",
-                                    measurementvalue: 0,
+                                    stock: 0,
                                     unitprice: 0,
                                   })
                                 }
@@ -2521,7 +2521,7 @@ ${
                           <TableCell>
                             {purchaseItem.unitofmeasurement}
                           </TableCell>
-                          <TableCell>{purchaseItem.measurementvalue}</TableCell>
+                          <TableCell>{purchaseItem.stock}</TableCell>
                           <TableCell>{purchaseItem.unitprice}</TableCell>
                           <TableCell>{purchaseItem.totalamount}</TableCell>
                         </TableRow>

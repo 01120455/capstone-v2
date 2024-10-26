@@ -54,9 +54,7 @@ const transactionSchema = z.object({
           .string()
           .min(1, "Unit of Measurement is required")
           .max(100, "Unit of Measurement is too long"),
-        measurementvalue: z.coerce
-          .number()
-          .min(0, "Measurement value cannot be negative"),
+        stock: z.coerce.number().min(0, "Measurement value cannot be negative"),
         unitprice: z.coerce
           .number()
           .multipleOf(0.01)
@@ -104,9 +102,7 @@ const TransactionItem = z.object({
     .string()
     .min(1, "Unit of Measurement is required")
     .max(100, "Unit of Measurement is too long"),
-  measurementvalue: z.coerce
-    .number()
-    .min(0, "Measurement value cannot be negative"),
+  stock: z.coerce.number().min(0, "Measurement value cannot be negative"),
   unitprice: z.coerce
     .number()
     .multipleOf(0.01)

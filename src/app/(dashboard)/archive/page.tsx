@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -30,7 +30,7 @@ const tables = [
   "Items",
   // "Sales",
   "Purchases",
-  "Purchase Items",
+  // "Purchase Items",
 ];
 
 const tableIcon = {
@@ -42,10 +42,16 @@ const tableIcon = {
   // Suppliers: <TruckIcon />,
 };
 
+type ArchiveTableProps = {
+  type: string;
+  onRestore: (id: number, type: string | undefined) => void;
+};
+
 interface CombinedTransactionItem {
   documentNumber?: string;
   transactionitemid: number;
   transactionid: number;
+  frommilling: boolean;
   status: "pending" | "paid" | "cancelled";
   Item: {
     type: "bigas" | "palay" | "resico";
@@ -56,22 +62,709 @@ interface CombinedTransactionItem {
   type: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
-  measurementvalue?: number;
+  stock?: number;
   unitprice?: number;
   totalamount: number;
   lastmodifiedat?: Date;
-  recentdelete: boolean | undefined;
+}
+
+const ROWS_PER_PAGE = 10;
+
+const useUserFilters = () => {
+  const [userFilters, setUserFilters] = useState({
+    username: "",
+    firstname: "",
+    middlename: "",
+    lastname: "",
+    role: "",
+    status: "",
+  });
+
+  const clearUser = () => {
+    setUserFilters({
+      username: "",
+      firstname: "",
+      middlename: "",
+      lastname: "",
+      role: "",
+      status: "",
+    });
+  };
+
+  return {
+    userFilters,
+    setUserFilters,
+    clearUser,
+  };
+};
+
+const useUsers = () => {
+  const [users, setUsers] = useState<AddUser[] | null>(null);
+  const [currentUserPage, setCurrentUserPage] = useState(1);
+  const [totalUserPages, setTotalUserPages] = useState(0);
+  const { userFilters, setUserFilters, clearUser } = useUserFilters();
+
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const fetchUsers = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (userFilters.username) {
+          params.append("username", userFilters.username);
+        }
+        if (userFilters.firstname) {
+          params.append("firstname", userFilters.firstname);
+        }
+        if (userFilters.middlename) {
+          params.append("midlename", userFilters.middlename);
+        }
+        if (userFilters.lastname) {
+          params.append("lastname", userFilters.lastname);
+        }
+        if (userFilters.role) {
+          params.append("role", userFilters.role);
+        }
+        if (userFilters.status) {
+          params.append("status", userFilters.status);
+        }
+
+        const response = await fetch(
+          `/api/archive/user/userpagination?${params}`
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const totalUsers = await fetch(`/api/user/userpagination`);
+
+        const data = await response.json();
+        setUsers(data);
+        const totalRowsData = await totalUsers.json();
+        setTotalUserPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    },
+    [userFilters]
+  );
+
+  useEffect(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    if (
+      userFilters.username ||
+      userFilters.firstname ||
+      userFilters.middlename ||
+      userFilters.lastname
+    ) {
+      const timer = setTimeout(() => fetchUsers(currentUserPage), 1000);
+      setDebounceTimeout(timer);
+    } else {
+      fetchUsers(currentUserPage);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [
+    userFilters.username,
+    userFilters.firstname,
+    userFilters.middlename,
+    userFilters.lastname,
+    currentUserPage,
+    fetchUsers,
+  ]);
+
+  const refreshUsers = () => {
+    setUserFilters({
+      username: "",
+      firstname: "",
+      middlename: "",
+      lastname: "",
+      role: "",
+      status: "",
+    });
+    fetchUsers(currentUserPage);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentUserPage(page);
+  };
+
+  const clearUserFilters = () => {
+    clearUser();
+    fetchUsers(1);
+  };
+
+  return {
+    users,
+    currentUserPage,
+    totalUserPages,
+    handlePageChange,
+    userFilters,
+    setUserFilters,
+    clearUserFilters,
+    refreshUsers,
+  };
+};
+
+const useItemFilters = () => {
+  const [itemFilters, setItemFilters] = useState({
+    name: "",
+    type: "",
+    sackweight: "",
+    unitofmeasurement: "",
+  });
+
+  const clearItem = () => {
+    setItemFilters({
+      name: "",
+      type: "",
+      sackweight: "",
+      unitofmeasurement: "",
+    });
+  };
+
+  return {
+    itemFilters,
+    setItemFilters,
+    clearItem,
+  };
+};
+
+const useItems = () => {
+  const [items, setItems] = useState<ViewItem[]>([]);
+  const [currentItemPage, setCurrentItemPage] = useState(1);
+  const [totalItemPages, setTotalItemPages] = useState(0);
+  const { itemFilters, setItemFilters, clearItem } = useItemFilters();
+
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const fetchItems = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (itemFilters.name) {
+          params.append("name", itemFilters.name);
+        }
+        if (itemFilters.type) {
+          params.append("type", itemFilters.type);
+        }
+        if (itemFilters.sackweight) {
+          params.append("sackweight", itemFilters.sackweight);
+        }
+        if (itemFilters.unitofmeasurement) {
+          params.append("unitofmeasurement", itemFilters.unitofmeasurement);
+        }
+
+        const response = await fetch(
+          `/api/archive/product/productpagination?${params}`
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const totalItems = await fetch(
+          `/api/archive/product/productpagination`
+        );
+
+        const data = await response.json();
+        setItems(data);
+        const totalRowsData = await totalItems.json();
+        setTotalItemPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    },
+    [itemFilters]
+  );
+
+  useEffect(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    if (itemFilters.name) {
+      const timer = setTimeout(() => fetchItems(currentItemPage), 1000);
+      setDebounceTimeout(timer);
+    } else {
+      fetchItems(currentItemPage);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [itemFilters.name, currentItemPage, fetchItems]);
+
+  const refreshItems = () => {
+    setItemFilters({
+      name: "",
+      type: "",
+      sackweight: "",
+      unitofmeasurement: "",
+    });
+    fetchItems(currentItemPage);
+  };
+
+  const handleItemPageChange = (page: number) => {
+    setCurrentItemPage(page);
+  };
+
+  const clearItemFilters = () => {
+    clearItem();
+    fetchItems(1);
+  };
+
+  return {
+    items,
+    currentItemPage,
+    totalItemPages,
+    handleItemPageChange,
+    itemFilters,
+    setItemFilters,
+    clearItemFilters,
+    refreshItems,
+  };
+};
+
+const usePurchaseFilters = () => {
+  const [purchaseFilters, setPurchaseFilters] = useState({
+    purordno: "",
+    name: "",
+    frommilling: "",
+    status: "",
+    dateRange: { start: "", end: "" },
+  });
+
+  const clearPurchase = () => {
+    setPurchaseFilters({
+      purordno: "",
+      name: "",
+      frommilling: "",
+      status: "",
+      dateRange: { start: "", end: "" },
+    });
+  };
+
+  return {
+    purchaseFilters,
+    setPurchaseFilters,
+    clearPurchase,
+  };
+};
+
+const usePurchases = () => {
+  const { purchaseFilters, setPurchaseFilters, clearPurchase } =
+    usePurchaseFilters();
+  const [purchases, setPurchases] = useState<TransactionTable[]>([]);
+  const [currentPurchasesPage, setCurrentPurchasesPage] = useState(1);
+  const [totalPurchasesPages, setTotalPurchasesPages] = useState(0);
+
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const fetchPurchases = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (purchaseFilters.purordno) {
+          params.append("documentnumber", purchaseFilters.purordno);
+        }
+        if (purchaseFilters.name) {
+          params.append("name", purchaseFilters.name);
+        }
+        if (purchaseFilters.frommilling) {
+          params.append("frommilling", purchaseFilters.frommilling);
+        }
+        if (purchaseFilters.status) {
+          params.append("status", purchaseFilters.status);
+        }
+        if (purchaseFilters.dateRange.start) {
+          params.append("startdate", purchaseFilters.dateRange.start);
+        }
+        if (purchaseFilters.dateRange.end) {
+          params.append("enddate", purchaseFilters.dateRange.end);
+        }
+
+        const response = await fetch(
+          `/api/archive/suppliertransaction/suppliertransactionpagination?${params}`
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        setPurchases(data);
+
+        const totalPurchasesResponse = await fetch(
+          `/api/archive/suppliertransaction/suppliertransactionpagination`
+        );
+        const totalRowsData = await totalPurchasesResponse.json();
+        setTotalPurchasesPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching purchases:", error);
+      }
+    },
+    [purchaseFilters]
+  );
+
+  useEffect(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    const shouldDebounce = purchaseFilters.purordno || purchaseFilters.name;
+
+    if (shouldDebounce) {
+      const timer = setTimeout(
+        () => fetchPurchases(currentPurchasesPage),
+        2000
+      );
+      setDebounceTimeout(timer);
+    } else {
+      fetchPurchases(currentPurchasesPage);
+    }
+
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [
+    purchaseFilters.purordno,
+    purchaseFilters.name,
+    currentPurchasesPage,
+    fetchPurchases,
+  ]);
+
+  const refreshPurchases = () => {
+    setPurchaseFilters({
+      purordno: "",
+      name: "",
+      frommilling: "",
+      status: "",
+      dateRange: { start: "", end: "" },
+    });
+    fetchPurchases(currentPurchasesPage);
+  };
+
+  const handlePurchasesPageChange = (page: number) => {
+    setCurrentPurchasesPage(page);
+  };
+
+  const clearPurchasesFilters = () => {
+    clearPurchase();
+    fetchPurchases(1);
+  };
+
+  return {
+    purchases,
+    currentPurchasesPage,
+    totalPurchasesPages,
+    handlePurchasesPageChange,
+    purchaseFilters,
+    setPurchaseFilters,
+    refreshPurchases,
+    clearPurchasesFilters,
+  };
+};
+
+const usePurchaseItems = () => {
+  const [purchaseItems, setPurchaseItems] = useState<TransactionItem[]>([]);
+
+  const viewPurchaseItems = async (purchaseId: number) => {
+    try {
+      const response = await fetch(
+        `/api/transactionitem/purchaseitem/${purchaseId}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const items = await response.json();
+      // Assuming you have a setPurchaseItems function to set the items state
+      setPurchaseItems(items);
+    } catch (error) {
+      console.error("Error fetching purchase items:", error);
+    }
+  };
+
+  return {
+    purchaseItems,
+    setPurchaseItems,
+    viewPurchaseItems,
+  };
+};
+
+const useTransactionItems = () => {
+  const {
+    purchaseFilters: filters2,
+    setPurchaseFilters: setFilters2,
+    clearPurchase: clear2,
+  } = usePurchaseFilters();
+  const [transactionItem, setTransactionItem] = useState<
+    CombinedTransactionItem[]
+  >([]);
+  const [currentTransactionItemsPage, setCurrentTransactionItemsPage] =
+    useState(1);
+  const [totalTransactionItemsPages, setTotalTransactionItemsPages] =
+    useState(0);
+
+  const fetchTransactionData = useCallback(
+    async (page: number) => {
+      if (isNaN(page) || page < 1) return;
+
+      try {
+        const params = new URLSearchParams({
+          limit: ROWS_PER_PAGE.toString(),
+          page: page.toString(),
+        });
+
+        if (filters2.purordno) {
+          params.append("documentnumber", filters2.purordno);
+        }
+        if (filters2.name) {
+          params.append("name", filters2.name);
+        }
+        if (filters2.status) {
+          params.append("status", filters2.status);
+        }
+        if (filters2.dateRange.start) {
+          params.append("startdate", filters2.dateRange.start);
+        }
+        if (filters2.dateRange.end) {
+          params.append("enddate", filters2.dateRange.end);
+        }
+
+        const transactionsResponse = await fetch(
+          `/api/archive/suppliertransaction/suppliertransactionpagination?${params}`
+        );
+        if (!transactionsResponse.ok) {
+          throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
+        }
+        const transactions: any[] = await transactionsResponse.json();
+
+        const transactionItemsResponse = await fetch(
+          "/api/archive/transactionitem"
+        );
+        if (!transactionItemsResponse.ok) {
+          throw new Error(
+            `HTTP error! status: ${transactionItemsResponse.status}`
+          );
+        }
+        const allTransactionItems: TransactionItem[] =
+          await transactionItemsResponse.json();
+
+        const transactionMap = new Map<number, any>();
+        transactions.forEach((transaction) => {
+          transactionMap.set(transaction.transactionid, {
+            documentNumber: transaction.DocumentNumber?.documentnumber,
+            frommilling: transaction.frommilling,
+            type: transaction.type,
+            status: transaction.status,
+          });
+        });
+
+        const combinedData: CombinedTransactionItem[] = allTransactionItems
+          .map((item) => {
+            const transactionInfo =
+              transactionMap.get(item.transactionid) || {};
+            return {
+              ...item,
+              documentNumber: transactionInfo.documentNumber,
+              frommilling: transactionInfo.frommilling || false,
+              type: transactionInfo.type || "otherType",
+              status: transactionInfo.status || "otherStatus",
+            };
+          })
+          .filter((item) => item.documentNumber !== undefined);
+
+        setTransactionItem(combinedData);
+
+        const totalResponse = await fetch(
+          `/api/suppliertransaction/suppliertransactionpagination`
+        );
+        const totalData = await totalResponse.json();
+        setTotalTransactionItemsPages(
+          Math.ceil(totalData.length / ROWS_PER_PAGE)
+        );
+      } catch (error) {
+        console.error("Error fetching transaction data:", error);
+      }
+    },
+    [filters2]
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchTransactionData(currentTransactionItemsPage);
+    };
+
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 2000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [filters2, currentTransactionItemsPage, fetchTransactionData]);
+
+  const clearFilters2 = () => {
+    clear2();
+    fetchTransactionData(1);
+  };
+
+  const handleTransactionItemsPageChange = (page: number) => {
+    setCurrentTransactionItemsPage(page);
+  };
+
+  const refreshTransactionItems = async () => {
+    await fetchTransactionData(currentTransactionItemsPage);
+  };
+
+  return {
+    transactionItem,
+    currentTransactionItemsPage,
+    totalTransactionItemsPages,
+    handleTransactionItemsPageChange,
+    filters: filters2,
+    setFilters: setFilters2,
+    refreshTransactionItems,
+    clearFilters2,
+  };
+};
+
+function ArchiveTable({ type, onRestore }: ArchiveTableProps) {
+  const {
+    users,
+    currentUserPage,
+    totalUserPages,
+    handlePageChange,
+    userFilters,
+    setUserFilters,
+    clearUserFilters,
+    refreshUsers,
+  } = useUsers();
+  const {
+    items,
+    currentItemPage,
+    totalItemPages,
+    handleItemPageChange,
+    itemFilters,
+    setItemFilters,
+    clearItemFilters,
+    refreshItems,
+  } = useItems();
+  const {
+    purchases,
+    currentPurchasesPage,
+    totalPurchasesPages,
+    handlePurchasesPageChange,
+    purchaseFilters,
+    setPurchaseFilters,
+    refreshPurchases,
+    clearPurchasesFilters,
+  } = usePurchases();
+  const { purchaseItems, setPurchaseItems, viewPurchaseItems } =
+    usePurchaseItems();
+  const {
+    transactionItem,
+    currentTransactionItemsPage,
+    totalTransactionItemsPages,
+    handleTransactionItemsPageChange,
+    filters: filters2,
+    setFilters: setFilters2,
+    refreshTransactionItems,
+    clearFilters2,
+  } = useTransactionItems();
+
+  switch (type) {
+    case "users":
+      return (
+        <UserTable
+          users={users}
+          onRestore={onRestore}
+          filters={userFilters}
+          setFilters={setUserFilters}
+          currentPage={currentUserPage}
+          totalPages={totalUserPages}
+          handlePageChange={handlePageChange}
+          clearFilters={clearUserFilters}
+        />
+      );
+    case "items":
+      return (
+        <ItemTable
+          items={items}
+          onRestore={onRestore}
+          filters={itemFilters}
+          setFilters={setItemFilters}
+          currentPage={currentItemPage}
+          totalPages={totalItemPages}
+          handlePageChange={handleItemPageChange}
+          clearFilters={clearItemFilters}
+        />
+      );
+    case "purchases":
+      return (
+        <PurchaseTable
+          purchases={purchases}
+          onRestore={onRestore}
+          filters={purchaseFilters}
+          setFilters={setPurchaseFilters}
+          currentPage={currentPurchasesPage}
+          totalPages={totalPurchasesPages}
+          handlePageChange={handlePurchasesPageChange}
+          clearFilters={clearPurchasesFilters}
+          transactionItem={transactionItem}
+          currentTransactionItemsPage={currentTransactionItemsPage}
+          totalTransactionItemsPages={totalTransactionItemsPages}
+          handleTransactionItemsPageChange={handleTransactionItemsPageChange}
+          filters2={filters2}
+          setFilters2={setFilters2}
+          clearFilters2={clearFilters2}
+        />
+      );
+    default:
+      return null;
+  }
 }
 
 export default function ArchivePage() {
   const [activeTab, setActiveTab] = useState("Users");
-  const [searchTerm, setSearchTerm] = useState("");
+  const { users, refreshUsers } = useUsers();
+  const { items, refreshItems } = useItems();
+  const { purchases, refreshPurchases } = usePurchases();
+  const { transactionItem, refreshTransactionItems } = useTransactionItems();
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleRestore = async (id: number) => {
+  const handleRestore = async (id: number, type: string | undefined) => {
     console.log(`Restore item with id: ${id} in tab: ${activeTab}`);
 
     if (id <= 0) {
@@ -84,37 +777,19 @@ export default function ArchivePage() {
     switch (activeTab) {
       case "Users":
         endpoint = `/api/archive/user/restore/${id}`;
-        toast.success(`Deleted user has been restored`, {
-          description: "You have successfully restore user data.",
-        });
         break;
       case "Items":
         endpoint = `/api/archive/product/restore/${id}`;
-        toast.success(`Deleted item has been restored`, {
-          description: "You have successfully restore item data.",
-        });
         break;
-      // case "Sales":
-      //   endpoint = `/api/archive/customertransaction/restore/${id}`;
-      //   break;
       case "Purchases":
-        endpoint = `/api/archive/suppliertransaction/restore/${id}`;
-        toast.success(`Deleted Purchase Order has been restored`, {
-          description: "You have successfully restore Purchase Order data.",
-        });
-        break;
-      // case "Customers":
-      //   endpoint = `/api/archive/customer/restore/${id}`;
-      //   break;
-      // case "Suppliers":
-      //   endpoint = `/api/archive/supplier/restore/${id}`;
-      //   break;
-      case "Purchase Items":
-        endpoint = `/api/archive/suppliertransactionitem/restore/${id}`;
-        toast.success(`Deleted purchase order item has been restored`, {
-          description:
-            "You have successfully restore purchase order item data.",
-        });
+        if (type === "purchase") {
+          endpoint = `/api/archive/suppliertransaction/restore/${id}`;
+        } else if (type === "purchaseItem") {
+          endpoint = `/api/archive/suppliertransactionitem/restore/${id}`;
+        } else {
+          console.error("Invalid type for Purchases");
+          return;
+        }
         break;
       default:
         console.error("Invalid active tab");
@@ -126,17 +801,61 @@ export default function ArchivePage() {
         method: "PUT",
       });
 
-      if (response.ok) {
-        console.log("Item restored successfully");
-      }
-
       if (!response.ok) {
         throw new Error("Failed to restore item");
       }
 
+      if (response.ok && activeTab === "Users") {
+        refreshUsers();
+        toast.success(
+          `Deleted user ${""} ${
+            users?.find((u) => u.userid === id)?.username
+          } ${""} has been restored`,
+          {
+            description: "You have successfully restored user data.",
+          }
+        );
+      }
+
+      if (response.ok && activeTab === "Items") {
+        refreshItems();
+        toast.success(
+          `Deleted item ${""} ${
+            items?.find((u) => u.itemid === id)?.name
+          } ${""} has been restored`,
+          {
+            description: "You have successfully restored item data.",
+          }
+        );
+      }
+
+      if (response.ok && activeTab === "Purchases" && type === "purchase") {
+        refreshPurchases();
+        toast.success(
+          `Deleted Purchase Order No. ${""} ${
+            purchases?.find((u) => u.transactionid === id)?.DocumentNumber
+              .documentnumber
+          } ${""} has been restored`,
+          {
+            description: "You have successfully restored Purchase Order data.",
+          }
+        );
+      }
+
+      if (response.ok && activeTab === "Purchases" && type === "purchaseItem") {
+        refreshTransactionItems();
+        toast.success(
+          `Deleted Purchase Item ${""} ${
+            transactionItem?.find((u) => u.Item.itemid === id)?.Item.name
+          } ${""} has been restored`,
+          {
+            description: "You have successfully restored Purchase Item data.",
+          }
+        );
+      }
+
       const data = await response.json();
       console.log(`${activeTab} restored:`, data);
-      // Optionally, update local state or UI
     } catch (error) {
       console.error("Error restoring item:", error);
     }
@@ -166,7 +885,7 @@ export default function ArchivePage() {
           </h1>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {isSmallScreen ? (
-              <TabsList className="grid h-12 w-full grid-cols-5">
+              <TabsList className="grid h-12 w-full grid-cols-3">
                 {Object.entries(tableIcon).map(([key, Icon]) => (
                   <TabsTrigger key={key} value={key}>
                     {Icon}
@@ -174,7 +893,7 @@ export default function ArchivePage() {
                 ))}
               </TabsList>
             ) : (
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 {tables.map((table) => (
                   <TabsTrigger key={table} value={table}>
                     {table}
@@ -182,22 +901,12 @@ export default function ArchivePage() {
                 ))}
               </TabsList>
             )}
-            <div className="mt-4 mb-4">
-              <div className="relative w-full">
-                <Input
-                  placeholder="Search archived items..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="max-w-sm"
-                />
-              </div>
-            </div>
+            <div className="mt-4 mb-4"></div>
 
             {tables.map((table) => (
               <TabsContent key={table} value={table}>
                 <ArchiveTable
                   type={table.toLowerCase()}
-                  searchTerm={searchTerm}
                   onRestore={handleRestore}
                 />
               </TabsContent>
@@ -207,231 +916,4 @@ export default function ArchivePage() {
       </div>
     </div>
   );
-}
-
-type ArchiveTableProps = {
-  type: string;
-  searchTerm: string;
-  onRestore: (id: number) => void;
-};
-
-function ArchiveTable({ type, searchTerm, onRestore }: ArchiveTableProps) {
-  const [users, setUsers] = useState<AddUser[] | null>(null);
-  // const [sales, setSales] = useState<TransactionTable[]>([]);
-  const [purchases, setPurchases] = useState<TransactionTable[]>([]);
-  const [transactionItem, setTransactionItem] = useState<
-    CombinedTransactionItem[]
-  >([]);
-  const [items, setItems] = useState<ViewItem[]>([]);
-
-  useEffect(() => {
-    async function getUsers() {
-      try {
-        const response = await fetch("/api/archive/user");
-        if (response.ok) {
-          const users = await response.json();
-          setUsers(users); // Set the fetched users
-        } else {
-          console.error("Error fetching users:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    }
-    getUsers();
-  }, []);
-
-  // useEffect(() => {
-  //   const getSales = async () => {
-  //     try {
-  //       const response = await fetch("/api/archive/customertransaction");
-  //       const text = await response.text();
-  //       // console.log("Raw Response Text:", text);
-
-  //       const data = JSON.parse(text);
-
-  //       const parsedData = data.map((item: any) => {
-  //         return {
-  //           ...item,
-  //           createdat: item.createdat ? new Date(item.createdat) : null,
-  //           lastmodifiedat: item.lastmodifiedat
-  //             ? new Date(item.lastmodifiedat)
-  //             : null,
-  //           taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-  //         };
-  //       });
-
-  //       // console.log("Parsed Data with Date Conversion:", parsedData);
-
-  //       // console.log("Parsed Data:", parsedData);
-  //       setSales(parsedData);
-
-  //       console.log("Sales:", parsedData);
-  //     } catch (error) {
-  //       console.error("Error in getPurchases:", error);
-  //     }
-  //   };
-
-  //   getSales();
-  // }, []);
-
-  useEffect(() => {
-    const getPurchases = async () => {
-      try {
-        const response = await fetch("/api/archive/suppliertransaction");
-        const text = await response.text();
-        // console.log("Raw Response Text:", text);
-
-        const data = JSON.parse(text);
-
-        const parsedData = data.map((item: any) => {
-          return {
-            ...item,
-            createdat: item.createdat ? new Date(item.createdat) : null,
-            lastmodifiedat: item.lastmodifiedat
-              ? new Date(item.lastmodifiedat)
-              : null,
-            taxamount: item.taxamount ? parseFloat(item.taxamount) : null,
-          };
-        });
-
-        // console.log("Parsed Data with Date Conversion:", parsedData);
-
-        // console.log("Parsed Data:", parsedData);
-        setPurchases(parsedData);
-      } catch (error) {
-        console.error("Error in getPurchases:", error);
-      }
-    };
-
-    getPurchases();
-  }, []);
-
-  const fetchTransactionData = async (): Promise<CombinedTransactionItem[]> => {
-    const transactionsResponse = await fetch(
-      "/api/archive/suppliertransactionitem"
-    );
-    if (!transactionsResponse.ok)
-      throw new Error("Failed to fetch transactions");
-    const transactions: any[] = await transactionsResponse.json();
-    console.log("Transactions:", transactions);
-
-    const transactionItemsResponse = await fetch(
-      "/api/archive/transactionitem"
-    );
-    if (!transactionItemsResponse.ok)
-      throw new Error("Failed to fetch transaction items");
-    const transactionItems: TransactionItem[] =
-      await transactionItemsResponse.json();
-    console.log("Transaction Items:", transactionItems);
-
-    const transactionMap = new Map<number, any>();
-    transactions.forEach((transaction) => {
-      transactionMap.set(transaction.transactionid, {
-        documentNumber: transaction.DocumentNumber?.documentnumber,
-        type: transaction.type,
-        status: transaction.status,
-      });
-    });
-    console.log("Transaction Map:", Array.from(transactionMap.entries()));
-
-    const combinedData: CombinedTransactionItem[] = transactionItems.map(
-      (item) => {
-        const transactionInfo = transactionMap.get(item.transactionid) || {};
-
-        const combinedItem = {
-          ...item,
-          documentNumber: transactionInfo.documentNumber,
-          type: transactionInfo.type || "otherType",
-          status: transactionInfo.status || "otherStatus",
-          // Use the recentdelete attribute directly from the item
-          recentdelete: item.recentdelete,
-        };
-
-        console.log("Combined Item:", combinedItem); // Log each combined item
-        return combinedItem;
-      }
-    );
-
-    // Filter out items with undefined documentNumber and only include recent deletes
-    const filteredData = combinedData.filter(
-      (item) => item.documentNumber !== undefined && item.recentdelete == true
-    );
-    console.log("Filtered Data (recent deletes only):", filteredData); // Log the filtered data
-
-    return filteredData;
-  };
-
-  useEffect(() => {
-    const getData = async () => {
-      const combinedData = await fetchTransactionData();
-      setTransactionItem(combinedData);
-    };
-
-    getData();
-  }, []);
-
-  console.log("Transaction Item:", transactionItem);
-
-  useEffect(() => {
-    async function getItems() {
-      try {
-        const response = await fetch("/api/archive/product");
-        if (response.ok) {
-          const items = await response.json();
-          setItems(items);
-        } else {
-          console.error("Error fetching items:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    }
-    getItems();
-  }, []);
-
-  switch (type) {
-    case "users":
-      return (
-        <UserTable
-          users={users}
-          searchTerm={searchTerm}
-          onRestore={onRestore}
-        />
-      );
-    case "items":
-      return (
-        <ItemTable
-          items={items}
-          searchTerm={searchTerm}
-          onRestore={onRestore}
-        />
-      );
-    // case "sales":
-    //   return (
-    //     <SalesTable
-    //       sales={sales}
-    //       searchTerm={searchTerm}
-    //       onRestore={onRestore}
-    //     />
-    //   );
-    case "purchases":
-      return (
-        <PurchaseTable
-          purchases={purchases}
-          searchTerm={searchTerm}
-          onRestore={onRestore}
-        />
-      );
-    case "purchase items":
-      return (
-        <PurchaseItemTable
-          purchases={transactionItem}
-          searchTerm={searchTerm}
-          onRestore={onRestore}
-        />
-      );
-    default:
-      return null;
-  }
 }

@@ -74,10 +74,10 @@ export const POST = async (req: NextRequest) => {
           ) as string;
           const unitofmeasurement =
             unitofmeasurementstring as UnitOfMeasurement;
-          const measurementvalueString = formData.get(
-            `TransactionItem[${index}][measurementvalue]`
+          const stockString = formData.get(
+            `TransactionItem[${index}][stock]`
           ) as string;
-          const measurementvalue = parseFloat(measurementvalueString);
+          const stock = parseFloat(stockString);
           const unitprice = parseFloat(unitpriceString);
 
           if (
@@ -87,7 +87,7 @@ export const POST = async (req: NextRequest) => {
             throw new Error("Invalid item details");
           }
 
-          if (isNaN(unitprice) || isNaN(measurementvalue)) {
+          if (isNaN(unitprice) || isNaN(stock)) {
             throw new Error("Number fields must be valid numbers");
           }
 
@@ -107,7 +107,7 @@ export const POST = async (req: NextRequest) => {
             itemId = existingItem.itemid;
 
             const currentStock = existingItem.stock ?? 0;
-            const newStock = currentStock + measurementvalue;
+            const newStock = currentStock + stock;
 
             await tx.item.update({
               where: { itemid: itemId },
@@ -120,14 +120,14 @@ export const POST = async (req: NextRequest) => {
                 type,
                 sackweight,
                 unitofmeasurement,
-                stock: measurementvalue,
+                stock: stock,
                 lastmodifiedby: userid,
               },
             });
             itemId = newItem.itemid;
           }
 
-          const amount = measurementvalue * unitprice;
+          const amount = stock * unitprice;
           if (isNaN(amount)) {
             throw new Error("Calculated amount is invalid");
           }
@@ -139,7 +139,7 @@ export const POST = async (req: NextRequest) => {
             type: type,
             sackweight: sackweight,
             unitofmeasurement: unitofmeasurement,
-            measurementvalue: measurementvalue,
+            stock: stock,
             unitprice: unitprice,
             lastmodifiedby: userid,
             totalamount: amount,
@@ -238,7 +238,7 @@ export async function GET(req: NextRequest) {
             type: true,
             sackweight: true,
             unitofmeasurement: true,
-            measurementvalue: true,
+            stock: true,
             unitprice: true,
             totalamount: true,
             lastmodifiedat: true,

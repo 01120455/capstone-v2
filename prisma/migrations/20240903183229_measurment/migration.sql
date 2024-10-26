@@ -1,9 +1,9 @@
 /*
   Warnings:
 
-  - You are about to drop the column `measurementvalue` on the `item` table. All the data in the column will be lost.
+  - You are about to drop the column `stock` on the `item` table. All the data in the column will be lost.
 
 */
 -- AlterTable
-ALTER TABLE `item` DROP COLUMN `measurementvalue`,
+ALTER TABLE `item` DROP COLUMN `stock`,
     ADD COLUMN `stock` DOUBLE NULL;

@@ -182,8 +182,8 @@ const calculateVolume = (transactions: TransactionTable[]) => {
           const weightPerItem = SACK_WEIGHTS[item.sackweight] || 0;
           const itemWeight =
             item.unitofmeasurement === "weight"
-              ? item.measurementvalue
-              : item.measurementvalue * weightPerItem;
+              ? item.stock
+              : item.stock * weightPerItem;
 
           if (item.type === "palay") {
             volume.palayPurchase += itemWeight;
@@ -250,8 +250,7 @@ export default function Dashboard() {
           0
         );
         const itemCount = items.reduce(
-          (sum: number, item: TransactionItem) =>
-            sum + (item.measurementvalue || 0),
+          (sum: number, item: TransactionItem) => sum + (item.stock || 0),
           0
         );
 
@@ -332,8 +331,7 @@ export default function Dashboard() {
         if (item.Item?.name) {
           itemNamesSet.add(item.Item.name);
           salesByMonth[month][item.Item.name] =
-            (salesByMonth[month][item.Item.name] || 0) +
-            (item.measurementvalue || 1);
+            (salesByMonth[month][item.Item.name] || 0) + (item.stock || 1);
         }
       });
     });

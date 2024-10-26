@@ -44,18 +44,18 @@ enum UnitOfMeasurement {
 //     const sackweightString = formData.get("Item[sackweight]") as string;
 //     const unitpriceString = formData.get("unitprice") as string;
 //     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
-//     const measurementvalueString = formData.get("measurementvalue") as string;
+//     const stockString = formData.get("stock") as string;
 
 //     if (!name || !Object.values(ItemType).includes(typeString as ItemType)) {
 //       return NextResponse.json({ error: "Invalid item details" }, { status: 400 });
 //     }
 
 //     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
-//     const measurementvalue = parseFloat(measurementvalueString);
+//     const stock = parseFloat(stockString);
 //     const unitprice = parseFloat(unitpriceString);
 
-//     if (isNaN(unitprice) || isNaN(measurementvalue)) {
-//       console.error("Invalid number fields", { unitprice, measurementvalue });
+//     if (isNaN(unitprice) || isNaN(stock)) {
+//       console.error("Invalid number fields", { unitprice, stock });
 //       return NextResponse.json({ error: "Number fields must be valid numbers" }, { status: 400 });
 //     }
 
@@ -71,7 +71,7 @@ enum UnitOfMeasurement {
 //     let itemId;
 //     if (existingItem) {
 //       itemId = existingItem.itemid;
-//       const newStock = (existingItem.stock ?? 0) + measurementvalue;
+//       const newStock = (existingItem.stock ?? 0) + stock;
 
 //       await prisma.item.update({
 //         where: { itemid: itemId },
@@ -84,7 +84,7 @@ enum UnitOfMeasurement {
 //           type: typeString as ItemType,
 //           sackweight: sackweightString as SackWeight,
 //           unitofmeasurement,
-//           stock: measurementvalue,
+//           stock: stock,
 //           lastmodifiedby: userid,
 //         },
 //       });
@@ -92,9 +92,9 @@ enum UnitOfMeasurement {
 //     }
 
 //     // Calculate total amount for purchase item
-//     const amount = measurementvalue * unitprice;
+//     const amount = stock * unitprice;
 //     if (isNaN(amount)) {
-//       console.error("Calculated amount is NaN", { measurementvalue, unitprice });
+//       console.error("Calculated amount is NaN", { stock, unitprice });
 //       return NextResponse.json({ error: "Calculated amount is invalid" }, { status: 400 });
 //     }
 
@@ -103,7 +103,7 @@ enum UnitOfMeasurement {
 //         transactionid,
 //         itemid: itemId,
 //         unitofmeasurement,
-//         measurementvalue,
+//         stock,
 //         unitprice,
 //         totalamount: amount,
 //         lastmodifiedby: userid,
@@ -173,7 +173,7 @@ export const POST = async (req: NextRequest) => {
     const sackweightString = formData.get("Item[sackweight]") as string;
     const unitpriceString = formData.get("unitprice") as string;
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
-    const measurementvalueString = formData.get("measurementvalue") as string;
+    const stockString = formData.get("stock") as string;
 
     if (!name || !Object.values(ItemType).includes(typeString as ItemType)) {
       return NextResponse.json(
@@ -183,11 +183,11 @@ export const POST = async (req: NextRequest) => {
     }
 
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
-    const measurementvalue = parseFloat(measurementvalueString);
+    const stock = parseFloat(stockString);
     const unitprice = parseFloat(unitpriceString);
 
-    if (isNaN(unitprice) || isNaN(measurementvalue)) {
-      console.error("Invalid number fields", { unitprice, measurementvalue });
+    if (isNaN(unitprice) || isNaN(stock)) {
+      console.error("Invalid number fields", { unitprice, stock });
       return NextResponse.json(
         { error: "Number fields must be valid numbers" },
         { status: 400 }
@@ -201,10 +201,10 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    const amount = measurementvalue * unitprice;
+    const amount = stock * unitprice;
     if (isNaN(amount)) {
       console.error("Calculated amount is NaN", {
-        measurementvalue,
+        stock,
         unitprice,
       });
       return NextResponse.json(
@@ -222,7 +222,7 @@ export const POST = async (req: NextRequest) => {
         let itemId;
         if (existingItem) {
           itemId = existingItem.itemid;
-          const newStock = (existingItem.stock ?? 0) + measurementvalue;
+          const newStock = (existingItem.stock ?? 0) + stock;
 
           await prisma.item.update({
             where: { itemid: itemId },
@@ -235,7 +235,7 @@ export const POST = async (req: NextRequest) => {
               type: typeString as ItemType,
               sackweight: sackweightString as SackWeight,
               unitofmeasurement,
-              stock: measurementvalue,
+              stock: stock,
               lastmodifiedby: userid,
             },
           });
@@ -249,7 +249,7 @@ export const POST = async (req: NextRequest) => {
             type: typeString as ItemType,
             sackweight: sackweightString as SackWeight,
             unitofmeasurement,
-            measurementvalue,
+            stock,
             unitprice,
             totalamount: amount,
             lastmodifiedby: userid,
@@ -322,7 +322,7 @@ export const PUT = async (req: NextRequest) => {
     const sackweightString = formData.get("Item[sackweight]") as string;
     const unitpriceString = formData.get("unitprice") as string;
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
-    const measurementvalueString = formData.get("measurementvalue") as string;
+    const stockString = formData.get("stock") as string;
     const transactionidString = formData.get("transactionid") as string;
     const transactionid = parseInt(transactionidString, 10);
 
@@ -334,11 +334,11 @@ export const PUT = async (req: NextRequest) => {
     }
 
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
-    const measurementvalue = parseFloat(measurementvalueString);
+    const stock = parseFloat(stockString);
     const unitprice = parseFloat(unitpriceString);
 
-    if (isNaN(unitprice) || isNaN(measurementvalue)) {
-      console.error("Invalid number fields", { unitprice, measurementvalue });
+    if (isNaN(unitprice) || isNaN(stock)) {
+      console.error("Invalid number fields", { unitprice, stock });
       return NextResponse.json(
         { error: "Number fields must be valid numbers" },
         { status: 400 }
@@ -364,7 +364,7 @@ export const PUT = async (req: NextRequest) => {
     }
 
     // Store the old measurement value to calculate difference
-    const oldMeasurementValue = transactionItem?.measurementvalue ?? 0;
+    const oldstock = transactionItem?.stock ?? 0;
 
     // Check or create item
     const existingItem = await prisma.item.findFirst({
@@ -374,7 +374,7 @@ export const PUT = async (req: NextRequest) => {
     let itemId;
     if (existingItem) {
       itemId = existingItem.itemid;
-      const measurementDifference = measurementvalue - oldMeasurementValue;
+      const measurementDifference = stock - oldstock;
       const newStock = (existingItem.stock ?? 0) + measurementDifference;
 
       await prisma.item.update({
@@ -388,7 +388,7 @@ export const PUT = async (req: NextRequest) => {
           type: typeString as ItemType,
           sackweight: sackweightString as SackWeight,
           unitofmeasurement,
-          stock: measurementvalue,
+          stock: stock,
           lastmodifiedby: userid,
         },
       });
@@ -396,10 +396,10 @@ export const PUT = async (req: NextRequest) => {
     }
 
     // Calculate total amount for purchase item
-    const amount = measurementvalue * unitprice;
+    const amount = stock * unitprice;
     if (isNaN(amount)) {
       console.error("Calculated amount is NaN", {
-        measurementvalue,
+        stock,
         unitprice,
       });
       return NextResponse.json(
@@ -416,7 +416,7 @@ export const PUT = async (req: NextRequest) => {
         type: typeString as ItemType,
         sackweight: sackweightString as SackWeight,
         unitofmeasurement,
-        measurementvalue,
+        stock,
         unitprice,
         totalamount: amount,
         lastmodifiedby: userid,
@@ -439,7 +439,7 @@ export const PUT = async (req: NextRequest) => {
     const itemUnitPrice = transactionItem.unitprice ?? 0;
 
     const oldTotalAmount = purchaseData.totalamount ?? 0;
-    const totalDifference = amount - oldMeasurementValue * itemUnitPrice;
+    const totalDifference = amount - oldstock * itemUnitPrice;
 
     const newTotalAmount = oldTotalAmount + totalDifference;
 
@@ -476,7 +476,7 @@ export const PUT = async (req: NextRequest) => {
 //     const sackweightString = formData.get("TransactionItem[item][sackweight]") as string;
 //     const unitpriceString = formData.get("TransactionItem[unitprice]") as string;
 //     const unitofmeasurementString = formData.get("TransactionItem[unitofmeasurement]") as string;
-//     const measurementvalueString = formData.get("TransactionItem[measurementvalue]") as string;
+//     const stockString = formData.get("TransactionItem[stock]") as string;
 //     const transactionidString = formData.get("TransactionItem[transactionid]") as string;
 
 //     if (!name || !Object.values(ItemType).includes(typeString as ItemType)) {
@@ -484,12 +484,12 @@ export const PUT = async (req: NextRequest) => {
 //     }
 
 //     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
-//     const measurementvalue = parseFloat(measurementvalueString);
+//     const stock = parseFloat(stockString);
 //     const unitprice = parseFloat(unitpriceString);
 //     const transactionid = parseInt(transactionidString, 10);
 
-//     if (isNaN(unitprice) || isNaN(measurementvalue)) {
-//       console.error("Invalid number fields", { unitprice, measurementvalue });
+//     if (isNaN(unitprice) || isNaN(stock)) {
+//       console.error("Invalid number fields", { unitprice, stock });
 //       return NextResponse.json({ error: "Number fields must be valid numbers" }, { status: 400 });
 //     }
 
@@ -505,7 +505,7 @@ export const PUT = async (req: NextRequest) => {
 //     let itemId;
 //     if (existingItem) {
 //       itemId = existingItem.itemid;
-//       const newStock = (existingItem.stock ?? 0) + measurementvalue;
+//       const newStock = (existingItem.stock ?? 0) + stock;
 
 //       await prisma.item.update({
 //         where: { itemid: itemId },
@@ -518,7 +518,7 @@ export const PUT = async (req: NextRequest) => {
 //           type: typeString as ItemType,
 //           sackweight: sackweightString as SackWeight,
 //           unitofmeasurement,
-//           stock: measurementvalue,
+//           stock: stock,
 //           lastmodifiedby: userid,
 //         },
 //       });
@@ -526,9 +526,9 @@ export const PUT = async (req: NextRequest) => {
 //     }
 
 //     // Calculate total amount for purchase item
-//     const amount = measurementvalue * unitprice;
+//     const amount = stock * unitprice;
 //     if (isNaN(amount)) {
-//       console.error("Calculated amount is NaN", { measurementvalue, unitprice });
+//       console.error("Calculated amount is NaN", { stock, unitprice });
 //       return NextResponse.json({ error: "Calculated amount is invalid" }, { status: 400 });
 //     }
 
@@ -537,7 +537,7 @@ export const PUT = async (req: NextRequest) => {
 //         transactionid,
 //         itemid: itemId,
 //         unitofmeasurement,
-//         measurementvalue,
+//         stock,
 //         unitprice,
 //         totalamount: amount,
 //         lastmodifiedby: userid,

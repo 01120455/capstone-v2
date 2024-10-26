@@ -83,6 +83,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const ROLES = {
   SALES: "sales",
@@ -639,81 +640,84 @@ export default function Component() {
           </div>
           <div className="flex items-center justify-center rounded-lg overflow-hidden bg-customColors-offWhite">
             <div className="w-full max-w-[1000px] bg-customColors-offWhite">
-              <Table
-                style={{ width: "100%" }}
-                className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden"
-                divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto"
-              >
-                <TableHeader>
-                  <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                    <TableHead>Image</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Username</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers &&
-                    filteredUsers.map((user: AddUser, index: number) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {/* <Image
+              <ScrollArea>
+                <Table
+                  style={{ width: "100%" }}
+                  className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden"
+                  divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto"
+                >
+                  <TableHeader>
+                    <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                      <TableHead>Image</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Username</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers &&
+                      filteredUsers.map((user: AddUser, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            {/* <Image
                           src={user.imagepath ?? ""}
                           alt="User Image"
                           width={250}
                           height={250}
                           className="rounded"
                         /> */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleShowImage(user)}
-                          >
-                            View Image
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          {user.firstname} {user.middlename} {user.lastname}
-                        </TableCell>
-                        <TableCell>{user.role}</TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`px-2 py-1 rounded-full ${
-                              user.status === "active"
-                                ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                            }`}
-                          >
-                            {user.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{user.username}</TableCell>
-                        <TableCell className="text-right">
-                          {canAccessButton(ROLES.ADMIN) && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleEditUser(user)}
-                              >
-                                <FilePenIcon className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleDeleteUser(user)}
-                              >
-                                <TrashIcon className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleShowImage(user)}
+                            >
+                              View Image
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            {user.firstname} {user.middlename} {user.lastname}
+                          </TableCell>
+                          <TableCell>{user.role}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={`px-2 py-1 rounded-full ${
+                                user.status === "active"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                  : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                              }`}
+                            >
+                              {user.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{user.username}</TableCell>
+                          <TableCell className="text-right">
+                            {canAccessButton(ROLES.ADMIN) && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleEditUser(user)}
+                                >
+                                  <FilePenIcon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleDeleteUser(user)}
+                                >
+                                  <TrashIcon className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
               <div className="flex items-center justify-center mt-4">
                 <Pagination>
                   <PaginationContent>

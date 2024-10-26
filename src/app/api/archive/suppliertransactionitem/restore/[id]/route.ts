@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import _ from "lodash";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "@/lib/session";
 
@@ -26,9 +25,7 @@ export const PUT = async (req: NextRequest) => {
     ); // @ts-ignore
     const userid = session.user.userid;
 
-    // Use a Prisma transaction
     const result = await prisma.$transaction(async (prisma) => {
-      // Find the existing purchase item
       const existingPurchaseItem = await prisma.transactionItem.findUnique({
         where: { transactionitemid: purchaseId },
       });
@@ -37,7 +34,17 @@ export const PUT = async (req: NextRequest) => {
         throw new Error("Purchase Item not found");
       }
 
-      // Update the purchase item to mark it as deleted
+      const purchaseItemStockValue = existingPurchaseItem.stock;
+
+      await prisma.item.update({
+        where: { itemid: existingPurchaseItem.itemid },
+        data: {
+          stock: {
+            increment: purchaseItemStockValue,
+          },
+        },
+      });
+
       const updatedPurchaseItem = await prisma.transactionItem.update({
         where: { transactionitemid: purchaseId },
         data: {

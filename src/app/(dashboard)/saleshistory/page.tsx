@@ -98,7 +98,7 @@ interface CombinedTransactionItem {
   type: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
-  measurementvalue?: number;
+  stock?: number;
   unitprice?: number;
   totalamount: number;
   lastmodifiedat?: Date;
@@ -897,9 +897,7 @@ export default function Component() {
                                     <TableCell>
                                       {item.unitofmeasurement}
                                     </TableCell>
-                                    <TableCell>
-                                      {item.measurementvalue}
-                                    </TableCell>
+                                    <TableCell>{item.stock}</TableCell>
                                     {canAccessButton(
                                       ROLES.ADMIN ||
                                         ROLES.MANAGER ||
@@ -1208,7 +1206,7 @@ export default function Component() {
                           <TableCell>
                             {purchaseItem.unitofmeasurement}
                           </TableCell>
-                          <TableCell>{purchaseItem.measurementvalue}</TableCell>
+                          <TableCell>{purchaseItem.stock}</TableCell>
                           {canAccessButton(
                             ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                           ) && (

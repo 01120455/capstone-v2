@@ -138,7 +138,7 @@ export function SalesTable({
                             <TableCell>{item.Item.type}</TableCell>
                             <TableCell>{item.Item.sackweight}</TableCell>
                             <TableCell>{item.unitofmeasurement}</TableCell>
-                            <TableCell>{item.measurementvalue}</TableCell>
+                            <TableCell>{item.stock}</TableCell>
                             <TableCell>{formatPrice(item.unitprice)}</TableCell>
                             <TableCell>
                               {formatPrice(item.totalamount)}

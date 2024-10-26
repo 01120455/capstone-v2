@@ -17,6 +17,36 @@ export const PUT = async (req: NextRequest) => {
         throw new Error("Transaction not found");
       }
 
+      const existingPurchaseItems = await prisma.transactionItem.findMany({
+        where: { transactionid: id, recentdelete: true },
+        select: {
+          itemid: true,
+          stock: true,
+        },
+      });
+
+      if (!existingPurchaseItems.length) {
+        const updateTransaction = await prisma.transaction.update({
+          where: { transactionid: id, type: "purchase" },
+          data: { recentdelete: false },
+        });
+      }
+
+      await Promise.all(
+        existingPurchaseItems.map(async (item) => {
+          const purchaseItemStockValue = item.stock ?? 0;
+
+          await prisma.item.update({
+            where: { itemid: item.itemid },
+            data: {
+              stock: {
+                increment: purchaseItemStockValue,
+              },
+            },
+          });
+        })
+      );
+
       const updateTransactionItem = await prisma.transactionItem.updateMany({
         where: { transactionid: id, recentdelete: true },
         data: { recentdelete: false },

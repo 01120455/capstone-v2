@@ -77,10 +77,10 @@ export const POST = async (req: NextRequest) => {
         const unitpriceString = formData.get(
           `TransactionItem[${index}][unitprice]`
         ) as string;
-        const measurementvalueString = formData.get(
-          `TransactionItem[${index}][measurementvalue]`
+        const stockString = formData.get(
+          `TransactionItem[${index}][stock]`
         ) as string;
-        const measurementvalue = parseFloat(measurementvalueString);
+        const stock = parseFloat(stockString);
         const unitprice = parseFloat(unitpriceString);
 
         if (
@@ -90,7 +90,7 @@ export const POST = async (req: NextRequest) => {
           throw new Error("Invalid item details");
         }
 
-        if (isNaN(unitprice) || isNaN(measurementvalue)) {
+        if (isNaN(unitprice) || isNaN(stock)) {
           throw new Error("Number fields must be valid numbers");
         }
 
@@ -112,7 +112,7 @@ export const POST = async (req: NextRequest) => {
           if (currentStock === 0) {
             throw new Error("Transaction cannot proceed: stock is zero.");
           } else {
-            const newStock = currentStock - measurementvalue;
+            const newStock = currentStock - stock;
 
             await tx.item.update({
               where: { itemid: itemId },
@@ -124,7 +124,7 @@ export const POST = async (req: NextRequest) => {
           }
         }
 
-        const amount = measurementvalue * unitprice;
+        const amount = stock * unitprice;
         if (isNaN(amount)) {
           throw new Error("Calculated amount is invalid");
         }
@@ -136,7 +136,7 @@ export const POST = async (req: NextRequest) => {
           type: type,
           sackweight: sackweight,
           unitofmeasurement: itemUnitOfMeasurement,
-          measurementvalue: measurementvalue,
+          stock: stock,
           unitprice: unitprice,
           lastmodifiedby: userid,
           totalamount: amount,

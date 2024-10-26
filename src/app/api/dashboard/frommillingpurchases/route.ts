@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
             type: true,
             sackweight: true,
             unitofmeasurement: true,
-            measurementvalue: true,
+            stock: true,
             unitprice: true,
             totalamount: true,
             lastmodifiedat: true,

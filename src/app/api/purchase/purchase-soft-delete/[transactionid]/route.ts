@@ -26,7 +26,6 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    // Start a transaction
     const [existingPurchaseItem, existingPurchase] = await prisma.$transaction([
       prisma.transactionItem.findFirst({
         where: { transactionid: purchaseId },
@@ -43,12 +42,12 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    if (existingPurchaseItem.recentdelete) {
-      return NextResponse.json(
-        { error: "Purchase Item is already marked as deleted" },
-        { status: 400 }
-      );
-    }
+    // if (existingPurchaseItem.recentdelete) {
+    //   return NextResponse.json(
+    //     { error: "Purchase Item is already marked as deleted" },
+    //     { status: 400 }
+    //   );
+    // }
 
     if (!existingPurchase) {
       return NextResponse.json(
@@ -64,8 +63,7 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    // Update both items in the transaction block
-    const [updatedPurchaseItem, updatedPurchase] = await prisma.$transaction([
+    await prisma.$transaction([
       prisma.transactionItem.update({
         where: { transactionitemid: existingPurchaseItem.transactionitemid },
         data: {
@@ -82,7 +80,33 @@ export const PUT = async (req: NextRequest) => {
       }),
     ]);
 
-    return NextResponse.json(updatedPurchase, { status: 200 });
+    const findTransactionItems = await prisma.transactionItem.findMany({
+      where: {
+        transactionid: purchaseId,
+        recentdelete: false,
+      },
+      select: {
+        itemid: true,
+        stock: true,
+      },
+    });
+
+    await Promise.all(
+      findTransactionItems.map(async (item) => {
+        const purchaseItemStockValue = item.stock;
+
+        await prisma.item.update({
+          where: { itemid: item.itemid },
+          data: {
+            stock: {
+              decrement: purchaseItemStockValue,
+            },
+          },
+        });
+      })
+    );
+
+    return NextResponse.json(existingPurchase, { status: 200 });
   } catch (error) {
     console.error("Error updating item:", error);
     return NextResponse.json(

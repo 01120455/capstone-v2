@@ -51,7 +51,7 @@ ALTER TABLE `item` DROP COLUMN `createdat`,
     ADD COLUMN `deleted` BOOLEAN NOT NULL DEFAULT false,
     ADD COLUMN `lastmodifiedat` DATETIME(3) NULL,
     ADD COLUMN `lastmodifiedby` INTEGER NULL,
-    ADD COLUMN `measurementvalue` DOUBLE NULL,
+    ADD COLUMN `stock` DOUBLE NULL,
     ADD COLUMN `sackweight` ENUM('bags25kg', 'cavans50kg') NOT NULL,
     MODIFY `unitofmeasurement` ENUM('quantity', 'weight') NOT NULL;
 
@@ -127,7 +127,7 @@ CREATE TABLE `TransactionItem` (
     `transactionid` INTEGER NOT NULL,
     `itemid` INTEGER NOT NULL,
     `unitofmeasurement` ENUM('quantity', 'weight') NOT NULL,
-    `measurementvalue` DOUBLE NULL,
+    `stock` DOUBLE NULL,
     `unitprice` DOUBLE NULL,
     `totalamount` DOUBLE NOT NULL,
     `lastmodifiedby` INTEGER NULL,

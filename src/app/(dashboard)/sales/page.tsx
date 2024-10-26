@@ -78,7 +78,7 @@ export default function Sales() {
           sackweight: item.sackweight,
         },
         unitofmeasurement: item.unitofmeasurement,
-        measurementvalue: item.quantity,
+        stock: item.quantity,
         unitprice: item.price,
       })),
     },
@@ -128,7 +128,7 @@ export default function Sales() {
           unitofmeasurement: item.unitofmeasurement,
         },
         unitofmeasurement: item.unitofmeasurement,
-        measurementvalue: item.quantity,
+        stock: item.quantity,
         unitprice: item.price,
       }))
     );
@@ -180,21 +180,21 @@ export default function Sales() {
 
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  const checkInvoiceExists = async (invoicenumber: string) => {
-    try {
-      const response = await fetch(`/api/documentnumber/${invoicenumber}`);
-      if (response.ok) {
-        const data = await response.json();
-        return data.exists;
-      } else {
-        console.error("Error checking invoice number:", response.status);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error checking invoice number:", error);
-      return false;
-    }
-  };
+  // const checkInvoiceExists = async (invoicenumber: string) => {
+  //   try {
+  //     const response = await fetch(`/api/documentnumber/${invoicenumber}`);
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       return data.exists;
+  //     } else {
+  //       console.error("Error checking invoice number:", response.status);
+  //       return false;
+  //     }
+  //   } catch (error) {
+  //     console.error("Error checking invoice number:", error);
+  //     return false;
+  //   }
+  // };
 
   const handleSubmit = async (values: AddSales) => {
     if (cart.length === 0) {
@@ -205,9 +205,9 @@ export default function Sales() {
       return;
     }
 
-    const invoiceExists = await checkInvoiceExists(
-      values.DocumentNumber.documentnumber
-    );
+    // const invoiceExists = await checkInvoiceExists(
+    //   values.DocumentNumber.documentnumber
+    // );
     // if (invoiceExists) {
     //   // setInvoiceExists(true);
     //   // setInvoiceNumber(values.InvoiceNumber.invoicenumber);
@@ -249,7 +249,10 @@ export default function Sales() {
     //   });
     // }
 
-    if (invoiceExists && insufficientStock) {
+    if (
+      // invoiceExists &&
+      insufficientStock
+    ) {
       toast.error(
         "Invoice number already exists and item stock is insufficient",
         {
@@ -261,18 +264,18 @@ export default function Sales() {
       toast.error("Item stock is insufficient", {
         description: "Check your item stock and try again.",
       });
-    } else if (invoiceExists) {
-      toast.error("Invoice number already exists", {
-        description: "Please enter a different invoice number.",
-      });
-    } else if (insufficientStock) {
-      toast.error("Item stock is insufficient", {
-        description: "Check your item stock and try again.",
-      });
-    } else if (invoiceExists) {
-      toast.error("Invoice number already exists", {
-        description: "Please enter a different invoice number.",
-      });
+      // } else if (invoiceExists) {
+      //   toast.error("Invoice number already exists", {
+      //     description: "Please enter a different invoice number.",
+      //   });
+      // } else if (insufficientStock) {
+      //   toast.error("Item stock is insufficient", {
+      //     description: "Check your item stock and try again.",
+      //   });
+      // } else if (invoiceExists) {
+      //   toast.error("Invoice number already exists", {
+      //     description: "Please enter a different invoice number.",
+      //   });
     } else {
       null;
     }
@@ -298,8 +301,8 @@ export default function Sales() {
         item.Item.sackweight
       );
       formData.append(
-        `TransactionItem[${index}][measurementvalue]`,
-        item.measurementvalue.toString()
+        `TransactionItem[${index}][stock]`,
+        item.stock.toString()
       );
       formData.append(
         `TransactionItem[${index}][unitprice]`,

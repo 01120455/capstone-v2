@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
             },
             transactionitemid: true,
             unitofmeasurement: true,
-            measurementvalue: true,
+            stock: true,
             unitprice: true,
             totalamount: true,
             lastmodifiedat: true,
