@@ -24,8 +24,11 @@ import { useForm } from "react-hook-form";
 import { Login, loginSchema } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Home() {
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const form = useForm<Login>({
@@ -53,9 +56,7 @@ export default function Home() {
         return;
       }
 
-      if (response.ok) {
-        toast.success(`Welcome back, ${data.username}!`);
-      }
+      toast.success(`Welcome back, ${data.username}!`);
 
       switch (data.role) {
         case "admin":
@@ -84,7 +85,7 @@ export default function Home() {
           alt="Login Image"
           width={1000}
           height={1000}
-          className="w-full lg:w-1/2, xl:w-full object-contain"
+          className="w-full lg:w-1/2 xl:w-full object-contain"
         />
       </div>
       <div className="flex items-center justify-center p-6 md:p-12 lg:p-16">
@@ -94,14 +95,14 @@ export default function Home() {
           </div>
           <div className="flex justify-center">
             <Tabs defaultValue="login" className="w-[400px]">
-              <TabsList className=" w-full grid-cols-1 hidden">
+              <TabsList className="w-full grid-cols-1 hidden">
                 <TabsTrigger value="login">Login</TabsTrigger>
               </TabsList>
               <Card>
                 <CardHeader>
                   <CardTitle>Login</CardTitle>
                   <CardDescription>
-                    Login in to your account to continue
+                    Login to your account to continue
                   </CardDescription>
                 </CardHeader>
                 <Form {...form}>
@@ -140,13 +141,25 @@ export default function Home() {
                                 <Input
                                   {...field}
                                   id="password"
-                                  type="password"
+                                  type={showPassword ? "text" : "password"}
+                                  name="password"
                                   required
                                 />
                               </FormControl>
                             </FormItem>
                           )}
                         />
+                      </div>
+                      <div className="flex items-center mt-2">
+                        <Checkbox
+                          id="showpassword"
+                          onCheckedChange={() =>
+                            setShowPassword((prev) => !prev)
+                          }
+                        />
+                        <Label htmlFor="showpassword" className="ml-2">
+                          Show Password
+                        </Label>
                       </div>
                     </CardContent>
                     <CardFooter>
