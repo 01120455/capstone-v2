@@ -143,11 +143,17 @@ export default function Sales() {
       const existingItemIndex = prevCart.findIndex(
         (cartItem) => cartItem.id === item.itemid
       );
+
       if (existingItemIndex > -1) {
-        const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex].quantity += quantity;
-        return updatedCart;
+        // Create a new cart array to ensure state is updated correctly
+        return prevCart.map((cartItem, index) => {
+          if (index === existingItemIndex) {
+            return { ...cartItem, quantity: cartItem.quantity + quantity };
+          }
+          return cartItem;
+        });
       }
+
       const cartItem = {
         id: item.itemid,
         name: item.name,
@@ -158,6 +164,7 @@ export default function Sales() {
         quantity,
         imagepath: item.itemimage[0]?.imagepath ?? "",
       };
+
       return [...prevCart, cartItem];
     });
   }, []);

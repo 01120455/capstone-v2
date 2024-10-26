@@ -36,9 +36,9 @@ export default function Component() {
                   </h1>
                   <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
                     Our Inventory Management System with POS integration and
-                    purchase module is designed to streamline the operations of
-                    3R Shane Rice Mill. Manage your inventory efficiently, track
-                    sales, and handle purchases with ease.
+                    Purchase Order module is designed to streamline the
+                    operations of 3R Shane Rice Mill. Manage your inventory
+                    efficiently, track sales, and handle purchases with ease.
                   </p>
                 </div>
               </div>
@@ -47,7 +47,7 @@ export default function Component() {
                 alt="Hero"
                 width={600}
                 height={400}
-                className="mx-auto aspect-square overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
+                className="mx-auto aspect-square overflow-hidden rounded-xl object-fill sm:w-full lg:order-last"
               />
             </div>
           </div>
@@ -73,20 +73,19 @@ export default function Component() {
             </div>
             <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
               <Image
-                src="/next.svg"
+                src="/landingpageimage/inventory.png"
                 alt=""
                 width={600}
                 height={400}
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-fill object-center sm:w-full lg:order-last"
               />
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h3 className="text-2xl font-bold">Inventory Management</h3>
                   <p className="text-gray-500 dark:text-gray-400">
                     Our Inventory Management System allows you to track your
-                    inventory in real-time, manage stock levels, and generate
-                    reports to help you make informed decisions about your
-                    business.
+                    inventory in real-time, and manage stock levels to help you
+                    make informed decisions about your business.
                   </p>
                 </div>
                 <Link
@@ -100,19 +99,45 @@ export default function Component() {
             </div>
             <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
               <Image
-                src="/next.svg"
+                src="/landingpageimage/sales.png"
                 alt=""
                 width={600}
                 height={400}
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-fill object-center sm:w-full"
               />
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h3 className="text-2xl font-bold">Point of Sale</h3>
                   <p className="text-gray-500 dark:text-gray-400">
                     Our POS integration allows you to manage your sales and
-                    inventory in one place. Track sales, manage customers, and
-                    handle transactions with ease.
+                    inventory in one place. Track sales, and handle transactions
+                    with ease.
+                  </p>
+                </div>
+                <Link
+                  href="#"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                  prefetch={false}
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
+            <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
+              <Image
+                src="/landingpageimage/purchaseorderhistory.png"
+                alt=""
+                width={600}
+                height={400}
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-fill object-center sm:w-full lg:order-last"
+              />
+              <div className="flex flex-col justify-center space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold">Purchase Order</h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Our purchase order feature simplifies the management and
+                    tracking of your orders. You can easily monitor order
+                    status, and ensure timely delivery.
                   </p>
                 </div>
                 <Link
@@ -130,16 +155,17 @@ export default function Component() {
                 alt=""
                 width={600}
                 height={400}
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-fill object-center sm:w-full"
               />
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Sales analytics</h3>
+                  <h3 className="text-2xl font-bold">Dashboard analytics</h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    Our sales analytics feature allows you to track sales
-                    trends, identify top-selling products, and analyze customer
-                    behavior. Use this data to make informed decisions about
-                    your business and drive growth.
+                    Our dashboard analytics feature provides an overview of your
+                    business by integrating inventory, sales, and purchase order
+                    data into a single, user-friendly interface. With insights,
+                    you can monitor inventory levels, track sales performance,
+                    and analyze sales and purchase trends all in one place.
                   </p>
                 </div>
                 <Link
@@ -178,7 +204,7 @@ export default function Component() {
                 width={550}
                 height={310}
                 alt="Shane Rice Mill"
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-fill object-center sm:w-full lg:order-last"
               />
             </div>
           </div>
