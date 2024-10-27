@@ -827,7 +827,7 @@ export default function Component() {
       });
 
       if (uploadRes.ok) {
-        if (values.transactionid) {
+        if (values.transactionid && !values.transactionitemid) {
           toast.success(
             `Successfully added Item ${formPurchaseItemOnly.getValues(
               "Item.name"
