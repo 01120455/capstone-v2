@@ -668,6 +668,32 @@ export default function Component() {
     return false;
   };
 
+  const downloadInvoice = async () => {
+    const response = await fetch("/api/generateinvoice", {
+      method: "POST", // Keep as POST
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        transactionId: selectedTransaction?.transactionid, // Ensure selectedTransaction is defined
+      }),
+    });
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoice-${selectedTransaction?.transactionid}.pdf`; // Use backticks for template literals
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url); // Clean up
+    } else {
+      console.error("Failed to generate invoice");
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4 w-full">
@@ -790,6 +816,12 @@ export default function Component() {
                           </div>
                         </>
                       )}
+                      <Button
+                        onClick={downloadInvoice}
+                        className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+                      >
+                        Download Document
+                      </Button>
                     </div>
                   </div>
                 </div>
