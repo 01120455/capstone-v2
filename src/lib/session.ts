@@ -17,7 +17,7 @@ export interface SessionData {
   middlename?: string;
   lastname?: string;
   role?: string;
-  username?: string;
+  email?: string;
   status?: string;
   isLoggedIn?: boolean;
 }

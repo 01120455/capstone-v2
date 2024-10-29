@@ -12,13 +12,13 @@ export const user = z.object({
       invalid_type_error: "Invalid Type Received",
     })
     .default("active"),
-  username: z.string(),
+  email: z.string().email(),
   password: z.string().optional(),
   image: z.any().optional().nullable(),
 });
 
 export const loginSchema = z.object({
-  username: z.string(),
+  email: z.string().email(),
   password: z.string(),
 });
 

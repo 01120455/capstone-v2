@@ -34,7 +34,7 @@ export default function Home() {
   const form = useForm<Login>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -56,7 +56,7 @@ export default function Home() {
         return;
       }
 
-      toast.success(`Welcome back, ${data.username}!`);
+      toast.success(`Welcome back, ${data.email}!`);
 
       switch (data.role) {
         case "admin":
@@ -114,15 +114,15 @@ export default function Home() {
                       <div className="space-y-1">
                         <FormField
                           control={form.control}
-                          name="username"
+                          name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="username">Username</FormLabel>
+                              <FormLabel htmlFor="email">Email</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="username"
-                                  type="text"
+                                  id="email"
+                                  type="email"
                                   required
                                 />
                               </FormControl>

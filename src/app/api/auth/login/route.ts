@@ -8,13 +8,13 @@ const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password } = await req.json();
+    const { email, password } = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { username } });
+    const user = await prisma.user.findUnique({ where: { email} });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json(
-        { message: "Invalid username or password" },
+        { message: "Invalid email or password" },
         { status: 401 }
       );
     }
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({
       message: "Logged in Successfully",
       role: user.role,
-      username: user.username,
+      email: user.email,
     });
 
     const session = await getIronSession(req, res, sessionOptions);
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       middlename: user.middlename ?? undefined,
       lastname: user.lastname,
       role: user.role,
-      username: user.username,
+      email: user.email,
       status: user.status,
       isLoggedIn: true,
     };

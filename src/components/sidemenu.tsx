@@ -191,7 +191,7 @@ export default function SideMenu() {
           </div>
           <div
             className={`bg-customColors-ivoryWhite border-t border-gray-200 flex items-center justify-between ${
-              isMenuOpen ? "p-4" : "pt-4 pb-4 pl-1"
+              isMenuOpen ? "pt-4 pb-4" : "pt-4 pb-4 pl-1"
             } mt-auto`}
           >
             <div className="flex items-center space-x-3">
@@ -212,7 +212,7 @@ export default function SideMenu() {
                     : "Guest"}
                 </span>
                 <span className="text-xs text-gray-500">
-                  {user?.username || "guest"}
+                  {user?.email || "guest"}
                 </span>
               </div>
             </div>

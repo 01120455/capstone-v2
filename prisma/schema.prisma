@@ -15,7 +15,7 @@ model User {
   lastname            String            @db.VarChar(25)
   role                Role
   status              Status
-  username            String            @unique @db.VarChar(50)
+  email            String            @unique @db.VarChar(50)
   password            String
   recentdelete        Boolean           @default(false)
   createdat          DateTime          @default(now())
