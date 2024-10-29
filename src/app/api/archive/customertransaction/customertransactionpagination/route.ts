@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     // Build the where clause
     const whereClause: any = {
       recentdelete: true,
-      type: "sales",
+      transactiontype: "sales",
     };
 
     if (documentNumberFilter) {
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       whereClause.TransactionItem = {
         some: {
           Item: {
-            name: itemNameFilter,
+            itemname: itemNameFilter,
           },
         },
       };
@@ -108,8 +108,8 @@ export async function GET(req: NextRequest) {
           include: {
             Item: {
               select: {
-                name: true,
-                type: true,
+                itemname: true,
+                itemtype: true,
                 sackweight: true,
               },
             },

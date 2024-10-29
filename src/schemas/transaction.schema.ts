@@ -5,7 +5,7 @@ const is11Digits = (val: string) => /^\d{10}$/.test(val);
 const transactionSchema = z.object({
   transactionid: z.number().optional(),
   createdat: date().optional(),
-  type: z.enum(["purchase", "sales"], {
+  transactiontype: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
   }),
   status: z.enum(["pending", "paid", "cancelled"], {
@@ -25,11 +25,11 @@ const transactionSchema = z.object({
         transactionitemid: z.number().optional(),
         Item: z.object({
           itemid: z.number().optional(),
-          name: z
+          itemname: z
             .string()
             .min(1, "Item Name is required")
             .max(100, "Name is too long"),
-          type: z
+          itemtype: z
             .enum(["bigas", "palay", "resico"], {
               invalid_type_error: "Invalid Type Received",
             })
@@ -40,7 +40,7 @@ const transactionSchema = z.object({
             })
             .default("bag25kg"),
         }),
-        type: z
+        itemtype: z
           .enum(["bigas", "palay", "resico"], {
             invalid_type_error: "Invalid Type Received",
           })
@@ -54,7 +54,7 @@ const transactionSchema = z.object({
           .string()
           .min(1, "Unit of Measurement is required")
           .max(100, "Unit of Measurement is too long"),
-        stock: z.coerce.number().min(0, "Measurement value cannot be negative"),
+        stock: z.coerce.number().min(0, "Stock cannot be negative"),
         unitprice: z.coerce
           .number()
           .multipleOf(0.01)
@@ -73,11 +73,11 @@ const TransactionItem = z.object({
   transactionid: z.number(),
   Item: z.object({
     itemid: z.number().optional(),
-    name: z
+    itemname: z
       .string()
       .min(1, "Item Name is required")
       .max(100, "Name is too long"),
-    type: z
+    itemtype: z
       .enum(["bigas", "palay", "resico"], {
         invalid_type_error: "Invalid Type Received",
       })
@@ -88,7 +88,7 @@ const TransactionItem = z.object({
       })
       .default("bag25kg"),
   }),
-  type: z
+  itemtype: z
     .enum(["bigas", "palay", "resico"], {
       invalid_type_error: "Invalid Type Received",
     })
@@ -102,7 +102,7 @@ const TransactionItem = z.object({
     .string()
     .min(1, "Unit of Measurement is required")
     .max(100, "Unit of Measurement is too long"),
-  stock: z.coerce.number().min(0, "Measurement value cannot be negative"),
+  stock: z.coerce.number().min(0, "Stock cannot be negative"),
   unitprice: z.coerce
     .number()
     .multipleOf(0.01)
@@ -114,7 +114,7 @@ const TransactionItem = z.object({
 const transactionTableSchema = z.object({
   transactionid: z.number(),
   createdat: date(),
-  type: z.enum(["purchase", "sales"], {
+  transactiontype: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
   }),
   status: z.enum(["pending", "paid", "cancelled"], {
@@ -123,12 +123,22 @@ const transactionTableSchema = z.object({
   walkin: z.boolean(),
   frommilling: z.boolean(),
   totalamount: z.number().multipleOf(0.01).optional(),
-  User: z.object({
-    userid: z.number().optional(),
-    firstname: z.string(),
-    middlename: z.string().optional(),
-    lastname: z.string(),
-  }),
+  createdbyuser: z
+    .object({
+      userid: z.number().optional(),
+      firstname: z.string(),
+      middlename: z.string().optional(),
+      lastname: z.string(),
+    })
+    .optional(),
+  lastmodifiedbyuser: z
+    .object({
+      userid: z.number().optional(),
+      firstname: z.string(),
+      middlename: z.string().optional(),
+      lastname: z.string(),
+    })
+    .optional(),
   lastmodifiedat: date().optional(),
   DocumentNumber: z.object({
     documentnumberid: z.number().optional(),
@@ -140,7 +150,7 @@ const transactionTableSchema = z.object({
 const transactionOnlySchema = z.object({
   transactionid: z.number(),
   createdat: date(),
-  type: z.enum(["purchase", "sales"], {
+  transactiontype: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
   }),
   status: z.enum(["pending", "paid", "cancelled"], {

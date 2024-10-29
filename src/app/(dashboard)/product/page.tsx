@@ -252,8 +252,8 @@ export default function ProductManagement() {
   const form = useForm<AddItem>({
     resolver: zodResolver(item),
     defaultValues: {
-      name: "",
-      type: "bigas",
+      itemname: "",
+      itemtype: "bigas",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
       stock: 0,
@@ -304,7 +304,7 @@ export default function ProductManagement() {
       const result = await response.json();
       const action = values.itemid ? "updated" : "added";
 
-      toast.success(`Item ${values.name} has been ${action}`, {
+      toast.success(`Item ${values.itemname} has been ${action}`, {
         description: `You have successfully ${action} the item.`,
       });
 
@@ -491,7 +491,7 @@ export default function ProductManagement() {
 
   const handleDeleteWithToast = (itemid: number | undefined) => {
     handleDelete(itemid);
-    toast.success(`Item ${form.getValues().name} has been deleted`, {
+    toast.success(`Item ${form.getValues().itemname} has been deleted`, {
       description: "You can now add more items to the inventory.",
     });
   };
@@ -501,8 +501,8 @@ export default function ProductManagement() {
     setSelectedFile(undefined);
 
     form.reset({
-      name: "",
-      type: "bigas",
+      itemname: "",
+      itemtype: "bigas",
       sackweight: "bag25kg",
       unitofmeasurement: "quantity",
       stock: 0,
@@ -530,13 +530,13 @@ export default function ProductManagement() {
 
     form.reset({
       itemid: item.itemid,
-      name: item.name,
-      type: item.type,
+      itemname: item.itemname,
+      itemtype: item.itemtype,
       sackweight: item.sackweight,
       unitofmeasurement: item.unitofmeasurement,
       stock: item.stock,
       unitprice: item.unitprice,
-      imagepath: item.itemimage[0]?.imagepath ?? "",
+      imagepath: item.imagepath,
     });
   };
 
@@ -612,8 +612,8 @@ export default function ProductManagement() {
                           View Image
                         </Button>
                       </TableCell>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.type}</TableCell>
+                      <TableCell>{item.itemname}</TableCell>
+                      <TableCell>{item.itemtype}</TableCell>
                       <TableCell>{item.sackweight}</TableCell>
                       <TableCell>{item.unitofmeasurement}</TableCell>
                       <TableCell>{formatStock(item.stock)}</TableCell>
@@ -762,9 +762,9 @@ export default function ProductManagement() {
                     </DialogDescription>
                     <div className="flex-grow flex items-center justify-center overflow-hidden">
                       <div className="relative w-full h-[400px]">
-                        {showImage.itemimage[0]?.imagepath ? (
+                        {showImage.imagepath ? (
                           <Image
-                            src={showImage.itemimage[0].imagepath}
+                            src={showImage.imagepath}
                             alt="Product Image"
                             fill
                             sizes="(max-width: 600px) 100vw, 50vw"
@@ -791,7 +791,8 @@ export default function ProductManagement() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the item name {itemToDelete?.name} {""} which consists of
+                    the item name {itemToDelete?.itemname} {""} which consists
+                    of
                     {itemToDelete?.unitofmeasurement}
                     {""}
                     {itemToDelete?.stock} stocks and remove their data from our
@@ -855,14 +856,14 @@ export default function ProductManagement() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="name"
+                          name="itemname"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="name">Name</FormLabel>
+                              <FormLabel htmlFor="itemname">Name</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="name"
+                                  id="itemname"
                                   type="text"
                                   // value={inputValue || form.getValues("name")}
                                   // onChange={(e) => {
@@ -901,10 +902,10 @@ export default function ProductManagement() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="type"
+                          name="itemtype"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="type">Type</FormLabel>
+                              <FormLabel htmlFor="itemtype">Type</FormLabel>
                               <FormControl>
                                 <Select
                                   onValueChange={field.onChange}
@@ -1003,9 +1004,7 @@ export default function ProductManagement() {
                           name="stock"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="stock">
-                                Measurement Value
-                              </FormLabel>
+                              <FormLabel htmlFor="stock">Stock</FormLabel>
                               <FormControl>
                                 <Input {...field} id="stock" type="number" />
                               </FormControl>

@@ -15,7 +15,6 @@ export const PUT = async (req: NextRequest) => {
     const [existingItem, updatedItem] = await prisma.$transaction([
       prisma.item.findUnique({
         where: { itemid: itemId },
-        include: { itemimage: true },
       }),
       prisma.item.update({
         where: { itemid: itemId },
@@ -27,7 +26,7 @@ export const PUT = async (req: NextRequest) => {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    if (existingItem.deleted) {
+    if (existingItem.recentdelete) {
       return NextResponse.json(
         { error: "Item is already marked as deleted" },
         { status: 400 }

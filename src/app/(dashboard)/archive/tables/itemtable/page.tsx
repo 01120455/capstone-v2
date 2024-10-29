@@ -194,8 +194,8 @@ export function ItemTable({
           <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
             <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
               <TableHead>Image</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead>Item Name</TableHead>
+              <TableHead>Item Type</TableHead>
               <TableHead>Sack Weight</TableHead>
               <TableHead>Unit of Measurement</TableHead>
               <TableHead>Available Stocks</TableHead>
@@ -217,8 +217,8 @@ export function ItemTable({
                     View Image
                   </Button>
                 </TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.type}</TableCell>
+                <TableCell>{item.itemname}</TableCell>
+                <TableCell>{item.itemtype}</TableCell>
                 <TableCell>{item.sackweight}</TableCell>
                 <TableCell>{item.unitofmeasurement}</TableCell>
                 <TableCell>{formatStock(item.stock)}</TableCell>
@@ -289,9 +289,9 @@ export function ItemTable({
               </DialogDescription>
               <div className="flex-grow flex items-center justify-center overflow-hidden">
                 <div className="relative w-full h-[400px]">
-                  {showImage.itemimage[0]?.imagepath ? (
+                  {showImage?.imagepath ? (
                     <Image
-                      src={showImage.itemimage[0].imagepath}
+                      src={showImage.imagepath}
                       alt="Product Image"
                       fill
                       sizes="(max-width: 600px) 100vw, 50vw"

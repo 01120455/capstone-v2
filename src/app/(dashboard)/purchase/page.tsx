@@ -100,12 +100,12 @@ interface CombinedTransactionItem {
   frommilling: boolean;
   status: "pending" | "paid" | "cancelled";
   Item: {
-    type: "bigas" | "palay" | "resico";
-    name: string;
+    itemtype: "bigas" | "palay" | "resico";
+    itemname: string;
     sackweight: "bag25kg" | "cavan50kg";
     itemid?: number;
   };
-  type: "purchases" | "sales";
+  transactiontype: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
   stock?: number;
@@ -277,7 +277,6 @@ const usePurchaseItems = () => {
       }
 
       const items = await response.json();
-      // Assuming you have a setPurchaseItems function to set the items state
       setPurchaseItems(items);
     } catch (error) {
       console.error("Error fetching purchase items:", error);
@@ -315,7 +314,6 @@ const useTransactionItems = () => {
           page: page.toString(),
         });
 
-        // Add filters to params
         if (filters2.purordno) {
           params.append("documentnumber", filters2.purordno);
         }
@@ -332,7 +330,6 @@ const useTransactionItems = () => {
           params.append("enddate", filters2.dateRange.end);
         }
 
-        // Fetch filtered transactions
         const transactionsResponse = await fetch(
           `/api/suppliertransaction/suppliertransactionpagination?${params}`
         );
@@ -341,7 +338,6 @@ const useTransactionItems = () => {
         }
         const transactions: any[] = await transactionsResponse.json();
 
-        // Fetch all transaction items
         const transactionItemsResponse = await fetch("/api/transactionitem");
         if (!transactionItemsResponse.ok) {
           throw new Error(
@@ -351,18 +347,16 @@ const useTransactionItems = () => {
         const allTransactionItems: TransactionItem[] =
           await transactionItemsResponse.json();
 
-        // Create transaction map for quick lookups
         const transactionMap = new Map<number, any>();
         transactions.forEach((transaction) => {
           transactionMap.set(transaction.transactionid, {
             documentNumber: transaction.DocumentNumber?.documentnumber,
             frommilling: transaction.frommilling,
-            type: transaction.type,
+            transactiontype: transaction.transactiontype,
             status: transaction.status,
           });
         });
 
-        // Combine and filter data
         const combinedData: CombinedTransactionItem[] = allTransactionItems
           .map((item) => {
             const transactionInfo =
@@ -371,16 +365,14 @@ const useTransactionItems = () => {
               ...item,
               documentNumber: transactionInfo.documentNumber,
               frommilling: transactionInfo.frommilling || false,
-              type: transactionInfo.type || "otherType",
+              transactiontype: transactionInfo.transactiontype || "otherType",
               status: transactionInfo.status || "otherStatus",
             };
           })
           .filter((item) => item.documentNumber !== undefined);
 
-        // Set state
         setTransactionItem(combinedData);
 
-        // Fetch total count for pagination
         const totalResponse = await fetch(
           `/api/suppliertransaction/suppliertransactionpagination`
         );
@@ -402,7 +394,7 @@ const useTransactionItems = () => {
 
     const timer = setTimeout(() => {
       fetchData();
-    }, 2000); // Debounce time
+    }, 2000);
 
     return () => {
       clearTimeout(timer);
@@ -469,11 +461,13 @@ export default function Component() {
   const [purchaseToDelete, setPurchaseToDelete] =
     useState<TransactionTable | null>(null);
 
+  console.log("user session:", user);
+
   const form = useForm<Transaction>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       transactionid: 0,
-      type: "purchase",
+      transactiontype: "purchase",
       status: "pending",
       walkin: false,
       frommilling: false,
@@ -486,8 +480,8 @@ export default function Component() {
           transactionitemid: 0,
           Item: {
             itemid: 0,
-            name: "",
-            type: "palay",
+            itemname: "",
+            itemtype: "palay",
             sackweight: "bag25kg",
           },
           unitofmeasurement: "",
@@ -505,8 +499,8 @@ export default function Component() {
       transactionid: 0,
       Item: {
         itemid: 0,
-        name: "",
-        type: "palay",
+        itemname: "",
+        itemtype: "palay",
         sackweight: "bag25kg",
       },
       unitofmeasurement: "",
@@ -519,7 +513,7 @@ export default function Component() {
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       transactionid: 0,
-      type: "purchase",
+      transactiontype: "purchase",
       status: "pending",
       walkin: false,
       frommilling: false,
@@ -552,7 +546,7 @@ export default function Component() {
 
     form.reset({
       transactionid: 0,
-      type: "purchase",
+      transactiontype: "purchase",
       status: "pending",
       walkin: false,
       frommilling: false,
@@ -565,8 +559,8 @@ export default function Component() {
           transactionitemid: 0,
           Item: {
             itemid: 0,
-            name: "",
-            type: "palay",
+            itemname: "",
+            itemtype: "palay",
             sackweight: "bag25kg",
           },
           unitofmeasurement: "",
@@ -586,8 +580,8 @@ export default function Component() {
       transactionid: purchaseItem.transactionid,
       Item: {
         itemid: purchaseItem.Item?.itemid,
-        name: purchaseItem.Item?.name,
-        type: purchaseItem.Item?.type,
+        itemname: purchaseItem.Item?.itemname,
+        itemtype: purchaseItem.Item?.itemtype,
         sackweight: purchaseItem.Item?.sackweight,
       },
       unitofmeasurement: purchaseItem?.unitofmeasurement,
@@ -605,8 +599,8 @@ export default function Component() {
       transactionid: transactionid,
       Item: {
         itemid: 0,
-        name: "",
-        type: "palay",
+        itemname: "",
+        itemtype: "palay",
         sackweight: "bag25kg",
       },
       unitofmeasurement: "",
@@ -621,7 +615,7 @@ export default function Component() {
 
     formPurchaseOnly.reset({
       transactionid: purchase.transactionid,
-      type: purchase.type,
+      transactiontype: purchase.transactiontype,
       status: purchase.status,
       walkin: purchase.walkin,
       frommilling: purchase.frommilling,
@@ -636,11 +630,10 @@ export default function Component() {
     setShowModal(false);
     setShowModalPurchaseItem(false);
     setShowModalEditPurchase(false);
-    // setItemInputValue("");
 
     form.reset({
       transactionid: 0,
-      type: "purchase",
+      transactiontype: "purchase",
       status: "pending",
       walkin: false,
       frommilling: false,
@@ -653,8 +646,8 @@ export default function Component() {
           transactionitemid: 0,
           Item: {
             itemid: 0,
-            name: "",
-            type: "palay",
+            itemname: "",
+            itemtype: "palay",
             sackweight: "bag25kg",
           },
           unitofmeasurement: "",
@@ -668,8 +661,8 @@ export default function Component() {
       transactionitemid: 0,
       Item: {
         itemid: 0,
-        name: "",
-        type: "palay",
+        itemname: "",
+        itemtype: "palay",
         sackweight: "bag25kg",
       },
       unitofmeasurement: "",
@@ -679,7 +672,7 @@ export default function Component() {
 
     formPurchaseOnly.reset({
       transactionid: 0,
-      type: "purchase",
+      transactiontype: "purchase",
       status: "pending",
       walkin: false,
       frommilling: false,
@@ -703,7 +696,7 @@ export default function Component() {
     console.log("Form Values:", values);
     const formData = new FormData();
 
-    formData.append("type", values.type);
+    formData.append("transactiontype", values.transactiontype);
     formData.append("status", values.status);
     formData.append("walkin", values.walkin.toString());
     formData.append("frommilling", values.frommilling.toString());
@@ -715,12 +708,12 @@ export default function Component() {
     values.TransactionItem !== undefined
       ? values.TransactionItem.forEach((item, index) => {
           formData.append(
-            `TransactionItem[${index}][item][name]`,
-            item.Item.name
+            `TransactionItem[${index}][item][itemname]`,
+            item.Item.itemname
           );
           formData.append(
-            `TransactionItem[${index}][item][type]`,
-            item.Item.type
+            `TransactionItem[${index}][item][itemtype]`,
+            item.Item.itemtype
           );
           formData.append(
             `TransactionItem[${index}][item][sackweight]`,
@@ -780,12 +773,6 @@ export default function Component() {
           console.log("Purchase added successfully");
         }
 
-        // if (uploadResult.Entity) {
-        //   setSuccessItem(uploadResult);
-        // } else {
-        //   console.error("Unexpected structure:", uploadResult);
-        // }
-
         console.log("Upload Result:", uploadResult);
         setShowModal(false);
         setShowModalEditPurchase(false);
@@ -812,8 +799,8 @@ export default function Component() {
       : `/api/purchaseitem/purchaseitem/${values.transactionid}`;
 
     const formData = new FormData();
-    formData.append("Item[name]", values.Item.name);
-    formData.append("Item[type]", values.Item.type);
+    formData.append("Item[itemname]", values.Item.itemname);
+    formData.append("Item[itemtype]", values.Item.itemtype);
     formData.append("Item[sackweight]", values.Item.sackweight);
     formData.append("unitofmeasurement", values.unitofmeasurement);
     formData.append("stock", values.stock.toString());
@@ -830,7 +817,7 @@ export default function Component() {
         if (values.transactionid && !values.transactionitemid) {
           toast.success(
             `Successfully added Item ${formPurchaseItemOnly.getValues(
-              "Item.name"
+              "Item.itemname"
             )} `,
             {
               description:
@@ -843,7 +830,7 @@ export default function Component() {
         if (values.transactionitemid) {
           toast.success(
             `Successfully updated Item ${formPurchaseItemOnly.getValues(
-              "Item.name"
+              "Item.itemname"
             )} `,
             {
               description:
@@ -857,7 +844,6 @@ export default function Component() {
         refreshPurchases();
         refreshTransactionItems();
         formPurchaseItemOnly.reset();
-        // setItemInputValue("");
       } else {
         console.error("Operation failed", await uploadRes.text());
       }
@@ -895,7 +881,9 @@ export default function Component() {
   ) => {
     handleDeletePurchaseItemConfirm(purchaseItem);
     toast.success(
-      `Purchase item ${""} ${purchaseItem.Item.name} ${""} has been deleted`,
+      `Purchase item ${""} ${
+        purchaseItem.Item.itemname
+      } ${""} has been deleted`,
       {
         description: "You can now continue with what you are doing.",
       }
@@ -990,9 +978,12 @@ export default function Component() {
     return false;
   };
 
+  console.log("User role:", user?.role);
+
   const transactionData = {
     transactionid: formPurchaseOnly.getValues("transactionid") || 0,
-    type: formPurchaseOnly.getValues("type") || "purchase",
+    transactiontype:
+      formPurchaseOnly.getValues("transactiontype") || "purchase",
     status: formPurchaseOnly.getValues("status") || "pending",
     walkin: formPurchaseOnly.getValues("walkin") || false,
     frommilling: formPurchaseOnly.getValues("frommilling") || false,
@@ -1032,6 +1023,8 @@ export default function Component() {
 
     const parsedData = transactionSchema.safeParse(transactionData);
 
+    console.log("Parsed Data:", parsedData);
+
     if (parsedData.success) {
       const data = parsedData.data;
       if (data.transactionid === id) {
@@ -1060,16 +1053,6 @@ export default function Component() {
     setFilters2((prev) => ({ ...prev, purordno: value }));
     handlePageChange(1);
     handleTransactionItemsPageChange(1);
-
-    // setPurchaseOrderDropdownVisible(e.target.value.length > 0);
-    // const filtered = purchases
-    //   .map((p) => p.DocumentNumber?.documentnumber) // Use optional chaining to avoid undefined
-    //   .filter(
-    //     (purordno): purordno is string =>
-    //       purordno !== undefined &&
-    //       purordno.toLowerCase().includes(value.toLowerCase())
-    //   );
-    // setPurchaseOrderSuggestions(filtered);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1077,15 +1060,6 @@ export default function Component() {
     setFilters((prev) => ({ ...prev, name: value }));
     setFilters2((prev) => ({ ...prev, name: value }));
     handlePageChange(1);
-
-    // setItemDropdownVisible(e.target.value.length > 0);
-    // const filtered = purchases
-    //   .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name)) // Adjust according to your data structure
-    //   .filter((itemName) =>
-    //     itemName?.toLowerCase().includes(value.toLowerCase())
-    //   );
-
-    // setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
   const renderFilters = () => (
@@ -1108,28 +1082,6 @@ export default function Component() {
               value={filters.purordno}
               onChange={handlePurchaseOrderChange}
             />
-            {/* {isPurchaseOrderDropdownVisible &&
-              purchaseOrderSuggestions.length > 0 && (
-                <div
-                  ref={dropdownRefPurchaseOrder} // Attach ref to the dropdown
-                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                >
-                  {purchaseOrderSuggestions.map((purordno) => (
-                    <div
-                      key={purordno}
-                      className="p-2 cursor-pointer hover:bg-gray-200"
-                      onClick={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          purordno: purordno,
-                        }))
-                      }
-                    >
-                      {purordno}
-                    </div>
-                  ))}
-                </div>
-              )} */}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="item-name">Item Name</Label>
@@ -1140,27 +1092,6 @@ export default function Component() {
               value={filters.name}
               onChange={handleItemNameChange}
             />
-            {/* {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
-              <div
-                ref={dropdownRefItem} // Attach ref to the dropdown
-                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-              >
-                {itemNameSuggestions.map((item) => (
-                  <div
-                    key={item}
-                    className="p-2 cursor-pointer hover:bg-gray-200"
-                    onClick={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        name: item,
-                      }))
-                    }
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            )} */}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="frommilling">From Milling</Label>
@@ -1284,51 +1215,6 @@ export default function Component() {
 
   const filteredPurchases = useMemo(() => {
     return purchases;
-    // return purchases.filter((purchase) => {
-    //   // Your existing filtering logic for purchases
-    //   const purordno =
-    //     purchase.DocumentNumber?.documentnumber?.toLowerCase() || "";
-    //   const purordnoMatches = purordno.includes(searchTerm.toLowerCase());
-    //   const statusMatches =
-    //     filters.status === "all" || purchase.status === filters.status;
-    //   const frommillingMatches =
-    //     filters.frommilling === "all" ||
-    //     (filters.frommilling === "true" && purchase.frommilling) ||
-    //     (filters.frommilling === "false" && !purchase.frommilling);
-
-    //   const createdAt = purchase.createdat
-    //     ? new Date(purchase.createdat)
-    //     : null;
-    //   const start = filters.dateRange.start
-    //     ? new Date(filters.dateRange.start)
-    //     : null;
-    //   const end = filters.dateRange.end
-    //     ? new Date(filters.dateRange.end)
-    //     : null;
-
-    //   const isWithinDateRange = (
-    //     createdAt: Date | null,
-    //     start: Date | null,
-    //     end: Date | null
-    //   ) => {
-    //     if (!createdAt) return false;
-    //     if (start && end) return createdAt >= start && createdAt <= end;
-    //     if (start) return createdAt >= start;
-    //     if (end) return createdAt <= end;
-    //     return true;
-    //   };
-
-    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
-
-    //   return (
-    //     (!filters.purordno ||
-    //       purordno.includes(filters.purordno.toLowerCase())) &&
-    //     statusMatches &&
-    //     frommillingMatches &&
-    //     dateRangeMatches &&
-    //     (searchTerm === "" || purordnoMatches)
-    //   );
-    // });
   }, [purchases]);
 
   const filteredTransactionItems = useMemo(() => {
@@ -1380,7 +1266,12 @@ export default function Component() {
                           <TableHead>Status</TableHead>
                           <TableHead>From Milling</TableHead>
                           <TableHead>Total Amount</TableHead>
-                          <TableHead>Created at</TableHead>
+                          <TableHead>Created by</TableHead>
+                          {canAccessButton(ROLES.ADMIN) && (
+                            <>
+                              <TableHead>Created at</TableHead>
+                            </>
+                          )}
                           {canAccessButton(ROLES.ADMIN) && (
                             <>
                               <TableHead>Last Modify by</TableHead>
@@ -1418,6 +1309,15 @@ export default function Component() {
                               <TableCell>
                                 {formatPrice(purchase.totalamount ?? 0)}
                               </TableCell>
+                              {canAccessButton(ROLES.ADMIN) && (
+                                <>
+                                  <TableCell>
+                                    {purchase.createdbyuser
+                                      ? `${purchase.createdbyuser.firstname} ${purchase.createdbyuser.lastname}`
+                                      : "N/A"}
+                                  </TableCell>
+                                </>
+                              )}
                               <TableCell>
                                 {purchase.createdat
                                   ? new Date(
@@ -1434,8 +1334,8 @@ export default function Component() {
                               {canAccessButton(ROLES.ADMIN) && (
                                 <>
                                   <TableCell>
-                                    {purchase.User
-                                      ? `${purchase.User.firstname} ${purchase.User.lastname}`
+                                    {purchase.lastmodifiedbyuser
+                                      ? `${purchase.lastmodifiedbyuser.firstname} ${purchase.lastmodifiedbyuser.lastname}`
                                       : "N/A"}
                                   </TableCell>
                                   <TableCell>
@@ -1576,7 +1476,7 @@ export default function Component() {
                                 <TableHead>Item Type</TableHead>
                                 <TableHead>Sack Weight</TableHead>
                                 <TableHead>Unit of Measurement</TableHead>
-                                <TableHead>Measurement Value</TableHead>
+                                <TableHead>Stock</TableHead>
                                 <TableHead>Unit Price</TableHead>
                                 <TableHead>Total Amount</TableHead>
                                 {canAccessButton(ROLES.ADMIN) && (
@@ -1593,10 +1493,10 @@ export default function Component() {
                                     (purchaseItem, index: number) => (
                                       <TableRow key={index}>
                                         <TableCell>
-                                          {purchaseItem.Item.name}
+                                          {purchaseItem.Item.itemname}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.type}
+                                          {purchaseItem.itemtype}
                                         </TableCell>
                                         <TableCell>
                                           {purchaseItem.sackweight}
@@ -1693,56 +1593,20 @@ export default function Component() {
                           <div className="space-y-2">
                             <FormField
                               control={formPurchaseItemOnly.control}
-                              name={`Item.name`}
+                              name={`Item.itemname`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel htmlFor="name">
+                                  <FormLabel htmlFor="itemname">
                                     Item Name
                                   </FormLabel>
                                   <FormControl>
                                     <Input
                                       {...field}
-                                      id="name"
+                                      id="itemname"
                                       type="text"
-                                      // value={
-                                      //   itemInputValue ||
-                                      //   formPurchaseItemOnly.getValues(
-                                      //     "Item.name"
-                                      //   )
-                                      // }
-                                      // onChange={(e) => {
-                                      //   handleFormItemInputChange(e);
-                                      //   field.onChange(e); // Call the original onChange
-                                      // }}
-                                      // onFocus={() => {
-                                      //   setItemFormDropdownVisible(
-                                      //     itemInputValue.length > 0
-                                      //   );
-                                      // }}
                                     />
                                   </FormControl>
                                   <FormMessage />
-                                  {/* {isItemFormDropdownVisible &&
-                                    itemInputValue.length > 0 && (
-                                      <div
-                                        ref={dropdownRefItem} // Attach ref to the dropdown
-                                        className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                                      >
-                                        {itemFormSuggestions.map((item) => (
-                                          <div
-                                            key={item}
-                                            className="p-2 cursor-pointer hover:bg-gray-200"
-                                            onClick={() =>
-                                              handleFormTransactionItemClick(
-                                                item
-                                              )
-                                            }
-                                          >
-                                            {item}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )} */}
                                 </FormItem>
                               )}
                             />
@@ -1750,10 +1614,10 @@ export default function Component() {
                           <div className="space-y-2">
                             <FormField
                               control={formPurchaseItemOnly.control}
-                              name="Item.type"
+                              name="Item.itemtype"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel htmlFor="type">
+                                  <FormLabel htmlFor="itemtype">
                                     Item Type
                                   </FormLabel>
                                   <FormControl>
@@ -1859,9 +1723,7 @@ export default function Component() {
                               name="stock"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel htmlFor="stock">
-                                    Measurement Value
-                                  </FormLabel>
+                                  <FormLabel htmlFor="stock">Stock</FormLabel>
                                   <FormControl>
                                     <Input
                                       {...field}
@@ -1914,9 +1776,9 @@ export default function Component() {
                       </AlertDialogTitle>
                       <AlertDialogDescription>
                         This action cannot be undone. This will delete the
-                        purchased item {purchaseItemToDelete.Item.name} from the
-                        Supplier. Please confirm you want to proceed with this
-                        action.
+                        purchased item {purchaseItemToDelete.Item.itemname} from
+                        the Supplier. Please confirm you want to proceed with
+                        this action.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -2096,16 +1958,16 @@ export default function Component() {
                                   <div className="space-y-2">
                                     <FormField
                                       control={form.control}
-                                      name={`TransactionItem.${index}.Item.name`}
+                                      name={`TransactionItem.${index}.Item.itemname`}
                                       render={({ field }) => (
                                         <FormItem>
-                                          <FormLabel htmlFor="name">
+                                          <FormLabel htmlFor="itemname">
                                             Item Name
                                           </FormLabel>
                                           <FormControl>
                                             <Input
                                               {...field}
-                                              id="name"
+                                              id="itemname"
                                               type="text"
                                               placeholder="Enter item name"
                                             />
@@ -2118,10 +1980,10 @@ export default function Component() {
                                   <div className="space-y-2">
                                     <FormField
                                       control={form.control}
-                                      name={`TransactionItem.${index}.Item.type`}
+                                      name={`TransactionItem.${index}.Item.itemtype`}
                                       render={({ field }) => (
                                         <FormItem>
-                                          <FormLabel htmlFor="type">
+                                          <FormLabel htmlFor="itemtype">
                                             Item Type
                                           </FormLabel>
                                           <FormControl>
@@ -2228,7 +2090,7 @@ export default function Component() {
                                       render={({ field }) => (
                                         <FormItem>
                                           <FormLabel htmlFor="stock">
-                                            Measurement Value
+                                            Stock
                                           </FormLabel>
                                           <FormControl>
                                             <Input
@@ -2277,11 +2139,11 @@ export default function Component() {
                               <Button
                                 onClick={() =>
                                   append({
-                                    type: "palay",
+                                    itemtype: "palay",
                                     sackweight: "bag25kg",
                                     Item: {
-                                      type: "palay",
-                                      name: "",
+                                      itemtype: "palay",
+                                      itemname: "",
                                       sackweight: "bag25kg",
                                       itemid: undefined,
                                     },
@@ -2491,7 +2353,7 @@ ${
                         <TableHead>Item Type</TableHead>
                         <TableHead>Sack Weight</TableHead>
                         <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Measurement Value</TableHead>
+                        <TableHead>Stock</TableHead>
                         <TableHead>Unit Price</TableHead>
                         <TableHead>Total Amount</TableHead>
                       </TableRow>
@@ -2515,8 +2377,8 @@ ${
                               {purchaseItem.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{purchaseItem.Item.name}</TableCell>
-                          <TableCell>{purchaseItem.Item.type}</TableCell>
+                          <TableCell>{purchaseItem.Item.itemname}</TableCell>
+                          <TableCell>{purchaseItem.Item.itemtype}</TableCell>
                           <TableCell>{purchaseItem.sackweight}</TableCell>
                           <TableCell>
                             {purchaseItem.unitofmeasurement}

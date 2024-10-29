@@ -46,12 +46,12 @@ interface CombinedTransactionItem {
   frommilling: boolean;
   status: "pending" | "paid" | "cancelled";
   Item: {
-    type: "bigas" | "palay" | "resico";
-    name: string;
+    itemtype: "bigas" | "palay" | "resico";
+    itemname: string;
     sackweight: "bag25kg" | "cavan50kg";
     itemid?: number;
   };
-  type: "purchases" | "sales";
+  transactiontype: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
   stock?: number;
@@ -336,8 +336,8 @@ export function PurchaseTable({
                   Sales Created by:
                 </div>
                 <div>
-                  {selectedTransaction.User
-                    ? `${selectedTransaction.User.firstname} ${selectedTransaction.User.lastname}`
+                  {selectedTransaction.createdbyuser
+                    ? `${selectedTransaction.createdbyuser.firstname} ${selectedTransaction.createdbyuser.lastname}`
                     : "N/A"}
                 </div>
               </div>
@@ -351,7 +351,7 @@ export function PurchaseTable({
                           <TableHead>Item Type</TableHead>
                           <TableHead>Sack Weight</TableHead>
                           <TableHead>Unit of Measurement</TableHead>
-                          <TableHead>Measurement Value</TableHead>
+                          <TableHead>Stock</TableHead>
                           <TableHead>Unit Price</TableHead>
                           <TableHead>Total Amount</TableHead>
                         </TableRow>
@@ -360,8 +360,8 @@ export function PurchaseTable({
                         {selectedTransaction.TransactionItem.map(
                           (item, index) => (
                             <TableRow key={index}>
-                              <TableCell>{item.Item.name}</TableCell>
-                              <TableCell>{item.Item.type}</TableCell>
+                              <TableCell>{item.Item.itemname}</TableCell>
+                              <TableCell>{item.Item.itemtype}</TableCell>
                               <TableCell>{item.Item.sackweight}</TableCell>
                               <TableCell>{item.unitofmeasurement}</TableCell>
                               <TableCell>{item.stock}</TableCell>
@@ -535,7 +535,7 @@ export function PurchaseTable({
                   <TableHead>Item Type</TableHead>
                   <TableHead>Sack Weight</TableHead>
                   <TableHead>Unit of Measurement</TableHead>
-                  <TableHead>Measurement Value</TableHead>
+                  <TableHead>Stock</TableHead>
                   <TableHead>Unit Price</TableHead>
                   <TableHead>Total Amount</TableHead>
                   <TableHead>Actions</TableHead>
@@ -564,8 +564,8 @@ export function PurchaseTable({
                         {purchaseItem.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{purchaseItem.Item.name}</TableCell>
-                    <TableCell>{purchaseItem.Item.type}</TableCell>
+                    <TableCell>{purchaseItem.Item.itemname}</TableCell>
+                    <TableCell>{purchaseItem.Item.itemtype}</TableCell>
                     <TableCell>{purchaseItem.sackweight}</TableCell>
                     <TableCell>{purchaseItem.unitofmeasurement}</TableCell>
                     <TableCell>{purchaseItem.stock}</TableCell>

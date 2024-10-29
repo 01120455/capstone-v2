@@ -10,17 +10,13 @@ export async function GET(req: NextRequest) {
       },
       select: {
         itemid: true,
-        name: true,
-        type: true,
+        itemname: true,
+        itemtype: true,
         sackweight: true,
         unitofmeasurement: true,
         stock: true,
         unitprice: true,
-        itemimage: {
-          select: {
-            imagepath: true,
-          },
-        },
+        imagepath: true,
         User: {
           select: {
             userid: true,

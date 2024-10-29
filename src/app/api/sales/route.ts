@@ -64,12 +64,12 @@ export const POST = async (req: NextRequest) => {
       const items: any[] = [];
       let index = 0;
 
-      while (formData.has(`TransactionItem[${index}][item][name]`)) {
+      while (formData.has(`TransactionItem[${index}][item][itemname]`)) {
         const name = formData.get(
-          `TransactionItem[${index}][item][name]`
+          `TransactionItem[${index}][item][itemname]`
         ) as string;
         const typeString = formData.get(
-          `TransactionItem[${index}][item][type]`
+          `TransactionItem[${index}][item][itemtype]`
         ) as string;
         const sackweightString = formData.get(
           `TransactionItem[${index}][item][sackweight]`
@@ -100,7 +100,7 @@ export const POST = async (req: NextRequest) => {
         let itemId;
         let itemUnitOfMeasurement;
         const existingItem = await tx.item.findFirst({
-          where: { name, type },
+          where: { itemname: name, itemtype: type },
         });
 
         if (existingItem) {
@@ -133,7 +133,7 @@ export const POST = async (req: NextRequest) => {
 
         items.push({
           itemid: itemId,
-          type: type,
+          itemtype: type,
           sackweight: sackweight,
           unitofmeasurement: itemUnitOfMeasurement,
           stock: stock,
@@ -161,8 +161,9 @@ export const POST = async (req: NextRequest) => {
 
       const newPurchase = await tx.transaction.create({
         data: {
+          createdby: userid,
           lastmodifiedby: userid,
-          type: "sales",
+          transactiontype: "sales",
           documentnumberid: newInvoice.documentnumberid,
           status,
           walkin,

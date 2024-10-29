@@ -56,12 +56,12 @@ export const POST = async (req: NextRequest) => {
         const items: any[] = [];
         let index = 0;
 
-        while (formData.has(`TransactionItem[${index}][item][name]`)) {
+        while (formData.has(`TransactionItem[${index}][item][itemname]`)) {
           const name = formData.get(
-            `TransactionItem[${index}][item][name]`
+            `TransactionItem[${index}][item][itemname]`
           ) as string;
           const typeString = formData.get(
-            `TransactionItem[${index}][item][type]`
+            `TransactionItem[${index}][item][itemtype]`
           ) as string;
           const sackweightString = formData.get(
             `TransactionItem[${index}][item][sackweight]`
@@ -100,7 +100,7 @@ export const POST = async (req: NextRequest) => {
 
           let itemId;
           const existingItem = await tx.item.findFirst({
-            where: { name, type, unitofmeasurement },
+            where: { itemname: name, itemtype: type, unitofmeasurement },
           });
 
           if (existingItem) {
@@ -116,8 +116,8 @@ export const POST = async (req: NextRequest) => {
           } else {
             const newItem = await tx.item.create({
               data: {
-                name,
-                type,
+                itemname: name,
+                itemtype: type,
                 sackweight,
                 unitofmeasurement,
                 stock: stock,
@@ -136,7 +136,7 @@ export const POST = async (req: NextRequest) => {
 
           items.push({
             itemid: itemId,
-            type: type,
+            itemtype: type,
             sackweight: sackweight,
             unitofmeasurement: unitofmeasurement,
             stock: stock,
@@ -165,7 +165,8 @@ export const POST = async (req: NextRequest) => {
         const newPurchase = await tx.transaction.create({
           data: {
             lastmodifiedby: userid,
-            type: "purchase",
+            createdby: userid,
+            transactiontype: "purchase",
             documentnumberid: newPurchaseOrderNo.documentnumberid,
             status,
             walkin,
@@ -206,11 +207,17 @@ export async function GET(req: NextRequest) {
   try {
     const transaction = await prisma.transaction.findMany({
       where: {
-        type: "purchase",
+        transactiontype: "purchase",
         recentdelete: false,
       },
       include: {
-        User: {
+        lastmodifiedbyuser: {
+          select: {
+            firstname: true,
+            lastname: true,
+          },
+        },
+        createdbyuser: {
           select: {
             firstname: true,
             lastname: true,
@@ -229,13 +236,13 @@ export async function GET(req: NextRequest) {
             transactionid: true,
             Item: {
               select: {
-                name: true,
-                type: true,
+                itemname: true,
+                itemtype: true,
                 sackweight: true,
               },
             },
             transactionitemid: true,
-            type: true,
+            itemtype: true,
             sackweight: true,
             unitofmeasurement: true,
             stock: true,

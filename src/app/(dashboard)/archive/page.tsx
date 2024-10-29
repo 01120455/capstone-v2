@@ -54,12 +54,12 @@ interface CombinedTransactionItem {
   frommilling: boolean;
   status: "pending" | "paid" | "cancelled";
   Item: {
-    type: "bigas" | "palay" | "resico";
-    name: string;
+    itemtype: "bigas" | "palay" | "resico";
+    itemname: string;
     sackweight: "bag25kg" | "cavan50kg";
     itemid?: number;
   };
-  type: "purchases" | "sales";
+  transactiontype: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
   stock?: number;
@@ -587,7 +587,7 @@ const useTransactionItems = () => {
           transactionMap.set(transaction.transactionid, {
             documentNumber: transaction.DocumentNumber?.documentnumber,
             frommilling: transaction.frommilling,
-            type: transaction.type,
+            transactiontype: transaction.transactiontype,
             status: transaction.status,
           });
         });
@@ -600,7 +600,7 @@ const useTransactionItems = () => {
               ...item,
               documentNumber: transactionInfo.documentNumber,
               frommilling: transactionInfo.frommilling || false,
-              type: transactionInfo.type || "otherType",
+              transactiontype: transactionInfo.transactiontype || "otherType",
               status: transactionInfo.status || "otherStatus",
             };
           })
@@ -821,7 +821,7 @@ export default function ArchivePage() {
         refreshItems();
         toast.success(
           `Deleted item ${""} ${
-            items?.find((u) => u.itemid === id)?.name
+            items?.find((u) => u.itemid === id)?.itemname
           } ${""} has been restored`,
           {
             description: "You have successfully restored item data.",
@@ -846,7 +846,7 @@ export default function ArchivePage() {
         refreshTransactionItems();
         toast.success(
           `Deleted Purchase Item ${""} ${
-            transactionItem?.find((u) => u.Item.itemid === id)?.Item.name
+            transactionItem?.find((u) => u.Item.itemid === id)?.Item.itemname
           } ${""} has been restored`,
           {
             description: "You have successfully restored Purchase Item data.",

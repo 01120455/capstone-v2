@@ -47,8 +47,8 @@ export default function Sales() {
   const [cart, setCart] = useState<
     {
       id: number;
-      name: string;
-      type: "bigas" | "palay" | "resico";
+      itemname: string;
+      itemtype: "bigas" | "palay" | "resico";
       sackweight: "bag25kg" | "cavan50kg";
       unitofmeasurement: "quantity" | "weight";
       price: number;
@@ -61,7 +61,7 @@ export default function Sales() {
     resolver: zodResolver(salesTransactionSchema),
     defaultValues: {
       transactionid: 0,
-      type: "sales",
+      transactiontype: "sales",
       status: "pending",
       walkin: false,
       frommilling: false,
@@ -73,8 +73,8 @@ export default function Sales() {
         transactionitemid: 0,
         Item: {
           itemid: item.id,
-          name: item.name,
-          type: item.type,
+          itemname: item.itemname,
+          itemtype: item.itemtype,
           sackweight: item.sackweight,
         },
         unitofmeasurement: item.unitofmeasurement,
@@ -122,8 +122,8 @@ export default function Sales() {
         transactionitemid: 0,
         Item: {
           itemid: item.id,
-          name: item.name,
-          type: item.type,
+          itemname: item.itemname,
+          itemtype: item.itemtype,
           sackweight: item.sackweight,
           unitofmeasurement: item.unitofmeasurement,
         },
@@ -145,7 +145,6 @@ export default function Sales() {
       );
 
       if (existingItemIndex > -1) {
-        // Create a new cart array to ensure state is updated correctly
         return prevCart.map((cartItem, index) => {
           if (index === existingItemIndex) {
             return { ...cartItem, quantity: cartItem.quantity + quantity };
@@ -156,13 +155,13 @@ export default function Sales() {
 
       const cartItem = {
         id: item.itemid,
-        name: item.name,
-        type: item.type,
+        itemname: item.itemname,
+        itemtype: item.itemtype,
         sackweight: item.sackweight,
         unitofmeasurement: item.unitofmeasurement,
         price: item.unitprice,
         quantity,
-        imagepath: item.itemimage[0]?.imagepath ?? "",
+        imagepath: item?.imagepath ?? "",
       };
 
       return [...prevCart, cartItem];
@@ -290,7 +289,7 @@ export default function Sales() {
     console.log("Form Values:", values);
     const formData = new FormData();
 
-    formData.append("type", values.type);
+    formData.append("type", values.transactiontype);
     formData.append("status", values.status);
     formData.append("walkin", values.walkin.toString());
     formData.append("frommilling", values.frommilling.toString());
@@ -301,8 +300,14 @@ export default function Sales() {
     );
 
     values.TransactionItem?.forEach((item, index) => {
-      formData.append(`TransactionItem[${index}][item][name]`, item.Item.name);
-      formData.append(`TransactionItem[${index}][item][type]`, item.Item.type);
+      formData.append(
+        `TransactionItem[${index}][item][itemname]`,
+        item.Item.itemname
+      );
+      formData.append(
+        `TransactionItem[${index}][item][itemtype]`,
+        item.Item.itemtype
+      );
       formData.append(
         `TransactionItem[${index}][item][sackweight]`,
         item.Item.sackweight
@@ -365,9 +370,7 @@ export default function Sales() {
                       >
                         <div className="flex items-center justify-center">
                           <Image
-                            src={
-                              item.itemimage[0]?.imagepath ?? "/no-image.jpg"
-                            }
+                            src={item?.imagepath ?? "/no-image.jpg"}
                             alt="Product Image"
                             width={250}
                             height={250}
@@ -375,14 +378,14 @@ export default function Sales() {
                           />
                         </div>
                         <h3 className="text-lg font-semibold mb-2">
-                          {item.name}
+                          {item.itemname}
                         </h3>
                         <div className="flex flex-row justify-between">
                           <p className="text-gray-500 mb-4">
                             {formatPrice(item.unitprice)}
                           </p>
                           <p className="text-gray-500 mb-4 text-right">
-                            {item.type === "bigas" ? "Rice" : "Palay"}
+                            {item.itemtype === "bigas" ? "Rice" : "Palay"}
                           </p>
                           {item.unitofmeasurement === "quantity" && (
                             <p className="text-gray-500 mb-4 text-right">
@@ -507,7 +510,7 @@ export default function Sales() {
                         <TableBody>
                           {cart.map((item, index) => (
                             <TableRow key={index}>
-                              <TableCell>{item.name}</TableCell>
+                              <TableCell>{item.itemname}</TableCell>
                               <TableCell>
                                 <Input
                                   type="number"

@@ -125,7 +125,7 @@ export function SalesTable({
                         <TableHead>Item Type</TableHead>
                         <TableHead>Sack Weight</TableHead>
                         <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Measurement Value</TableHead>
+                        <TableHead>Stock</TableHead>
                         <TableHead>Unit Price</TableHead>
                         <TableHead>Total Amount</TableHead>
                       </TableRow>

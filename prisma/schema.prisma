@@ -8,21 +8,23 @@ datasource db {
 }
 
 model User {
-  userid          Int               @id @default(autoincrement())
-  imagepath       String?
-  firstname       String            @db.VarChar(25)
-  middlename      String?           @db.VarChar(25)
-  lastname        String            @db.VarChar(25)
-  role            Role
-  status          Status
-  username        String            @unique @db.VarChar(50)
-  password        String
-  recentdelete    Boolean           @default(false)
-  createdat       DateTime          @default(now())
-  Item            Item[]
-  TransactionItem TransactionItem[]
-  Transaction     Transaction[]
+  userid              Int               @id @default(autoincrement())
+  imagepath           String?
+  firstname           String            @db.VarChar(25)
+  middlename          String?           @db.VarChar(25)
+  lastname            String            @db.VarChar(25)
+  role                Role
+  status              Status
+  username            String            @unique @db.VarChar(50)
+  password            String
+  recentdelete        Boolean           @default(false)
+  createdat          DateTime          @default(now())
+  Item                Item[]
+  TransactionItem     TransactionItem[]
+  Transaction         Transaction[]     @relation("usercreatedtransactions")
+  ModifiedTransactions Transaction[]     @relation("usermodifiedtransactions")
 }
+
 
 model DocumentNumber {
   documentnumberid Int           @id @default(autoincrement())
@@ -33,18 +35,20 @@ model DocumentNumber {
 
 model Transaction {
   transactionid    Int               @id @default(autoincrement())
-  type             TransactionType
+  transactiontype             TransactionType
   status           TransactionStatus
   walkin           Boolean           @default(false)
   frommilling      Boolean           @default(false)
   totalamount      Float?
+  createdby       Int
   createdat        DateTime          @default(now())
   lastmodifiedby   Int?
   lastmodifiedat   DateTime?         @updatedAt
   documentnumberid Int?
   recentdelete     Boolean           @default(false)
   DocumentNumber   DocumentNumber?   @relation(fields: [documentnumberid], references: [documentnumberid])
-  User             User?             @relation(fields: [lastmodifiedby], references: [userid])
+  createdbyuser    User               @relation("usercreatedtransactions", fields: [createdby], references: [userid])
+  lastmodifiedbyuser User?            @relation("usermodifiedtransactions", fields: [lastmodifiedby], references: [userid])
   TransactionItem  TransactionItem[]
 }
 
@@ -52,11 +56,11 @@ model TransactionItem {
   transactionitemid Int                   @id @default(autoincrement())
   transactionid     Int
   itemid            Int
-  type              ItemType
+  itemtype              ItemType
   sackweight        SackWeightType
   unitofmeasurement UnitofMeasurementType
   stock             Float
-  unitprice         Float?
+  unitprice         Float
   totalamount       Float
   lastmodifiedby    Int?
   lastmodifiedat    DateTime?             @updatedAt
@@ -68,25 +72,18 @@ model TransactionItem {
 
 model Item {
   itemid            Int                   @id @default(autoincrement())
-  name              String?               @db.VarChar(50)
-  type              ItemType
+  itemname              String               @db.VarChar(50)
+  itemtype              ItemType
   sackweight        SackWeightType
   unitofmeasurement UnitofMeasurementType
   stock             Float
   unitprice         Float?
+  imagepath       String?
   lastmodifiedby    Int?
   lastmodifiedat    DateTime?             @updatedAt
   recentdelete      Boolean               @default(false)
   User              User?                 @relation(fields: [lastmodifiedby], references: [userid])
-  itemimage         ItemImage[]
   Item              TransactionItem[]
-}
-
-model ItemImage {
-  imageid   Int    @id @default(autoincrement())
-  itemid    Int
-  imagepath String
-  Item      Item   @relation(fields: [itemid], references: [itemid])
 }
 
 enum SackWeightType {

@@ -64,12 +64,12 @@ interface CombinedTransactionItem {
   frommilling: boolean;
   status: "pending" | "paid" | "cancelled";
   Item: {
-    type: "bigas" | "palay" | "resico";
-    name: string;
+    itemtype: "bigas" | "palay" | "resico";
+    itemname: string;
     sackweight: "bag25kg" | "cavan50kg";
     itemid?: number;
   };
-  type: "purchases" | "sales";
+  transactiontype: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
   stock?: number;
@@ -196,12 +196,6 @@ const usePurchases = () => {
     };
   }, [filters.purordno, filters.name, currentPage, fetchPurchases]);
 
-  // console.log(filters);
-
-  // useEffect(() => {
-  //   fetchPurchases(currentPage);
-  // }, [fetchPurchases, currentPage]);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -246,7 +240,6 @@ const useTransactionItems = () => {
           page: page.toString(),
         });
 
-        // Add filters to params
         if (filters2.purordno) {
           params.append("documentnumber", filters2.purordno);
         }
@@ -263,7 +256,6 @@ const useTransactionItems = () => {
           params.append("enddate", filters2.dateRange.end);
         }
 
-        // Fetch filtered transactions
         const transactionsResponse = await fetch(
           `/api/suppliertransaction/suppliertransactionpagination?${params}`
         );
@@ -272,7 +264,6 @@ const useTransactionItems = () => {
         }
         const transactions: any[] = await transactionsResponse.json();
 
-        // Fetch all transaction items
         const transactionItemsResponse = await fetch("/api/transactionitem");
         if (!transactionItemsResponse.ok) {
           throw new Error(
@@ -282,18 +273,16 @@ const useTransactionItems = () => {
         const allTransactionItems: TransactionItem[] =
           await transactionItemsResponse.json();
 
-        // Create transaction map for quick lookups
         const transactionMap = new Map<number, any>();
         transactions.forEach((transaction) => {
           transactionMap.set(transaction.transactionid, {
             documentNumber: transaction.DocumentNumber?.documentnumber,
             frommilling: transaction.frommilling,
-            type: transaction.type,
+            transactiontype: transaction.transactiontype,
             status: transaction.status,
           });
         });
 
-        // Combine and filter data
         const combinedData: CombinedTransactionItem[] = allTransactionItems
           .map((item) => {
             const transactionInfo =
@@ -302,16 +291,14 @@ const useTransactionItems = () => {
               ...item,
               documentNumber: transactionInfo.documentNumber,
               frommilling: transactionInfo.frommilling || false,
-              type: transactionInfo.type || "otherType",
+              transactiontype: transactionInfo.transactiontype || "otherType",
               status: transactionInfo.status || "otherStatus",
             };
           })
           .filter((item) => item.documentNumber !== undefined);
 
-        // Set state
         setTransactionItem(combinedData);
 
-        // Fetch total count for pagination
         const totalResponse = await fetch(
           `/api/suppliertransaction/suppliertransactionpagination`
         );
@@ -333,7 +320,7 @@ const useTransactionItems = () => {
 
     const timer = setTimeout(() => {
       fetchData();
-    }, 2000); // Debounce time
+    }, 2000); 
 
     return () => {
       clearTimeout(timer);
@@ -393,31 +380,12 @@ export default function Component() {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, purordno: value }));
     setFilters2((prev) => ({ ...prev, purordno: value }));
-    // setPurchaseOrderDropdownVisible(e.target.value.length > 0);
-
-    // const filtered = purchases
-    //   .map((p) => p.DocumentNumber?.documentnumber) // Use optional chaining to avoid undefined
-    //   .filter(
-    //     (purordno): purordno is string =>
-    //       purordno !== undefined &&
-    //       purordno.toLowerCase().includes(value.toLowerCase())
-    //   );
-    // setPurchaseOrderSuggestions(filtered);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
     setFilters2((prev) => ({ ...prev, name: value }));
-    // setItemDropdownVisible(e.target.value.length > 0);
-
-    // const filtered = purchases
-    //   .flatMap((p) => p.TransactionItem.map((item) => item?.Item?.name)) // Adjust according to your data structure
-    //   .filter((itemName) =>
-    //     itemName?.toLowerCase().includes(value.toLowerCase())
-    //   );
-
-    // setItemNameSuggestions(Array.from(new Set(filtered)));
   };
 
   const clearAllFilters = () => {
@@ -447,28 +415,6 @@ export default function Component() {
               value={filters.purordno}
               onChange={handlePurchaseOrderChange}
             />
-            {/* {isPurchaseOrderDropdownVisible &&
-              purchaseOrderSuggestions.length > 0 && (
-                <div
-                  ref={dropdownRefPurchaseOrder} // Attach ref to the dropdown
-                  className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-                >
-                  {purchaseOrderSuggestions.map((purordno) => (
-                    <div
-                      key={purordno}
-                      className="p-2 cursor-pointer hover:bg-gray-200"
-                      onClick={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          purordno: purordno,
-                        }))
-                      }
-                    >
-                      {purordno}
-                    </div>
-                  ))}
-                </div>
-              )} */}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="item-name">Item Name</Label>
@@ -479,27 +425,6 @@ export default function Component() {
               value={filters.name}
               onChange={handleItemNameChange}
             />
-            {/* {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
-              <div
-                ref={dropdownRefItem} // Attach ref to the dropdown
-                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-              >
-                {itemNameSuggestions.map((item) => (
-                  <div
-                    key={item}
-                    className="p-2 cursor-pointer hover:bg-gray-200"
-                    onClick={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        name: item,
-                      }))
-                    }
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            )} */}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="frommilling">From Milling</Label>
@@ -608,46 +533,6 @@ export default function Component() {
 
   const filteredTransactionItems = useMemo(() => {
     return transactionItem;
-    // return transactionItem.filter((item) => {
-    //   const purordno = item.documentNumber?.toLowerCase() || "";
-    //   const statusMatches =
-    //     filters.status === "all" || item.status === filters.status;
-    //   const itemNameMatches = item.Item?.name
-    //     ? item.Item.name.toLowerCase().includes(filters.name.toLowerCase())
-    //     : false;
-
-    //   const createdAt = item.lastmodifiedat
-    //     ? new Date(item.lastmodifiedat)
-    //     : null;
-    //   const start = filters.dateRange.start
-    //     ? new Date(filters.dateRange.start)
-    //     : null;
-    //   const end = filters.dateRange.end
-    //     ? new Date(filters.dateRange.end)
-    //     : null;
-
-    //   const isWithinDateRange = (
-    //     createdAt: Date | null,
-    //     start: Date | null,
-    //     end: Date | null
-    //   ) => {
-    //     if (!createdAt) return false;
-    //     if (start && end) return createdAt >= start && createdAt <= end;
-    //     if (start) return createdAt >= start;
-    //     if (end) return createdAt <= end;
-    //     return true;
-    //   };
-
-    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
-
-    //   return (
-    //     (!filters.purordno ||
-    //       purordno.includes(filters.purordno.toLowerCase())) &&
-    //     statusMatches &&
-    //     itemNameMatches &&
-    //     dateRangeMatches
-    //   );
-    // });
   }, [transactionItem]);
 
   const canAccessButton = (role: String) => {
@@ -683,6 +568,14 @@ export default function Component() {
                   </div>
                   <div className="grid gap-1">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-1 p-2">
+                    <div className="font-medium text-muted-foreground">
+                        Created by:
+                      </div>
+                      <div>
+                        {selectedTransaction.createdbyuser
+                          ? `${selectedTransaction.createdbyuser.firstname} ${selectedTransaction.createdbyuser.lastname}`
+                          : "N/A"}
+                      </div>
                       <div className="font-medium text-muted-foreground">
                         Purchase Date:
                       </div>
@@ -703,8 +596,8 @@ export default function Component() {
                         Updated by:
                       </div>
                       <div>
-                        {selectedTransaction.User
-                          ? `${selectedTransaction.User.firstname} ${selectedTransaction.User.lastname}`
+                        {selectedTransaction.lastmodifiedbyuser
+                          ? `${selectedTransaction.lastmodifiedbyuser.firstname} ${selectedTransaction.lastmodifiedbyuser.lastname}`
                           : "N/A"}
                       </div>
                       <div className="font-medium text-muted-foreground">
@@ -738,7 +631,7 @@ export default function Component() {
                                 <TableHead>Item Type</TableHead>
                                 <TableHead>Sack Weight</TableHead>
                                 <TableHead>Unit of Measurement</TableHead>
-                                <TableHead>Measurement Value</TableHead>
+                                <TableHead>Stock</TableHead>
                                 {canAccessButton(
                                   ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                                 ) && (
@@ -753,8 +646,8 @@ export default function Component() {
                               {selectedTransaction.TransactionItem.map(
                                 (item, index) => (
                                   <TableRow key={index}>
-                                    <TableCell>{item.Item.name}</TableCell>
-                                    <TableCell>{item.type}</TableCell>
+                                    <TableCell>{item.Item.itemname}</TableCell>
+                                    <TableCell>{item.itemtype}</TableCell>
                                     <TableCell>{item.sackweight}</TableCell>
                                     <TableCell>
                                       {item.unitofmeasurement}
@@ -1024,7 +917,7 @@ export default function Component() {
                         <TableHead>Item Type</TableHead>
                         <TableHead>Sack Weight</TableHead>
                         <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Measurement Value</TableHead>
+                        <TableHead>Stock</TableHead>
                         {canAccessButton(
                           ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                         ) && (
@@ -1054,8 +947,8 @@ export default function Component() {
                               {purchaseItem.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{purchaseItem.Item.name}</TableCell>
-                          <TableCell>{purchaseItem.Item.type}</TableCell>
+                          <TableCell>{purchaseItem.Item.itemname}</TableCell>
+                          <TableCell>{purchaseItem.Item.itemtype}</TableCell>
                           <TableCell>{purchaseItem.sackweight}</TableCell>
                           <TableCell>
                             {purchaseItem.unitofmeasurement}

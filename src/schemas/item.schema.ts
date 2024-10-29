@@ -3,11 +3,11 @@ import { date, z } from "zod";
 
 export const item = z.object({
   itemid: z.coerce.number().optional(),
-  name: z
+  itemname: z
     .string({ required_error: "Name is required" })
     .min(1, { message: "Name is required" })
     .max(100, { message: "Name is too long" }),
-  type: z
+  itemtype: z
     .enum(["bigas", "palay", "resico"], {
       invalid_type_error: "Invalid Type Received",
     })
@@ -32,8 +32,8 @@ export const item = z.object({
 
 export const viewItem = z.object({
   itemid: z.number(),
-  name: z.string(),
-  type: z.enum(["bigas", "palay", "resico"]),
+  itemname: z.string(),
+  itemtype: z.enum(["bigas", "palay", "resico"]),
   sackweight: z.enum(["bag25kg", "cavan50kg"]),
   unitofmeasurement: z.enum(["quantity", "weight"]),
   stock: z.number().multipleOf(0.01),
@@ -45,11 +45,7 @@ export const viewItem = z.object({
     lastname: z.string(),
   }),
   lastmodifiedat: z.date().optional(),
-  itemimage: z.array(
-    z.object({
-      imagepath: z.string().optional(),
-    })
-  ),
+  imagepath: z.string().optional(),
 });
 
 export type AddItem = z.infer<typeof item>;

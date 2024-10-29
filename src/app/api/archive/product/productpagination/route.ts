@@ -41,11 +41,11 @@ export async function GET(req: NextRequest) {
   };
 
   if (nameFilter) {
-    whereClause.name = nameFilter;
+    whereClause.itemname = nameFilter;
   }
 
   if (typeFilter) {
-    whereClause.type = typeFilter;
+    whereClause.itemtype = typeFilter;
   }
 
   if (sackweightFilter) {
@@ -61,17 +61,13 @@ export async function GET(req: NextRequest) {
       where: whereClause,
       select: {
         itemid: true,
-        name: true,
-        type: true,
+        itemname: true,
+        itemtype: true,
         sackweight: true,
         unitofmeasurement: true,
         stock: true,
         unitprice: true,
-        itemimage: {
-          select: {
-            imagepath: true,
-          },
-        },
+        imagepath: true,
         User: {
           select: {
             userid: true,

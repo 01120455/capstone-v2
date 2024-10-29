@@ -3,7 +3,7 @@ import { date, z } from "zod";
 const salesTransactionSchema = z.object({
   transactionid: z.number().optional(),
   createdat: date().optional(),
-  type: z.enum(["purchase", "sales"], {
+  transactiontype: z.enum(["purchase", "sales"], {
     invalid_type_error: "Invalid Type Received",
   }),
   status: z.enum(["pending", "paid", "cancelled"], {
@@ -26,11 +26,11 @@ const salesTransactionSchema = z.object({
         transactionitemid: z.number().optional(),
         Item: z.object({
           itemid: z.number().optional(),
-          name: z
+          itemname: z
             .string()
             .min(1, "Name is required")
             .max(100, "Name is too long"),
-          type: z
+          itemtype: z
             .enum(["bigas", "palay", "resico"], {
               invalid_type_error: "Invalid Type Received",
             })
@@ -45,7 +45,7 @@ const salesTransactionSchema = z.object({
           .string()
           .min(1, "Unit of Measurement is required")
           .max(100, "Unit of Measurement is too long"),
-        stock: z.coerce.number().min(0, "Measurement value cannot be negative"),
+        stock: z.coerce.number().min(0, "Stock cannot be negative"),
         unitprice: z.coerce
           .number()
           .multipleOf(0.01)

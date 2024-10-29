@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     // Build the where clause
     const whereClause: any = {
       recentdelete: true,
-      type: "purchase",
+      transactiontype: "purchase",
     };
 
     if (documentNumberFilter) {
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       whereClause.TransactionItem = {
         some: {
           Item: {
-            name: itemNameFilter,
+            itemname: itemNameFilter,
           },
         },
       };
@@ -90,7 +90,13 @@ export async function GET(req: NextRequest) {
     const purchases = await prisma.transaction.findMany({
       where: whereClause,
       include: {
-        User: {
+        lastmodifiedbyuser: {
+          select: {
+            firstname: true,
+            lastname: true,
+          },
+        },
+        createdbyuser: {
           select: {
             firstname: true,
             lastname: true,
@@ -108,8 +114,8 @@ export async function GET(req: NextRequest) {
           include: {
             Item: {
               select: {
-                name: true,
-                type: true,
+                itemname: true,
+                itemtype: true,
                 sackweight: true,
               },
             },

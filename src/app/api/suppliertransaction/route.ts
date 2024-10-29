@@ -11,7 +11,13 @@ export async function GET(req: NextRequest) {
         recentdelete: false,
       },
       include: {
-        User: {
+        createdbyuser: {
+          select: {
+            firstname: true,
+            lastname: true,
+          },
+        },
+        lastmodifiedbyuser: {
           select: {
             firstname: true,
             lastname: true,
@@ -30,8 +36,8 @@ export async function GET(req: NextRequest) {
             transactionid: true,
             Item: {
               select: {
-                name: true,
-                type: true,
+                itemname: true,
+                itemtype: true,
                 sackweight: true,
               },
             },

@@ -44,8 +44,8 @@ export const POST = async (req: NextRequest) => {
     const userid = session.user.userid;
 
     const formData = await req.formData();
-    const name = formData.get("name") as string;
-    const typeString = formData.get("type") as string;
+    const name = formData.get("itemname") as string;
+    const typeString = formData.get("itemtype") as string;
     const sackweightString = formData.get("sackweight") as string;
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
     const stock = parseFloat(formData.get("stock") as string);
@@ -146,8 +146,8 @@ export const POST = async (req: NextRequest) => {
     const [existingItem, result] = await prisma.$transaction(async (tx) => {
       const existingItem = await tx.item.findFirst({
         where: {
-          name,
-          type,
+          itemname: name,
+          itemtype: type,
           unitofmeasurement,
           sackweight,
         },
@@ -164,40 +164,21 @@ export const POST = async (req: NextRequest) => {
             unitprice,
             lastmodifiedby: userid,
             recentdelete: false,
-            itemimage: fileUrl
-              ? {
-                  deleteMany: {},
-                  create: {
-                    imagepath: fileUrl,
-                  },
-                }
-              : undefined,
-          },
-          include: {
-            itemimage: true,
+            imagepath: fileUrl,
           },
         });
         return [existingItem, updatedItem];
       } else {
         const newItem = await tx.item.create({
           data: {
-            name,
-            type,
+            itemname: name,
+            itemtype: type,
             sackweight,
             unitofmeasurement,
             stock,
             unitprice,
             lastmodifiedby: userid,
-            itemimage: fileUrl
-              ? {
-                  create: {
-                    imagepath: fileUrl,
-                  },
-                }
-              : undefined,
-          },
-          include: {
-            itemimage: true,
+            imagepath: fileUrl,
           },
         });
         return [null, newItem];
@@ -227,17 +208,13 @@ export async function GET(req: NextRequest) {
       },
       select: {
         itemid: true,
-        name: true,
-        type: true,
+        itemname: true,
+        itemtype: true,
         sackweight: true,
         unitofmeasurement: true,
         stock: true,
         unitprice: true,
-        itemimage: {
-          select: {
-            imagepath: true,
-          },
-        },
+        imagepath: true,
         User: {
           select: {
             userid: true,
@@ -558,7 +535,6 @@ export const PUT = async (req: NextRequest) => {
       async (tx) => {
         const existingItem = await tx.item.findUnique({
           where: { itemid: itemId },
-          include: { itemimage: true },
         });
 
         if (!existingItem) {
@@ -601,11 +577,11 @@ export const PUT = async (req: NextRequest) => {
           await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
           fileUrl = `${relativeUploadDir}/${filename}`;
 
-          if (existingItem.itemimage.length > 0) {
+          if (existingItem.imagepath) {
             const oldImagePath = join(
               process.cwd(),
               "public",
-              existingItem.itemimage[0].imagepath
+              existingItem.imagepath
             );
             try {
               await unlink(oldImagePath);
@@ -618,24 +594,14 @@ export const PUT = async (req: NextRequest) => {
         const updatedItem = await tx.item.update({
           where: { itemid: itemId },
           data: {
-            name,
-            type,
+            itemname: name,
+            itemtype: type,
             sackweight,
             unitofmeasurement,
             stock,
             unitprice,
             lastmodifiedby: userid,
-            itemimage: fileUrl
-              ? {
-                  deleteMany: {}, // delete all existing images
-                  create: {
-                    imagepath: fileUrl,
-                  },
-                }
-              : undefined,
-          },
-          include: {
-            itemimage: true,
+            imagepath: fileUrl,
           },
         });
 
@@ -666,37 +632,14 @@ export const DELETE = async (req: NextRequest) => {
       where: {
         itemid,
       },
-      include: {
-        itemimage: true,
-      },
     });
 
     if (!itemFound) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
-
-    if (itemFound.itemimage.length > 0) {
-      await prisma.itemImage.deleteMany({
-        where: { itemid: itemFound.itemid },
-      });
-    }
-
     const deleteItem = await prisma.item.delete({
       where: { itemid },
     });
-
-    if (itemFound.itemimage.length > 0) {
-      const imagePath = join(
-        process.cwd(),
-        "public",
-        itemFound.itemimage[0].imagepath
-      );
-      try {
-        await unlink(imagePath);
-      } catch (e: any) {
-        console.error("Error deleting image file\n", e);
-      }
-    }
 
     return NextResponse.json(deleteItem, { status: 200 });
   } catch (error) {

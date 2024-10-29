@@ -168,8 +168,8 @@ export const POST = async (req: NextRequest) => {
     const formData = await req.formData();
 
     // Extract and validate form data
-    const name = formData.get("Item[name]") as string;
-    const typeString = formData.get("Item[type]") as string;
+    const name = formData.get("Item[itemname]") as string;
+    const typeString = formData.get("Item[itemtype]") as string;
     const sackweightString = formData.get("Item[sackweight]") as string;
     const unitpriceString = formData.get("unitprice") as string;
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
@@ -216,7 +216,11 @@ export const POST = async (req: NextRequest) => {
     const [existingItem, newTransactionItem, purchaseData] =
       await prisma.$transaction(async (prisma) => {
         const existingItem = await prisma.item.findFirst({
-          where: { name, type: typeString as ItemType, unitofmeasurement },
+          where: {
+            itemname: name,
+            itemtype: typeString as ItemType,
+            unitofmeasurement,
+          },
         });
 
         let itemId;
@@ -231,8 +235,8 @@ export const POST = async (req: NextRequest) => {
         } else {
           const newItem = await prisma.item.create({
             data: {
-              name,
-              type: typeString as ItemType,
+              itemname: name,
+              itemtype: typeString as ItemType,
               sackweight: sackweightString as SackWeight,
               unitofmeasurement,
               stock: stock,
@@ -246,7 +250,7 @@ export const POST = async (req: NextRequest) => {
           data: {
             transactionid,
             itemid: itemId,
-            type: typeString as ItemType,
+            itemtype: typeString as ItemType,
             sackweight: sackweightString as SackWeight,
             unitofmeasurement,
             stock,
@@ -317,8 +321,8 @@ export const PUT = async (req: NextRequest) => {
     const formData = await req.formData();
 
     // Extract and validate form data
-    const name = formData.get("Item[name]") as string;
-    const typeString = formData.get("Item[type]") as string;
+    const name = formData.get("Item[itemname]") as string;
+    const typeString = formData.get("Item[itemtype]") as string;
     const sackweightString = formData.get("Item[sackweight]") as string;
     const unitpriceString = formData.get("unitprice") as string;
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
@@ -363,12 +367,16 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    // Store the old measurement value to calculate difference
+    // Store the old Stock to calculate difference
     const oldstock = transactionItem?.stock ?? 0;
 
     // Check or create item
     const existingItem = await prisma.item.findFirst({
-      where: { name, type: typeString as ItemType, unitofmeasurement },
+      where: {
+        itemname: name,
+        itemtype: typeString as ItemType,
+        unitofmeasurement,
+      },
     });
 
     let itemId;
@@ -384,8 +392,8 @@ export const PUT = async (req: NextRequest) => {
     } else {
       const newItem = await prisma.item.create({
         data: {
-          name,
-          type: typeString as ItemType,
+          itemname: name,
+          itemtype: typeString as ItemType,
           sackweight: sackweightString as SackWeight,
           unitofmeasurement,
           stock: stock,
@@ -413,7 +421,7 @@ export const PUT = async (req: NextRequest) => {
       data: {
         transactionid,
         itemid: itemId,
-        type: typeString as ItemType,
+        itemtype: typeString as ItemType,
         sackweight: sackweightString as SackWeight,
         unitofmeasurement,
         stock,

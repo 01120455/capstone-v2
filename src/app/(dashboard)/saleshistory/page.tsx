@@ -90,12 +90,12 @@ interface CombinedTransactionItem {
   transactionid: number;
   status: "pending" | "paid" | "cancelled";
   Item: {
-    type: "bigas" | "palay" | "resico";
-    name: string;
+    itemtype: "bigas" | "palay" | "resico";
+    itemname: string;
     sackweight: "bag25kg" | "cavan50kg";
     itemid?: number;
   };
-  type: "purchases" | "sales";
+  transactiontype: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
   stock?: number;
@@ -217,12 +217,6 @@ const usePurchases = () => {
     };
   }, [filters.invoiceno, filters.name, currentPage, fetchSales]);
 
-  // console.log(filters);
-
-  // useEffect(() => {
-  //   fetchSales(currentPage);
-  // }, [fetchSales, currentPage]);
-
   const refreshSales = () => {
     setFilters({
       invoiceno: "",
@@ -279,7 +273,6 @@ const useTransactionItems = () => {
           page: page.toString(),
         });
 
-        // Add filters to params
         if (filters2.invoiceno) {
           params.append("documentnumber", filters2.invoiceno);
         }
@@ -299,7 +292,6 @@ const useTransactionItems = () => {
           params.append("enddate", filters2.dateRange.end);
         }
 
-        // Fetch filtered transactions
         const transactionsResponse = await fetch(
           `/api/customertransaction/customertransactionpagination?${params}`
         );
@@ -308,7 +300,6 @@ const useTransactionItems = () => {
         }
         const transactions: any[] = await transactionsResponse.json();
 
-        // Fetch all transaction items
         const transactionItemsResponse = await fetch("/api/transactionitem");
         if (!transactionItemsResponse.ok) {
           throw new Error(
@@ -318,18 +309,16 @@ const useTransactionItems = () => {
         const allTransactionItems: TransactionItem[] =
           await transactionItemsResponse.json();
 
-        // Create transaction map for quick lookups
         const transactionMap = new Map<number, any>();
         transactions.forEach((transaction) => {
           transactionMap.set(transaction.transactionid, {
             documentNumber: transaction.DocumentNumber?.documentnumber,
             frommilling: transaction.frommilling,
-            type: transaction.type,
+            transactiontype: transaction.transactiontype,
             status: transaction.status,
           });
         });
 
-        // Combine and filter data
         const combinedData: CombinedTransactionItem[] = allTransactionItems
           .map((item) => {
             const transactionInfo =
@@ -338,16 +327,14 @@ const useTransactionItems = () => {
               ...item,
               documentNumber: transactionInfo.documentNumber,
               frommilling: transactionInfo.frommilling || false,
-              type: transactionInfo.type || "otherType",
+              transactiontype: transactionInfo.transactiontype || "otherType",
               status: transactionInfo.status || "otherStatus",
             };
           })
           .filter((item) => item.documentNumber !== undefined);
 
-        // Set state
         setTransactionItem(combinedData);
 
-        // Fetch total count for pagination
         const totalResponse = await fetch(
           `/api/customertransaction/customertransactionpagination`
         );
@@ -369,7 +356,7 @@ const useTransactionItems = () => {
 
     const timer = setTimeout(() => {
       fetchData();
-    }, 2000); // Debounce time
+    }, 2000);
 
     return () => {
       clearTimeout(timer);
@@ -511,62 +498,6 @@ export default function Component() {
 
   const filteredTransactions = useMemo(() => {
     return sales;
-    //   const invoiceNo =
-    //     sales.DocumentNumber?.documentnumber?.toLowerCase() || "";
-    //   const statusMatches =
-    //     filters.status === "all" || sales.status === filters.status;
-    //   const walkinMatches =
-    //     filters.walkin === "all" ||
-    //     (filters.walkin === "true" && sales.walkin) ||
-    //     (filters.walkin === "false" && !sales.walkin);
-    //   const frommillingMatches =
-    //     filters.frommilling === "all" ||
-    //     (filters.frommilling === "true" && sales.frommilling) ||
-    //     (filters.frommilling === "false" && !sales.frommilling);
-    //   const itemNameMatches = sales.TransactionItem.some((item) => {
-    //     const itemName = item?.Item?.name?.toLowerCase() || "";
-    //     return itemName.includes(filters.name.toLowerCase());
-    //   });
-    //   const createdAt = sales.createdat ? new Date(sales.createdat) : null;
-    //   const start = filters.dateRange.start
-    //     ? new Date(filters.dateRange.start)
-    //     : null;
-    //   const end = filters.dateRange.end
-    //     ? new Date(filters.dateRange.end)
-    //     : null;
-    //   const isWithinDateRange = (
-    //     createdAt: Date | null,
-    //     start: Date | null,
-    //     end: Date | null
-    //   ) => {
-    //     if (!createdAt) return false;
-    //     if (start && end) return createdAt >= start && createdAt <= end;
-    //     if (start) return createdAt >= start;
-    //     if (end) return createdAt <= end;
-    //     return true;
-    //   };
-    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
-    //   console.log("Filtering sales:", sales);
-    //   console.log("Matches:", {
-    //     invoiceNoMatches:
-    //       !filters.invoiceno ||
-    //       invoiceNo.includes(filters.invoiceno.toLowerCase()),
-    //     statusMatches,
-    //     walkinMatches,
-    //     frommillingMatches,
-    //     itemNameMatches,
-    //     dateRangeMatches,
-    //   });
-    //   return (
-    //     (!filters.invoiceno ||
-    //       invoiceNo.includes(filters.invoiceno.toLowerCase())) &&
-    //     statusMatches &&
-    //     walkinMatches &&
-    //     frommillingMatches &&
-    //     itemNameMatches &&
-    //     dateRangeMatches
-    //   );
-    // });
   }, [sales]);
 
   const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -608,27 +539,6 @@ export default function Component() {
               value={filters.invoiceno}
               onChange={handleInvoiceChange}
             />
-            {/* {isInvoiceDropdownVisible && invoiceSuggestions.length > 0 && (
-              <div
-                ref={dropdownRefInvoice} // Attach ref to the dropdown
-                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-              >
-                {invoiceSuggestions.map((invoiceno) => (
-                  <div
-                    key={invoiceno}
-                    className="p-2 cursor-pointer hover:bg-gray-200"
-                    onClick={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        invoiceno: invoiceno,
-                      }))
-                    }
-                  >
-                    {invoiceno}
-                  </div>
-                ))}
-              </div>
-            )} */}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="item-name">Item Name</Label>
@@ -639,27 +549,6 @@ export default function Component() {
               value={filters.name}
               onChange={handleItemNameChange}
             />
-            {/* {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
-              <div
-                ref={dropdownRefItem} // Attach ref to the dropdown
-                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-              >
-                {itemNameSuggestions.map((item) => (
-                  <div
-                    key={item}
-                    className="p-2 cursor-pointer hover:bg-gray-200"
-                    onClick={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        name: item,
-                      }))
-                    }
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            )} */}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="walkin">Walk-in</Label>
@@ -769,41 +658,6 @@ export default function Component() {
 
   const filteredTransactionItems = useMemo(() => {
     return transactionItem;
-    //   const invoiceno = item.documentNumber?.toLowerCase() || "";
-    //   const statusMatches =
-    //     filters.status === "all" || item.status === filters.status;
-    //   const itemNameMatches = item.Item?.name
-    //     ? item.Item.name.toLowerCase().includes(filters.name.toLowerCase())
-    //     : false;
-    //   const createdAt = item.lastmodifiedat
-    //     ? new Date(item.lastmodifiedat)
-    //     : null;
-    //   const start = filters.dateRange.start
-    //     ? new Date(filters.dateRange.start)
-    //     : null;
-    //   const end = filters.dateRange.end
-    //     ? new Date(filters.dateRange.end)
-    //     : null;
-    //   const isWithinDateRange = (
-    //     createdAt: Date | null,
-    //     start: Date | null,
-    //     end: Date | null
-    //   ) => {
-    //     if (!createdAt) return false;
-    //     if (start && end) return createdAt >= start && createdAt <= end;
-    //     if (start) return createdAt >= start;
-    //     if (end) return createdAt <= end;
-    //     return true;
-    //   };
-    //   const dateRangeMatches = isWithinDateRange(createdAt, start, end);
-    //   return (
-    //     (!filters.invoiceno ||
-    //       invoiceno.includes(filters.invoiceno.toLowerCase())) &&
-    //     statusMatches &&
-    //     itemNameMatches &&
-    //     dateRangeMatches
-    //   );
-    // });
   }, [transactionItem]);
 
   const canAccessButton = (role: String) => {
@@ -857,8 +711,8 @@ export default function Component() {
                         Sales Created by:
                       </div>
                       <div>
-                        {selectedTransaction.User
-                          ? `${selectedTransaction.User.firstname} ${selectedTransaction.User.lastname}`
+                        {selectedTransaction.createdbyuser
+                          ? `${selectedTransaction.createdbyuser.firstname} ${selectedTransaction.createdbyuser.lastname}`
                           : "N/A"}
                       </div>
                     </div>
@@ -876,7 +730,7 @@ export default function Component() {
                                 <TableHead>Item Type</TableHead>
                                 <TableHead>Sack Weight</TableHead>
                                 <TableHead>Unit of Measurement</TableHead>
-                                <TableHead>Measurement Value</TableHead>
+                                <TableHead>Stock</TableHead>
                                 {canAccessButton(
                                   ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                                 ) && (
@@ -891,8 +745,8 @@ export default function Component() {
                               {selectedTransaction.TransactionItem.map(
                                 (item, index) => (
                                   <TableRow key={index}>
-                                    <TableCell>{item.Item.name}</TableCell>
-                                    <TableCell>{item.type}</TableCell>
+                                    <TableCell>{item.Item.itemname}</TableCell>
+                                    <TableCell>{item.itemtype}</TableCell>
                                     <TableCell>{item.sackweight}</TableCell>
                                     <TableCell>
                                       {item.unitofmeasurement}
@@ -1177,7 +1031,7 @@ export default function Component() {
                         <TableHead>Item Type</TableHead>
                         <TableHead>Sack Weight</TableHead>
                         <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Measurement Value</TableHead>
+                        <TableHead>Stock</TableHead>
                         {canAccessButton(
                           ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                         ) && (
@@ -1207,8 +1061,8 @@ export default function Component() {
                               {purchaseItem.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{purchaseItem.Item.name}</TableCell>
-                          <TableCell>{purchaseItem.Item.type}</TableCell>
+                          <TableCell>{purchaseItem.Item.itemname}</TableCell>
+                          <TableCell>{purchaseItem.Item.itemtype}</TableCell>
                           <TableCell>{purchaseItem.sackweight}</TableCell>
                           <TableCell>
                             {purchaseItem.unitofmeasurement}

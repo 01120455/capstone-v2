@@ -185,12 +185,12 @@ const calculateVolume = (transactions: TransactionTable[]) => {
               ? item.stock
               : item.stock * weightPerItem;
 
-          if (item.type === "palay") {
+          if (item.itemtype === "palay") {
             volume.palayPurchase += itemWeight;
-          } else if (item.type === "bigas") {
+          } else if (item.itemtype === "bigas") {
             volume.bigasPurchase += itemWeight;
             volume.bigasMilling += itemWeight;
-          } else if (item.type === "resico") {
+          } else if (item.itemtype === "resico") {
             volume.resicoPurchase += itemWeight;
             volume.resicoMilling += itemWeight;
           }
@@ -328,10 +328,10 @@ export default function Dashboard() {
       if (!salesByMonth[month]) salesByMonth[month] = {};
 
       sale.TransactionItem.forEach((item: TransactionItem) => {
-        if (item.Item?.name) {
-          itemNamesSet.add(item.Item.name);
-          salesByMonth[month][item.Item.name] =
-            (salesByMonth[month][item.Item.name] || 0) + (item.stock || 1);
+        if (item.Item?.itemname) {
+          itemNamesSet.add(item.Item.itemname);
+          salesByMonth[month][item.Item.itemname] =
+            (salesByMonth[month][item.Item.itemname] || 0) + (item.stock || 1);
         }
       });
     });
