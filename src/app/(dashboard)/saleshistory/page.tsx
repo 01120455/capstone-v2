@@ -684,7 +684,6 @@ export default function Component() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `invoice-${selectedTransaction?.transactionid}.pdf`; // Use backticks for template literals
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -816,12 +815,18 @@ export default function Component() {
                           </div>
                         </>
                       )}
-                      <Button
-                        onClick={downloadInvoice}
-                        className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
-                      >
-                        Download Document
-                      </Button>
+                      {canAccessButton(
+                        ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                      ) && (
+                        <>
+                          <Button
+                            onClick={downloadInvoice}
+                            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+                          >
+                            Download Document
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

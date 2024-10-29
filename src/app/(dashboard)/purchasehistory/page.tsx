@@ -320,7 +320,7 @@ const useTransactionItems = () => {
 
     const timer = setTimeout(() => {
       fetchData();
-    }, 2000); 
+    }, 2000);
 
     return () => {
       clearTimeout(timer);
@@ -543,6 +543,31 @@ export default function Component() {
     return false;
   };
 
+  const downloadPurchaseOrder = async () => {
+    const response = await fetch("/api/generatepurchaseorder", {
+      method: "POST", // Keep as POST
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        transactionId: selectedTransaction?.transactionid, // Ensure selectedTransaction is defined
+      }),
+    });
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url); // Clean up
+    } else {
+      console.error("Failed to generate purchase order");
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4 w-full">
@@ -568,7 +593,7 @@ export default function Component() {
                   </div>
                   <div className="grid gap-1">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-1 p-2">
-                    <div className="font-medium text-muted-foreground">
+                      <div className="font-medium text-muted-foreground">
                         Created by:
                       </div>
                       <div>
@@ -676,7 +701,7 @@ export default function Component() {
                         </ScrollArea>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2">
+                    <div className="grid grid-cols-1">
                       <div className="font-medium">
                         Total Items:{" "}
                         {selectedTransaction.TransactionItem.length}
@@ -689,6 +714,18 @@ export default function Component() {
                             Total:{" "}
                             {formatPrice(selectedTransaction.totalamount ?? 0)}
                           </div>
+                        </>
+                      )}
+                      {canAccessButton(
+                        ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
+                      ) && (
+                        <>
+                          <Button
+                            onClick={downloadPurchaseOrder}
+                            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+                          >
+                            Download Document
+                          </Button>
                         </>
                       )}
                     </div>

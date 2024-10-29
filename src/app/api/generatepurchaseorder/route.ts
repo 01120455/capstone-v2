@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     // Add transaction details
     page.drawText(
-      `Invoice No.: ${transaction.DocumentNumber?.documentnumber}`,
+      `Purchase Order No.: ${transaction.DocumentNumber?.documentnumber}`,
       {
         x: margin,
         y: height - margin,
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse(pdfBytes, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=invoice-${transaction.DocumentNumber?.documentnumber}.pdf`,
+        "Content-Disposition": `attachment; filename=purchaseorder-${transaction.DocumentNumber?.documentnumber}.pdf`,
       },
     });
   } catch (error) {
