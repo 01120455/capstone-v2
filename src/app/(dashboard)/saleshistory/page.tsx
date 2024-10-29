@@ -1031,17 +1031,24 @@ export default function Component() {
                                   </TableCell>
                                   <TableCell>
                                     <div className="flex items-center gap-2">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleEdit(transaction)}
-                                      >
-                                        <FilePenIcon className="h-4 w-4" />
-                                        <span className="sr-only">
-                                          Edit Transaction
-                                        </span>
-                                      </Button>
-
+                                      {canAccessButton(
+                                        ROLES.ADMIN || ROLES.MANAGER
+                                      ) && (
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleEdit(transaction)
+                                            }
+                                          >
+                                            <FilePenIcon className="h-4 w-4" />
+                                            <span className="sr-only">
+                                              Edit Transaction
+                                            </span>
+                                          </Button>
+                                        </>
+                                      )}
                                       <Button
                                         variant="ghost"
                                         size="icon"
