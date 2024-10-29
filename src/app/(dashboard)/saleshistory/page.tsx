@@ -1042,6 +1042,7 @@ export default function Component() {
                                               handleEdit(transaction)
                                             }
                                           >
+                                            
                                             <FilePenIcon className="h-4 w-4" />
                                             <span className="sr-only">
                                               Edit Transaction
