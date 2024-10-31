@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") || "1");
   const skip = (page - 1) * limit;
 
-  const usernameFilter = searchParams.get("username") || "";
+  const emailFilter = searchParams.get("email") || "";
   const firstNameFilter = searchParams.get("firstname") || "";
   const middleNameFilter = searchParams.get("middlename") || "";
   const lastNameFilter = searchParams.get("lastname") || "";
@@ -42,8 +42,8 @@ export async function GET(req: NextRequest) {
     recentdelete: false,
   };
 
-  if (usernameFilter) {
-    whereClause.username = usernameFilter;
+  if (emailFilter) {
+    whereClause.email = emailFilter;
   }
 
   if (firstNameFilter) {
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
         lastname: true,
         role: true,
         status: true,
-        username: true,
+        email: true,
         password: true,
       },
       orderBy: {

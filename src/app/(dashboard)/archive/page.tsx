@@ -72,7 +72,7 @@ const ROWS_PER_PAGE = 10;
 
 const useUserFilters = () => {
   const [userFilters, setUserFilters] = useState({
-    username: "",
+    email: "",
     firstname: "",
     middlename: "",
     lastname: "",
@@ -82,7 +82,7 @@ const useUserFilters = () => {
 
   const clearUser = () => {
     setUserFilters({
-      username: "",
+      email: "",
       firstname: "",
       middlename: "",
       lastname: "",
@@ -118,8 +118,8 @@ const useUsers = () => {
           page: page.toString(),
         });
 
-        if (userFilters.username) {
-          params.append("username", userFilters.username);
+        if (userFilters.email) {
+          params.append("email", userFilters.email);
         }
         if (userFilters.firstname) {
           params.append("firstname", userFilters.firstname);
@@ -162,7 +162,7 @@ const useUsers = () => {
     }
 
     if (
-      userFilters.username ||
+      userFilters.email ||
       userFilters.firstname ||
       userFilters.middlename ||
       userFilters.lastname
@@ -179,7 +179,7 @@ const useUsers = () => {
       }
     };
   }, [
-    userFilters.username,
+    userFilters.email,
     userFilters.firstname,
     userFilters.middlename,
     userFilters.lastname,
@@ -189,7 +189,7 @@ const useUsers = () => {
 
   const refreshUsers = () => {
     setUserFilters({
-      username: "",
+      email: "",
       firstname: "",
       middlename: "",
       lastname: "",
@@ -809,7 +809,7 @@ export default function ArchivePage() {
         refreshUsers();
         toast.success(
           `Deleted user ${""} ${
-            users?.find((u) => u.userid === id)?.username
+            users?.find((u) => u.userid === id)?.email
           } ${""} has been restored`,
           {
             description: "You have successfully restored user data.",

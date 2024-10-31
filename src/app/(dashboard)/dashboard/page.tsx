@@ -39,7 +39,6 @@ import {
 } from "@/components/icons/Icons";
 import { ViewItem } from "@/schemas/item.schema";
 
-// Constants
 const SACK_WEIGHTS = {
   bag25kg: 25,
   cavan50kg: 50,
@@ -60,7 +59,6 @@ const ALL_MONTHS = [
   "December",
 ] as const;
 
-// Types
 type SalesChartData = {
   month: string;
   [itemName: string]: number | string;
@@ -80,13 +78,12 @@ interface Totals {
   };
 }
 interface StatCardProps {
-  title: string; // Title should be a string
-  value: number | string; // Value can be either a number or string
-  subValue?: number | string; // subValue is optional and can be a number or string
-  icon: React.ElementType; // Icon is a React component
+  title: string;
+  value: number | string;
+  subValue?: number | string;
+  icon: React.ElementType;
 }
 
-// Reusable Components
 const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
@@ -106,8 +103,8 @@ const StatCard: React.FC<StatCardProps> = ({
 );
 
 interface VolumeCardProps {
-  title: string; // Title should be a string
-  volume: number; // Volume should be a number
+  title: string;
+  volume: number;
 }
 
 const VolumeCard: React.FC<VolumeCardProps> = ({ title, volume }) => (
@@ -121,7 +118,6 @@ const VolumeCard: React.FC<VolumeCardProps> = ({ title, volume }) => (
   </Card>
 );
 
-// Custom Hooks
 const useTransactionData = (endpoint: string) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,7 +130,6 @@ const useTransactionData = (endpoint: string) => {
         const text = await response.text();
         const parsedData = JSON.parse(text);
 
-        // Convert dates if needed
         const processedData = parsedData.map((item: any) => ({
           ...item,
           createdat: item.createdat ? new Date(item.createdat) : null,
@@ -159,7 +154,6 @@ const useTransactionData = (endpoint: string) => {
   return { data, loading, error };
 };
 
-// Utility functions
 const formatters = {
   number: new Intl.NumberFormat("en-PH", {
     minimumFractionDigits: 0,
@@ -185,9 +179,7 @@ const calculateVolume = (transactions: TransactionTable[]) => {
               ? item.stock
               : item.stock * weightPerItem;
 
-          if (item.itemtype === "palay") {
-            volume.palayPurchase += itemWeight;
-          } else if (item.itemtype === "bigas") {
+          if (item.itemtype === "bigas") {
             volume.bigasPurchase += itemWeight;
             volume.bigasMilling += itemWeight;
           } else if (item.itemtype === "resico") {
@@ -198,7 +190,6 @@ const calculateVolume = (transactions: TransactionTable[]) => {
         return volume;
       },
       {
-        palayPurchase: 0,
         bigasPurchase: 0,
         resicoPurchase: 0,
         bigasMilling: 0,
@@ -207,10 +198,36 @@ const calculateVolume = (transactions: TransactionTable[]) => {
     );
 };
 
+const calculateVolumeOfBigasPalay = (transactions: TransactionTable[]) => {
+  return transactions
+    .filter((transaction) => transaction)
+    .reduce(
+      (volume, transaction) => {
+        transaction.TransactionItem.forEach((item: TransactionItem) => {
+          const weightPerItem = SACK_WEIGHTS[item.sackweight] || 0;
+          const itemWeight =
+            item.unitofmeasurement === "weight"
+              ? item.stock
+              : item.stock * weightPerItem;
+
+          if (item.itemtype === "palay") {
+            volume.palayPurchase += itemWeight;
+          } else if (item.itemtype === "bigas") {
+            volume.bigasPurchase += itemWeight;
+          }
+        });
+        return volume;
+      },
+      {
+        palayPurchase: 0,
+        bigasPurchase: 0,
+      }
+    );
+};
+
 export default function Dashboard() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  // Data fetching
   const { data: sales, loading: salesLoading } = useTransactionData(
     "/api/dashboard/customertransaction"
   );
@@ -219,10 +236,15 @@ export default function Dashboard() {
   );
   const { data: items, loading: itemsLoading } =
     useTransactionData("/api/product");
+
   const { data: millingPurchases, loading: millingLoading } =
     useTransactionData("/api/dashboard/frommillingpurchases");
 
-  // Memoized calculations
+  const { data: bigasPalayPurchases, loading: bigasPalayLoading } =
+    useTransactionData("/api/dashboard/palaybigaspurchases");
+
+  console.log("bigasPalayPurchases", bigasPalayPurchases);
+
   const totals = useMemo(() => {
     if (!sales?.length) return null;
 
@@ -231,13 +253,12 @@ export default function Dashboard() {
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
-    // Assuming you have a way to access the items stock data.
     const totalStock = items.reduce((acc: number, item: ViewItem) => {
       if (item.unitofmeasurement === "weight") {
-        return acc + item.stock; // Assuming stock is already in kg
+        return acc + item.stock;
       } else if (item.unitofmeasurement === "quantity") {
-        const weightPerItem = SACK_WEIGHTS[item.sackweight || "bag25kg"] || 0; // Default to bag25kg if undefined
-        return acc + item.stock * weightPerItem; // Convert quantity to kg
+        const weightPerItem = SACK_WEIGHTS[item.sackweight || "bag25kg"] || 0;
+        return acc + item.stock * weightPerItem;
       }
       return acc;
     }, 0);
@@ -282,7 +303,7 @@ export default function Dashboard() {
                 ? itemCount
                 : 0),
           },
-          totalStock, // Add totalStock to the return object
+          totalStock,
         };
       },
       {
@@ -291,10 +312,10 @@ export default function Dashboard() {
         totalTransactions: 0,
         currentMonth: { amount: 0, items: 0 },
         lastMonth: { amount: 0, items: 0 },
-        totalStock: 0, // Initialize totalStock
+        totalStock: 0,
       }
     );
-  }, [sales, items]); // Ensure items are included in the dependency array
+  }, [sales, items]);
 
   const averagePurchaseValue = useMemo(() => {
     if (!purchases?.length) return 0;
@@ -314,6 +335,13 @@ export default function Dashboard() {
     if (!millingPurchases?.length) return null;
     return calculateVolume(millingPurchases);
   }, [millingPurchases]);
+
+  const volumeOfBigasPalay = useMemo(() => {
+    if (!bigasPalayPurchases?.length) return null;
+    return calculateVolumeOfBigasPalay(bigasPalayPurchases);
+  }, [bigasPalayPurchases]);
+
+  console.log("volumeOfBigasPalay", volumeOfBigasPalay);
 
   const { salesChartData, itemNames } = useMemo(() => {
     if (!sales?.length) return { salesChartData: [], itemNames: [] };
@@ -385,7 +413,6 @@ export default function Dashboard() {
     return combinedData;
   }, [sales, purchases]);
 
-  // Screen size effect
   useEffect(() => {
     const handleResize = () => setIsSmallScreen(window.innerWidth < 640);
     handleResize();
@@ -393,8 +420,13 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Loading state
-  if (salesLoading || purchasesLoading || itemsLoading || millingLoading) {
+  if (
+    salesLoading ||
+    purchasesLoading ||
+    itemsLoading ||
+    millingLoading ||
+    bigasPalayLoading
+  ) {
     return (
       <div className="flex h-screen items-center justify-center">
         Loading...
@@ -402,7 +434,6 @@ export default function Dashboard() {
     );
   }
 
-  // Chart configurations
   const salesChartConfig: ChartConfig = {
     month: { label: "Month", color: "var(--chart-0)" },
     ...itemNames.reduce(
@@ -433,7 +464,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Main content */}
       <div className="flex-1 p-8 overflow-auto">
         <h2 className="text-3xl font-bold mb-6">Dashboard Overview</h2>
 
@@ -468,15 +498,14 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Volume cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <VolumeCard
             title="Palay Purchase Volume"
-            volume={volume?.palayPurchase || 0}
+            volume={volumeOfBigasPalay?.palayPurchase || 0}
           />
           <VolumeCard
             title="Bigas Purchase Volume"
-            volume={volume?.bigasPurchase || 0}
+            volume={volumeOfBigasPalay?.bigasPurchase || 0}
           />
           <VolumeCard
             title="Resico Purchase Volume"
@@ -492,7 +521,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Inventory Levels */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Inventory Levels</CardTitle>
@@ -510,7 +538,7 @@ export default function Dashboard() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 10)} // Limit name length if needed
+                  tickFormatter={(value) => value.slice(0, 10)}
                 />
                 <YAxis />
                 <ChartTooltip
@@ -528,7 +556,6 @@ export default function Dashboard() {
           </CardFooter>
         </Card>
 
-        {/* Sales Analysis */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Sales Performance</CardTitle>
@@ -572,7 +599,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Transaction Insights */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Transaction Trends</CardTitle>

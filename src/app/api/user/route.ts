@@ -39,7 +39,7 @@ export const POST = async (req: NextRequest) => {
     const lastname = formData.get("lastname") as string;
     const role = formData.get("role") as Role;
     const status = formData.get("status") as Status;
-    const username = formData.get("username") as string;
+    const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const image = formData.get("image") as File | null;
 
@@ -51,7 +51,7 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    if (!firstname || !lastname || !role || !status || !username || !password) {
+    if (!firstname || !lastname || !role || !status || !email || !password) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -122,7 +122,7 @@ export const POST = async (req: NextRequest) => {
           lastname,
           role,
           status,
-          username,
+          email,
           password: hashedPassword,
           imagepath: fileUrl,
         },
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
         lastname: true,
         role: true,
         status: true,
-        username: true,
+        email: true,
         password: true,
       },
     });
@@ -308,7 +308,7 @@ export const PUT = async (req: NextRequest) => {
     const lastname = formData.get("lastname") as string;
     const role = formData.get("role") as Role;
     const status = formData.get("status") as Status;
-    const username = formData.get("username") as string;
+    const email = formData.get("email") as string;
     const password = formData.get("password") as string | null; // Allow password to be null
     const image = formData.get("image") as File | null;
 
@@ -320,7 +320,7 @@ export const PUT = async (req: NextRequest) => {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    if (!firstname || !lastname || !role || !status || !username) {
+    if (!firstname || !lastname || !role || !status || !email) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -404,7 +404,7 @@ export const PUT = async (req: NextRequest) => {
           lastname,
           role,
           status,
-          username,
+          email,
           password: hashedPassword,
           imagepath: fileUrl,
         },

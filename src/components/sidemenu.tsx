@@ -176,7 +176,7 @@ export default function SideMenu() {
             <MenuIcon className="w-4 h-4" />
           </button>
           <span className="text-lg font-semibold hidden lg:block">
-            Point of Sale
+            3R Shane IMS
           </span>
         </div>
         <div className="flex flex-col flex-grow overflow-hidden">

@@ -17,6 +17,8 @@ model User {
   status              Status
   email            String            @unique @db.VarChar(50)
   password            String
+  resettoken         String?
+  resettokenexpires  DateTime?
   recentdelete        Boolean           @default(false)
   createdat          DateTime          @default(now())
   Item                Item[]

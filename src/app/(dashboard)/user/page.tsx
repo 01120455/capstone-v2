@@ -96,7 +96,7 @@ const USERS_PER_PAGE = 10;
 
 const useFilters = () => {
   const [filters, setFilters] = useState({
-    username: "",
+    email: "",
     firstname: "",
     middlename: "",
     lastname: "",
@@ -106,7 +106,7 @@ const useFilters = () => {
 
   const clear = () => {
     setFilters({
-      username: "",
+      email: "",
       firstname: "",
       middlename: "",
       lastname: "",
@@ -142,8 +142,8 @@ const useUsers = () => {
           page: page.toString(),
         });
 
-        if (filters.username) {
-          params.append("username", filters.username);
+        if (filters.email) {
+          params.append("email", filters.email);
         }
         if (filters.firstname) {
           params.append("firstname", filters.firstname);
@@ -184,7 +184,7 @@ const useUsers = () => {
     }
 
     if (
-      filters.username ||
+      filters.email ||
       filters.firstname ||
       filters.middlename ||
       filters.lastname
@@ -201,7 +201,7 @@ const useUsers = () => {
       }
     };
   }, [
-    filters.username,
+    filters.email,
     filters.firstname,
     filters.middlename,
     filters.lastname,
@@ -211,7 +211,7 @@ const useUsers = () => {
 
   const refreshUsers = () => {
     setFilters({
-      username: "",
+      email: "",
       firstname: "",
       middlename: "",
       lastname: "",
@@ -270,7 +270,7 @@ export default function Component() {
     (user) =>
       user.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchTerm.toLowerCase())
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const form = useForm<AddUser>({
@@ -282,7 +282,7 @@ export default function Component() {
       lastname: "",
       role: "",
       status: "active",
-      username: "",
+      email: "",
       password: "",
       userid: 0,
       image: undefined,
@@ -303,7 +303,7 @@ export default function Component() {
       lastname: "",
       role: "",
       status: "active",
-      username: "",
+      email: "",
       password: "",
       userid: 0,
     });
@@ -320,7 +320,7 @@ export default function Component() {
       lastname: user.lastname,
       role: user.role,
       status: user.status,
-      username: user.username,
+      email: user.email,
       password: "",
     });
   };
@@ -341,7 +341,7 @@ export default function Component() {
     formData.append("lastname", values.lastname);
     formData.append("role", values.role);
     formData.append("status", values.status);
-    formData.append("username", values.username);
+    formData.append("email", values.email);
 
     if (selectedFile) {
       formData.append("image", selectedFile);
@@ -494,9 +494,9 @@ export default function Component() {
     return users;
   }, [users]);
 
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleemailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setFilters((prev) => ({ ...prev, username: value }));
+    setFilters((prev) => ({ ...prev, email: value }));
     handlePageChange(1);
   };
 
@@ -607,7 +607,7 @@ export default function Component() {
   return (
     <div className="flex h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="w-full max-w-screen-2xl mx-auto p-4">
+        <div className="container mx-auto px-4 md:px-6 py-8">
           <div className="flex flex-col items-center">
             <div className="w-[1000px]">
               <div className="flex justify-between items-center mb-6">
@@ -615,25 +615,23 @@ export default function Component() {
                   User Management
                 </h1>
               </div>
-              <div className="mb-6">
-                <div className="flex items-center justify-between gap-4 mb-6">
-                  <Input
-                    type="text"
-                    placeholder="Search by username..."
-                    value={filters.username}
-                    onChange={handleUsernameChange}
-                    className="w-full md:w-auto"
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={handleAddUser}>
-                      {isSmallScreen ? (
-                        <PlusIcon className="w-6 h-6" />
-                      ) : (
-                        "Add User"
-                      )}
-                    </Button>
-                    {renderFilters()}
-                  </div>
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <Input
+                  type="text"
+                  placeholder="Search by email..."
+                  value={filters.email}
+                  onChange={handleemailChange}
+                  className="w-full md:w-auto"
+                />
+                <div className="flex gap-2">
+                  <Button onClick={handleAddUser}>
+                    {isSmallScreen ? (
+                      <PlusIcon className="w-6 h-6" />
+                    ) : (
+                      "Add User"
+                    )}
+                  </Button>
+                  {renderFilters()}
                 </div>
               </div>
             </div>
@@ -652,7 +650,7 @@ export default function Component() {
                       <TableHead>Name</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Username</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -691,7 +689,7 @@ export default function Component() {
                               {user.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{user.username}</TableCell>
+                          <TableCell>{user.email}</TableCell>
                           <TableCell className="text-right">
                             {canAccessButton(ROLES.ADMIN) && (
                               <>
@@ -1023,14 +1021,14 @@ export default function Component() {
                       <div className="space-y-2">
                         <FormField
                           control={form.control}
-                          name="username"
+                          name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="username">Username</FormLabel>
+                              <FormLabel htmlFor="email">email</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  id="username"
+                                  id="email"
                                   placeholder="JohnDoe@gmail.com"
                                 />
                               </FormControl>

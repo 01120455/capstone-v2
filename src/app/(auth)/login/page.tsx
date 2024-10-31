@@ -26,6 +26,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import Link from "next/link";
+import { Eye, EyeOff, Lock, Mail } from "@/components/icons/Icons";
 
 export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
@@ -94,81 +96,106 @@ export default function Home() {
             <h1 className="text-3xl font-bold">Welcome to 3R Shane</h1>
           </div>
           <div className="flex justify-center">
-            <Tabs defaultValue="login" className="w-[400px]">
-              <TabsList className="w-full grid-cols-1 hidden">
-                <TabsTrigger value="login">Login</TabsTrigger>
-              </TabsList>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Login</CardTitle>
-                  <CardDescription>
-                    Login to your account to continue
-                  </CardDescription>
-                </CardHeader>
-                <Form {...form}>
-                  <form
-                    className="w-full max-w-4xl mx-auto p-6"
-                    onSubmit={form.handleSubmit(handleSubmit)}
-                  >
-                    <CardContent className="space-y-2">
-                      <div className="space-y-1">
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="email">Email</FormLabel>
-                              <FormControl>
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">
+                  Login
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Enter your credentials to access your account
+                </CardDescription>
+              </CardHeader>
+              <Form {...form}>
+                <form
+                  className="w-full max-w-4xl mx-auto p-6"
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                >
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="email">Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-2 h-5 w-5 text-gray-400" />
                                 <Input
                                   {...field}
                                   id="email"
                                   type="email"
+                                  placeholder="karadavid@example.com"
+                                  className="pl-10 pr-10"
                                   required
                                 />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="password">Password</FormLabel>
-                              <FormControl>
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="password">Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-2 h-5 w-5 text-gray-400" />
                                 <Input
                                   {...field}
                                   id="password"
                                   type={showPassword ? "text" : "password"}
                                   name="password"
+                                  className="pl-10 pr-10"
                                   required
                                 />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="flex items-center mt-2">
-                        <Checkbox
-                          id="showpassword"
-                          onCheckedChange={() =>
-                            setShowPassword((prev) => !prev)
-                          }
-                        />
-                        <Label htmlFor="showpassword" className="ml-2">
-                          Show Password
-                        </Label>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button type="submit">Login</Button>
-                    </CardFooter>
-                  </form>
-                </Form>
-              </Card>
-            </Tabs>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute right-3 top-2 text-gray-400"
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="h-5 w-5" />
+                                  ) : (
+                                    <Eye className="h-5 w-5" />
+                                  )}
+                                </button>
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    {/* <div className="flex items-center mt-2">
+                      <Checkbox
+                        id="showpassword"
+                        onCheckedChange={() => setShowPassword((prev) => !prev)}
+                      />
+                      <Label htmlFor="showpassword" className="ml-2">
+                        Show Password
+                      </Label>
+                    </div> */}
+                  </CardContent>
+                  <CardFooter className="flex flex-col space-y-4">
+                    <Button type="submit" className="w-full">
+                      Login
+                    </Button>
+                    <div className="text-sm text-center">
+                      <Link
+                        href="/forgotpassword"
+                        className="text-primary hover:underline"
+                      >
+                        Forgot your password?
+                      </Link>
+                    </div>
+                  </CardFooter>
+                </form>
+              </Form>
+            </Card>
           </div>
         </div>
       </div>

@@ -32,7 +32,7 @@ export default function Component() {
       lastname: "",
       role: "",
       status: "active",
-      username: "",
+      email: "",
       password: "",
       userid: 0,
       image: undefined,
@@ -48,7 +48,7 @@ export default function Component() {
   //     lastname: user.lastname,
   //     role: user.role,
   //     status: user.status,
-  //     username: user.username,
+  //     email: user.email,
   //     password: "",
   //     userid: user.userid,
   //   });
@@ -93,7 +93,7 @@ export default function Component() {
             lastname: session.lastname || "",
             role: session.role || "",
             status: "active",
-            username: session.username || "",
+            email: session.email || "",
             password: "",
             userid: session.userid || 0,
           });
@@ -118,7 +118,7 @@ export default function Component() {
     formData.append("lastname", values.lastname);
     formData.append("role", values.role);
     formData.append("status", values.status);
-    formData.append("username", values.username);
+    formData.append("email", values.email);
 
     if (selectedFile) {
       formData.append("image", selectedFile);
@@ -148,7 +148,7 @@ export default function Component() {
           }
           toast.success(
             `User ${""} ${form.getValues(
-              "username"
+              "email"
             )} ${""} your profile has been updated`,
             {
               description: "You have successfully updated your profile.",
@@ -225,8 +225,8 @@ export default function Component() {
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Username:</span>
-                  <span>{userSession?.username}</span>
+                  <span className="text-muted-foreground">Email:</span>
+                  <span>{userSession?.email}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Password:</span>
@@ -343,14 +343,14 @@ export default function Component() {
               <div className="space-y-2 ml-10">
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel htmlFor="username">Username</FormLabel>
+                      <FormLabel htmlFor="email">Email</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          id="username"
+                          id="email"
                           placeholder="johndoe"
                           defaultValue={field.value}
                           className="w-1/2 lg:w-full"

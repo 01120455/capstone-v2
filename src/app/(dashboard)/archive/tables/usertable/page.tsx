@@ -45,7 +45,7 @@ interface UserTableProps {
 }
 
 type UserFilters = {
-  username: string;
+  email: string;
   firstname: string;
   middlename: string;
   lastname: string;
@@ -67,9 +67,9 @@ export function UserTable({
     return users;
   }, [users]);
 
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleemailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setFilters((prev: UserFilters) => ({ ...prev, username: value }));
+    setFilters((prev: UserFilters) => ({ ...prev, email: value }));
     handlePageChange(1);
   };
 
@@ -183,9 +183,9 @@ export function UserTable({
         <div className="flex items-center justify-between gap-4 mb-6">
           <Input
             type="text"
-            placeholder="Search by username..."
-            value={filters.username}
-            onChange={handleUsernameChange}
+            placeholder="Search by email..."
+            value={filters.email}
+            onChange={handleemailChange}
             className="w-full md:w-auto"
           />
           <div className="flex gap-2">{renderFilters()}</div>
@@ -198,7 +198,7 @@ export function UserTable({
               <TableHead>Name</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Username</TableHead>
+              <TableHead>email</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -220,7 +220,7 @@ export function UserTable({
                     {user.status}
                   </Badge>
                 </TableCell>
-                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <Button
                     variant="outline"
