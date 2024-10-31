@@ -450,8 +450,8 @@ export default function Dashboard() {
 
   const stocksChartConfig = {
     desktop: {
-      label: "Stock Levels",
-      color: "hsl(var(--chart-2))",
+      label: "itemname",
+      color: "hsl(var(--chart-9))",
     },
   } satisfies ChartConfig;
 
@@ -534,7 +534,7 @@ export default function Dashboard() {
               <BarChart data={items}>
                 <CartesianGrid vertical={false} />
                 <XAxis
-                  dataKey="name"
+                  dataKey="itemname"
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}

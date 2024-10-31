@@ -376,7 +376,6 @@ export const PUT = async (req: NextRequest) => {
         await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
         fileUrl = `${relativeUploadDir}/${filename}`;
 
-        // Delete the old image if it exists
         if (existingUser.imagepath) {
           const oldImagePath = join(
             process.cwd(),
