@@ -182,7 +182,7 @@ export default function Component() {
       : "Guest";
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex min-h-screen w-full">
       <div className="flex-1 overflow-y-auto p-8">
         <header className="flex flex-col sm:flex-row justify-start items-center mb-8">
           <div className="w-full">

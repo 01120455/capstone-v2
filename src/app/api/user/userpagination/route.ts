@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   const statusFilter = searchParams.get("status") || "";
 
   const whereClause: any = {
-    recentdelete: false,
+    
   };
 
   if (emailFilter) {

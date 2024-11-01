@@ -10,13 +10,9 @@ export async function GET(req: NextRequest) {
         transactiontype: "purchase",
         status: "paid",
         frommilling: true,
-        recentdelete: false,
       },
       include: {
         TransactionItem: {
-          where: {
-            recentdelete: false,
-          },
           select: {
             transactionid: true,
             Item: {

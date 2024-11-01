@@ -149,7 +149,7 @@ const useUsers = () => {
           params.append("firstname", filters.firstname);
         }
         if (filters.middlename) {
-          params.append("midlename", filters.middlename);
+          params.append("middlename", filters.middlename);
         }
         if (filters.lastname) {
           params.append("lastname", filters.lastname);
@@ -605,9 +605,9 @@ export default function Component() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-customColors-offWhite">
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="container mx-auto px-4 md:px-6 py-8">
+    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex flex-col items-center">
             <div className="w-[1000px]">
               <div className="flex justify-between items-center mb-6">

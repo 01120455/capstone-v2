@@ -163,7 +163,6 @@ export const POST = async (req: NextRequest) => {
             stock: newStock,
             unitprice,
             lastmodifiedby: userid,
-            recentdelete: false,
             imagepath: fileUrl,
           },
         });
@@ -203,9 +202,6 @@ export const POST = async (req: NextRequest) => {
 export async function GET(req: NextRequest) {
   try {
     const items = await prisma.item.findMany({
-      where: {
-        recentdelete: false,
-      },
       select: {
         itemid: true,
         itemname: true,

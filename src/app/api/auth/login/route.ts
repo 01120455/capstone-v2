@@ -19,9 +19,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (user.recentdelete) {
-      return NextResponse.json({ message: "invalid account" }, { status: 403 });
-    }
 
     const res = NextResponse.json({
       message: "Logged in Successfully",

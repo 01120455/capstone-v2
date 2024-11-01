@@ -6,9 +6,6 @@ const prisma = new PrismaClient();
 export async function GET(req: NextRequest) {
   try {
     const transactionItems = await prisma.transactionItem.findMany({
-      where: {
-        recentdelete: false,
-      },
       include: {
         Transaction: true,
         Item: true,

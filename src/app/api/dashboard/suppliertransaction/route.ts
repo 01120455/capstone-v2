@@ -9,7 +9,6 @@ export async function GET(req: NextRequest) {
       where: {
         transactiontype: "purchase",
         status: "paid",
-        recentdelete: false,
       },
       include: {
         createdbyuser: {
@@ -30,9 +29,6 @@ export async function GET(req: NextRequest) {
           },
         },
         TransactionItem: {
-          where: {
-            recentdelete: false,
-          },
           select: {
             transactionid: true,
             Item: {

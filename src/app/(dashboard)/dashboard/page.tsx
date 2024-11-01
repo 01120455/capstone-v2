@@ -463,8 +463,8 @@ export default function Dashboard() {
   } satisfies ChartConfig;
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <div className="flex-1 p-8 overflow-auto">
+    <div className="flex min-h-screen bg-customColors-offWhite">
+      <div className="flex-1 pl-12 pr-12 pt-4 overflow-y-auto">
         <h2 className="text-3xl font-bold mb-6">Dashboard Overview</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

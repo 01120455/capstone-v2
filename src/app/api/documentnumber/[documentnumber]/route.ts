@@ -1,11 +1,8 @@
-// pages/api/invoicenumber/[invoicenumber].ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Define the type for the params
 interface Params {
   documentnumber: string;
 }
@@ -24,7 +21,6 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
     const exists = await prisma.documentNumber.findUnique({
       where: {
         documentnumber,
-        recentdelete: false,
       },
     });
 

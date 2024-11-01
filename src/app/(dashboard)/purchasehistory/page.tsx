@@ -569,9 +569,9 @@ export default function Component() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-customColors-offWhite">
-      <div className="flex-1 overflow-y-auto pt-8 pl-4 pr-4 w-full">
-        <div className="container mx-auto px-4 md:px-6 py-8">
+    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+      <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
+        <div className="container mx-auto px-4 md:px-6 py-4">
           <h1 className="text-2xl font-bold mb-6">Purchase Order History</h1>
           <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">

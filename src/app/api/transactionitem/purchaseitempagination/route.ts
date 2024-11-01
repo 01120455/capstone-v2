@@ -37,7 +37,6 @@ export async function GET(req: NextRequest) {
     // Fetch the relevant transactions first
     const transactions = await prisma.transaction.findMany({
       where: {
-        recentdelete: false,
         transactiontype: "purchase",
       },
       select: {
@@ -49,7 +48,6 @@ export async function GET(req: NextRequest) {
 
     const transactionItems = await prisma.transactionItem.findMany({
       where: {
-        recentdelete: false,
         transactionid: {
           in: transactionIds,
         },

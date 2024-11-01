@@ -145,9 +145,6 @@ export const POST = async (req: NextRequest) => {
 export async function GET(req: NextRequest) {
   try {
     const users = await prisma.user.findMany({
-      where: {
-        recentdelete: false,
-      },
       select: {
         userid: true,
         imagepath: true,

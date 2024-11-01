@@ -37,15 +37,15 @@ export async function GET(req: NextRequest) {
   const unitofmeasurementFilter = searchParams.get("unitofmeasurement") || "";
 
   const whereClause: any = {
-    recentdelete: false,
+    
   };
 
   if (nameFilter) {
-    whereClause.name = nameFilter;
+    whereClause.itemname = nameFilter;
   }
 
   if (typeFilter) {
-    whereClause.type = typeFilter;
+    whereClause.itemtype = typeFilter;
   }
 
   if (sackweightFilter) {

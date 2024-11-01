@@ -8,13 +8,11 @@ export async function GET(req: NextRequest) {
     const transaction = await prisma.transaction.findMany({
       where: {
         transactiontype: "sales",
-        recentdelete: false,
         status: "paid",
       },
       include: {
         TransactionItem: {
           where: {
-            recentdelete: false,
           },
           select: {
             transactionid: true,

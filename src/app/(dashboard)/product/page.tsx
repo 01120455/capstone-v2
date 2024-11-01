@@ -317,31 +317,31 @@ export default function ProductManagement() {
     }
   };
 
-  const handleDelete = async (itemid: number | undefined) => {
-    if (!itemid) return;
+  // const handleDelete = async (itemid: number | undefined) => {
+  //   if (!itemid) return;
 
-    try {
-      const response = await fetch(
-        `/api/product/product-soft-delete/${itemid}`,
-        {
-          method: "PUT",
-        }
-      );
+  //   try {
+  //     const response = await fetch(
+  //       `/api/product/product-soft-delete/${itemid}`,
+  //       {
+  //         method: "PUT",
+  //       }
+  //     );
 
-      if (!response.ok) throw new Error("Failed to delete item");
+  //     if (!response.ok) throw new Error("Failed to delete item");
 
-      toast.success(`Item has been deleted`, {
-        description: "You can now add more items to the inventory.",
-      });
+  //     toast.success(`Item has been deleted`, {
+  //       description: "You can now add more items to the inventory.",
+  //     });
 
-      setShowAlert(false);
-      setItemToDelete(null);
-      // refreshItems(currentPage);
-    } catch (error) {
-      console.error("Error deleting item:", error);
-      toast.error("Failed to delete item");
-    }
-  };
+  //     setShowAlert(false);
+  //     setItemToDelete(null);
+  //     // refreshItems(currentPage);
+  //   } catch (error) {
+  //     console.error("Error deleting item:", error);
+  //     toast.error("Failed to delete item");
+  //   }
+  // };
 
   const resetForm = () => {
     form.reset();
@@ -480,21 +480,21 @@ export default function ProductManagement() {
     setShowImage(null);
   };
 
-  const handleDeleteCancel = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    event.preventDefault();
-    setShowAlert(false);
-    setItemToDelete(null);
-    form.reset();
-  };
+  // const handleDeleteCancel = (
+  //   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  // ) => {
+  //   event.preventDefault();
+  //   setShowAlert(false);
+  //   setItemToDelete(null);
+  //   form.reset();
+  // };
 
-  const handleDeleteWithToast = (itemid: number | undefined) => {
-    handleDelete(itemid);
-    toast.success(`Item ${form.getValues().itemname} has been deleted`, {
-      description: "You can now add more items to the inventory.",
-    });
-  };
+  // const handleDeleteWithToast = (itemid: number | undefined) => {
+  //   handleDelete(itemid);
+  //   toast.success(`Item ${form.getValues().itemname} has been deleted`, {
+  //     description: "You can now add more items to the inventory.",
+  //   });
+  // };
 
   const handleCancel = () => {
     setShowModal(false);
@@ -540,15 +540,15 @@ export default function ProductManagement() {
     });
   };
 
-  const handleDeleteItem = (item: AddItem) => {
-    setItemToDelete(item);
-    setShowAlert(true);
-  };
+  // const handleDeleteItem = (item: AddItem) => {
+  //   setItemToDelete(item);
+  //   setShowAlert(true);
+  // };
 
   return (
-    <div className="flex h-screen w-full bg-customColors-offWhite">
-      <div className="flex-1 overflow-y-hidden p-5 w-full">
-        <div className="container mx-auto px-4 md:px-6 py-8">
+    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+      <div className="flex-1 overflow-y-hidden pl-6 pr-6 w-full">
+        <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-customColors-darkKnight">
               Product Management
@@ -651,7 +651,7 @@ export default function ProductManagement() {
                             <FilePenIcon className="w-4 h-4" />
                             <span className="sr-only">Edit</span>
                           </Button>
-                          {canAccessButton(ROLES.ADMIN) && (
+                          {/* {canAccessButton(ROLES.ADMIN) && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -660,7 +660,7 @@ export default function ProductManagement() {
                               <TrashIcon className="w-4 h-4" />
                               <span className="sr-only">Delete</span>
                             </Button>
-                          )}
+                          )} */}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -784,7 +784,7 @@ export default function ProductManagement() {
               </Dialog>
             )}
           </>
-          {itemToDelete && (
+          {/* {itemToDelete && (
             <AlertDialog open={showAlert}>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -811,7 +811,7 @@ export default function ProductManagement() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          )}
+          )} */}
           {showModal && (
             <Dialog open={showModal} onOpenChange={handleCancel}>
               <DialogContent className="sm:max-w-[600px]">

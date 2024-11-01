@@ -48,7 +48,6 @@ export async function GET(req: NextRequest) {
   try {
     // Build the where clause
     const whereClause: any = {
-      recentdelete: false,
       transactiontype: "purchase",
     };
 
@@ -108,9 +107,6 @@ export async function GET(req: NextRequest) {
           },
         },
         TransactionItem: {
-          where: {
-            recentdelete: false,
-          },
           include: {
             Item: {
               select: {

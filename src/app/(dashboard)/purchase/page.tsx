@@ -453,13 +453,13 @@ export default function Component() {
   const [showModal, setShowModal] = useState(false);
   const [showModalEditPurchase, setShowModalEditPurchase] = useState(false);
   const [showModalPurchaseItem, setShowModalPurchaseItem] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [showAlertPurchaseItem, setShowAlertPurchaseItem] = useState(false);
+  // const [showAlert, setShowAlert] = useState(false);
+  // const [showAlertPurchaseItem, setShowAlertPurchaseItem] = useState(false);
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
-  const [purchaseItemToDelete, setPurchaseItemToDelete] =
-    useState<TransactionItem | null>(null);
-  const [purchaseToDelete, setPurchaseToDelete] =
-    useState<TransactionTable | null>(null);
+  // const [purchaseItemToDelete, setPurchaseItemToDelete] =
+  //   useState<TransactionItem | null>(null);
+  // const [purchaseToDelete, setPurchaseToDelete] =
+  //   useState<TransactionTable | null>(null);
 
   console.log("user session:", user);
 
@@ -852,108 +852,108 @@ export default function Component() {
     }
   };
 
-  const handleDeletePurchaseItemConfirm = async (
-    purchaseItem: TransactionItem
-  ) => {
-    try {
-      const response = await fetch(
-        `/api/purchaseitem/purchaseitemSD/purchaseitem-soft-delete/${purchaseItem.transactionitemid}`,
-        {
-          method: "PUT",
-        }
-      );
+  // const handleDeletePurchaseItemConfirm = async (
+  //   purchaseItem: TransactionItem
+  // ) => {
+  //   try {
+  //     const response = await fetch(
+  //       `/api/purchaseitem/purchaseitemSD/purchaseitem-soft-delete/${purchaseItem.transactionitemid}`,
+  //       {
+  //         method: "PUT",
+  //       }
+  //     );
 
-      if (response.ok) {
-        console.log("Purchase Item deleted successfully");
-        setShowAlertPurchaseItem(false);
-        refreshPurchases();
-        refreshTransactionItems();
-      } else {
-        console.error("Error deleting Purchase Item:", response.status);
-      }
-    } catch (error) {
-      console.error("Error deleting Purchase Item:", error);
-    }
-  };
+  //     if (response.ok) {
+  //       console.log("Purchase Item deleted successfully");
+  //       setShowAlertPurchaseItem(false);
+  //       refreshPurchases();
+  //       refreshTransactionItems();
+  //     } else {
+  //       console.error("Error deleting Purchase Item:", response.status);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting Purchase Item:", error);
+  //   }
+  // };
 
-  const handleDeletePurchaseItemConfirmWithToast = (
-    purchaseItem: TransactionItem
-  ) => {
-    handleDeletePurchaseItemConfirm(purchaseItem);
-    toast.success(
-      `Purchase item ${""} ${
-        purchaseItem.Item.itemname
-      } ${""} has been deleted`,
-      {
-        description: "You can now continue with what you are doing.",
-      }
-    );
-  };
+  // const handleDeletePurchaseItemConfirmWithToast = (
+  //   purchaseItem: TransactionItem
+  // ) => {
+  //   handleDeletePurchaseItemConfirm(purchaseItem);
+  //   toast.success(
+  //     `Purchase item ${""} ${
+  //       purchaseItem.Item.itemname
+  //     } ${""} has been deleted`,
+  //     {
+  //       description: "You can now continue with what you are doing.",
+  //     }
+  //   );
+  // };
 
-  const handleDeleteWithToast = (itemid: number | undefined) => {
-    handleDelete(itemid);
-    toast.success(
-      `Purchase Order No. ${""} ${
-        purchaseToDelete?.DocumentNumber.documentnumber
-      } ${""} has been deleted`,
-      {
-        description: "You can now continue with what you are doing.",
-      }
-    );
-  };
+  // const handleDeleteWithToast = (itemid: number | undefined) => {
+  //   handleDelete(itemid);
+  //   toast.success(
+  //     `Purchase Order No. ${""} ${
+  //       purchaseToDelete?.DocumentNumber.documentnumber
+  //     } ${""} has been deleted`,
+  //     {
+  //       description: "You can now continue with what you are doing.",
+  //     }
+  //   );
+  // };
 
-  const handleDeletePurchaseItem = (purchaseItem: TransactionItem) => {
-    setPurchaseItemToDelete(purchaseItem);
-    setShowAlertPurchaseItem(true);
-    console.log("Deleting purchase item:", purchaseItem);
-  };
+  // const handleDeletePurchaseItem = (purchaseItem: TransactionItem) => {
+  //   setPurchaseItemToDelete(purchaseItem);
+  //   setShowAlertPurchaseItem(true);
+  //   console.log("Deleting purchase item:", purchaseItem);
+  // };
 
-  const handlePurchaseItemDeleteCancel = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    event.preventDefault();
-    setShowAlertPurchaseItem(false);
-    setPurchaseItemToDelete(null);
-    formPurchaseItemOnly.reset();
-  };
+  // const handlePurchaseItemDeleteCancel = (
+  //   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  // ) => {
+  //   event.preventDefault();
+  //   setShowAlertPurchaseItem(false);
+  //   setPurchaseItemToDelete(null);
+  //   formPurchaseItemOnly.reset();
+  // };
 
-  const handleDelete = async (transactionid: number | undefined) => {
-    try {
-      const response = await fetch(
-        `/api/purchase/purchase-soft-delete/${transactionid}`,
-        {
-          method: "PUT",
-        }
-      );
+  // const handleDelete = async (transactionid: number | undefined) => {
+  //   try {
+  //     const response = await fetch(
+  //       `/api/purchase/purchase-soft-delete/${transactionid}`,
+  //       {
+  //         method: "PUT",
+  //       }
+  //     );
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Purchase deleted successfully");
-        setShowAlert(false);
-        setPurchaseToDelete(null);
-        refreshPurchases();
-        refreshTransactionItems();
-      } else {
-        console.error("Error deleting Purchase:", response.status);
-      }
-    } catch (error) {
-      console.error("Error deleting Purchase:", error);
-    }
-  };
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       console.log("Purchase deleted successfully");
+  //       setShowAlert(false);
+  //       setPurchaseToDelete(null);
+  //       refreshPurchases();
+  //       refreshTransactionItems();
+  //     } else {
+  //       console.error("Error deleting Purchase:", response.status);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting Purchase:", error);
+  //   }
+  // };
 
-  const handleDeletePurchase = (purchase: TransactionTable) => {
-    setPurchaseToDelete(purchase);
-    setShowAlert(true);
-  };
+  // const handleDeletePurchase = (purchase: TransactionTable) => {
+  //   setPurchaseToDelete(purchase);
+  //   setShowAlert(true);
+  // };
 
-  const handleDeleteCancel = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    event.preventDefault();
-    setShowAlert(false);
-    setPurchaseToDelete(null);
-    form.reset();
-  };
+  // const handleDeleteCancel = (
+  //   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  // ) => {
+  //   event.preventDefault();
+  //   setShowAlert(false);
+  //   setPurchaseToDelete(null);
+  //   form.reset();
+  // };
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -1222,9 +1222,9 @@ export default function Component() {
   }, [transactionItem]);
 
   return (
-    <div className="flex h-screen w-full bg-customColors-offWhite">
-      <div className="flex-1 overflow-y-auto p-5 w-full">
-        <div className="container mx-auto px-4 md:px-6 py-8">
+    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+      <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
+        <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">
               <div className="flex  items-center justify-between mb-6 -mr-6">
@@ -1373,7 +1373,7 @@ export default function Component() {
                                     <FilePenIcon className="w-4 h-4" />
                                     <span className="sr-only">Edit</span>
                                   </Button>
-                                  {canAccessButton(ROLES.ADMIN) && (
+                                  {/* {canAccessButton(ROLES.ADMIN) && (
                                     <>
                                       <Button
                                         variant="outline"
@@ -1386,7 +1386,7 @@ export default function Component() {
                                         <span className="sr-only">Delete</span>
                                       </Button>
                                     </>
-                                  )}
+                                  )} */}
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1531,7 +1531,7 @@ export default function Component() {
                                                     Edit
                                                   </span>
                                                 </Button>
-                                                <Button
+                                                {/* <Button
                                                   variant="outline"
                                                   size="sm"
                                                   onClick={() =>
@@ -1544,7 +1544,7 @@ export default function Component() {
                                                   <span className="sr-only">
                                                     Delete
                                                   </span>
-                                                </Button>
+                                                </Button> */}
                                               </div>
                                             </>
                                           )}
@@ -1767,7 +1767,7 @@ export default function Component() {
                   </DialogContent>
                 </Dialog>
               )}
-              {purchaseItemToDelete && (
+              {/* {purchaseItemToDelete && (
                 <AlertDialog open={showAlertPurchaseItem}>
                   <AlertDialogContent className="bg-customColors-offWhite">
                     <AlertDialogHeader>
@@ -1829,7 +1829,7 @@ export default function Component() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              )}
+              )} */}
               {showModal && (
                 <Dialog open={showModal} onOpenChange={handleCancel}>
                   <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4 bg-customColors-offWhite">

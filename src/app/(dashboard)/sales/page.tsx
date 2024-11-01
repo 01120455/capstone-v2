@@ -354,9 +354,9 @@ export default function Sales() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto pt-4">
           <div className="grid gap-1 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_460px]">
             <div className="flex-1 overflow-auto p-4 md:p-4">
               <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] xl:h-[800px] w-auto border rounded-lg p-2">
