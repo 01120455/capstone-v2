@@ -25,6 +25,8 @@ import {
   EllipsisIcon,
   MenuIcon,
   ArchiveIcon,
+  ChevronsUpDown,
+  ChevronRightIcon,
 } from "@/components/icons/Icons";
 import { userSessionContext } from "@/components/sessionContext-provider";
 import {
@@ -36,7 +38,15 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible } from "@radix-ui/react-collapsible";
+import { CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
 const ROLES = {
   SALES: "sales",
@@ -54,17 +64,16 @@ const MenuItem = ({
   icon: any;
   label: string;
 }) => (
-  <SidebarMenuItem>
-    <SidebarMenuButton asChild>
-      <Link href={href} prefetch={false} className="flex items-center">
-        <Icon className="w-4 h-4 mr-3" />
-        <span>{label}</span>
-      </Link>
-    </SidebarMenuButton>
-  </SidebarMenuItem>
+  <Link href={href} prefetch={false} className="flex items-center">
+    <Icon className="w-4 h-4 mr-3" />
+    <span>{label}</span>
+  </Link>
 );
 
-export default function SideMenu() {
+export default function SideMenu({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const { isMobile } = useSidebar();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const user = useContext(userSessionContext);
   const { isAuthenticated, userRole } = useAuth();
@@ -92,28 +101,190 @@ export default function SideMenu() {
     if (user.role === ROLES.ADMIN || user.role === ROLES.MANAGER) {
       return (
         <>
-          <MenuItem
-            href="/dashboard"
-            icon={LayoutDashboardIcon}
-            label="Dashboard"
-          />
-          <MenuItem href="/product" icon={BoxIcon} label="Product" />
-          <MenuItem href="/sales" icon={DollarSignIcon} label="Sales" />
-          <MenuItem
-            href="/saleshistory"
-            icon={CalendarIcon}
-            label="Sales History"
-          />
-          <MenuItem href="/purchase" icon={PurchaseIcon} label="Purchase" />
-          <MenuItem
-            href="/purchasehistory"
-            icon={CalendarIcon}
-            label="Purchase History"
-          />
+          <SidebarGroup>
+            <SidebarGroupLabel>Overview</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Analytics"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Analytics">
+                      <MenuItem
+                        href="/dashboard"
+                        icon={LayoutDashboardIcon}
+                        label="Dashboard"
+                      />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Inventory</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Product"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Product">
+                      <MenuItem
+                        href="/product"
+                        icon={BoxIcon}
+                        label="Product"
+                      />
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem key="Product">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/product">
+                            <span>Rice and By-products</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Sales</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Sales"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Sales">
+                      <MenuItem
+                        href="/sales"
+                        icon={DollarSignIcon}
+                        label="Sales"
+                      />
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem key="Sales">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/sales">
+                            <span>Point of Sale</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="SalesHistory">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/saleshistory">
+                            <span>Sales History</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="SalesItems">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/salesitem">
+                            <span>Sold Items</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Purchase</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Purchase"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Purchase">
+                      <MenuItem
+                        href="/purchase"
+                        icon={PurchaseIcon}
+                        label="Purchase"
+                      />
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem key="Purchase">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/purchase">
+                            <span>Purchase Order</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="PurchaseHistory">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/purchasehistory">
+                            <span>Purchase Order History</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="PurchasedItemsFromMilling">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/purchaseditemsfrommilling">
+                            <span>Milling Purchased Items</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+
           {user.role === ROLES.ADMIN && (
             <>
-              <MenuItem href="/user" icon={UsersIcon} label="Users" />
-              {/* <MenuItem href="/archive" icon={ArchiveIcon} label="Archive" /> */}
+              <SidebarGroup>
+                <SidebarGroupLabel>User Management</SidebarGroupLabel>
+                <SidebarMenu>
+                  <Collapsible
+                    key="User"
+                    asChild
+                    defaultOpen={true}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton tooltip="User">
+                          <MenuItem
+                            href="/user"
+                            icon={UsersIcon}
+                            label="Users"
+                          />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                </SidebarMenu>
+              </SidebarGroup>
             </>
           )}
         </>
@@ -123,12 +294,55 @@ export default function SideMenu() {
     if (user.role === ROLES.SALES) {
       return (
         <>
-          <MenuItem href="/sales" icon={DollarSignIcon} label="Sales" />
-          <MenuItem
-            href="/saleshistory"
-            icon={CalendarIcon}
-            label="Sales History"
-          />
+          <SidebarGroup>
+            <SidebarGroupLabel>Sales</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Sales"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Sales">
+                      <MenuItem
+                        href="/sales"
+                        icon={DollarSignIcon}
+                        label="Sales"
+                      />
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem key="Sales">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/sales">
+                            <span>Point of Sale</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="SalesHistory">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/saleshistory">
+                            <span>Sales History</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="SalesItems">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/salesitem">
+                            <span>Sales Items</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
         </>
       );
     }
@@ -136,17 +350,97 @@ export default function SideMenu() {
     if (user.role === ROLES.INVENTORY) {
       return (
         <>
-          <MenuItem href="/product" icon={BoxIcon} label="Product" />
-          <MenuItem
-            href="/saleshistory"
-            icon={CalendarIcon}
-            label="Sales History"
-          />
-          <MenuItem
-            href="/purchasehistory"
-            icon={CalendarIcon}
-            label="Purchase History"
-          />
+          <SidebarGroup>
+            <SidebarGroupLabel>Inventory</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Product"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Product">
+                      <MenuItem
+                        href="/product"
+                        icon={BoxIcon}
+                        label="Product"
+                      />
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem key="Product">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/product">
+                            <span>Rice and By-products</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Transaction History</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Transactions"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Transactions">
+                      <MenuItem
+                        href="/saleshistory"
+                        icon={DollarSignIcon}
+                        label="Transactions"
+                      />
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem key="SalesHistory">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/saleshistory">
+                            <span>Sales History</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="SalesItems">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/salesitem">
+                            <span>Sales Items</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="PurchaseOrderHistory">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/purchasehistory">
+                            <span>Purchase Order History</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="PurchasedItemsFromMilling">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/purchaseditemsfrommilling">
+                            <span>Purchased Items from Milling</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
         </>
       );
     }
@@ -159,42 +453,48 @@ export default function SideMenu() {
   }
 
   return (
-    <Sidebar collapsible="offcanvas" variant="sidebar">
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="border-b p-4">
         <div className="flex items-center justify-between">
           <span className="text-lg font-semibold block">3R Shane IMS</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <ScrollArea className="h-[calc(100vh-8rem)]">
-          <SidebarMenu>{menuItems}</SidebarMenu>
-        </ScrollArea>
+        <ScrollArea className="h-[calc(100vh-8rem)]">{menuItems}</ScrollArea>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Avatar>
-              <AvatarImage src={user?.imagepath} />
-              <AvatarFallback>{user?.firstname?.[0] || "U"}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">
-                {user?.firstname && user?.lastname
-                  ? `${user.firstname} ${user.lastname}`
-                  : "Guest"}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {user?.email || "guest"}
-              </span>
-            </div>
-          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <EllipsisIcon className="h-4 w-4" />
-              </Button>
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage src={user?.imagepath} />
+                  <AvatarFallback className="rounded-lg">
+                    {user?.firstname?.[0] || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">
+                    {user?.firstname && user?.lastname
+                      ? `${user.firstname} ${user.lastname}`
+                      : "Guest"}
+                  </span>
+                  <span className="truncate text-xs">
+                    {user?.email || "guest"}
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4" />
+              </SidebarMenuButton>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent
+              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+              side={isMobile ? "bottom" : "right"}
+              align="end"
+              sideOffset={4}
+            >
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   onSelect={() => (window.location.href = "/profile")}

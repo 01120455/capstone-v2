@@ -15,7 +15,7 @@ export default function DashboardLayout({
           <SideMenu />
           <Toaster />
           <main className="w-full">
-            <SidebarTrigger />
+            <SidebarTrigger className="-ml-1" />
             {children}
           </main>
         </UserProvider>
