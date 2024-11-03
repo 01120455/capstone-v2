@@ -55,7 +55,6 @@ model TransactionItem {
   transactionitemid Int                   @id @default(autoincrement())
   transactionid     Int
   itemid            Int
-  itemtype              ItemType
   sackweight        SackWeightType
   unitofmeasurement UnitofMeasurementType
   stock             Float
@@ -73,6 +72,7 @@ model Item {
   itemname              String               @db.VarChar(50)
   itemtype              ItemType
   sackweight        SackWeightType
+  status          Status
   unitofmeasurement UnitofMeasurementType
   stock             Float
   unitprice         Float?
@@ -84,6 +84,8 @@ model Item {
 }
 
 enum SackWeightType {
+  bag5kg
+  bag10kg
   bag25kg
   cavan50kg
 }

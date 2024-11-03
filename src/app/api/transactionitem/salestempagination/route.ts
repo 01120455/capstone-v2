@@ -27,14 +27,12 @@ const convertBigIntToString = (value: any): any => {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
-  // Use a fallback value in the parseInt
   const limit = parseInt(searchParams.get("limit") || "10");
   const page = parseInt(searchParams.get("page") || "1");
 
   const skip = (page - 1) * limit;
 
   try {
-    // Fetch the relevant transactions first
     const transactions = await prisma.transaction.findMany({
       where: {
         transactiontype: "sales",

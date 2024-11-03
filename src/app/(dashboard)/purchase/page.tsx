@@ -1221,6 +1221,15 @@ export default function Component() {
     return transactionItem;
   }, [transactionItem]);
 
+  const formatStock = (stock: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(stock);
+  };
+  
+
   return (
     <div className="flex min-h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
@@ -1496,7 +1505,7 @@ export default function Component() {
                                           {purchaseItem.Item.itemname}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.itemtype}
+                                          {purchaseItem.Item.itemtype}
                                         </TableCell>
                                         <TableCell>
                                           {purchaseItem.sackweight}
@@ -1505,13 +1514,13 @@ export default function Component() {
                                           {purchaseItem.unitofmeasurement}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.stock}
+                                          {formatStock(purchaseItem.stock)}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.unitprice}
+                                          {formatPrice(purchaseItem.unitprice)}
                                         </TableCell>
                                         <TableCell>
-                                          {purchaseItem.totalamount}
+                                          {formatPrice(purchaseItem.totalamount)}
                                         </TableCell>
                                         <TableCell>
                                           {canAccessButton(ROLES.ADMIN) && (
@@ -2139,7 +2148,6 @@ export default function Component() {
                               <Button
                                 onClick={() =>
                                   append({
-                                    itemtype: "palay",
                                     sackweight: "bag25kg",
                                     Item: {
                                       itemtype: "palay",

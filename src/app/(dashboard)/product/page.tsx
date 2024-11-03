@@ -84,6 +84,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { userSessionContext } from "@/components/sessionContext-provider";
+import { Badge } from "@/components/ui/badge";
 
 const ROLES = {
   SALES: "sales",
@@ -100,6 +101,7 @@ const useFilters = () => {
     type: "",
     sackweight: "",
     unitofmeasurement: "",
+    active: "",
   });
 
   const clear = () => {
@@ -108,6 +110,7 @@ const useFilters = () => {
       type: "",
       sackweight: "",
       unitofmeasurement: "",
+      active: "",
     });
   };
 
@@ -149,6 +152,9 @@ const useItems = () => {
         }
         if (filters.unitofmeasurement) {
           params.append("unitofmeasurement", filters.unitofmeasurement);
+        }
+        if (filters.active) {
+          params.append("active", filters.active);
         }
 
         const response = await fetch(
@@ -195,6 +201,7 @@ const useItems = () => {
       type: "",
       sackweight: "",
       unitofmeasurement: "",
+      active: "",
     });
     fetchItems(currentPage);
   };
@@ -255,6 +262,7 @@ export default function ProductManagement() {
       itemname: "",
       itemtype: "bigas",
       sackweight: "bag25kg",
+      status: "active",
       unitofmeasurement: "quantity",
       stock: 0,
       unitprice: 0,
@@ -275,6 +283,10 @@ export default function ProductManagement() {
   const filteredItems = useMemo(() => {
     return items;
   }, [items]);
+
+  useEffect(() => {
+    console.log(form.formState.errors);
+  }, [form.formState.errors]);
 
   console.log("Filtered Items: ", filteredItems);
 
@@ -369,16 +381,6 @@ export default function ProductManagement() {
   //   return () => document.removeEventListener("mousedown", handleClickOutside);
   // }, []);
 
-  const canAccessButton = (role: string) => {
-    if (!user) return false;
-    if (user.role === ROLES.ADMIN) return true;
-    if (user.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
-    return (
-      [ROLES.SALES, ROLES.INVENTORY].includes(user.role as any) &&
-      role !== ROLES.ADMIN
-    );
-  };
-
   // const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
   // const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
   // const dropdownRefItem = useRef<HTMLDivElement>(null);
@@ -454,6 +456,25 @@ export default function ProductManagement() {
               </SelectContent>
             </Select>
           </div>
+          <div className="grid gap-2">
+            <span className="text-sm">Sack Weight</span>
+            <Select
+              value={filters.sackweight}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, sackweight: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Sack Weight" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bag5kg">Bag5kg</SelectItem>
+                <SelectItem value="bag10kg">Bag10kg</SelectItem>
+                <SelectItem value="bag25kg">Bag25kg</SelectItem>
+                <SelectItem value="cavan50kg">Cavan50kg</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="grid gap-2">
             <span className="text-sm">Unit of Measurement</span>
@@ -467,6 +488,23 @@ export default function ProductManagement() {
               <SelectContent>
                 <SelectItem value="quantity">Quantity</SelectItem>
                 <SelectItem value="weight">Weight</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm">Active</span>
+            <Select
+              value={filters.active}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, active: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Active" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -504,6 +542,7 @@ export default function ProductManagement() {
       itemname: "",
       itemtype: "bigas",
       sackweight: "bag25kg",
+      status: "active",
       unitofmeasurement: "quantity",
       stock: 0,
       unitprice: 0,
@@ -533,10 +572,11 @@ export default function ProductManagement() {
       itemname: item.itemname,
       itemtype: item.itemtype,
       sackweight: item.sackweight,
+      status: item.status,
       unitofmeasurement: item.unitofmeasurement,
       stock: item.stock,
       unitprice: item.unitprice,
-      imagepath: item.imagepath,
+      imagepath: item.imagepath || "",
     });
   };
 
@@ -544,6 +584,74 @@ export default function ProductManagement() {
   //   setItemToDelete(item);
   //   setShowAlert(true);
   // };
+
+  const canAccessButton = (role: string) => {
+    if (!user) return false;
+    if (user.role === ROLES.ADMIN) return true;
+    if (user.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+    return (
+      [ROLES.SALES, ROLES.INVENTORY].includes(user.role as any) &&
+      role !== ROLES.ADMIN
+    );
+  };
+
+  console.log("User Role: ", user?.role);
+
+  const itemData = {
+    itemid: form.getValues("itemid") || 0,
+    itemname: form.getValues("itemname") || "",
+    itemtype: form.getValues("itemtype"),
+    sackweight: form.getValues("sackweight") || "bag25kg",
+    status: form.getValues("status") || "active",
+    unitofmeasurement: form.getValues("unitofmeasurement") || "quantity",
+    stock: form.getValues("stock") || 0,
+    unitprice: form.getValues("unitprice") || 0,
+    imagepath: form.getValues("imagepath"),
+  };
+
+  console.log("Item Data: ", itemData);
+
+  const userActionWithAccess = (id: number, role: string, itemData: any) => {
+    if (!role) {
+      return "access denied";
+    }
+
+    const canAccessInput = () => {
+      if (user?.role === ROLES.ADMIN) return true;
+      if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+      return false;
+    };
+
+    if (!canAccessInput()) {
+      return "access denied";
+    }
+
+    if (id === 0) {
+      return "add";
+    }
+
+    const parsedData = item.safeParse(itemData);
+
+    console.log("Parsed Data: ", parsedData);
+
+    if (parsedData.success) {
+      const data = parsedData.data;
+      if (data.itemid === id) {
+        return "edit";
+      }
+    } else {
+      console.error("Error parsing data: ", parsedData.error);
+      return "error";
+    }
+  };
+
+  const itemId = form.getValues("itemid");
+
+  const action = userActionWithAccess(itemId ?? 0, user?.role, itemData);
+
+  console.log("User Action: ", action);
 
   return (
     <div className="flex min-h-screen w-full bg-customColors-offWhite">
@@ -585,6 +693,7 @@ export default function ProductManagement() {
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Sack Weight</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Unit of Measurement</TableHead>
                   <TableHead>Available Stocks</TableHead>
                   {canAccessButton(ROLES.ADMIN || ROLES.MANAGER) && (
@@ -615,6 +724,17 @@ export default function ProductManagement() {
                       <TableCell>{item.itemname}</TableCell>
                       <TableCell>{item.itemtype}</TableCell>
                       <TableCell>{item.sackweight}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`px-2 py-1 rounded-full ${
+                            item.status === "active"
+                              ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                              : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                          }`}
+                        >
+                          {item.status}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{item.unitofmeasurement}</TableCell>
                       <TableCell>{formatStock(item.stock)}</TableCell>
                       {canAccessButton(ROLES.ADMIN || ROLES.MANAGER) && (
@@ -861,40 +981,9 @@ export default function ProductManagement() {
                             <FormItem>
                               <FormLabel htmlFor="itemname">Name</FormLabel>
                               <FormControl>
-                                <Input
-                                  {...field}
-                                  id="itemname"
-                                  type="text"
-                                  // value={inputValue || form.getValues("name")}
-                                  // onChange={(e) => {
-                                  //   handleInputChange(e);
-                                  //   field.onChange(e);
-                                  // }}
-                                  // onFocus={() =>
-                                  //   setDropdownVisible(inputValue.length > 0)
-                                  // }
-                                />
+                                <Input {...field} id="itemname" type="text" />
                               </FormControl>
                               <FormMessage />
-                              {/* {dropdownVisible &&
-                                filteredItemsName.length > 0 && (
-                                  <div
-                                    ref={dropdownRef}
-                                    className="absolute z-10 bg-white border border-gray-300 mt-1 max-h-60 overflow-y-auto"
-                                  >
-                                    {filteredItemsName.map((item) => (
-                                      <div
-                                        key={item.itemid}
-                                        className="p-2 cursor-pointer hover:bg-gray-200"
-                                        onClick={() =>
-                                          handleItemClick(item.name)
-                                        }
-                                      >
-                                        {item.name}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )} */}
                             </FormItem>
                           )}
                         />
@@ -964,6 +1053,73 @@ export default function ProductManagement() {
                           )}
                         />
                       </div>
+                      {(action === "edit" && user?.role === ROLES.ADMIN) ||
+                      user?.role === ROLES.MANAGER ? (
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="status"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="status">Status</FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    {...field}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Status">
+                                        {field.value}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="active">
+                                        Active
+                                      </SelectItem>
+                                      <SelectItem value="inactive">
+                                        Inactive
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      ) : null}
+                      {/* <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="status"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor="status">Status</FormLabel>
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  {...field}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select Status">
+                                      {field.value}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="active">
+                                      Active
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                      Inactive
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div> */}
                       <div className="space-y-2">
                         <FormField
                           control={form.control}

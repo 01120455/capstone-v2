@@ -36,7 +36,7 @@ const salesTransactionSchema = z.object({
             })
             .default("palay"),
           sackweight: z
-            .enum(["bag25kg", "cavan50kg"], {
+            .enum(["bag5kg", "bag10kg", "bag25kg", "cavan50kg"], {
               invalid_type_error: "Invalid Type Received",
             })
             .default("bag25kg"),

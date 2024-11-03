@@ -77,7 +77,6 @@ export const POST = async (req: NextRequest) => {
         { status: 400 }
       );
     }
-
     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
 
     if (isNaN(stock) || isNaN(unitprice)) {
@@ -97,7 +96,6 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // Handle file upload
     let fileUrl = null;
 
     if (image) {
@@ -173,6 +171,7 @@ export const POST = async (req: NextRequest) => {
             itemname: name,
             itemtype: type,
             sackweight,
+            status: "active",
             unitofmeasurement,
             stock,
             unitprice,
@@ -183,8 +182,6 @@ export const POST = async (req: NextRequest) => {
         return [null, newItem];
       }
     });
-
-    // Return the result based on whether an item was updated or created
     if (existingItem) {
       return NextResponse.json(result, { status: 200 });
     } else {
@@ -207,6 +204,7 @@ export async function GET(req: NextRequest) {
         itemname: true,
         itemtype: true,
         sackweight: true,
+        status: true,
         unitofmeasurement: true,
         stock: true,
         unitprice: true,
@@ -260,208 +258,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// export const PUT = async (req: NextRequest) => {
-//   try {
-//     const session = await getIronSession(
-//       req,
-//       NextResponse.next(),
-//       sessionOptions
-//     );
-//     const userid = session.user.userid;
-
-//     const formData = await req.formData();
-
-//     const itemId = parseInt(formData.get("itemid") as string, 10);
-//     const name = formData.get("name") as string;
-//     const typeString = formData.get("type") as string;
-
-//     const sackweightString = formData.get("sackweight") as string;
-
-//     if (!Object.values(SackWeight).includes(sackweightString as SackWeight)) {
-//       return NextResponse.json(
-//         { error: "Invalid sack weight" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const sackweight = sackweightString as SackWeight;
-
-//     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
-
-//     if (
-//       !Object.values(UnitOfMeasurement).includes(
-//         unitofmeasurementString as UnitOfMeasurement
-//       )
-//     ) {
-//       return NextResponse.json(
-//         { error: "Invalid unit of measurement" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const unitofmeasurement = unitofmeasurementString as UnitOfMeasurement;
-
-//     const stock = parseFloat(formData.get("stock") as string);
-//     const unitprice = parseFloat(formData.get("unitprice") as string);
-//     const reorderlevel = parseInt(formData.get("reorderlevel") as string, 10);
-//     const criticallevel = parseInt(formData.get("criticallevel") as string, 10);
-//     const image = formData.get("image") as File | null;
-
-//     if (!sackweight) {
-//       return NextResponse.json(
-//         { error: "Sack weight is required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (isNaN(stock) || isNaN(unitprice)) {
-//       return NextResponse.json(
-//         {
-//           error:
-//             "stock and unit price must be valid numbers and not negative values",
-//         },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (!unitofmeasurement) {
-//       return NextResponse.json(
-//         { error: "Unit of measurement is required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (isNaN(reorderlevel) || isNaN(criticallevel)) {
-//       return NextResponse.json(
-//         {
-//           error:
-//             "Reorder level and critical level must be valid numbers and not negative values",
-//         },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (!Object.values(ItemType).includes(typeString as ItemType)) {
-//       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
-//     }
-
-//     const type = typeString as ItemType;
-
-//     if (!name || !type || !sackweight || isNaN(unitprice) || isNaN(itemId)) {
-//       return NextResponse.json(
-//         { error: "All fields are required and must be valid to be updated" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const existingItem = await prisma.item.findUnique({
-//       where: { itemid: itemId },
-//       include: { itemimage: true },
-//     });
-
-//     if (!existingItem) {
-//       return NextResponse.json({ error: "Item not found" }, { status: 404 });
-//     }
-
-//     let fileUrl = null;
-
-//     if (image) {
-//       if (image.size > MAX_FILE_SIZE) {
-//         return NextResponse.json(
-//           { error: "File is too large" },
-//           { status: 400 }
-//         );
-//       }
-
-//       if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
-//         return NextResponse.json(
-//           { error: "Invalid file type" },
-//           { status: 400 }
-//         );
-//       }
-
-//       const buffer = await image.arrayBuffer();
-
-//       // Sanitize the name to create a valid folder name
-//       const sanitizedFolderName = name.replace(/[^a-zA-Z0-9-_]/g, "_");
-//       const relativeUploadDir = `/uploads/product_image/${sanitizedFolderName}`;
-//       const uploadDir = join(process.cwd(), "public", relativeUploadDir);
-
-//       try {
-//         await stat(uploadDir);
-//       } catch (e: any) {
-//         if (e.code === "ENOENT") {
-//           await mkdir(uploadDir, { recursive: true });
-//         } else {
-//           console.error(
-//             "Error while trying to create directory when uploading a file\n",
-//             e
-//           );
-//           return NextResponse.json(
-//             { error: "Internal server error" },
-//             { status: 500 }
-//           );
-//         }
-//       }
-
-//       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-//       const filename = `${image.name.replace(
-//         /\s/g,
-//         "-"
-//       )}-${uniqueSuffix}.${mime.getExtension(image.type)}`;
-//       await writeFile(`${uploadDir}/${filename}`, Buffer.from(buffer));
-//       fileUrl = `${relativeUploadDir}/${filename}`;
-
-//       if (existingItem.itemimage.length > 0) {
-//         const oldImagePath = join(
-//           process.cwd(),
-//           "public",
-//           existingItem.itemimage[0].imagepath
-//         );
-//         try {
-//           await unlink(oldImagePath);
-//         } catch (e: any) {
-//           console.error("Error deleting old image file\n", e);
-//         }
-//       }
-//     }
-
-//     const updatedItem = await prisma.item.update({
-//       where: { itemid: itemId },
-//       data: {
-//         name,
-//         type,
-//         sackweight,
-//         unitofmeasurement,
-//         stock,
-//         unitprice,
-//         reorderlevel,
-//         criticallevel,
-//         lastmodifiedby: userid,
-//         itemimage: fileUrl
-//           ? {
-//               deleteMany: {}, // delete all existing images
-//               create: {
-//                 imagepath: fileUrl,
-//               },
-//             }
-//           : undefined,
-//       },
-//       include: {
-//         itemimage: true,
-//       },
-//     });
-
-//     return NextResponse.json(updatedItem, { status: 200 });
-//   } catch (error) {
-//     console.error("Error updating item:", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// };
-
 export const PUT = async (req: NextRequest) => {
   try {
     const session = await getIronSession(
@@ -473,8 +269,8 @@ export const PUT = async (req: NextRequest) => {
 
     const formData = await req.formData();
     const itemId = parseInt(formData.get("itemid") as string, 10);
-    const name = formData.get("name") as string;
-    const typeString = formData.get("type") as string;
+    const name = formData.get("itemname") as string;
+    const typeString = formData.get("itemtype") as string;
     const sackweightString = formData.get("sackweight") as string;
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
     const stock = parseFloat(formData.get("stock") as string);
@@ -593,6 +389,7 @@ export const PUT = async (req: NextRequest) => {
             itemname: name,
             itemtype: type,
             sackweight,
+            status: "active",
             unitofmeasurement,
             stock,
             unitprice,

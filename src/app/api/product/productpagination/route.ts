@@ -35,10 +35,9 @@ export async function GET(req: NextRequest) {
   const typeFilter = searchParams.get("type") || "";
   const sackweightFilter = searchParams.get("sackweight") || "";
   const unitofmeasurementFilter = searchParams.get("unitofmeasurement") || "";
+  const statusFilter = searchParams.get("status") || "";
 
-  const whereClause: any = {
-    
-  };
+  const whereClause: any = {};
 
   if (nameFilter) {
     whereClause.itemname = nameFilter;
@@ -56,6 +55,10 @@ export async function GET(req: NextRequest) {
     whereClause.unitofmeasurement = unitofmeasurementFilter;
   }
 
+  if (statusFilter) {
+    whereClause.status = statusFilter;
+  }
+
   try {
     const items = await prisma.item.findMany({
       where: whereClause,
@@ -64,6 +67,7 @@ export async function GET(req: NextRequest) {
         itemname: true,
         itemtype: true,
         sackweight: true,
+        status: true,
         unitofmeasurement: true,
         stock: true,
         unitprice: true,

@@ -40,11 +40,6 @@ const transactionSchema = z.object({
             })
             .default("bag25kg"),
         }),
-        itemtype: z
-          .enum(["bigas", "palay", "resico"], {
-            invalid_type_error: "Invalid Type Received",
-          })
-          .default("palay"),
         sackweight: z
           .enum(["bag25kg", "cavan50kg"], {
             invalid_type_error: "Invalid Type Received",
@@ -88,11 +83,6 @@ const TransactionItem = z.object({
       })
       .default("bag25kg"),
   }),
-  itemtype: z
-    .enum(["bigas", "palay", "resico"], {
-      invalid_type_error: "Invalid Type Received",
-    })
-    .default("palay"),
   sackweight: z
     .enum(["bag25kg", "cavan50kg"], {
       invalid_type_error: "Invalid Type Received",

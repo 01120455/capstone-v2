@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { z } from "zod";
+import { stat, mkdir, writeFile, unlink } from "fs/promises";
+import { join } from "path";
+import mime from "mime";
+import _ from "lodash";
+import { getIronSession } from "iron-session";
+import { sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { itemid: string } }
-) {
-  const { itemid } = params;
-
+export async function GET(req: NextRequest) {
   try {
-    const item = await prisma.item.findUnique({
+    const items = await prisma.item.findMany({
       where: {
-        itemid: Number(itemid), 
+        status: "active",
       },
       select: {
         itemid: true,
@@ -35,11 +37,10 @@ export async function GET(
         lastmodifiedat: true,
         lastmodifiedby: true,
       },
+      orderBy: {
+        lastmodifiedat: "desc",
+      },
     });
-
-    if (!item) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
-    }
 
     const convertBigIntToString = (value: any): any => {
       if (value instanceof Date) {
@@ -62,11 +63,11 @@ export async function GET(
       return value;
     };
 
-    const convertedItem = convertBigIntToString(item);
+    const convertedItems = convertBigIntToString(items);
 
-    return NextResponse.json(convertedItem, { status: 200 });
+    return NextResponse.json(convertedItems, { status: 200 });
   } catch (error) {
-    console.error("Error getting item:", error);
+    console.error("Error getting purchases:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

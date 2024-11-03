@@ -40,6 +40,8 @@ import {
 import { ViewItem } from "@/schemas/item.schema";
 
 const SACK_WEIGHTS = {
+  bag5kg: 5,
+  bag10kg: 10,
   bag25kg: 25,
   cavan50kg: 50,
 } as const;
@@ -179,10 +181,10 @@ const calculateVolume = (transactions: TransactionTable[]) => {
               ? item.stock
               : item.stock * weightPerItem;
 
-          if (item.itemtype === "bigas") {
+          if (item.Item.itemtype === "bigas") {
             volume.bigasPurchase += itemWeight;
             volume.bigasMilling += itemWeight;
-          } else if (item.itemtype === "resico") {
+          } else if (item.Item.itemtype === "resico") {
             volume.resicoPurchase += itemWeight;
             volume.resicoMilling += itemWeight;
           }
@@ -210,9 +212,9 @@ const calculateVolumeOfBigasPalay = (transactions: TransactionTable[]) => {
               ? item.stock
               : item.stock * weightPerItem;
 
-          if (item.itemtype === "palay") {
+          if (item.Item.itemtype === "palay") {
             volume.palayPurchase += itemWeight;
-          } else if (item.itemtype === "bigas") {
+          } else if (item.Item.itemtype === "bigas") {
             volume.bigasPurchase += itemWeight;
           }
         });
@@ -234,8 +236,9 @@ export default function Dashboard() {
   const { data: purchases, loading: purchasesLoading } = useTransactionData(
     "/api/dashboard/suppliertransaction"
   );
-  const { data: items, loading: itemsLoading } =
-    useTransactionData("/api/product");
+  const { data: items, loading: itemsLoading } = useTransactionData(
+    "/api/dashboard/product"
+  );
 
   const { data: millingPurchases, loading: millingLoading } =
     useTransactionData("/api/dashboard/frommillingpurchases");

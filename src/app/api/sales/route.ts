@@ -133,7 +133,6 @@ export const POST = async (req: NextRequest) => {
 
         items.push({
           itemid: itemId,
-          itemtype: type,
           sackweight: sackweight,
           unitofmeasurement: itemUnitOfMeasurement,
           stock: stock,
@@ -181,6 +180,53 @@ export const POST = async (req: NextRequest) => {
         await tx.transactionItem.createMany({
           data: purchaseItemsData,
         });
+      }
+
+      const originalStocks = items.map((item) => ({
+        itemid: item.itemid,
+        stock: item.stock,
+      }));
+
+      for (const originalStock of originalStocks) {
+        const stockToUpdate = originalStock.stock;
+
+        const currentItem = await tx.item.findUnique({
+          where: { itemid: originalStock.itemid },
+        });
+
+        if (!currentItem) continue;
+
+        if (newPurchase.status === "paid") {
+          if (currentItem.stock > 0) {
+            const newStock = currentItem.stock - stockToUpdate;
+
+            if (newStock < 0) {
+              await tx.item.update({
+                where: { itemid: originalStock.itemid },
+                data: { stock: 0 },
+              });
+            } else {
+              await tx.item.update({
+                where: { itemid: originalStock.itemid },
+                data: {
+                  stock: newStock,
+                },
+              });
+            }
+          }
+        } else if (
+          newPurchase.status === "pending" ||
+          newPurchase.status === "cancelled"
+        ) {
+          await tx.item.update({
+            where: { itemid: originalStock.itemid },
+            data: {
+              stock: {
+                increment: stockToUpdate,
+              },
+            },
+          });
+        }
       }
 
       return [newPurchase, newInvoice];

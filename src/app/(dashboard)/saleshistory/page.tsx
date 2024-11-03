@@ -4,7 +4,6 @@ import {
   useState,
   useMemo,
   useEffect,
-  useRef,
   useCallback,
   useContext,
 } from "react";
@@ -20,11 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import transactionSchema, {
-  TransactionItem,
-  TransactionOnly,
-  TransactionTable,
-} from "@/schemas/transaction.schema";
+import { TransactionTable } from "@/schemas/transaction.schema";
 import { Badge } from "@/components/ui/badge";
 import {
   XIcon,
@@ -74,7 +69,6 @@ import {
 import salesTransactionEditSchema, {
   EditSales,
 } from "@/schemas/saleseditstatus.schema";
-import { User } from "@/interfaces/user";
 import { userSessionContext } from "@/components/sessionContext-provider";
 
 const ROLES = {
@@ -249,145 +243,6 @@ const usePurchases = () => {
   };
 };
 
-const useTransactionItems = () => {
-  const {
-    filters: filters2,
-    setFilters: setFilters2,
-    clear: clear2,
-  } = useFilters();
-  const [transactionItem, setTransactionItem] = useState<
-    CombinedTransactionItem[]
-  >([]);
-  const [currentTransactionItemsPage, setCurrentTransactionItemsPage] =
-    useState(1);
-  const [totalTransactionItemsPages, setTotalTransactionItemsPages] =
-    useState(0);
-
-  const fetchTransactionData = useCallback(
-    async (page: number) => {
-      if (isNaN(page) || page < 1) return;
-
-      try {
-        const params = new URLSearchParams({
-          limit: ROWS_PER_PAGE.toString(),
-          page: page.toString(),
-        });
-
-        if (filters2.invoiceno) {
-          params.append("documentnumber", filters2.invoiceno);
-        }
-        if (filters2.name) {
-          params.append("name", filters2.name);
-        }
-        if (filters2.walkin) {
-          params.append("walkin", filters2.walkin);
-        }
-        if (filters2.status) {
-          params.append("status", filters2.status);
-        }
-        if (filters2.dateRange.start) {
-          params.append("startdate", filters2.dateRange.start);
-        }
-        if (filters2.dateRange.end) {
-          params.append("enddate", filters2.dateRange.end);
-        }
-
-        const transactionsResponse = await fetch(
-          `/api/customertransaction/customertransactionpagination?${params}`
-        );
-        if (!transactionsResponse.ok) {
-          throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
-        }
-        const transactions: any[] = await transactionsResponse.json();
-
-        const transactionItemsResponse = await fetch("/api/transactionitem");
-        if (!transactionItemsResponse.ok) {
-          throw new Error(
-            `HTTP error! status: ${transactionItemsResponse.status}`
-          );
-        }
-        const allTransactionItems: TransactionItem[] =
-          await transactionItemsResponse.json();
-
-        const transactionMap = new Map<number, any>();
-        transactions.forEach((transaction) => {
-          transactionMap.set(transaction.transactionid, {
-            documentNumber: transaction.DocumentNumber?.documentnumber,
-            frommilling: transaction.frommilling,
-            transactiontype: transaction.transactiontype,
-            status: transaction.status,
-          });
-        });
-
-        const combinedData: CombinedTransactionItem[] = allTransactionItems
-          .map((item) => {
-            const transactionInfo =
-              transactionMap.get(item.transactionid) || {};
-            return {
-              ...item,
-              documentNumber: transactionInfo.documentNumber,
-              frommilling: transactionInfo.frommilling || false,
-              transactiontype: transactionInfo.transactiontype || "otherType",
-              status: transactionInfo.status || "otherStatus",
-            };
-          })
-          .filter((item) => item.documentNumber !== undefined);
-
-        setTransactionItem(combinedData);
-
-        const totalResponse = await fetch(
-          `/api/customertransaction/customertransactionpagination`
-        );
-        const totalData = await totalResponse.json();
-        setTotalTransactionItemsPages(
-          Math.ceil(totalData.length / ROWS_PER_PAGE)
-        );
-      } catch (error) {
-        console.error("Error fetching transaction data:", error);
-      }
-    },
-    [filters2]
-  );
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await fetchTransactionData(currentTransactionItemsPage);
-    };
-
-    const timer = setTimeout(() => {
-      fetchData();
-    }, 2000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [filters2, currentTransactionItemsPage, fetchTransactionData]);
-
-  const clearFilters2 = () => {
-    clear2();
-    fetchTransactionData(1);
-  };
-
-  const handleTransactionItemsPageChange = (page: number) => {
-    setCurrentTransactionItemsPage(page);
-  };
-
-  const refreshTransactionItems = async () => {
-    await fetchTransactionData(currentTransactionItemsPage);
-  };
-
-  return {
-    transactionItem,
-    currentTransactionItemsPage,
-    totalTransactionItemsPages,
-    handleTransactionItemsPageChange,
-    refreshTransactionItems,
-    filters: filters2,
-    setFilters: setFilters2,
-    clearFilters2,
-  };
-};
-
 export default function Component() {
   const user = useContext(userSessionContext);
   const {
@@ -400,16 +255,6 @@ export default function Component() {
     setFilters,
     clearFilters,
   } = usePurchases();
-  const {
-    transactionItem,
-    currentTransactionItemsPage,
-    totalTransactionItemsPages,
-    handleTransactionItemsPageChange,
-    refreshTransactionItems,
-    filters: filters2,
-    setFilters: setFilters2,
-    clearFilters2,
-  } = useTransactionItems();
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionTable | null>(null);
   const [showModalEditSales, setShowModalEditSales] = useState(false);
@@ -487,7 +332,6 @@ export default function Component() {
         console.log("Closing modal...");
         setShowModalEditSales(false);
         refreshSales();
-        refreshTransactionItems();
       } else {
         console.error("Upload failed", await uploadRes.text());
       }
@@ -503,20 +347,16 @@ export default function Component() {
   const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, invoiceno: value }));
-    setFilters2((prev) => ({ ...prev, invoiceno: value }));
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
-    setFilters2((prev) => ({ ...prev, name: value }));
   };
 
   const clearAllFilters = () => {
     clearFilters();
-    clearFilters2();
     handlePageChange(1);
-    handleTransactionItemsPageChange(1);
   };
 
   const renderFilters = () => (
@@ -591,14 +431,6 @@ export default function Component() {
                     start: newValue,
                   },
                 }));
-
-                setFilters2((prev) => ({
-                  ...prev,
-                  dateRange: {
-                    ...prev.dateRange,
-                    start: newValue,
-                  },
-                }));
               }}
             />
           </div>
@@ -618,14 +450,6 @@ export default function Component() {
                     end: newValue,
                   },
                 }));
-
-                setFilters2((prev) => ({
-                  ...prev,
-                  dateRange: {
-                    ...prev.dateRange,
-                    end: newValue,
-                  },
-                }));
               }}
             />
           </div>
@@ -639,10 +463,6 @@ export default function Component() {
       ...prev,
       status: value,
     }));
-    setFilters2((prev) => ({
-      ...prev,
-      status: value,
-    }));
   };
 
   const handleWalkinChange = (value: string) => {
@@ -650,15 +470,7 @@ export default function Component() {
       ...prev,
       walkin: value,
     }));
-    setFilters2((prev) => ({
-      ...prev,
-      walkin: value,
-    }));
   };
-
-  const filteredTransactionItems = useMemo(() => {
-    return transactionItem;
-  }, [transactionItem]);
 
   const canAccessButton = (role: String) => {
     if (user?.role === ROLES.ADMIN) return true;
@@ -692,6 +504,15 @@ export default function Component() {
       console.error("Failed to generate invoice");
     }
   };
+
+  const formatStock = (stock: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(stock);
+  };
+  
 
   return (
     <div className="flex min-h-screen w-full bg-customColors-offWhite">
@@ -771,12 +592,12 @@ export default function Component() {
                                 (item, index) => (
                                   <TableRow key={index}>
                                     <TableCell>{item.Item.itemname}</TableCell>
-                                    <TableCell>{item.itemtype}</TableCell>
+                                    <TableCell>{item.Item.itemtype}</TableCell>
                                     <TableCell>{item.sackweight}</TableCell>
                                     <TableCell>
                                       {item.unitofmeasurement}
                                     </TableCell>
-                                    <TableCell>{item.stock}</TableCell>
+                                    <TableCell>{formatStock(item.stock)}</TableCell>
                                     {canAccessButton(
                                       ROLES.ADMIN ||
                                         ROLES.MANAGER ||
@@ -1045,125 +866,6 @@ export default function Component() {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-6">
-            <div className="flex  items-center justify-between mb-6 -mr-6">
-              <h1 className="text-2xl font-bold ">List of Sales Items</h1>
-            </div>
-            <div className="flex items-center justify-between"></div>
-            <div className="overflow-x-auto">
-              <div className="table-container relative">
-                <ScrollArea>
-                  <Table
-                    style={{ width: "100%" }}
-                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
-                    divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                  >
-                    <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                        <TableHead>Invoice No.</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Item Name</TableHead>
-                        <TableHead>Item Type</TableHead>
-                        <TableHead>Sack Weight</TableHead>
-                        <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Stock</TableHead>
-                        {canAccessButton(
-                          ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
-                        ) && (
-                          <>
-                            <TableHead>Unit Price</TableHead>
-                            <TableHead>Total Amount</TableHead>
-                          </>
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactionItems.map((purchaseItem) => (
-                        <TableRow key={purchaseItem.transactionitemid}>
-                          <TableCell>{purchaseItem.documentNumber}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={`px-2 py-1 rounded-full ${
-                                purchaseItem.status === "paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                  : purchaseItem.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                  : purchaseItem.status === "cancelled"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
-                              }`}
-                            >
-                              {purchaseItem.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{purchaseItem.Item.itemname}</TableCell>
-                          <TableCell>{purchaseItem.Item.itemtype}</TableCell>
-                          <TableCell>{purchaseItem.sackweight}</TableCell>
-                          <TableCell>
-                            {purchaseItem.unitofmeasurement}
-                          </TableCell>
-                          <TableCell>{purchaseItem.stock}</TableCell>
-                          {canAccessButton(
-                            ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
-                          ) && (
-                            <>
-                              <TableCell>{purchaseItem.unitprice}</TableCell>
-                              <TableCell>{purchaseItem.totalamount}</TableCell>
-                            </>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-                <div className="flex items-center justify-center mt-4 mb-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            handleTransactionItemsPageChange(
-                              Math.max(1, currentTransactionItemsPage - 1)
-                            )
-                          }
-                        />
-                      </PaginationItem>
-                      {[...Array(totalTransactionItemsPages)].map(
-                        (_, index) => (
-                          <PaginationItem key={index}>
-                            <PaginationLink
-                              onClick={() =>
-                                handleTransactionItemsPageChange(index + 1)
-                              }
-                              isActive={
-                                currentTransactionItemsPage === index + 1
-                              }
-                            >
-                              {index + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        )
-                      )}
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            handleTransactionItemsPageChange(
-                              Math.min(
-                                totalTransactionItemsPages,
-                                currentTransactionItemsPage + 1
-                              )
-                            )
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              </div>
             </div>
           </div>
           {showModalEditSales && (

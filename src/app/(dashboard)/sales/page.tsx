@@ -49,7 +49,7 @@ export default function Sales() {
       id: number;
       itemname: string;
       itemtype: "bigas" | "palay" | "resico";
-      sackweight: "bag25kg" | "cavan50kg";
+      sackweight: "bag5kg" | "bag10kg" | "bag25kg" | "cavan50kg";
       unitofmeasurement: "quantity" | "weight";
       price: number;
       quantity: number;
@@ -353,11 +353,19 @@ export default function Sales() {
     }
   };
 
+  const formatStock = (stock: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(stock);
+  };
+
   return (
     <div className="flex min-h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto pt-4">
-          <div className="grid gap-1 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_460px]">
+          <div className="grid gap-1 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_400px]">
             <div className="flex-1 overflow-auto p-4 md:p-4">
               <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] xl:h-[800px] w-auto border rounded-lg p-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-8">
@@ -389,12 +397,12 @@ export default function Sales() {
                           </p>
                           {item.unitofmeasurement === "quantity" && (
                             <p className="text-gray-500 mb-4 text-right">
-                              {item.stock} pcs
+                              {formatStock(item.stock)} pcs
                             </p>
                           )}
                           {item.unitofmeasurement === "weight" && (
                             <p className="text-gray-500 mb-4 text-right">
-                              {item.stock} kg
+                              {formatStock(item.stock)} kg
                             </p>
                           )}
                         </div>
@@ -498,7 +506,7 @@ export default function Sales() {
                     <h2 className="text-lg font-semibold mb-2">
                       Order Summary
                     </h2>
-                    <div className="overflow-y-auto h-[500px] w-auto border rounded-lg p-2">
+                    <div className="overflow-y-auto h-[400px] w-auto border rounded-lg p-2">
                       <Table>
                         <TableHeader>
                           <TableRow>

@@ -12,9 +12,14 @@ export const item = z.object({
       invalid_type_error: "Invalid Type Received",
     })
     .default("bigas"),
-  sackweight: z.enum(["bag25kg", "cavan50kg"], {
+  sackweight: z.enum(["bag5kg", "bag10kg", "bag25kg", "cavan50kg"], {
     invalid_type_error: "Invalid Type Received",
   }),
+  status: z
+    .enum(["active", "inactive"], {
+      invalid_type_error: "Invalid Type Received",
+    })
+    .default("active"),
   unitofmeasurement: z.enum(["quantity", "weight"], {
     invalid_type_error: "Invalid Type Received",
   }),
@@ -34,7 +39,8 @@ export const viewItem = z.object({
   itemid: z.number(),
   itemname: z.string(),
   itemtype: z.enum(["bigas", "palay", "resico"]),
-  sackweight: z.enum(["bag25kg", "cavan50kg"]),
+  sackweight: z.enum(["bag5kg", "bag10kg", "bag25kg", "cavan50kg"]),
+  status: z.enum(["active", "inactive"]),
   unitofmeasurement: z.enum(["quantity", "weight"]),
   stock: z.number().multipleOf(0.01),
   unitprice: z.number().multipleOf(0.01),
@@ -45,7 +51,7 @@ export const viewItem = z.object({
     lastname: z.string(),
   }),
   lastmodifiedat: z.date().optional(),
-  imagepath: z.string().optional(),
+  imagepath: z.string().nullable().optional(),
 });
 
 export type AddItem = z.infer<typeof item>;

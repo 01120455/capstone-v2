@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
               },
             },
             transactionitemid: true,
-            itemtype: true,
             sackweight: true,
             unitofmeasurement: true,
             stock: true,

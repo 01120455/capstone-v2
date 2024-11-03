@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useMemo,
-  useEffect,
-  useRef,
-  useCallback,
-  useContext,
-} from "react";
+import { useState, useMemo, useEffect, useCallback, useContext } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,18 +13,9 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import transactionSchema, {
-  TransactionItem,
-  TransactionOnly,
-  TransactionTable,
-} from "@/schemas/transaction.schema";
+import { TransactionItem } from "@/schemas/transaction.schema";
 import { Badge } from "@/components/ui/badge";
-import {
-  XIcon,
-  ArrowRightIcon,
-  FilterIcon,
-  FilePenIcon,
-} from "@/components/icons/Icons";
+import { FilterIcon } from "@/components/icons/Icons";
 import {
   Pagination,
   PaginationContent,
@@ -53,28 +37,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
-import salesTransactionEditSchema, {
-  EditSales,
-} from "@/schemas/saleseditstatus.schema";
-import { User } from "@/interfaces/user";
 import { userSessionContext } from "@/components/sessionContext-provider";
 
 const ROLES = {
@@ -98,8 +60,8 @@ interface CombinedTransactionItem {
   transactiontype: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
-  stock?: number;
-  unitprice?: number;
+  stock: number;
+  unitprice: number;
   totalamount: number;
   lastmodifiedat?: Date;
 }
@@ -439,6 +401,11 @@ export default function Component() {
             </div>
             <div className="flex items-center justify-between"></div>
             <div className="overflow-x-auto">
+              <div className="flex items-center justify-end">
+                <div className="flex items-center gap-4 mb-4">
+                  {renderFilters()}
+                </div>
+              </div>
               <div className="table-container relative">
                 <ScrollArea>
                   <Table
@@ -495,8 +462,12 @@ export default function Component() {
                             ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                           ) && (
                             <>
-                              <TableCell>{purchaseItem.unitprice}</TableCell>
-                              <TableCell>{purchaseItem.totalamount}</TableCell>
+                              <TableCell>
+                                {formatPrice(purchaseItem.unitprice)}
+                              </TableCell>
+                              <TableCell>
+                                {formatPrice(purchaseItem.totalamount)}
+                              </TableCell>
                             </>
                           )}
                         </TableRow>
@@ -518,22 +489,78 @@ export default function Component() {
                           }
                         />
                       </PaginationItem>
-                      {[...Array(totalTransactionItemsPages)].map(
-                        (_, index) => (
-                          <PaginationItem key={index}>
+                      {currentTransactionItemsPage > 3 && (
+                        <>
+                          <PaginationItem>
                             <PaginationLink
                               onClick={() =>
-                                handleTransactionItemsPageChange(index + 1)
+                                handleTransactionItemsPageChange(1)
                               }
-                              isActive={
-                                currentTransactionItemsPage === index + 1
-                              }
+                              isActive={currentTransactionItemsPage === 1}
                             >
-                              {index + 1}
+                              1
                             </PaginationLink>
                           </PaginationItem>
-                        )
+                          {currentTransactionItemsPage > 3 && (
+                            <PaginationEllipsis />
+                          )}
+                        </>
                       )}
+
+                      {Array.from(
+                        { length: Math.min(3, totalTransactionItemsPages) },
+                        (_, index) => {
+                          const pageIndex =
+                            Math.max(1, currentTransactionItemsPage - 1) +
+                            index;
+                          if (
+                            pageIndex < 1 ||
+                            pageIndex > totalTransactionItemsPages
+                          )
+                            return null;
+
+                          return (
+                            <PaginationItem key={pageIndex}>
+                              <PaginationLink
+                                onClick={() =>
+                                  handleTransactionItemsPageChange(pageIndex)
+                                }
+                                isActive={
+                                  currentTransactionItemsPage === pageIndex
+                                }
+                              >
+                                {pageIndex}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
+                      )}
+
+                      {currentTransactionItemsPage <
+                        totalTransactionItemsPages - 2 && (
+                        <>
+                          {currentTransactionItemsPage <
+                            totalTransactionItemsPages - 3 && (
+                            <PaginationEllipsis />
+                          )}
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() =>
+                                handleTransactionItemsPageChange(
+                                  totalTransactionItemsPages
+                                )
+                              }
+                              isActive={
+                                currentTransactionItemsPage ===
+                                totalTransactionItemsPages
+                              }
+                            >
+                              {totalTransactionItemsPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+
                       <PaginationItem>
                         <PaginationNext
                           onClick={() =>

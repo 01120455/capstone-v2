@@ -72,8 +72,8 @@ interface CombinedTransactionItem {
   transactiontype: "purchases" | "sales";
   sackweight: "bag25kg" | "cavan50kg";
   unitofmeasurement: string;
-  stock?: number;
-  unitprice?: number;
+  stock: number;
+  unitprice: number;
   totalamount: number;
   lastmodifiedat?: Date;
 }
@@ -403,12 +403,12 @@ export default function Component() {
 
   const downloadPurchaseOrder = async () => {
     const response = await fetch("/api/generatepurchaseorder", {
-      method: "POST", // Keep as POST
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        transactionId: selectedTransaction?.transactionid, // Ensure selectedTransaction is defined
+        transactionId: selectedTransaction?.transactionid,
       }),
     });
 
@@ -420,12 +420,20 @@ export default function Component() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url); // Clean up
+      window.URL.revokeObjectURL(url);
     } else {
       console.error("Failed to generate purchase order");
     }
   };
 
+  const formatStock = (stock: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(stock);
+  };
+  
   return (
     <div className="flex min-h-screen w-full bg-customColors-offWhite">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
@@ -438,6 +446,11 @@ export default function Component() {
             </div>
             <div className="flex items-center justify-between"></div>
             <div className="overflow-x-auto">
+              <div className="flex items-center justify-end">
+                <div className="flex items-center gap-4 mb-4">
+                  {renderFilters()}
+                </div>
+              </div>
               <div className="table-container relative">
                 <ScrollArea>
                   <Table
@@ -489,13 +502,17 @@ export default function Component() {
                           <TableCell>
                             {purchaseItem.unitofmeasurement}
                           </TableCell>
-                          <TableCell>{purchaseItem.stock}</TableCell>
+                          <TableCell>{formatStock(purchaseItem.stock)}</TableCell>
                           {canAccessButton(
                             ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                           ) && (
                             <>
-                              <TableCell>{purchaseItem.unitprice}</TableCell>
-                              <TableCell>{purchaseItem.totalamount}</TableCell>
+                              <TableCell>
+                                {formatPrice(purchaseItem.unitprice)}
+                              </TableCell>
+                              <TableCell>
+                                {formatPrice(purchaseItem.totalamount)}
+                              </TableCell>
                             </>
                           )}
                         </TableRow>

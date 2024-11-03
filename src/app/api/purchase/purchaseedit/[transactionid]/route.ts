@@ -11,126 +11,6 @@ enum Status {
   paid = "paid",
   cancelled = "cancelled",
 }
-
-// export const PUT = async (req: NextRequest) => {
-//   try {
-//     const { pathname } = new URL(req.url);
-//     const transactionId = parseInt(pathname.split("/").pop() as string, 10);
-
-//     const session = await getIronSession(
-//       req,
-//       NextResponse.next(),
-//       sessionOptions
-//     );
-//     const userid = session.user.userid;
-//     const formData = await req.formData();
-
-//     const invoicenumber = formData.get("invoicenumber") as string;
-//     const frommilling = formData.get("frommilling") === "true";
-//     const firstname = formData.get("Entity[firstname]") as string;
-//     const middlename = formData.get("Entity[middlename]") as string;
-//     const lastname = formData.get("Entity[lastname]") as string;
-//     const contactnumber = formData.get("Entity[contactnumber]") as string;
-//     const statusString = formData.get("status") as string;
-//     const status = statusString as Status;
-//     const walkin = formData.get("walkin") === "true";
-//     const taxpercentage =
-//       parseFloat(formData.get("taxpercentage") as string) || 0; // Set default to 0 if NaN
-
-//     if (isNaN(transactionId)) {
-//       return NextResponse.json(
-//         { error: "Invalid transaction ID" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // Validate Supplier Information
-//     if (!firstname || !lastname || !contactnumber) {
-//       return NextResponse.json(
-//         { error: "Supplier name and contact number are required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (!invoicenumber) {
-//       return NextResponse.json(
-//         { error: "Invoice number is required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // Ensure status is valid
-//     if (!Object.values(Status).includes(status)) {
-//       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-//     }
-
-//     // Normalize middlename if it is null
-//     const normalizedMiddlename = middlename || "";
-
-//     // Execute Prisma transaction
-//     const updatedPurchase = await prisma.$transaction(async (tx) => {
-//       // Find existing purchase
-//       const existingPurchase = await tx.transaction.findUnique({
-//         where: { transactionid: transactionId },
-//       });
-
-//       if (!existingPurchase) {
-//         throw new Error("Purchase not found");
-//       }
-
-//       const totalAmount = existingPurchase.totalamount ?? 0;
-//       const taxAmount = totalAmount * (taxpercentage / 100);
-//       const totalAmountMinusTax = totalAmount - taxAmount;
-
-//       // Find or create supplier
-//       let supplierId;
-//       const existingSupplier = await tx.entity.findUnique({
-//         where: { entityid: existingPurchase.entityid },
-//       });
-
-//       if (existingSupplier) {
-//         supplierId = existingSupplier.entityid;
-//       } else {
-//         const newSupplier = await tx.entity.create({
-//           data: {
-//             type: "supplier",
-//             firstname,
-//             middlename: normalizedMiddlename,
-//             lastname,
-//             contactnumber,
-//           },
-//         });
-//         supplierId = newSupplier.entityid;
-//       }
-
-//       // Update purchase
-//       const updatedPurchase = await tx.transaction.update({
-//         where: { transactionid: transactionId },
-//         data: {
-//           lastmodifiedby: userid,
-//           entityid: supplierId,
-//           status: status,
-//           walkin: walkin,
-//           frommilling: frommilling,
-//           taxpercentage: taxpercentage,
-//           taxamount: taxAmount,
-//           totalamount: totalAmountMinusTax,
-//         },
-//       });
-
-//       return updatedPurchase;
-//     });
-
-//     return NextResponse.json(updatedPurchase, { status: 200 });
-//   } catch (error) {
-//     console.error("Error updating purchase:", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// };
-
 export const PUT = async (req: NextRequest) => {
   try {
     const { pathname } = new URL(req.url);
@@ -171,6 +51,17 @@ export const PUT = async (req: NextRequest) => {
     const updatedPurchase = await prisma.$transaction(async (tx) => {
       const existingPurchase = await tx.transaction.findUnique({
         where: { transactionid: transactionId },
+        select: {
+          transactionid: true,
+          totalamount: true,
+          documentnumberid: true,
+          TransactionItem: {
+            select: {
+              itemid: true,
+              stock: true,
+            },
+          },
+        },
       });
 
       if (!existingPurchase) {
@@ -207,6 +98,51 @@ export const PUT = async (req: NextRequest) => {
         },
       });
 
+      const originalStocks = existingPurchase.TransactionItem.map((item) => ({
+        itemid: item.itemid,
+        stock: item.stock, 
+      }));
+      
+      for (const originalStock of originalStocks) {
+        const stockToUpdate = originalStock.stock;
+      
+        const currentItem = await tx.item.findUnique({
+          where: { itemid: originalStock.itemid },
+        });
+      
+        if (!currentItem) continue; 
+      
+        if (status === "cancelled" || status === "pending") {
+   
+          if (currentItem.stock >= stockToUpdate) {
+            await tx.item.update({
+              where: { itemid: originalStock.itemid },
+              data: {
+                stock: {
+                  decrement: stockToUpdate,
+                },
+              },
+            });
+          } else {
+
+            await tx.item.update({
+              where: { itemid: originalStock.itemid },
+              data: { stock: 0 },
+            });
+          }
+        } else if (status === "paid") {
+
+          await tx.item.update({
+            where: { itemid: originalStock.itemid },
+            data: {
+              stock: {
+                increment: stockToUpdate,
+              },
+            },
+          });
+        }
+      }
+      
       return updatedPurchase;
     });
 

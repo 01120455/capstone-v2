@@ -42,6 +42,7 @@ export const PUT = async (req: NextRequest) => {
     const updatedPurchase = await prisma.$transaction(async (tx) => {
       const existingPurchase = await tx.transaction.findUnique({
         where: { transactionid: transactionId },
+        include: { TransactionItem: true },
       });
 
       if (!existingPurchase) {
@@ -55,6 +56,48 @@ export const PUT = async (req: NextRequest) => {
           status: status,
         },
       });
+
+      const originalStocks = existingPurchase.TransactionItem.map((item) => ({
+        itemid: item.itemid,
+        stock: item.stock,
+      }));
+
+      for (const originalStock of originalStocks) {
+        const stockToUpdate = originalStock.stock;
+
+        const currentItem = await tx.item.findUnique({
+          where: { itemid: originalStock.itemid },
+        });
+
+        if (!currentItem) continue;
+
+        if (status === "cancelled" || status === "pending") {
+          if (currentItem.stock >= stockToUpdate) {
+            await tx.item.update({
+              where: { itemid: originalStock.itemid },
+              data: {
+                stock: {
+                  decrement: stockToUpdate,
+                },
+              },
+            });
+          } else {
+            await tx.item.update({
+              where: { itemid: originalStock.itemid },
+              data: { stock: 0 },
+            });
+          }
+        } else if (status === "paid") {
+          await tx.item.update({
+            where: { itemid: originalStock.itemid },
+            data: {
+              stock: {
+                increment: stockToUpdate,
+              },
+            },
+          });
+        }
+      }
 
       return updatedPurchase;
     });
