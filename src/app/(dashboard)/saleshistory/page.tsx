@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useMemo,
-  useEffect,
-  useCallback,
-  useContext,
-} from "react";
+import { useState, useMemo, useEffect, useCallback, useContext } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -180,12 +174,14 @@ const usePurchases = () => {
         const data = await response.json();
         setSales(data);
 
-        const totalSalesResponse = await fetch(`/api/sales/salespagination`);
+        const totalSalesResponse = await fetch(`/api/sales`);
         const totalRowsData = await totalSalesResponse.json();
         setTotalPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
       } catch (error) {
         console.error("Error fetching sales:", error);
       }
+
+      console.log("totalPages", totalPages);
     },
     [filters]
   );
@@ -482,12 +478,12 @@ export default function Component() {
 
   const downloadInvoice = async () => {
     const response = await fetch("/api/generateinvoice", {
-      method: "POST", // Keep as POST
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        transactionId: selectedTransaction?.transactionid, // Ensure selectedTransaction is defined
+        transactionId: selectedTransaction?.transactionid,
       }),
     });
 
@@ -499,7 +495,7 @@ export default function Component() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url); // Clean up
+      window.URL.revokeObjectURL(url);
     } else {
       console.error("Failed to generate invoice");
     }
@@ -512,13 +508,14 @@ export default function Component() {
       maximumFractionDigits: 2,
     }).format(stock);
   };
-  
 
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
-          <h1 className="text-2xl font-bold mb-6">Sales History</h1>
+          <h1 className="text-2xl font-bold mb-6 text-customColors-eveningSeaGreen">
+            Sales History
+          </h1>
           <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4"></div>
@@ -597,7 +594,9 @@ export default function Component() {
                                     <TableCell>
                                       {item.unitofmeasurement}
                                     </TableCell>
-                                    <TableCell>{formatStock(item.stock)}</TableCell>
+                                    <TableCell>
+                                      {formatStock(item.stock)}
+                                    </TableCell>
                                     {canAccessButton(
                                       ROLES.ADMIN ||
                                         ROLES.MANAGER ||
@@ -658,18 +657,17 @@ export default function Component() {
                       {renderFilters()}
                     </div>
                   </div>
-                  <div className="table-container relative  ">
+                  <div className="table-container relative">
                     <ScrollArea>
                       <Table
                         style={{ width: "100%" }}
-                        className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                        divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
+                        className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative  bg-customColors-beigePaper"
+                        // divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                          <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
                             <TableHead>Invoice No.</TableHead>
                             <TableHead>Walk-in</TableHead>
-                            {/* <TableHead>From Milling</TableHead> */}
                             <TableHead>Status</TableHead>
                             {canAccessButton(
                               ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
@@ -691,7 +689,7 @@ export default function Component() {
                               ) => (
                                 <TableRow
                                   key={index}
-                                  className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                                  className="hover:bg-customColors-screenLightGreen"
                                 >
                                   <TableCell>
                                     {transaction.DocumentNumber.documentnumber}
@@ -699,9 +697,6 @@ export default function Component() {
                                   <TableCell>
                                     {transaction.walkin ? "True" : "False"}
                                   </TableCell>
-                                  {/* <TableCell>
-                                    {transaction.frommilling ? "True" : "False"}
-                                  </TableCell> */}
                                   <TableCell>
                                     <Badge
                                       className={`px-2 py-1 rounded-full ${
@@ -711,7 +706,7 @@ export default function Component() {
                                           ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
                                           : transaction.status === "cancelled"
                                           ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                                          : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
                                       }`}
                                     >
                                       {transaction.status}
@@ -795,6 +790,7 @@ export default function Component() {
                         <PaginationContent>
                           <PaginationItem>
                             <PaginationPrevious
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() =>
                                 handlePageChange(Math.max(1, currentPage - 1))
                               }
@@ -804,6 +800,7 @@ export default function Component() {
                             <>
                               <PaginationItem>
                                 <PaginationLink
+                                  className="hover:bg-customColors-beigePaper"
                                   onClick={() => handlePageChange(1)}
                                   isActive={currentPage === 1}
                                 >
@@ -825,6 +822,7 @@ export default function Component() {
                               return (
                                 <PaginationItem key={pageIndex}>
                                   <PaginationLink
+                                    className="hover:bg-customColors-beigePaper"
                                     onClick={() => handlePageChange(pageIndex)}
                                     isActive={currentPage === pageIndex}
                                   >
@@ -842,6 +840,7 @@ export default function Component() {
                               )}
                               <PaginationItem>
                                 <PaginationLink
+                                  className="hover:bg-customColors-beigePaper"
                                   onClick={() => handlePageChange(totalPages)}
                                   isActive={currentPage === totalPages}
                                 >
@@ -853,6 +852,7 @@ export default function Component() {
 
                           <PaginationItem>
                             <PaginationNext
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() =>
                                 handlePageChange(
                                   Math.min(totalPages, currentPage + 1)
@@ -872,7 +872,7 @@ export default function Component() {
             <Dialog open={showModalEditSales} onOpenChange={handleCancel}>
               <DialogContent className="w-full max-w-full sm:min-w-[400px] md:w-[400px] lg:min-w-[400px] p-4 bg-customColors-offWhite">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-customColors-eveningSeaGreen">
                     {formSalesOnly.getValues("transactionid")
                       ? "Edit Sales status"
                       : "Add Sales status"}

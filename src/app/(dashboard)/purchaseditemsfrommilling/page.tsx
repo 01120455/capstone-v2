@@ -194,9 +194,7 @@ const useTransactionItems = () => {
 
         setTransactionItem(combinedData);
 
-        const totalResponse = await fetch(
-          `/api/suppliertransaction/suppliertransactionpagination`
-        );
+        const totalResponse = await fetch(`/api/suppliertransaction`);
         const totalData = await totalResponse.json();
         setTotalTransactionItemsPages(
           Math.ceil(totalData.length / ROWS_PER_PAGE)
@@ -282,7 +280,11 @@ export default function Component() {
         <h2 className="text-lg font-bold mb-4">Filters</h2>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Button onClick={clearAllFilters}>Clear Filters</Button>
+            <Button
+              onClick={clearAllFilters}
+            >
+              Clear Filters
+            </Button>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="document-number">Purchase Order No.</Label>
@@ -433,14 +435,14 @@ export default function Component() {
       maximumFractionDigits: 2,
     }).format(stock);
   };
-  
+
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full bg-customColors-lightPastelGreen">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex flex-col gap-6">
             <div className="flex  items-center justify-between mb-6 -mr-6">
-              <h1 className="text-2xl font-bold ">
+              <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
                 List of Purchase Items from Milling
               </h1>
             </div>
@@ -455,11 +457,11 @@ export default function Component() {
                 <ScrollArea>
                   <Table
                     style={{ width: "100%" }}
-                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
-                    divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
+                    // divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto bg-customColors-offWhite rounded-md"
                   >
                     <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                      <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
                         <TableHead>Purchase Order No.</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Item Name</TableHead>
@@ -479,7 +481,10 @@ export default function Component() {
                     </TableHeader>
                     <TableBody>
                       {filteredTransactionItems.map((purchaseItem) => (
-                        <TableRow key={purchaseItem.transactionitemid}>
+                        <TableRow
+                          key={purchaseItem.transactionitemid}
+                          className="hover:bg-customColors-screenLightGreen"
+                        >
                           <TableCell>{purchaseItem.documentNumber}</TableCell>
                           <TableCell>
                             <Badge
@@ -502,7 +507,9 @@ export default function Component() {
                           <TableCell>
                             {purchaseItem.unitofmeasurement}
                           </TableCell>
-                          <TableCell>{formatStock(purchaseItem.stock)}</TableCell>
+                          <TableCell>
+                            {formatStock(purchaseItem.stock)}
+                          </TableCell>
                           {canAccessButton(
                             ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                           ) && (
@@ -527,6 +534,7 @@ export default function Component() {
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
+                          className="hover:bg-customColors-beigePaper"
                           onClick={() =>
                             handleTransactionItemsPageChange(
                               Math.max(1, currentTransactionItemsPage - 1)
@@ -538,6 +546,7 @@ export default function Component() {
                         (_, index) => (
                           <PaginationItem key={index}>
                             <PaginationLink
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() =>
                                 handleTransactionItemsPageChange(index + 1)
                               }
@@ -552,6 +561,7 @@ export default function Component() {
                       )}
                       <PaginationItem>
                         <PaginationNext
+                          className="hover:bg-customColors-beigePaper"
                           onClick={() =>
                             handleTransactionItemsPageChange(
                               Math.min(

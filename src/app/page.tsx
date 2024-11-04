@@ -5,7 +5,7 @@ import { WheatIcon } from "@/components/icons/Icons";
 
 export default function Component() {
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex flex-col min-h-[100dvh] bg-customColors-lightPastelGreen">
       <header className="px-4 mt-4 lg:px-6 h-14 flex items-center">
         <Link
           href="#"
@@ -13,12 +13,14 @@ export default function Component() {
           prefetch={false}
         >
           <WheatIcon className="h-6 w-6 mr-2" />
-          <span className="text-3xl font-bold">3R Shane Rice Mill</span>
+          <span className="text-3xl font-bold text-customColors-eveningSeaGreen">
+            3R Shane Rice Mill
+          </span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link
             href="/login"
-            className="text-xl font-medium border border-gray-900 px-3 py-1 rounded-sm bg-gray-900 text-gray-50 "
+            className="text-xl font-medium border border-customColors-eveningSeaGreen px-3 py-1 rounded-sm bg-customColors-eveningSeaGreen text-gray-50 "
             prefetch={false}
           >
             Login
@@ -31,7 +33,7 @@ export default function Component() {
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-customColors-eveningSeaGreen">
                     3R Shane Rice Mill Inventory Management System
                   </h1>
                   <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
@@ -59,7 +61,7 @@ export default function Component() {
                 <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">
                   Our System Features
                 </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-customColors-eveningSeaGreen">
                   Streamline Your Operations
                 </h2>
                 <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
@@ -81,7 +83,9 @@ export default function Component() {
               />
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Inventory Management</h3>
+                  <h3 className="text-2xl font-bold text-customColors-eveningSeaGreen">
+                    Inventory Management
+                  </h3>
                   <p className="text-gray-500 dark:text-gray-400">
                     Our Inventory Management System allows you to track your
                     inventory in real-time, and manage stock levels to help you
@@ -90,7 +94,7 @@ export default function Component() {
                 </div>
                 <Link
                   href="#"
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-customColors-eveningSeaGreen px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
                   prefetch={false}
                 >
                   Learn More
@@ -107,7 +111,9 @@ export default function Component() {
               />
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Point of Sale</h3>
+                  <h3 className="text-2xl font-bold text-customColors-eveningSeaGreen">
+                    Point of Sale
+                  </h3>
                   <p className="text-gray-500 dark:text-gray-400">
                     Our POS integration allows you to manage your sales and
                     inventory in one place. Track sales, and handle transactions
@@ -116,7 +122,7 @@ export default function Component() {
                 </div>
                 <Link
                   href="#"
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-customColors-eveningSeaGreen px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
                   prefetch={false}
                 >
                   Learn More
@@ -133,7 +139,9 @@ export default function Component() {
               />
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Purchase Order</h3>
+                  <h3 className="text-2xl font-bold text-customColors-eveningSeaGreen">
+                    Purchase Order
+                  </h3>
                   <p className="text-gray-500 dark:text-gray-400">
                     Our purchase order feature simplifies the management and
                     tracking of your orders. You can easily monitor order
@@ -142,7 +150,7 @@ export default function Component() {
                 </div>
                 <Link
                   href="#"
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-customColors-eveningSeaGreen px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
                   prefetch={false}
                 >
                   Learn More
@@ -159,7 +167,9 @@ export default function Component() {
               />
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Dashboard analytics</h3>
+                  <h3 className="text-2xl font-bold text-customColors-eveningSeaGreen">
+                    Dashboard analytics
+                  </h3>
                   <p className="text-gray-500 dark:text-gray-400">
                     Our dashboard analytics feature provides an overview of your
                     business by integrating inventory, sales, and purchase order
@@ -170,7 +180,7 @@ export default function Component() {
                 </div>
                 <Link
                   href="#"
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-customColors-eveningSeaGreen px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
                   prefetch={false}
                 >
                   Learn More
@@ -183,7 +193,7 @@ export default function Component() {
           <div className="container px-4 md:px-6">
             <div className="grid items-center gap-6 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_550px]">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tigh text-customColors-eveningSeaGreen">
                   About 3R Shane Rice Mill
                 </h2>
                 <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">

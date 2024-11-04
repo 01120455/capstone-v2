@@ -93,12 +93,14 @@ export default function Home() {
       <div className="flex items-center justify-center p-6 md:p-12 lg:p-16">
         <div className="max-w-md w-full space-y-6">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold">Welcome to 3R Shane</h1>
+            <h1 className="text-3xl font-bold text-customColors-eveningSeaGreen">
+              Welcome to 3R Shane
+            </h1>
           </div>
           <div className="flex justify-center">
             <Card className="w-full max-w-md">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-center">
+                <CardTitle className="text-2xl font-bold text-center text-customColors-eveningSeaGreen">
                   Login
                 </CardTitle>
                 <CardDescription className="text-center">
@@ -181,7 +183,10 @@ export default function Home() {
                     </div> */}
                   </CardContent>
                   <CardFooter className="flex flex-col space-y-4">
-                    <Button type="submit" className="w-full">
+                    <Button
+                      type="submit"
+                      className="w-full bg-customColors-eveningSeaGreen"
+                    >
                       Login
                     </Button>
                     <div className="text-sm text-center">

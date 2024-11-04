@@ -12,7 +12,7 @@ export const user = z.object({
       invalid_type_error: "Invalid Type Received",
     })
     .default("active"),
-  email: z.string().email(),
+  email: z.string().email().optional(),
   password: z.string().optional(),
   image: z.any().optional().nullable(),
 });
@@ -24,3 +24,5 @@ export const loginSchema = z.object({
 
 export type AddUser = z.infer<typeof user>;
 export type Login = z.infer<typeof loginSchema>;
+
+export default user;

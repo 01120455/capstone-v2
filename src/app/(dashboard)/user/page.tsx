@@ -38,16 +38,6 @@ import { useForm } from "react-hook-form";
 import { user as UserSchema, AddUser } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -63,6 +53,9 @@ import {
   AlertCircle,
   CheckCircle,
   FilterIcon,
+  Lock,
+  EyeOff,
+  Eye,
 } from "@/components/icons/Icons";
 import { User } from "@/interfaces/user";
 import SideMenu from "@/components/sidemenu";
@@ -255,23 +248,10 @@ export default function Component() {
     refreshUsers,
   } = useUsers();
   const [showModal, setShowModal] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
   const [showImage, setShowImage] = useState<AddUser | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const currentUsers = users?.filter(
-    (user) =>
-      user.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<AddUser>({
     resolver: zodResolver(UserSchema),
@@ -341,7 +321,7 @@ export default function Component() {
     formData.append("lastname", values.lastname);
     formData.append("role", values.role);
     formData.append("status", values.status);
-    formData.append("email", values.email);
+    formData.append("email", values.email ?? "");
 
     if (selectedFile) {
       formData.append("image", selectedFile);
@@ -410,51 +390,6 @@ export default function Component() {
     if (file) {
       setSelectedFile(file);
     }
-  };
-
-  const handleDelete = async (userid: number | undefined) => {
-    try {
-      const response = await fetch(`/api/user/userSD/${userid}`, {
-        method: "PUT",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        console.log("User deleted successfully");
-        refreshUsers();
-        setShowAlert(false);
-        setUserToDelete(null);
-      } else {
-        console.error("Error deleting user:", response.status);
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-    }
-  };
-
-  const handleDeleteWithToast = (itemid: number | undefined) => {
-    handleDelete(itemid);
-    toast(
-      `User ${form.getValues("firstname")} ${form.getValues(
-        "lastname"
-      )} has been deleted`,
-      {
-        description: "You have successfully deleted the user.",
-      }
-    );
-  };
-
-  const handleDeleteUser = (user: AddUser) => {
-    setUserToDelete(user);
-    setShowAlert(true);
-  };
-
-  const handleDeleteCancel = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    event.preventDefault();
-    setShowAlert(false);
-    setUserToDelete(null);
-    form.reset();
   };
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -604,14 +539,72 @@ export default function Component() {
     </Popover>
   );
 
+  console.log("User Role: ", user?.role);
+
+  const userData = {
+    userid: form.getValues("userid"),
+    imagepath: form.getValues("imagepath"),
+    firstname: form.getValues("firstname"),
+    middlename: form.getValues("middlename"),
+    lastname: form.getValues("lastname"),
+    role: form.getValues("role"),
+    status: form.getValues("status"),
+    email: form.getValues("email"),
+    password: form.getValues("password"),
+  };
+
+  console.log("Item Data: ", userData);
+
+  const userActionWithAccess = (id: number, role: string, userData: any) => {
+    if (!role) {
+      return "access denied";
+    }
+
+    const canAccessInput = () => {
+      if (user?.role === ROLES.ADMIN) return true;
+      if (user?.role === ROLES.MANAGER) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.SALES) return role !== ROLES.ADMIN;
+      if (user?.role === ROLES.INVENTORY) return role !== ROLES.ADMIN;
+      return false;
+    };
+
+    if (!canAccessInput()) {
+      return "access denied";
+    }
+
+    if (id === 0) {
+      return "add";
+    }
+
+    const parsedData = UserSchema.safeParse(userData);
+
+    console.log("Parsed Data: ", parsedData);
+
+    if (parsedData.success) {
+      const data = parsedData.data;
+      if (data.userid === id) {
+        return "edit";
+      }
+    } else {
+      console.error("Error parsing data: ", parsedData.error);
+      return "error";
+    }
+  };
+
+  const userId = form.getValues("userid");
+
+  const action = userActionWithAccess(userId ?? 0, user?.role, userData);
+
+  console.log("User Action: ", action);
+
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full">
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex flex-col items-center">
             <div className="w-[1000px]">
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-customColors-darkKnight">
+                <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
                   User Management
                 </h1>
               </div>
@@ -636,16 +629,16 @@ export default function Component() {
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-center rounded-lg overflow-hidden bg-customColors-offWhite">
-            <div className="w-full max-w-[1000px] bg-customColors-offWhite">
+          <div className="flex items-center justify-center overflow-hidden bg-customColors-lightPastelGreen">
+            <div className="w-full max-w-[1000px] ">
               <ScrollArea>
                 <Table
                   style={{ width: "100%" }}
-                  className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden"
-                  divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto"
+                  className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden bg-customColors-beigePaper"
+                  // divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto bg-customColors-offWhite rounded-md "
                 >
-                  <TableHeader>
-                    <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                    <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
                       <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Role</TableHead>
@@ -700,13 +693,6 @@ export default function Component() {
                                 >
                                   <FilePenIcon className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => handleDeleteUser(user)}
-                                >
-                                  <TrashIcon className="h-4 w-4" />
-                                </Button>
                               </>
                             )}
                           </TableCell>
@@ -721,6 +707,7 @@ export default function Component() {
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
+                        className="hover:bg-customColors-screenLightGreen"
                         onClick={() =>
                           handlePageChange(Math.max(1, currentPage - 1))
                         }
@@ -730,6 +717,7 @@ export default function Component() {
                       <>
                         <PaginationItem>
                           <PaginationLink
+                            className="hover:bg-customColors-screenLightGreen"
                             onClick={() => handlePageChange(1)}
                             isActive={currentPage === 1}
                           >
@@ -750,6 +738,7 @@ export default function Component() {
                         return (
                           <PaginationItem key={pageIndex}>
                             <PaginationLink
+                              className="hover:bg-customColors-screenLightGreen"
                               onClick={() => handlePageChange(pageIndex)}
                               isActive={currentPage === pageIndex}
                             >
@@ -765,6 +754,7 @@ export default function Component() {
                         {currentPage < totalPages - 3 && <PaginationEllipsis />}
                         <PaginationItem>
                           <PaginationLink
+                            className="hover:bg-customColors-screenLightGreen"
                             onClick={() => handlePageChange(totalPages)}
                             isActive={currentPage === totalPages}
                           >
@@ -776,6 +766,7 @@ export default function Component() {
 
                     <PaginationItem>
                       <PaginationNext
+                        className="hover:bg-customColors-screenLightGreen"
                         onClick={() =>
                           handlePageChange(
                             Math.min(totalPages, currentPage + 1)
@@ -826,31 +817,6 @@ export default function Component() {
               </Dialog>
             )}
           </>
-          {userToDelete && (
-            <AlertDialog open={showAlert}>
-              <AlertDialogContent className="bg-customColors-offWhite">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    the user {userToDelete?.userid} {userToDelete?.firstname}{" "}
-                    {userToDelete?.lastname} and remove their data from our
-                    servers.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={handleDeleteCancel}>
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => handleDeleteWithToast(userToDelete.userid)}
-                  >
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
           {showModal && (
             <Dialog open={showModal} onOpenChange={handleCancel}>
               <DialogContent className="bg-customColors-offWhite">
@@ -1017,48 +983,70 @@ export default function Component() {
                           )}
                         />
                       </div>
-
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="email">email</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="email"
-                                  placeholder="JohnDoe@gmail.com"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="password">Password</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="password"
-                                  type="password"
-                                  placeholder={
-                                    form.getValues("userid")
-                                      ? "Leave blank if not changing"
-                                      : "Enter password"
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      {action === "add" ? (
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="email">email</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    id="email"
+                                    placeholder="JohnDoe@gmail.com"
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      ) : null}
+                      {action === "add" ? (
+                        <div className="space-y-2">
+                          <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel htmlFor="password">
+                                  Password
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input
+                                      {...field}
+                                      id="password"
+                                      type={showPassword ? "text" : "password"}
+                                      name="password"
+                                      placeholder={
+                                        form.getValues("userid")
+                                          ? "Leave blank if not changing"
+                                          : "Enter password"
+                                      }
+                                      required
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setShowPassword(!showPassword)
+                                      }
+                                      className="absolute right-3 top-2 text-gray-400"
+                                    >
+                                      {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                      ) : (
+                                        <Eye className="h-5 w-5" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      ) : null}
                     </div>
                     <DialogFooter className="pt-2">
                       <Button variant="outline" onClick={handleCancel}>

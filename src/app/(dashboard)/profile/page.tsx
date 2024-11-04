@@ -18,10 +18,12 @@ import { useForm } from "react-hook-form";
 import { user, AddUser } from "@/schemas/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "@/components/icons/Icons";
 
 export default function Component() {
   const [userSession, setUserSession] = useState<AddUser | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<AddUser>({
     resolver: zodResolver(user),
@@ -118,7 +120,7 @@ export default function Component() {
     formData.append("lastname", values.lastname);
     formData.append("role", values.role);
     formData.append("status", values.status);
-    formData.append("email", values.email);
+    formData.append("email", values.email || "");
 
     if (selectedFile) {
       formData.append("image", selectedFile);
@@ -368,14 +370,27 @@ export default function Component() {
                     <FormItem>
                       <FormLabel htmlFor="password">Password</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          id="password"
-                          type="password"
-                          placeholder="********"
-                          defaultValue={field.value}
-                          className="w-1/2 lg:w-full"
-                        />
+                        <div className="relative">
+                          <Input
+                            {...field}
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="********"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-2 text-gray-400"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-5 w-5" />
+                            ) : (
+                              <Eye className="h-5 w-5" />
+                            )}
+                          </button>
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}

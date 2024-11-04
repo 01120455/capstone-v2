@@ -104,24 +104,15 @@ export default function SideMenu({
           <SidebarGroup>
             <SidebarGroupLabel>Overview</SidebarGroupLabel>
             <SidebarMenu>
-              <Collapsible
-                key="Analytics"
-                asChild
-                defaultOpen={true}
-                className="group/collapsible"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Analytics">
-                      <MenuItem
-                        href="/dashboard"
-                        icon={LayoutDashboardIcon}
-                        label="Dashboard"
-                      />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                </SidebarMenuItem>
-              </Collapsible>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Analytics">
+                  <MenuItem
+                    href="/dashboard"
+                    icon={LayoutDashboardIcon}
+                    label="Dashboard"
+                  />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
 

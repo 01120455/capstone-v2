@@ -8,7 +8,7 @@ export default function DashboardLayout({
   return (
     <>
       <Toaster />
-      <main>{children}</main>
+      <main className="bg-customColors-lightPastelGreen">{children}</main>
     </>
   );
 }

@@ -185,9 +185,7 @@ const useTransactionItems = () => {
 
         setTransactionItem(combinedData);
 
-        const totalResponse = await fetch(
-          `/api/customertransaction/customertransactionpagination`
-        );
+        const totalResponse = await fetch(`/api/customertransaction`);
         const totalData = await totalResponse.json();
         setTotalTransactionItemsPages(
           Math.ceil(totalData.length / ROWS_PER_PAGE)
@@ -392,12 +390,14 @@ export default function Component() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
             <div className="flex  items-center justify-between mb-6 -mr-6">
-              <h1 className="text-2xl font-bold ">List of Sales Items</h1>
+              <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
+                List of Sales Items
+              </h1>
             </div>
             <div className="flex items-center justify-between"></div>
             <div className="overflow-x-auto">
@@ -410,11 +410,11 @@ export default function Component() {
                 <ScrollArea>
                   <Table
                     style={{ width: "100%" }}
-                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
-                    divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
+                    // divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto bg-customColors-offWhite rounded-md"
                   >
                     <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                      <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
                         <TableHead>Invoice No.</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Item Name</TableHead>
@@ -434,7 +434,10 @@ export default function Component() {
                     </TableHeader>
                     <TableBody>
                       {filteredTransactionItems.map((purchaseItem) => (
-                        <TableRow key={purchaseItem.transactionitemid}>
+                        <TableRow
+                          key={purchaseItem.transactionitemid}
+                          className="hover:bg-customColors-screenLightGreen"
+                        >
                           <TableCell>{purchaseItem.documentNumber}</TableCell>
                           <TableCell>
                             <Badge
@@ -482,6 +485,7 @@ export default function Component() {
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
+                          className="hover:bg-customColors-beigePaper"
                           onClick={() =>
                             handleTransactionItemsPageChange(
                               Math.max(1, currentTransactionItemsPage - 1)
@@ -493,6 +497,7 @@ export default function Component() {
                         <>
                           <PaginationItem>
                             <PaginationLink
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() =>
                                 handleTransactionItemsPageChange(1)
                               }
@@ -522,6 +527,7 @@ export default function Component() {
                           return (
                             <PaginationItem key={pageIndex}>
                               <PaginationLink
+                                className="hover:bg-customColors-beigePaper"
                                 onClick={() =>
                                   handleTransactionItemsPageChange(pageIndex)
                                 }
@@ -545,6 +551,7 @@ export default function Component() {
                           )}
                           <PaginationItem>
                             <PaginationLink
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() =>
                                 handleTransactionItemsPageChange(
                                   totalTransactionItemsPages
@@ -563,6 +570,7 @@ export default function Component() {
 
                       <PaginationItem>
                         <PaginationNext
+                          className="hover:bg-customColors-beigePaper"
                           onClick={() =>
                             handleTransactionItemsPageChange(
                               Math.min(

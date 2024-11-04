@@ -83,6 +83,12 @@ model Item {
   Item              TransactionItem[]
 }
 
+enum ItemStatus {
+  instock
+  outofstock
+  lowstock
+}
+
 enum SackWeightType {
   bag5kg
   bag10kg

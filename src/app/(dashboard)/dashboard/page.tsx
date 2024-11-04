@@ -94,7 +94,9 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      <CardTitle className="text-md font-bold text-customColors-eveningSeaGreen">
+        {title}
+      </CardTitle>
       <Icon className="h-4 w-4 text-muted-foreground" />
     </CardHeader>
     <CardContent>
@@ -111,8 +113,10 @@ interface VolumeCardProps {
 
 const VolumeCard: React.FC<VolumeCardProps> = ({ title, volume }) => (
   <Card>
-    <CardHeader>
-      <CardTitle>{title}</CardTitle>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-md font-bold text-customColors-eveningSeaGreen">
+        {title}
+      </CardTitle>
     </CardHeader>
     <CardContent>
       <div>{volume} kg</div>
@@ -466,9 +470,11 @@ export default function Dashboard() {
   } satisfies ChartConfig;
 
   return (
-    <div className="flex min-h-screen bg-customColors-offWhite">
+    <div className="flex min-h-screen">
       <div className="flex-1 pl-12 pr-12 pt-4 overflow-y-auto">
-        <h2 className="text-3xl font-bold mb-6">Dashboard Overview</h2>
+        <h2 className="text-3xl font-bold mb-6 text-customColors-eveningSeaGreen">
+          Dashboard Overview
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
@@ -526,7 +532,9 @@ export default function Dashboard() {
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Inventory Levels</CardTitle>
+            <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
+              Inventory Levels
+            </CardTitle>
             <CardDescription>Current Inventory Stock Levels</CardDescription>
           </CardHeader>
           <CardContent>
@@ -561,7 +569,9 @@ export default function Dashboard() {
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Sales Performance</CardTitle>
+            <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
+              Sales Performance
+            </CardTitle>
             <CardDescription>Sales data by item over time</CardDescription>
           </CardHeader>
           <CardContent>
@@ -604,7 +614,9 @@ export default function Dashboard() {
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Transaction Trends</CardTitle>
+            <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
+              Transaction Trends
+            </CardTitle>
             <CardDescription>Purchases vs. Sales over time</CardDescription>
           </CardHeader>
           <CardContent>

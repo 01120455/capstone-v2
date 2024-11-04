@@ -36,16 +36,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import transactionSchema, {
   Transaction,
   TransactionItem,
@@ -60,14 +50,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   PlusIcon,
-  TrashIcon,
   ViewIcon,
   FilePenIcon,
   FilterIcon,
 } from "@/components/icons/Icons";
-
 import { Badge } from "@/components/ui/badge";
-import { User } from "@/interfaces/user";
 import {
   Pagination,
   PaginationContent,
@@ -78,7 +65,6 @@ import {
 } from "@/components/ui/pagination";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ViewItem } from "@/schemas/item.schema";
 import {
   Popover,
   PopoverContent,
@@ -92,27 +78,6 @@ const ROLES = {
   MANAGER: "manager",
   ADMIN: "admin",
 };
-
-interface CombinedTransactionItem {
-  documentNumber?: string;
-  transactionitemid: number;
-  transactionid: number;
-  frommilling: boolean;
-  status: "pending" | "paid" | "cancelled";
-  Item: {
-    itemtype: "bigas" | "palay" | "resico";
-    itemname: string;
-    sackweight: "bag25kg" | "cavan50kg";
-    itemid?: number;
-  };
-  transactiontype: "purchases" | "sales";
-  sackweight: "bag25kg" | "cavan50kg";
-  unitofmeasurement: string;
-  stock?: number;
-  unitprice?: number;
-  totalamount: number;
-  lastmodifiedat?: Date;
-}
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat("en-PH", {
@@ -199,9 +164,7 @@ const usePurchases = () => {
         const data = await response.json();
         setPurchases(data);
 
-        const totalPurchasesResponse = await fetch(
-          `/api/purchase/purchasepagination`
-        );
+        const totalPurchasesResponse = await fetch(`/api/purchase`);
         const totalRowsData = await totalPurchasesResponse.json();
         setTotalPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
       } catch (error) {
@@ -290,142 +253,6 @@ const usePurchaseItems = () => {
   };
 };
 
-const useTransactionItems = () => {
-  const {
-    filters: filters2,
-    setFilters: setFilters2,
-    clear: clear2,
-  } = useFilters();
-  const [transactionItem, setTransactionItem] = useState<
-    CombinedTransactionItem[]
-  >([]);
-  const [currentTransactionItemsPage, setCurrentTransactionItemsPage] =
-    useState(1);
-  const [totalTransactionItemsPages, setTotalTransactionItemsPages] =
-    useState(0);
-
-  const fetchTransactionData = useCallback(
-    async (page: number) => {
-      if (isNaN(page) || page < 1) return;
-
-      try {
-        const params = new URLSearchParams({
-          limit: ROWS_PER_PAGE.toString(),
-          page: page.toString(),
-        });
-
-        if (filters2.purordno) {
-          params.append("documentnumber", filters2.purordno);
-        }
-        if (filters2.name) {
-          params.append("name", filters2.name);
-        }
-        if (filters2.status) {
-          params.append("status", filters2.status);
-        }
-        if (filters2.dateRange.start) {
-          params.append("startdate", filters2.dateRange.start);
-        }
-        if (filters2.dateRange.end) {
-          params.append("enddate", filters2.dateRange.end);
-        }
-
-        const transactionsResponse = await fetch(
-          `/api/suppliertransaction/suppliertransactionpagination?${params}`
-        );
-        if (!transactionsResponse.ok) {
-          throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
-        }
-        const transactions: any[] = await transactionsResponse.json();
-
-        const transactionItemsResponse = await fetch("/api/transactionitem");
-        if (!transactionItemsResponse.ok) {
-          throw new Error(
-            `HTTP error! status: ${transactionItemsResponse.status}`
-          );
-        }
-        const allTransactionItems: TransactionItem[] =
-          await transactionItemsResponse.json();
-
-        const transactionMap = new Map<number, any>();
-        transactions.forEach((transaction) => {
-          transactionMap.set(transaction.transactionid, {
-            documentNumber: transaction.DocumentNumber?.documentnumber,
-            frommilling: transaction.frommilling,
-            transactiontype: transaction.transactiontype,
-            status: transaction.status,
-          });
-        });
-
-        const combinedData: CombinedTransactionItem[] = allTransactionItems
-          .map((item) => {
-            const transactionInfo =
-              transactionMap.get(item.transactionid) || {};
-            return {
-              ...item,
-              documentNumber: transactionInfo.documentNumber,
-              frommilling: transactionInfo.frommilling || false,
-              transactiontype: transactionInfo.transactiontype || "otherType",
-              status: transactionInfo.status || "otherStatus",
-            };
-          })
-          .filter((item) => item.documentNumber !== undefined);
-
-        setTransactionItem(combinedData);
-
-        const totalResponse = await fetch(
-          `/api/suppliertransaction/suppliertransactionpagination`
-        );
-        const totalData = await totalResponse.json();
-        setTotalTransactionItemsPages(
-          Math.ceil(totalData.length / ROWS_PER_PAGE)
-        );
-      } catch (error) {
-        console.error("Error fetching transaction data:", error);
-      }
-    },
-    [filters2]
-  );
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await fetchTransactionData(currentTransactionItemsPage);
-    };
-
-    const timer = setTimeout(() => {
-      fetchData();
-    }, 2000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [filters2, currentTransactionItemsPage, fetchTransactionData]);
-
-  const clearFilters2 = () => {
-    clear2();
-    fetchTransactionData(1);
-  };
-
-  const handleTransactionItemsPageChange = (page: number) => {
-    setCurrentTransactionItemsPage(page);
-  };
-
-  const refreshTransactionItems = async () => {
-    await fetchTransactionData(currentTransactionItemsPage);
-  };
-
-  return {
-    transactionItem,
-    currentTransactionItemsPage,
-    totalTransactionItemsPages,
-    handleTransactionItemsPageChange,
-    filters: filters2,
-    setFilters: setFilters2,
-    refreshTransactionItems,
-    clearFilters2,
-  };
-};
-
 export default function Component() {
   const user = useContext(userSessionContext);
   const {
@@ -440,26 +267,10 @@ export default function Component() {
   } = usePurchases();
   const { purchaseItems, setPurchaseItems, viewPurchaseItems } =
     usePurchaseItems();
-  const {
-    transactionItem,
-    currentTransactionItemsPage,
-    totalTransactionItemsPages,
-    handleTransactionItemsPageChange,
-    filters: filters2,
-    setFilters: setFilters2,
-    refreshTransactionItems,
-    clearFilters2,
-  } = useTransactionItems();
   const [showModal, setShowModal] = useState(false);
   const [showModalEditPurchase, setShowModalEditPurchase] = useState(false);
   const [showModalPurchaseItem, setShowModalPurchaseItem] = useState(false);
-  // const [showAlert, setShowAlert] = useState(false);
-  // const [showAlertPurchaseItem, setShowAlertPurchaseItem] = useState(false);
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
-  // const [purchaseItemToDelete, setPurchaseItemToDelete] =
-  //   useState<TransactionItem | null>(null);
-  // const [purchaseToDelete, setPurchaseToDelete] =
-  //   useState<TransactionTable | null>(null);
 
   console.log("user session:", user);
 
@@ -777,7 +588,6 @@ export default function Component() {
         setShowModal(false);
         setShowModalEditPurchase(false);
         refreshPurchases();
-        refreshTransactionItems();
         form.reset();
       } else {
         console.error("Upload failed", await uploadRes.text());
@@ -842,7 +652,6 @@ export default function Component() {
         console.log("Purchase Item processed successfully");
         setShowModalPurchaseItem(false);
         refreshPurchases();
-        refreshTransactionItems();
         formPurchaseItemOnly.reset();
       } else {
         console.error("Operation failed", await uploadRes.text());
@@ -851,109 +660,6 @@ export default function Component() {
       console.error("Error processing purchase item:", error);
     }
   };
-
-  // const handleDeletePurchaseItemConfirm = async (
-  //   purchaseItem: TransactionItem
-  // ) => {
-  //   try {
-  //     const response = await fetch(
-  //       `/api/purchaseitem/purchaseitemSD/purchaseitem-soft-delete/${purchaseItem.transactionitemid}`,
-  //       {
-  //         method: "PUT",
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       console.log("Purchase Item deleted successfully");
-  //       setShowAlertPurchaseItem(false);
-  //       refreshPurchases();
-  //       refreshTransactionItems();
-  //     } else {
-  //       console.error("Error deleting Purchase Item:", response.status);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting Purchase Item:", error);
-  //   }
-  // };
-
-  // const handleDeletePurchaseItemConfirmWithToast = (
-  //   purchaseItem: TransactionItem
-  // ) => {
-  //   handleDeletePurchaseItemConfirm(purchaseItem);
-  //   toast.success(
-  //     `Purchase item ${""} ${
-  //       purchaseItem.Item.itemname
-  //     } ${""} has been deleted`,
-  //     {
-  //       description: "You can now continue with what you are doing.",
-  //     }
-  //   );
-  // };
-
-  // const handleDeleteWithToast = (itemid: number | undefined) => {
-  //   handleDelete(itemid);
-  //   toast.success(
-  //     `Purchase Order No. ${""} ${
-  //       purchaseToDelete?.DocumentNumber.documentnumber
-  //     } ${""} has been deleted`,
-  //     {
-  //       description: "You can now continue with what you are doing.",
-  //     }
-  //   );
-  // };
-
-  // const handleDeletePurchaseItem = (purchaseItem: TransactionItem) => {
-  //   setPurchaseItemToDelete(purchaseItem);
-  //   setShowAlertPurchaseItem(true);
-  //   console.log("Deleting purchase item:", purchaseItem);
-  // };
-
-  // const handlePurchaseItemDeleteCancel = (
-  //   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  // ) => {
-  //   event.preventDefault();
-  //   setShowAlertPurchaseItem(false);
-  //   setPurchaseItemToDelete(null);
-  //   formPurchaseItemOnly.reset();
-  // };
-
-  // const handleDelete = async (transactionid: number | undefined) => {
-  //   try {
-  //     const response = await fetch(
-  //       `/api/purchase/purchase-soft-delete/${transactionid}`,
-  //       {
-  //         method: "PUT",
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       console.log("Purchase deleted successfully");
-  //       setShowAlert(false);
-  //       setPurchaseToDelete(null);
-  //       refreshPurchases();
-  //       refreshTransactionItems();
-  //     } else {
-  //       console.error("Error deleting Purchase:", response.status);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting Purchase:", error);
-  //   }
-  // };
-
-  // const handleDeletePurchase = (purchase: TransactionTable) => {
-  //   setPurchaseToDelete(purchase);
-  //   setShowAlert(true);
-  // };
-
-  // const handleDeleteCancel = (
-  //   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  // ) => {
-  //   event.preventDefault();
-  //   setShowAlert(false);
-  //   setPurchaseToDelete(null);
-  //   form.reset();
-  // };
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -1050,15 +756,12 @@ export default function Component() {
   ) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, purordno: value }));
-    setFilters2((prev) => ({ ...prev, purordno: value }));
     handlePageChange(1);
-    handleTransactionItemsPageChange(1);
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFilters((prev) => ({ ...prev, name: value }));
-    setFilters2((prev) => ({ ...prev, name: value }));
     handlePageChange(1);
   };
 
@@ -1137,14 +840,6 @@ export default function Component() {
                     start: newValue,
                   },
                 }));
-
-                setFilters2((prev) => ({
-                  ...prev,
-                  dateRange: {
-                    ...prev.dateRange,
-                    start: newValue,
-                  },
-                }));
               }}
             />
           </div>
@@ -1164,14 +859,6 @@ export default function Component() {
                     end: newValue,
                   },
                 }));
-
-                setFilters2((prev) => ({
-                  ...prev,
-                  dateRange: {
-                    ...prev.dateRange,
-                    end: newValue,
-                  },
-                }));
               }}
             />
           </div>
@@ -1185,7 +872,6 @@ export default function Component() {
       ...prev,
       status: value,
     }));
-    setFilters2((prev) => ({ ...prev, status: value }));
     handlePageChange(1);
   };
 
@@ -1194,7 +880,6 @@ export default function Component() {
       ...prev,
       walkin: value,
     }));
-    setFilters2((prev) => ({ ...prev, walkin: value }));
     handlePageChange(1);
   };
 
@@ -1208,18 +893,12 @@ export default function Component() {
 
   const clearAllFilters = () => {
     clearFilters();
-    clearFilters2();
     handlePageChange(1);
-    handleTransactionItemsPageChange(1);
   };
 
   const filteredPurchases = useMemo(() => {
     return purchases;
   }, [purchases]);
-
-  const filteredTransactionItems = useMemo(() => {
-    return transactionItem;
-  }, [transactionItem]);
 
   const formatStock = (stock: number): string => {
     return new Intl.NumberFormat("en-US", {
@@ -1228,10 +907,9 @@ export default function Component() {
       maximumFractionDigits: 2,
     }).format(stock);
   };
-  
 
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full bg-customColors-lightPastelGreen">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="grid gap-6 grid-cols-1">
@@ -1266,11 +944,11 @@ export default function Component() {
                   <ScrollArea>
                     <Table
                       style={{ width: "100%" }}
-                      className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                      divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+                      className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
+                      // divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto bg-customColors-offWhite rounded-md"
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                        <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                        <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
                           <TableHead>Purchase Order No.</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>From Milling</TableHead>
@@ -1410,6 +1088,7 @@ export default function Component() {
                       <PaginationContent>
                         <PaginationItem>
                           <PaginationPrevious
+                            className="hover:bg-customColors-beigePaper"
                             onClick={() =>
                               handlePageChange(Math.max(1, currentPage - 1))
                             }
@@ -1418,6 +1097,7 @@ export default function Component() {
                         {[...Array(totalPages)].map((_, index) => (
                           <PaginationItem key={index}>
                             <PaginationLink
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() => handlePageChange(index + 1)}
                               isActive={currentPage === index + 1}
                             >
@@ -1427,6 +1107,7 @@ export default function Component() {
                         ))}
                         <PaginationItem>
                           <PaginationNext
+                            className="hover:bg-customColors-beigePaper"
                             onClick={() =>
                               handlePageChange(
                                 Math.min(totalPages, currentPage + 1)
@@ -1446,7 +1127,9 @@ export default function Component() {
                 >
                   <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4 bg-customColors-offWhite">
                     <DialogHeader>
-                      <DialogTitle>Items Purchased</DialogTitle>
+                      <DialogTitle className="text-customColors-eveningSeaGreen">
+                        Items Purchased
+                      </DialogTitle>
                       <div className="flex  items-center justify-between mb-6 mr-12">
                         <DialogDescription>
                           List of items purchased
@@ -1488,11 +1171,6 @@ export default function Component() {
                                 <TableHead>Stock</TableHead>
                                 <TableHead>Unit Price</TableHead>
                                 <TableHead>Total Amount</TableHead>
-                                {canAccessButton(ROLES.ADMIN) && (
-                                  <>
-                                    <TableHead>Actions</TableHead>
-                                  </>
-                                )}
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1520,42 +1198,8 @@ export default function Component() {
                                           {formatPrice(purchaseItem.unitprice)}
                                         </TableCell>
                                         <TableCell>
-                                          {formatPrice(purchaseItem.totalamount)}
-                                        </TableCell>
-                                        <TableCell>
-                                          {canAccessButton(ROLES.ADMIN) && (
-                                            <>
-                                              <div className="flex items-center gap-2">
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  onClick={() =>
-                                                    handleEditPurchaseItem(
-                                                      purchaseItem
-                                                    )
-                                                  }
-                                                >
-                                                  <FilePenIcon className="w-4 h-4" />
-                                                  <span className="sr-only">
-                                                    Edit
-                                                  </span>
-                                                </Button>
-                                                {/* <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  onClick={() =>
-                                                    handleDeletePurchaseItem(
-                                                      purchaseItem
-                                                    )
-                                                  }
-                                                >
-                                                  <TrashIcon className="w-4 h-4" />
-                                                  <span className="sr-only">
-                                                    Delete
-                                                  </span>
-                                                </Button> */}
-                                              </div>
-                                            </>
+                                          {formatPrice(
+                                            purchaseItem.totalamount
                                           )}
                                         </TableCell>
                                       </TableRow>
@@ -1571,279 +1215,11 @@ export default function Component() {
                   </DialogContent>
                 </Dialog>
               )}
-              {showModalPurchaseItem && (
-                <Dialog
-                  open={showModalPurchaseItem}
-                  onOpenChange={handleCancel}
-                >
-                  <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4 bg-customColors-offWhite">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {formPurchaseItemOnly.getValues("transactionitemid")
-                          ? "Edit Purchase Item"
-                          : "Add New Purchase Item"}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Fill out the form to{" "}
-                        {formPurchaseItemOnly.getValues("transactionitemid")
-                          ? "edit a"
-                          : "add a new"}{" "}
-                        purchased product to your inventory.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <Form {...formPurchaseItemOnly}>
-                      <form
-                        className="w-full max-w-full  mx-auto p-4 sm:p-6"
-                        onSubmit={formPurchaseItemOnly.handleSubmit(
-                          handleSubmitEditPurchaseItem
-                        )}
-                      >
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
-                          <div className="space-y-2">
-                            <FormField
-                              control={formPurchaseItemOnly.control}
-                              name={`Item.itemname`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="itemname">
-                                    Item Name
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="itemname"
-                                      type="text"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={formPurchaseItemOnly.control}
-                              name="Item.itemtype"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="itemtype">
-                                    Item Type
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                      {...field}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select Type">
-                                          {field.value}
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="bigas">
-                                          Bigas
-                                        </SelectItem>
-                                        <SelectItem value="palay">
-                                          Palay
-                                        </SelectItem>
-                                        <SelectItem value="resico">
-                                          Resico
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={formPurchaseItemOnly.control}
-                              name="Item.sackweight"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="sackweight">
-                                    Sack Weight
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                      {...field}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select Sack Weight">
-                                          {field.value}
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="bag25kg">
-                                          Bag 25kg
-                                        </SelectItem>
-                                        <SelectItem value="cavan50kg">
-                                          Cavan 50kg
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={formPurchaseItemOnly.control}
-                              name={`unitofmeasurement`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="unitofmeasurement">
-                                    Unit of Measurement
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                      {...field}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select Unit of Measurement">
-                                          {field.value}
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="quantity">
-                                          Quantity
-                                        </SelectItem>
-                                        <SelectItem value="weight">
-                                          Weight
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={formPurchaseItemOnly.control}
-                              name="stock"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="stock">Stock</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="stock"
-                                      type="number"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={formPurchaseItemOnly.control}
-                              name="unitprice"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="unitprice">
-                                    Unit Price
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="unitprice"
-                                      type="number"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex justify-end gap-4 mt-4">
-                          <Button variant="outline" onClick={handleCancel}>
-                            Cancel
-                          </Button>
-                          <Button type="submit">Save</Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
-              )}
-              {/* {purchaseItemToDelete && (
-                <AlertDialog open={showAlertPurchaseItem}>
-                  <AlertDialogContent className="bg-customColors-offWhite">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Are you absolutely sure?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will delete the
-                        purchased item {purchaseItemToDelete.Item.itemname} from
-                        the Supplier. Please confirm you want to proceed with
-                        this action.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel
-                        onClick={handlePurchaseItemDeleteCancel}
-                      >
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() =>
-                          handleDeletePurchaseItemConfirmWithToast(
-                            purchaseItemToDelete
-                          )
-                        }
-                      >
-                        Continue
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-              {purchaseToDelete && (
-                <AlertDialog open={showAlert}>
-                  <AlertDialogContent className="bg-customColors-offWhite">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Are you absolutely sure?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete Purchase Order No.{" "}
-                        {purchaseToDelete.DocumentNumber.documentnumber} and all
-                        of its contents from the database. Please confirm you
-                        want to proceed with this action.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={handleDeleteCancel}>
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() =>
-                          handleDeleteWithToast(purchaseToDelete.transactionid)
-                        }
-                      >
-                        Continue
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )} */}
               {showModal && (
                 <Dialog open={showModal} onOpenChange={handleCancel}>
                   <DialogContent className="w-full max-w-full sm:min-w-[600px] md:w-[700px] lg:min-w-[1200px] p-4 bg-customColors-offWhite">
                     <DialogHeader>
-                      <DialogTitle>
+                      <DialogTitle className="text-customColors-eveningSeaGreen">
                         {form.getValues("transactionid")
                           ? "Edit Purchase of Product"
                           : "Add New Purchase of Product"}
@@ -2336,114 +1712,6 @@ ${
                   </DialogContent>
                 </Dialog>
               )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-6">
-            <div className="flex  items-center justify-between mb-6 -mr-6">
-              <h1 className="text-2xl font-bold ">
-                List of Purchase Items from Milling
-              </h1>
-            </div>
-            <div className="flex items-center justify-between"></div>
-            <div className="overflow-x-auto">
-              <div className="table-container relative">
-                <ScrollArea>
-                  <Table
-                    style={{ width: "100%" }}
-                    className="min-w-[600px] rounded-md border-border w-full h-10 overflow-clip relative"
-                    divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto"
-                  >
-                    <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                      <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
-                        <TableHead>Purchase Order No.</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Item Name</TableHead>
-                        <TableHead>Item Type</TableHead>
-                        <TableHead>Sack Weight</TableHead>
-                        <TableHead>Unit of Measurement</TableHead>
-                        <TableHead>Stock</TableHead>
-                        <TableHead>Unit Price</TableHead>
-                        <TableHead>Total Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactionItems.map((purchaseItem) => (
-                        <TableRow key={purchaseItem.transactionitemid}>
-                          <TableCell>{purchaseItem.documentNumber}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={`px-2 py-1 rounded-full ${
-                                purchaseItem.status === "paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                  : purchaseItem.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                  : purchaseItem.status === "cancelled"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
-                              }`}
-                            >
-                              {purchaseItem.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{purchaseItem.Item.itemname}</TableCell>
-                          <TableCell>{purchaseItem.Item.itemtype}</TableCell>
-                          <TableCell>{purchaseItem.sackweight}</TableCell>
-                          <TableCell>
-                            {purchaseItem.unitofmeasurement}
-                          </TableCell>
-                          <TableCell>{purchaseItem.stock}</TableCell>
-                          <TableCell>{purchaseItem.unitprice}</TableCell>
-                          <TableCell>{purchaseItem.totalamount}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-                <div className="flex items-center justify-center mt-4 mb-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            handleTransactionItemsPageChange(
-                              Math.max(1, currentTransactionItemsPage - 1)
-                            )
-                          }
-                        />
-                      </PaginationItem>
-                      {[...Array(totalTransactionItemsPages)].map(
-                        (_, index) => (
-                          <PaginationItem key={index}>
-                            <PaginationLink
-                              onClick={() =>
-                                handleTransactionItemsPageChange(index + 1)
-                              }
-                              isActive={
-                                currentTransactionItemsPage === index + 1
-                              }
-                            >
-                              {index + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        )
-                      )}
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            handleTransactionItemsPageChange(
-                              Math.min(
-                                totalTransactionItemsPages,
-                                currentTransactionItemsPage + 1
-                              )
-                            )
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              </div>
             </div>
           </div>
         </div>

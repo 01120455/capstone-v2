@@ -14,7 +14,7 @@ export default function DashboardLayout({
         <UserProvider>
           <SideMenu />
           <Toaster />
-          <main className="w-full">
+          <main className="w-full bg-customColors-lightPastelGreen">
             <SidebarTrigger className="-ml-1" />
             {children}
           </main>

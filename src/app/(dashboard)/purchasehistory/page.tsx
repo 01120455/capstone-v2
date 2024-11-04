@@ -57,27 +57,6 @@ const ROLES = {
   ADMIN: "admin",
 };
 
-interface CombinedTransactionItem {
-  documentNumber?: string;
-  transactionitemid: number;
-  transactionid: number;
-  frommilling: boolean;
-  status: "pending" | "paid" | "cancelled";
-  Item: {
-    itemtype: "bigas" | "palay" | "resico";
-    itemname: string;
-    sackweight: "bag25kg" | "cavan50kg";
-    itemid?: number;
-  };
-  transactiontype: "purchases" | "sales";
-  sackweight: "bag25kg" | "cavan50kg";
-  unitofmeasurement: string;
-  stock?: number;
-  unitprice?: number;
-  totalamount: number;
-  lastmodifiedat?: Date;
-}
-
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -163,9 +142,7 @@ const usePurchases = () => {
         const data = await response.json();
         setPurchases(data);
 
-        const totalPurchasesResponse = await fetch(
-          `/api/purchase/purchasepagination`
-        );
+        const totalPurchasesResponse = await fetch(`/api/purchase`);
         const totalRowsData = await totalPurchasesResponse.json();
         setTotalPages(Math.ceil(totalRowsData.length / ROWS_PER_PAGE));
       } catch (error) {
@@ -377,12 +354,12 @@ export default function Component() {
 
   const downloadPurchaseOrder = async () => {
     const response = await fetch("/api/generatepurchaseorder", {
-      method: "POST", // Keep as POST
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        transactionId: selectedTransaction?.transactionid, // Ensure selectedTransaction is defined
+        transactionId: selectedTransaction?.transactionid,
       }),
     });
 
@@ -394,7 +371,7 @@ export default function Component() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url); // Clean up
+      window.URL.revokeObjectURL(url);
     } else {
       console.error("Failed to generate purchase order");
     }
@@ -407,20 +384,21 @@ export default function Component() {
       maximumFractionDigits: 2,
     }).format(stock);
   };
-  
 
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full bg-customColors-lightPastelGreen">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
-          <h1 className="text-2xl font-bold mb-6">Purchase Order History</h1>
+          <h1 className="text-2xl font-bold mb-6 text-customColors-eveningSeaGreen">
+            Purchase Order History
+          </h1>
           <div className="grid gap-6 grid-cols-1">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4"></div>
               {selectedTransaction ? (
                 <div className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold">
+                    <h2 className="text-lg font-bold text-customColors-eveningSeaGreen">
                       Purchase Order Details
                     </h2>
                     <Button
@@ -518,7 +496,9 @@ export default function Component() {
                                     <TableCell>
                                       {item.unitofmeasurement}
                                     </TableCell>
-                                    <TableCell>{formatStock(item.stock)}</TableCell>
+                                    <TableCell>
+                                      {formatStock(item.stock)}
+                                    </TableCell>
                                     {canAccessButton(
                                       ROLES.ADMIN ||
                                         ROLES.MANAGER ||
@@ -543,7 +523,7 @@ export default function Component() {
                       </div>
                     </div>
                     <div className="grid grid-cols-1">
-                      <div className="font-medium">
+                      <div className="font-medium text-customColors-eveningSeaGreen">
                         Total Items:{" "}
                         {selectedTransaction.TransactionItem.length}
                       </div>
@@ -551,7 +531,7 @@ export default function Component() {
                         ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                       ) && (
                         <>
-                          <div className="font-medium">
+                          <div className="font-medium text-customColors-eveningSeaGreen">
                             Total:{" "}
                             {formatPrice(selectedTransaction.totalamount ?? 0)}
                           </div>
@@ -563,7 +543,7 @@ export default function Component() {
                         <>
                           <Button
                             onClick={downloadPurchaseOrder}
-                            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+                            className="mt-4 text-white py-2 px-4 rounded"
                           >
                             Download Document
                           </Button>
@@ -593,11 +573,11 @@ export default function Component() {
                     <ScrollArea>
                       <Table
                         style={{ width: "100%" }}
-                        className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative"
-                        divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto"
+                        className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
+                        // divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto rounded-md"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                          <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                          <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
                             <TableHead>Purchase Order No.</TableHead>
                             <TableHead>From Milling</TableHead>
                             <TableHead>Status</TableHead>
@@ -624,7 +604,7 @@ export default function Component() {
                                   onClick={() =>
                                     setSelectedTransaction(transaction)
                                   }
-                                  className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                                  className="hover:bg-customColors-screenLightGreen"
                                 >
                                   <TableCell>
                                     {transaction.DocumentNumber.documentnumber}
@@ -699,6 +679,7 @@ export default function Component() {
                         <PaginationContent>
                           <PaginationItem>
                             <PaginationPrevious
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() =>
                                 handlePageChange(Math.max(1, currentPage - 1))
                               }
@@ -708,6 +689,7 @@ export default function Component() {
                             <>
                               <PaginationItem>
                                 <PaginationLink
+                                  className="hover:bg-customColors-beigePaper"
                                   onClick={() => handlePageChange(1)}
                                   isActive={currentPage === 1}
                                 >
@@ -729,6 +711,7 @@ export default function Component() {
                               return (
                                 <PaginationItem key={pageIndex}>
                                   <PaginationLink
+                                    className="hover:bg-customColors-beigePaper"
                                     onClick={() => handlePageChange(pageIndex)}
                                     isActive={currentPage === pageIndex}
                                   >
@@ -746,6 +729,7 @@ export default function Component() {
                               )}
                               <PaginationItem>
                                 <PaginationLink
+                                  className="hover:bg-customColors-beigePaper"
                                   onClick={() => handlePageChange(totalPages)}
                                   isActive={currentPage === totalPages}
                                 >
@@ -756,6 +740,7 @@ export default function Component() {
                           )}
                           <PaginationItem>
                             <PaginationNext
+                              className="hover:bg-customColors-beigePaper"
                               onClick={() =>
                                 handlePageChange(
                                   Math.min(totalPages, currentPage + 1)

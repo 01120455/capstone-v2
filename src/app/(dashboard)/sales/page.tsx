@@ -362,18 +362,18 @@ export default function Sales() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto pt-4">
           <div className="grid gap-1 sm:grid-cols-[1fr_300px] lg:grid-cols-[1fr_400px]">
             <div className="flex-1 overflow-auto p-4 md:p-4">
-              <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] xl:h-[800px] w-auto border rounded-lg p-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-8">
+              <div className="overflow-y-auto  h-[400px] md:h-[600px] lg:h-[600px] xl:h-[800px] w-auto border rounded-lg p-2 bg-customColors-whiteSmoke">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-4 lg:gap-4">
                   {items &&
                     items.map((item) => (
                       <div
                         key={item.itemid}
-                        className="bg-white rounded-lg shadow-md p-4 flex flex-col"
+                        className="bg-customColors-offWhite rounded-lg shadow-md p-4 flex flex-col"
                         onClick={() => addToCart(item)}
                       >
                         <div className="flex items-center justify-center">
@@ -385,7 +385,7 @@ export default function Sales() {
                             className="rounded-lg mb-4 object-cover sm:h-40 sm:w-40 md:h-32 md:w-32 lg:h-56 lg:w-56"
                           />
                         </div>
-                        <h3 className="text-lg font-semibold mb-2">
+                        <h3 className="text-lg font-semibold mb-2 text-customColors-eveningSeaGreen">
                           {item.itemname}
                         </h3>
                         <div className="flex flex-row justify-between">
@@ -411,12 +411,14 @@ export default function Sales() {
                 </div>
               </div>
             </div>
-            <div className="bg-customColors-offWhite shadow-t md:p-2">
-              <h2 className="text-xl font-bold">Sale Details</h2>
+            <div className="bg-customColors-lightPastelGreen shadow-t pt-2 pr-2 ">
+              <h2 className="text-xl font-bold text-customColors-eveningSeaGreen">
+                Sale Details
+              </h2>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(handleSubmit)}
-                  className="w-full max-w-full mx-auto p-4 sm:p-6"
+                  className="w-full max-w-full mx-auto pb-4 pl-4 pr-4"
                 >
                   <div className="grid grid-cols-2 gap-2 py-2">
                     <div className="space-y-2">
@@ -432,7 +434,7 @@ export default function Sales() {
                               <Input
                                 {...field}
                                 id="documentnumber"
-                                type="text="
+                                type="text"
                               />
                             </FormControl>
                             <FormMessage />
@@ -486,7 +488,7 @@ export default function Sales() {
                                   field.onChange(value === "true");
                                 }}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-customColors-offWhite">
                                   <SelectValue placeholder="Select Value">
                                     {field.value ? "Yes" : "No"}
                                   </SelectValue>
@@ -502,8 +504,8 @@ export default function Sales() {
                       />
                     </div>
                   </div>
-                  <div className="mt-6 bg-gray-100 p-4 rounded-md">
-                    <h2 className="text-lg font-semibold mb-2">
+                  <div className="mt-6 bg-customColors-offWhite p-4 rounded-md">
+                    <h2 className="text-lg font-semibold mb-2 text-customColors-eveningSeaGreen">
                       Order Summary
                     </h2>
                     <div className="overflow-y-auto h-[400px] w-auto border rounded-lg p-2">
@@ -553,12 +555,15 @@ export default function Sales() {
                     </div>
                   </div>
                   <div className="mt-4 flex items-center justify-between">
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-semibold text-customColors-eveningSeaGreen">
                       Total: {formatPrice(total)}
                     </p>
                     <div className="flex justify-end space-x-2">
                       <Button variant="outline">Cancel</Button>
-                      <Button type="submit" className="px-4 py-2">
+                      <Button
+                        type="submit"
+                        className="px-4 py-2 bg-customColors-eveningSeaGreen"
+                      >
                         Checkout
                       </Button>
                     </div>

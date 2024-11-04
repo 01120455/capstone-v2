@@ -4,7 +4,6 @@ import {
   useEffect,
   useState,
   ChangeEvent,
-  useRef,
   useMemo,
   useCallback,
   useContext,
@@ -43,31 +42,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import Image from "next/image";
 import { item, AddItem, ViewItem } from "@/schemas/item.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { User } from "@/interfaces/user";
-import {
-  FilePenIcon,
-  PlusIcon,
-  TrashIcon,
-  AlertCircle,
-  CheckCircle,
-  FilterIcon,
-} from "@/components/icons/Icons";
+import { FilePenIcon, PlusIcon, FilterIcon } from "@/components/icons/Icons";
 import {
   Pagination,
   PaginationContent,
@@ -163,12 +143,14 @@ const useItems = () => {
         if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
 
-        const totalItems = await fetch(`/api/product/productpagination`);
+        const totalItems = await fetch(`/api/product`);
 
         const data = await response.json();
         setItems(data);
         const totalRowsData = await totalItems.json();
         setTotalPages(Math.ceil(totalRowsData.length / ITEMS_PER_PAGE));
+
+        console.log("total pages: ", totalPages);
       } catch (error) {
         console.error("Error fetching items:", error);
       }
@@ -272,8 +254,6 @@ export default function ProductManagement() {
     },
   });
   const [showModal, setShowModal] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<AddItem | null>(null);
   const [selectedFile, setSelectedFile] = useState<File>();
   const [showImage, setShowImage] = useState<ViewItem | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -328,33 +308,6 @@ export default function ProductManagement() {
       toast.error("Failed to save item");
     }
   };
-
-  // const handleDelete = async (itemid: number | undefined) => {
-  //   if (!itemid) return;
-
-  //   try {
-  //     const response = await fetch(
-  //       `/api/product/product-soft-delete/${itemid}`,
-  //       {
-  //         method: "PUT",
-  //       }
-  //     );
-
-  //     if (!response.ok) throw new Error("Failed to delete item");
-
-  //     toast.success(`Item has been deleted`, {
-  //       description: "You can now add more items to the inventory.",
-  //     });
-
-  //     setShowAlert(false);
-  //     setItemToDelete(null);
-  //     // refreshItems(currentPage);
-  //   } catch (error) {
-  //     console.error("Error deleting item:", error);
-  //     toast.error("Failed to delete item");
-  //   }
-  // };
-
   const resetForm = () => {
     form.reset();
     setSelectedFile(undefined);
@@ -366,24 +319,6 @@ export default function ProductManagement() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     if (
-  //       dropdownRef.current &&
-  //       !dropdownRef.current.contains(event.target as Node)
-  //     ) {
-  //       setDropdownVisible(false);
-  //     }
-  //   };
-
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => document.removeEventListener("mousedown", handleClickOutside);
-  // }, []);
-
-  // const [isItemDropdownVisible, setItemDropdownVisible] = useState(false);
-  // const [itemNameSuggestions, setItemNameSuggestions] = useState<string[]>([]);
-  // const dropdownRefItem = useRef<HTMLDivElement>(null);
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -518,22 +453,6 @@ export default function ProductManagement() {
     setShowImage(null);
   };
 
-  // const handleDeleteCancel = (
-  //   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  // ) => {
-  //   event.preventDefault();
-  //   setShowAlert(false);
-  //   setItemToDelete(null);
-  //   form.reset();
-  // };
-
-  // const handleDeleteWithToast = (itemid: number | undefined) => {
-  //   handleDelete(itemid);
-  //   toast.success(`Item ${form.getValues().itemname} has been deleted`, {
-  //     description: "You can now add more items to the inventory.",
-  //   });
-  // };
-
   const handleCancel = () => {
     setShowModal(false);
     setSelectedFile(undefined);
@@ -579,11 +498,6 @@ export default function ProductManagement() {
       imagepath: item.imagepath || "",
     });
   };
-
-  // const handleDeleteItem = (item: AddItem) => {
-  //   setItemToDelete(item);
-  //   setShowAlert(true);
-  // };
 
   const canAccessButton = (role: string) => {
     if (!user) return false;
@@ -654,11 +568,11 @@ export default function ProductManagement() {
   console.log("User Action: ", action);
 
   return (
-    <div className="flex min-h-screen w-full bg-customColors-offWhite">
+    <div className="flex min-h-screen w-full">
       <div className="flex-1 overflow-y-hidden pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-customColors-darkKnight">
+            <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
               Product Management
             </h1>
           </div>
@@ -684,11 +598,11 @@ export default function ProductManagement() {
           <ScrollArea>
             <Table
               style={{ width: "100%" }}
-              className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative"
-              divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto"
+              className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
+              // divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto bg-customColors-offWhite rounded-md"
             >
               <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                <TableRow className="bg-customColors-mercury/50 hover:bg-customColors-mercury/50">
+                <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
                   <TableHead>Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
@@ -711,7 +625,10 @@ export default function ProductManagement() {
               <TableBody>
                 {filteredItems?.length > 0 ? (
                   filteredItems.map((item) => (
-                    <TableRow key={item.itemid}>
+                    <TableRow
+                      key={item.itemid}
+                      className="hover:bg-customColors-screenLightGreen"
+                    >
                       <TableCell>
                         <Button
                           variant="outline"
@@ -799,25 +716,17 @@ export default function ProductManagement() {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
+                    className="hover:bg-customColors-beigePaper"
                     onClick={() =>
                       handlePageChange(Math.max(1, currentPage - 1))
                     }
                   />
                 </PaginationItem>
-                {/* {[...Array(totalPages)].map((_, index) => (
-                              <PaginationItem key={index}>
-                                <PaginationLink
-                                  onClick={() => handlePageChange(index + 1)}
-                                  isActive={currentPage === index + 1}
-                                >
-                                  {index + 1}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ))} */}
                 {currentPage > 3 && (
                   <>
                     <PaginationItem>
                       <PaginationLink
+                        className="hover:bg-customColors-beigePaper"
                         onClick={() => handlePageChange(1)}
                         isActive={currentPage === 1}
                       >
@@ -835,6 +744,7 @@ export default function ProductManagement() {
                   return (
                     <PaginationItem key={pageIndex}>
                       <PaginationLink
+                        className="hover:bg-customColors-beigePaper"
                         onClick={() => handlePageChange(pageIndex)}
                         isActive={currentPage === pageIndex}
                       >
@@ -849,6 +759,7 @@ export default function ProductManagement() {
                     {currentPage < totalPages - 3 && <PaginationEllipsis />}
                     <PaginationItem>
                       <PaginationLink
+                        className="hover:bg-customColors-beigePaper"
                         onClick={() => handlePageChange(totalPages)}
                         isActive={currentPage === totalPages}
                       >
@@ -859,6 +770,7 @@ export default function ProductManagement() {
                 )}
                 <PaginationItem>
                   <PaginationNext
+                    className="hover:bg-customColors-beigePaper"
                     onClick={() =>
                       handlePageChange(Math.min(totalPages, currentPage + 1))
                     }
@@ -873,7 +785,7 @@ export default function ProductManagement() {
                 <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-white rounded">
                   <div className="flex flex-col">
                     <DialogHeader className="mb-2 flex items-start">
-                      <DialogTitle className="text-left flex-grow">
+                      <DialogTitle className="text-xl text-left flex-grow text-customColors-eveningSeaGreen">
                         Product Image
                       </DialogTitle>
                     </DialogHeader>
@@ -936,7 +848,7 @@ export default function ProductManagement() {
             <Dialog open={showModal} onOpenChange={handleCancel}>
               <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-customColors-eveningSeaGreen">
                     {form.getValues("itemid")
                       ? "Edit Product"
                       : "Add New Product"}
@@ -1196,7 +1108,11 @@ export default function ProductManagement() {
                         <Button variant="outline" onClick={handleCancel}>
                           Cancel
                         </Button>
-                        <Button type="submit">Save</Button>
+                        <Button
+                          type="submit"
+                        >
+                          Save
+                        </Button>
                       </div>
                     </DialogFooter>
                   </form>

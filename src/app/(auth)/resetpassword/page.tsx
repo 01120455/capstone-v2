@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 export default function Component() {
   const router = useRouter();
@@ -47,9 +48,14 @@ export default function Component() {
       if (res.ok) {
         setSuccess(true);
         setError(null);
+        toast.success("Password reset successful", {
+          description:
+            "Your password has been successfully reset. You can now log in with your new password.",
+        });
       } else {
         const data = await res.json();
         setError(data.message);
+        toast.error(data.message);
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
@@ -57,28 +63,21 @@ export default function Component() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Reset Password
+          <CardTitle className="text-2xl font-bold text-center text-customColors-eveningSeaGreen">
+            {success ? "Password Reset Successful" : "Reset Password"}
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your new password below
+            {success
+              ? "Your password has been successfully reset. You can now log in with your new password."
+              : "Enter your new password below"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="space-y-4">
-              <Alert className="border-green-500 bg-green-50">
-                <AlertTitle className="text-green-800">
-                  Password Reset Successful!
-                </AlertTitle>
-                <AlertDescription className="text-green-700">
-                  Your password has been successfully reset. You can now log in
-                  with your new password.
-                </AlertDescription>
-              </Alert>
               <Button className="w-full" onClick={() => router.push("/login")}>
                 Go to Login
               </Button>
@@ -151,13 +150,15 @@ export default function Component() {
           )}
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Link
-            href="/login"
-            className="text-sm text-primary hover:underline inline-flex items-center"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Login
-          </Link>
+          {success ? null : (
+            <Link
+              href="/login"
+              className="text-sm text-primary hover:underline inline-flex items-center"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Login
+            </Link>
+          )}
         </CardFooter>
       </Card>
     </div>
