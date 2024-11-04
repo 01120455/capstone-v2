@@ -81,7 +81,7 @@ const useFilters = () => {
     type: "",
     sackweight: "",
     unitofmeasurement: "",
-    active: "",
+    status: "",
   });
 
   const clear = () => {
@@ -90,7 +90,7 @@ const useFilters = () => {
       type: "",
       sackweight: "",
       unitofmeasurement: "",
-      active: "",
+      status: "",
     });
   };
 
@@ -133,8 +133,8 @@ const useItems = () => {
         if (filters.unitofmeasurement) {
           params.append("unitofmeasurement", filters.unitofmeasurement);
         }
-        if (filters.active) {
-          params.append("active", filters.active);
+        if (filters.status) {
+          params.append("status", filters.status);
         }
 
         const response = await fetch(
@@ -183,7 +183,7 @@ const useItems = () => {
       type: "",
       sackweight: "",
       unitofmeasurement: "",
-      active: "",
+      status: "",
     });
     fetchItems(currentPage);
   };
@@ -429,9 +429,9 @@ export default function ProductManagement() {
           <div className="grid gap-2">
             <span className="text-sm">Active</span>
             <Select
-              value={filters.active}
+              value={filters.status}
               onValueChange={(value) =>
-                setFilters((prev) => ({ ...prev, active: value }))
+                setFilters((prev) => ({ ...prev, status: value }))
               }
             >
               <SelectTrigger>
@@ -1108,11 +1108,7 @@ export default function ProductManagement() {
                         <Button variant="outline" onClick={handleCancel}>
                           Cancel
                         </Button>
-                        <Button
-                          type="submit"
-                        >
-                          Save
-                        </Button>
+                        <Button type="submit">Save</Button>
                       </div>
                     </DialogFooter>
                   </form>
