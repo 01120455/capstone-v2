@@ -601,464 +601,480 @@ export default function Component() {
     <div className="flex min-h-screen w-full">
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 md:px-6 py-4">
-          <div className="flex flex-col items-center">
-            <div className="w-[1000px]">
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
-                  User Management
-                </h1>
-              </div>
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <Input
-                  type="text"
-                  placeholder="Search by email..."
-                  value={filters.email}
-                  onChange={handleemailChange}
-                  className="w-full md:w-auto"
-                />
-                <div className="flex gap-2">
-                  <Button onClick={handleAddUser}>
-                    {isSmallScreen ? (
-                      <PlusIcon className="w-6 h-6" />
-                    ) : (
-                      "Add User"
-                    )}
-                  </Button>
-                  {renderFilters()}
+          <div className="grid gap-6 grid-cols-1">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col items-center">
+                <div className="w-[1000px]">
+                  <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
+                      User Management
+                    </h1>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 mb-6">
+                    <Input
+                      type="text"
+                      placeholder="Search by email..."
+                      value={filters.email}
+                      onChange={handleemailChange}
+                      className="w-full md:w-auto"
+                    />
+                    <div className="flex gap-2">
+                      <Button onClick={handleAddUser}>
+                        {isSmallScreen ? (
+                          <PlusIcon className="w-6 h-6" />
+                        ) : (
+                          "Add User"
+                        )}
+                      </Button>
+                      {renderFilters()}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center overflow-hidden bg-customColors-lightPastelGreen">
-            <div className="w-full max-w-[1000px] ">
-              <ScrollArea>
-                <Table
-                  style={{ width: "100%" }}
-                  className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden bg-customColors-beigePaper"
-                  // divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto bg-customColors-offWhite rounded-md "
-                >
-                  <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
-                    <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
-                      <TableHead>Image</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers &&
-                      filteredUsers.map((user: AddUser, index: number) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            {/* <Image
+              <div className="flex items-center justify-center overflow-hidden bg-customColors-lightPastelGreen">
+                <div className="w-full max-w-[1000px] ">
+                  <ScrollArea>
+                    <Table
+                      style={{ width: "100%" }}
+                      className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden bg-customColors-beigePaper"
+                      // divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto bg-customColors-offWhite rounded-md "
+                    >
+                      <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
+                        <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
+                          <TableHead>Image</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsers &&
+                          filteredUsers.map((user: AddUser, index: number) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                {/* <Image
                           src={user.imagepath ?? ""}
                           alt="User Image"
                           width={250}
                           height={250}
                           className="rounded"
                         /> */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleShowImage(user)}
-                            >
-                              View Image
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            {user.firstname} {user.middlename} {user.lastname}
-                          </TableCell>
-                          <TableCell>{user.role}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={`px-2 py-1 rounded-full ${
-                                user.status === "active"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                  : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                              }`}
-                            >
-                              {user.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell className="text-right">
-                            {canAccessButton(ROLES.ADMIN) && (
-                              <>
                                 <Button
                                   variant="outline"
-                                  size="icon"
-                                  onClick={() => handleEditUser(user)}
+                                  size="sm"
+                                  onClick={() => handleShowImage(user)}
                                 >
-                                  <FilePenIcon className="h-4 w-4" />
+                                  View Image
                                 </Button>
-                              </>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-              <div className="flex items-center justify-center mt-4">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        className="hover:bg-customColors-screenLightGreen"
-                        onClick={() =>
-                          handlePageChange(Math.max(1, currentPage - 1))
-                        }
-                      />
-                    </PaginationItem>
-                    {currentPage > 3 && (
-                      <>
+                              </TableCell>
+                              <TableCell>
+                                {user.firstname} {user.middlename}{" "}
+                                {user.lastname}
+                              </TableCell>
+                              <TableCell>{user.role}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={`px-2 py-1 rounded-full ${
+                                    user.status === "active"
+                                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                      : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                  }`}
+                                >
+                                  {user.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell className="text-right">
+                                {canAccessButton(ROLES.ADMIN) && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      onClick={() => handleEditUser(user)}
+                                    >
+                                      <FilePenIcon className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
+                  <div className="flex items-center justify-center mt-4">
+                    <Pagination>
+                      <PaginationContent>
                         <PaginationItem>
-                          <PaginationLink
+                          <PaginationPrevious
                             className="hover:bg-customColors-screenLightGreen"
-                            onClick={() => handlePageChange(1)}
-                            isActive={currentPage === 1}
-                          >
-                            1
-                          </PaginationLink>
-                        </PaginationItem>
-                        {currentPage > 3 && <PaginationEllipsis />}
-                      </>
-                    )}
-
-                    {Array.from(
-                      { length: Math.min(3, totalPages) },
-                      (_, index) => {
-                        const pageIndex = Math.max(1, currentPage - 1) + index;
-                        if (pageIndex < 1 || pageIndex > totalPages)
-                          return null;
-
-                        return (
-                          <PaginationItem key={pageIndex}>
-                            <PaginationLink
-                              className="hover:bg-customColors-screenLightGreen"
-                              onClick={() => handlePageChange(pageIndex)}
-                              isActive={currentPage === pageIndex}
-                            >
-                              {pageIndex}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-                    )}
-
-                    {currentPage < totalPages - 2 && (
-                      <>
-                        {currentPage < totalPages - 3 && <PaginationEllipsis />}
-                        <PaginationItem>
-                          <PaginationLink
-                            className="hover:bg-customColors-screenLightGreen"
-                            onClick={() => handlePageChange(totalPages)}
-                            isActive={currentPage === totalPages}
-                          >
-                            {totalPages}
-                          </PaginationLink>
-                        </PaginationItem>
-                      </>
-                    )}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        className="hover:bg-customColors-screenLightGreen"
-                        onClick={() =>
-                          handlePageChange(
-                            Math.min(totalPages, currentPage + 1)
-                          )
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            </div>
-          </div>
-
-          <>
-            {showImageModal && showImage && (
-              <Dialog open={showImageModal} onOpenChange={closeImage}>
-                <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-customColors-offWhite rounded">
-                  <div className="flex flex-col">
-                    <DialogHeader className="mb-2 flex items-start">
-                      <DialogTitle className="text-left flex-grow">
-                        User Image
-                      </DialogTitle>
-                    </DialogHeader>
-                    <DialogDescription className="mb-4 text-left">
-                      <p>You can click outside to close</p>
-                    </DialogDescription>
-                    <div className="flex-grow flex items-center justify-center overflow-hidden">
-                      <div className="relative w-full h-[400px]">
-                        {showImage?.imagepath ? (
-                          <Image
-                            src={showImage.imagepath}
-                            alt="Product Image"
-                            fill
-                            sizes="(max-width: 600px) 100vw, 50vw"
-                            style={{ objectFit: "contain" }}
-                            className="absolute"
+                            onClick={() =>
+                              handlePageChange(Math.max(1, currentPage - 1))
+                            }
                           />
-                        ) : (
-                          <p className="text-center">No image available</p>
+                        </PaginationItem>
+                        {currentPage > 3 && (
+                          <>
+                            <PaginationItem>
+                              <PaginationLink
+                                className="hover:bg-customColors-screenLightGreen"
+                                onClick={() => handlePageChange(1)}
+                                isActive={currentPage === 1}
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                            {currentPage > 3 && <PaginationEllipsis />}
+                          </>
                         )}
-                      </div>
-                    </div>
-                    <DialogFooter className="mt-4">
-                      <Button onClick={closeImage}>Close</Button>
-                    </DialogFooter>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </>
-          {showModal && (
-            <Dialog open={showModal} onOpenChange={handleCancel}>
-              <DialogContent className="bg-customColors-offWhite">
-                <DialogHeader>
-                  <DialogTitle>
-                    {form.getValues("userid") ? "Edit User" : "Add User"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Fill in the form below to{" "}
-                    {form.getValues("userid") ? "edit" : "add"} a user.
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                  <form
-                    className="w-full max-w-4xl mx-auto p-6"
-                    onSubmit={form.handleSubmit(handleSubmit)}
-                  >
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="imagepath"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="file">Upload Image</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...fileRef}
-                                  id="file"
-                                  type="file"
-                                  onChange={handleImage}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="firstname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="firstname">
-                                First Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="firstname"
-                                  placeholder="John"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="middlename"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="middlename">
-                                Middle Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="middlename"
-                                  placeholder="Alcarra"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="lastname"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="lastname">
-                                Last Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  id="lastname"
-                                  placeholder="Doe"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
 
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="role"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="role">Role</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
+                        {Array.from(
+                          { length: Math.min(3, totalPages) },
+                          (_, index) => {
+                            const pageIndex =
+                              Math.max(1, currentPage - 1) + index;
+                            if (pageIndex < 1 || pageIndex > totalPages)
+                              return null;
+
+                            return (
+                              <PaginationItem key={pageIndex}>
+                                <PaginationLink
+                                  className="hover:bg-customColors-screenLightGreen"
+                                  onClick={() => handlePageChange(pageIndex)}
+                                  isActive={currentPage === pageIndex}
                                 >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select role">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                    <SelectItem value="manager">
-                                      Manager
-                                    </SelectItem>
-                                    <SelectItem value="sales">Sales</SelectItem>
-                                    <SelectItem value="inventory">
-                                      Inventory
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="status">Status</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select status">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="active">
-                                      Active
-                                    </SelectItem>
-                                    <SelectItem value="inactive">
-                                      Inactive
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      {action === "add" ? (
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="email">email</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    id="email"
-                                    placeholder="JohnDoe@gmail.com"
-                                  />
-                                </FormControl>
-                              </FormItem>
+                                  {pageIndex}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                        )}
+
+                        {currentPage < totalPages - 2 && (
+                          <>
+                            {currentPage < totalPages - 3 && (
+                              <PaginationEllipsis />
                             )}
+                            <PaginationItem>
+                              <PaginationLink
+                                className="hover:bg-customColors-screenLightGreen"
+                                onClick={() => handlePageChange(totalPages)}
+                                isActive={currentPage === totalPages}
+                              >
+                                {totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </>
+                        )}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            className="hover:bg-customColors-screenLightGreen"
+                            onClick={() =>
+                              handlePageChange(
+                                Math.min(totalPages, currentPage + 1)
+                              )
+                            }
                           />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                </div>
+              </div>
+
+              <>
+                {showImageModal && showImage && (
+                  <Dialog open={showImageModal} onOpenChange={closeImage}>
+                    <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-customColors-offWhite rounded">
+                      <div className="flex flex-col">
+                        <DialogHeader className="mb-2 flex items-start">
+                          <DialogTitle className="text-left flex-grow">
+                            User Image
+                          </DialogTitle>
+                        </DialogHeader>
+                        <DialogDescription className="mb-4 text-left">
+                          <p>You can click outside to close</p>
+                        </DialogDescription>
+                        <div className="flex-grow flex items-center justify-center overflow-hidden">
+                          <div className="relative w-full h-[400px]">
+                            {showImage?.imagepath ? (
+                              <Image
+                                src={showImage.imagepath}
+                                alt="Product Image"
+                                fill
+                                sizes="(max-width: 600px) 100vw, 50vw"
+                                style={{ objectFit: "contain" }}
+                                className="absolute"
+                              />
+                            ) : (
+                              <p className="text-center">No image available</p>
+                            )}
+                          </div>
                         </div>
-                      ) : null}
-                      {action === "add" ? (
-                        <div className="space-y-2">
-                          <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel htmlFor="password">
-                                  Password
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="relative">
+                        <DialogFooter className="mt-4">
+                          <Button onClick={closeImage}>Close</Button>
+                        </DialogFooter>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </>
+              {showModal && (
+                <Dialog open={showModal} onOpenChange={handleCancel}>
+                  <DialogContent className="bg-customColors-offWhite">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {form.getValues("userid") ? "Edit User" : "Add User"}
+                      </DialogTitle>
+                      <DialogDescription>
+                        Fill in the form below to{" "}
+                        {form.getValues("userid") ? "edit" : "add"} a user.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form
+                        className="w-full max-w-4xl mx-auto p-6"
+                        onSubmit={form.handleSubmit(handleSubmit)}
+                      >
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="imagepath"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="file">
+                                    Upload Image
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...fileRef}
+                                      id="file"
+                                      type="file"
+                                      onChange={handleImage}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="firstname"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="firstname">
+                                    First Name
+                                  </FormLabel>
+                                  <FormControl>
                                     <Input
                                       {...field}
-                                      id="password"
-                                      type={showPassword ? "text" : "password"}
-                                      name="password"
-                                      placeholder={
-                                        form.getValues("userid")
-                                          ? "Leave blank if not changing"
-                                          : "Enter password"
-                                      }
-                                      required
+                                      id="firstname"
+                                      placeholder="John"
                                     />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setShowPassword(!showPassword)
-                                      }
-                                      className="absolute right-3 top-2 text-gray-400"
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="middlename"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="middlename">
+                                    Middle Name
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      id="middlename"
+                                      placeholder="Alcarra"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="lastname"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="lastname">
+                                    Last Name
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      id="lastname"
+                                      placeholder="Doe"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="role"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="role">Role</FormLabel>
+                                  <FormControl>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      defaultValue={field.value}
+                                      {...field}
                                     >
-                                      {showPassword ? (
-                                        <EyeOff className="h-5 w-5" />
-                                      ) : (
-                                        <Eye className="h-5 w-5" />
-                                      )}
-                                    </button>
-                                  </div>
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select role">
+                                          {field.value}
+                                        </SelectValue>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="admin">
+                                          Admin
+                                        </SelectItem>
+                                        <SelectItem value="manager">
+                                          Manager
+                                        </SelectItem>
+                                        <SelectItem value="sales">
+                                          Sales
+                                        </SelectItem>
+                                        <SelectItem value="inventory">
+                                          Inventory
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <FormField
+                              control={form.control}
+                              name="status"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel htmlFor="status">Status</FormLabel>
+                                  <FormControl>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      defaultValue={field.value}
+                                      {...field}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select status">
+                                          {field.value}
+                                        </SelectValue>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="active">
+                                          Active
+                                        </SelectItem>
+                                        <SelectItem value="inactive">
+                                          Inactive
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          {action === "add" ? (
+                            <div className="space-y-2">
+                              <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel htmlFor="email">email</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        id="email"
+                                        placeholder="JohnDoe@gmail.com"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ) : null}
+                          {action === "add" ? (
+                            <div className="space-y-2">
+                              <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel htmlFor="password">
+                                      Password
+                                    </FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Input
+                                          {...field}
+                                          id="password"
+                                          type={
+                                            showPassword ? "text" : "password"
+                                          }
+                                          name="password"
+                                          placeholder={
+                                            form.getValues("userid")
+                                              ? "Leave blank if not changing"
+                                              : "Enter password"
+                                          }
+                                          required
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setShowPassword(!showPassword)
+                                          }
+                                          className="absolute right-3 top-2 text-gray-400"
+                                        >
+                                          {showPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                          ) : (
+                                            <Eye className="h-5 w-5" />
+                                          )}
+                                        </button>
+                                      </div>
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ) : null}
                         </div>
-                      ) : null}
-                    </div>
-                    <DialogFooter className="pt-2">
-                      <Button variant="outline" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                      <Button type="submit">Save</Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          )}
+                        <DialogFooter className="pt-2">
+                          <Button variant="outline" onClick={handleCancel}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">Save</Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

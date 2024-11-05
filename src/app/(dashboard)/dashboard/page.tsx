@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   TransactionItem,
   TransactionTable,
@@ -36,8 +36,26 @@ import {
   WalletMoney,
   TrendingUp,
   ShoppingCart,
+  CalendarIcon,
 } from "@/components/icons/Icons";
 import { ViewItem } from "@/schemas/item.schema";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DateRange as DayPickerDateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 const SACK_WEIGHTS = {
   bag5kg: 5,
@@ -79,11 +97,27 @@ interface Totals {
     items: number;
   };
 }
+// Types for the incoming data
+interface InventoryTurnoverData {
+  itemname: string;
+  stock: number;
+  totalSales: number;
+  turnoverRate: number;
+}
+
+interface InventoryTurnoverBarChartProps {
+  data: InventoryTurnoverData[];
+}
+
 interface StatCardProps {
   title: string;
   value: number | string;
   subValue?: number | string;
   icon: React.ElementType;
+}
+
+interface StockTurnoverRateData {
+  stockTurnoverRate: number;
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -124,45 +158,147 @@ const VolumeCard: React.FC<VolumeCardProps> = ({ title, volume }) => (
   </Card>
 );
 
-const useTransactionData = (endpoint: string) => {
+// Define the DateRange interface that matches react-day-picker's DateRange
+interface DateRange {
+  from: Date | undefined;
+  to: Date | undefined;
+}
+
+const useTransactionData = (
+  endpoint: string,
+  period: string,
+  dateRange: DateRange
+) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(endpoint);
-        const text = await response.text();
-        const parsedData = JSON.parse(text);
+  const fetchTransactionData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
 
-        const processedData = parsedData.map((item: any) => ({
-          ...item,
-          createdat: item.createdat ? new Date(item.createdat) : null,
-          lastmodifiedat: item.lastmodifiedat
-            ? new Date(item.lastmodifiedat)
-            : null,
-        }));
-
-        setData(processedData);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Unknown error occurred")
-        );
-      } finally {
-        setLoading(false);
+      if (dateRange.from && dateRange.to) {
+        params.append("startDate", dateRange.from.toISOString());
+        params.append("endDate", dateRange.to.toISOString());
+      } else {
+        params.append("period", period);
       }
-    };
 
-    fetchData();
-  }, [endpoint]);
+      const response = await fetch(`${endpoint}?${params}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
 
-  return { data, loading, error };
+      const result = await response.json();
+      setData(result);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err);
+      } else {
+        setError(new Error("An unknown error occurred"));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [endpoint, period, dateRange]);
+
+  useEffect(() => {
+    fetchTransactionData();
+  }, [fetchTransactionData]);
+
+  return {
+    data,
+    loading,
+    error,
+  };
+};
+
+interface DateRangePickerProps {
+  dateRange: DateRange;
+  setDateRange: React.Dispatch<React.SetStateAction<DateRange>>;
+}
+
+const DateRangePicker: React.FC<DateRangePickerProps> = ({
+  dateRange,
+  setDateRange,
+}) => {
+  return (
+    <div className="grid gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            id="date"
+            variant={"outline"}
+            className={cn(
+              "w-[300px] justify-start text-left font-normal",
+              !dateRange.from && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {dateRange?.from ? (
+              dateRange.to ? (
+                <>
+                  {format(dateRange.from, "LLL dd, y")} -{" "}
+                  {format(dateRange.to, "LLL dd, y")}
+                </>
+              ) : (
+                format(dateRange.from, "LLL dd, y")
+              )
+            ) : (
+              <span>Pick a date range</span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={dateRange?.from}
+            selected={{
+              from: dateRange.from,
+              to: dateRange.to,
+            }}
+            onSelect={(selectedRange: DayPickerDateRange | undefined) => {
+              setDateRange({
+                from: selectedRange?.from ?? undefined,
+                to: selectedRange?.to ?? undefined,
+              });
+            }}
+            numberOfMonths={2}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
+interface PeriodFilterProps {
+  period: string;
+  setPeriod: (value: string) => void;
+}
+
+const PeriodFilter: React.FC<PeriodFilterProps> = ({ period, setPeriod }) => {
+  return (
+    <div>
+      <Select value={period} onValueChange={setPeriod}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select Period" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="7days">Past 7 Days</SelectItem>
+          <SelectItem value="1month">Past 1 Month</SelectItem>
+          <SelectItem value="6months">Past 6 Months</SelectItem>
+          <SelectItem value="1year">Past 1 Year</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
 };
 
 const formatters = {
   number: new Intl.NumberFormat("en-PH", {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }),
   currency: new Intl.NumberFormat("en-PH", {
@@ -193,6 +329,8 @@ const calculateVolume = (transactions: TransactionTable[]) => {
             volume.resicoMilling += itemWeight;
           }
         });
+
+        volume.totalMilling = volume.bigasMilling + volume.resicoMilling;
         return volume;
       },
       {
@@ -200,6 +338,7 @@ const calculateVolume = (transactions: TransactionTable[]) => {
         resicoPurchase: 0,
         bigasMilling: 0,
         resicoMilling: 0,
+        totalMilling: 0,
       }
     );
 };
@@ -233,24 +372,55 @@ const calculateVolumeOfBigasPalay = (transactions: TransactionTable[]) => {
 
 export default function Dashboard() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [period, setPeriod] = useState<string>("7days");
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: undefined,
+    to: undefined,
+  });
 
   const { data: sales, loading: salesLoading } = useTransactionData(
-    "/api/dashboard/customertransaction"
+    "/api/dashboard/customertransaction",
+    period,
+    dateRange
   );
+
   const { data: purchases, loading: purchasesLoading } = useTransactionData(
-    "/api/dashboard/suppliertransaction"
+    "/api/dashboard/suppliertransaction",
+    period,
+    dateRange
   );
   const { data: items, loading: itemsLoading } = useTransactionData(
-    "/api/dashboard/product"
+    "/api/dashboard/product",
+    period,
+    dateRange
   );
 
   const { data: millingPurchases, loading: millingLoading } =
-    useTransactionData("/api/dashboard/frommillingpurchases");
+    useTransactionData(
+      "/api/dashboard/frommillingpurchases",
+      period,
+      dateRange
+    );
 
   const { data: bigasPalayPurchases, loading: bigasPalayLoading } =
-    useTransactionData("/api/dashboard/palaybigaspurchases");
+    useTransactionData("/api/dashboard/palaybigaspurchases", period, dateRange);
 
-  console.log("bigasPalayPurchases", bigasPalayPurchases);
+  // console.log("bigasPalayPurchases", bigasPalayPurchases);
+
+  const { data: stockTurnOverRate, loading: stockTurnOverRateLoading } =
+    useTransactionData("/api/dashboard/stockturnoverrate", period, dateRange);
+
+  // console.log("stockTurnOverRate", stockTurnOverRate);
+
+  const { data: inventoryTurnover, loading: inventoryTurnverRateLoading } =
+    useTransactionData("/api/dashboard/inventoryturnover", period, dateRange);
+
+  // console.log("inventoryTurnover", inventoryTurnover);
+
+  const { data: stocktosaleratio, loading: stocktosaleratioLoading } =
+    useTransactionData("/api/dashboard/stockstosaleratio", period, dateRange);
+
+  console.log("stocktosaleratio", stocktosaleratio);
 
   const totals = useMemo(() => {
     if (!sales?.length) return null;
@@ -324,7 +494,7 @@ export default function Dashboard() {
     );
   }, [sales, items]);
 
-  const averagePurchaseValue = useMemo(() => {
+  const averagePurchaseMillingValue = useMemo(() => {
     if (!purchases?.length) return 0;
     const fromMillingPurchases = purchases.filter(
       (purchase) => purchase.frommilling
@@ -338,6 +508,23 @@ export default function Dashboard() {
       : 0;
   }, [purchases]);
 
+  const averageNonMillingPurchaseValue = useMemo(() => {
+    if (!purchases?.length) return 0;
+
+    const nonMillingPurchases = purchases.filter(
+      (purchase) => !purchase.frommilling
+    );
+
+    const totalAmount = nonMillingPurchases.reduce(
+      (sum, purchase) => sum + (purchase.totalamount || 0),
+      0
+    );
+
+    return nonMillingPurchases.length
+      ? totalAmount / nonMillingPurchases.length
+      : 0;
+  }, [purchases]);
+
   const volume = useMemo(() => {
     if (!millingPurchases?.length) return null;
     return calculateVolume(millingPurchases);
@@ -348,7 +535,15 @@ export default function Dashboard() {
     return calculateVolumeOfBigasPalay(bigasPalayPurchases);
   }, [bigasPalayPurchases]);
 
-  console.log("volumeOfBigasPalay", volumeOfBigasPalay);
+  // console.log("volumeOfBigasPalay", volumeOfBigasPalay);
+
+  const stockTurnOverRateData = useMemo(() => {
+    // If stockTurnOverRate is an array, return a default structure
+    if (!stockTurnOverRate || Array.isArray(stockTurnOverRate)) {
+      return { stockTurnoverRate: 0 }; // Provide a default value if no data or array
+    }
+    return stockTurnOverRate; // Use the data directly if it's valid and an object
+  }, [stockTurnOverRate]);
 
   const { salesChartData, itemNames } = useMemo(() => {
     if (!sales?.length) return { salesChartData: [], itemNames: [] };
@@ -427,20 +622,6 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  if (
-    salesLoading ||
-    purchasesLoading ||
-    itemsLoading ||
-    millingLoading ||
-    bigasPalayLoading
-  ) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
   const salesChartConfig: ChartConfig = {
     month: { label: "Month", color: "var(--chart-0)" },
     ...itemNames.reduce(
@@ -458,7 +639,7 @@ export default function Dashboard() {
   const stocksChartConfig = {
     desktop: {
       label: "itemname",
-      color: "hsl(var(--chart-9))",
+      color: "hsl(var(--chart-2))",
     },
   } satisfies ChartConfig;
 
@@ -469,6 +650,53 @@ export default function Dashboard() {
     },
   } satisfies ChartConfig;
 
+  // Memoized chart data preparation
+  const chartData = useMemo(() => {
+    return inventoryTurnover.map((item) => ({
+      itemname: item.itemname,
+      turnoverRate: item.turnoverRate, // Ensure this is a numeric value
+    }));
+  }, [inventoryTurnover]);
+
+  // Chart config: Customize colors and labels
+  const chartConfig = {
+    turnoverRate: {
+      label: "Turnover Rate",
+      color: "hsl(var(--chart-7))", // Can be changed to any valid CSS color value
+    },
+  };
+
+  const stockToSalechartData =
+    stocktosaleratio?.map((item) => ({
+      itemname: item.itemname,
+      stockToSalesRatio: item.stockToSalesRatio,
+    })) || [];
+
+  // Define chart configuration
+  const stockToSalechartConfig: ChartConfig = {
+    stockToSalesRatio: {
+      label: "Stock to Sales Ratio",
+      color: "hsl(var(--chart-1))",
+    },
+  };
+
+  if (
+    salesLoading ||
+    purchasesLoading ||
+    itemsLoading ||
+    millingLoading ||
+    bigasPalayLoading ||
+    stockTurnOverRateLoading ||
+    inventoryTurnverRateLoading ||
+    stocktosaleratioLoading
+  ) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen">
       <div className="flex-1 pl-12 pr-12 pt-4 overflow-y-auto">
@@ -476,7 +704,18 @@ export default function Dashboard() {
           Dashboard Overview
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="flex gap-4 mb-6">
+          <PeriodFilter
+            period={period}
+            setPeriod={(newPeriod) => {
+              setPeriod(newPeriod);
+              setDateRange({ from: undefined, to: undefined });
+            }}
+          />
+          <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 mb-8">
           <StatCard
             title="Total Inventory"
             value={`${formatters.number.format(totals?.totalStock || 0)} kg`}
@@ -490,6 +729,14 @@ export default function Dashboard() {
             icon={WalletMoney}
           />
           <StatCard
+            title="Stock Turnover Rate"
+            value={formatters.number.format(
+              stockTurnOverRateData?.stockTurnoverRate ?? 0 // Access the correct property
+            )}
+            subValue="Average stock turnover rate"
+            icon={ShoppingCart}
+          />
+          <StatCard
             title="Avg. Sales Transaction Value"
             value={formatters.currency.format(
               totals?.totalSales / totals?.totalTransactions || 0
@@ -498,8 +745,14 @@ export default function Dashboard() {
             icon={TrendingUp}
           />
           <StatCard
-            title="Average Purchase Order Value From Milling"
-            value={formatters.currency.format(averagePurchaseValue)}
+            title="Avg. Purchase Order Value"
+            value={formatters.currency.format(averageNonMillingPurchaseValue)}
+            subValue={`Total POs: ${purchases?.length || 0}`}
+            icon={ShoppingCart}
+          />
+          <StatCard
+            title="Avg. Purchase Order Value From Milling"
+            value={formatters.currency.format(averagePurchaseMillingValue)}
             subValue={`Total POs from Milling: ${
               purchases?.filter((p) => p.frommilling).length || 0
             }`}
@@ -507,7 +760,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <VolumeCard
             title="Palay Purchase Volume"
             volume={volumeOfBigasPalay?.palayPurchase || 0}
@@ -528,6 +781,10 @@ export default function Dashboard() {
             title="Resico Milling Volume"
             volume={volume?.resicoMilling || 0}
           />
+          <VolumeCard
+            title="Total Milling Volume"
+            volume={volume?.totalMilling || 0}
+          />
         </div>
 
         <Card className="mb-8">
@@ -535,7 +792,9 @@ export default function Dashboard() {
             <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
               Inventory Levels
             </CardTitle>
-            <CardDescription>Current Inventory Stock Levels</CardDescription>
+            <CardDescription>
+              Stock Levels of each item in inventory
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -546,12 +805,12 @@ export default function Dashboard() {
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="itemname"
-                  tickLine={false}
+                  tickLine={true}
                   tickMargin={10}
-                  axisLine={false}
+                  axisLine={true}
                   tickFormatter={(value) => value.slice(0, 10)}
                 />
-                <YAxis />
+                <YAxis tickLine={false} axisLine={false} />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent hideLabel />}
@@ -562,85 +821,188 @@ export default function Dashboard() {
           </CardContent>
           <CardFooter className="flex-col items-start gap-2 text-sm">
             <div className="leading-none text-muted-foreground">
-              Showing current stock levels for all items
+              Showing stock levels for all items
             </div>
           </CardFooter>
         </Card>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
-              Sales Performance
-            </CardTitle>
-            <CardDescription>Sales data by item over time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={salesChartConfig}
-              className="w-full h-[300px] md:h-[400px]"
-            >
-              <LineChart
-                data={salesChartData}
-                margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
+                Sales Performance
+              </CardTitle>
+              <CardDescription>Sales data graph for each item</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={salesChartConfig}
+                className="w-full h-[300px] md:h-[400px]"
               >
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                <LineChart
+                  data={salesChartData}
+                  margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <YAxis tickLine={false} axisLine={false} tickMargin={8} />
 
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent />}
-                />
-                <ChartLegend content={<ChartLegendContent />} />
-                {itemNames.map((itemName, index) => (
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  {itemNames.map((itemName, index) => (
+                    <Line
+                      key={itemName}
+                      dataKey={itemName}
+                      type="monotone"
+                      stroke={`hsl(var(--chart-${index + 1}))`}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  ))}
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
+                Transaction Trend Values
+              </CardTitle>
+              <CardDescription>Purchase Value vs. Sales Value</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={transactionChartConfig}
+                className="w-full h-[300px] md:h-[400px]"
+              >
+                <BarChart
+                  width={600}
+                  height={300}
+                  data={transactionData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={true}
+                    tickMargin={10}
+                    axisLine={true}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip
+                    content={<ChartTooltipContent indicator="dashed" />}
+                    cursor={false}
+                  />
+                  <Legend />
+                  <Bar dataKey="purchases" fill="#8884d8" radius={4} />
+                  <Bar dataKey="sales" fill="#82ca9d" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Inventory Turnover</CardTitle>
+              <CardDescription>
+                Visualizing the inventory turnover rates
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={chartConfig}
+                className="w-full h-[300px] md:h-[400px]"
+              >
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="itemname"
+                    tickLine={true}
+                    tickMargin={10}
+                    axisLine={true}
+                    tickFormatter={(value) => value.slice(0, 3)} // Show only the first 3 letters of each item name
+                  />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip
+                    content={<ChartTooltipContent indicator="dashed" />}
+                    cursor={false}
+                  />
+                  <Bar
+                    dataKey="turnoverRate"
+                    fill={chartConfig.turnoverRate.color}
+                    radius={4}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
+                Stock to Sales Ratio Trend
+              </CardTitle>
+              <CardDescription>
+                Stock-to-Sales Ratio for the selected items
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={stockToSalechartConfig}
+                className="w-full h-[300px] md:h-[400px]"
+              >
+                <LineChart
+                  width={600}
+                  height={300}
+                  data={stockToSalechartData}
+                  margin={{
+                    left: 12,
+                    right: 12,
+                    top: 12,
+                    bottom: 12,
+                  }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="itemname"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 3)} // Shorten the item name if needed
+                  />
+                  <YAxis />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
                   <Line
-                    key={itemName}
-                    dataKey={itemName}
+                    dataKey="stockToSalesRatio"
                     type="monotone"
-                    stroke={`hsl(var(--chart-${index + 1}))`}
+                    stroke="hsl(var(--chart-8))" // Use the dynamic color for stock-to-sales ratio
                     strokeWidth={2}
                     dot={false}
                   />
-                ))}
-              </LineChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
-              Transaction Trends
-            </CardTitle>
-            <CardDescription>Purchases vs. Sales over time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={transactionChartConfig}
-              className="w-full h-[300px] md:h-[400px]"
-            >
-              <BarChart
-                width={600}
-                height={300}
-                data={transactionData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="purchases" fill="#8884d8" />
-                <Bar dataKey="sales" fill="#82ca9d" />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

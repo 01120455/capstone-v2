@@ -157,7 +157,6 @@
 
 .table-container {
   position: relative;
-  
 }
 
 .table-container .fixed {
@@ -204,11 +203,22 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --chart-6: 120 50% 50%; /* New color */
-    --chart-7: 210 60% 40%; /* New color */
-    --chart-8: 330 70% 50%; /* New color */
-    --chart-9: 50 90% 70%; /* New color */
-    --chart-10: 0 100% 50%; /* New color */
+    --chart-6: 103, 60%, 45%; /* Greenish */
+    --chart-7: 224, 77%, 50%; /* Blue */
+    --chart-8: 330, 60%, 53%; /* Reddish-pink */
+    --chart-9: 160, 80%, 45%; /* Teal */
+    --chart-10: 45, 89%, 62%; /* Yellow-orange */
+    --chart-11: 270, 58%, 52%; /* Purple */
+    --chart-12: 120, 45%, 60%; /* Pastel green */
+    --chart-13: 200, 60%, 55%; /* Light blue */
+    --chart-14: 110, 52%, 50%; /* Mint green */
+    --chart-15: 17, 78%, 56%; /* Deep orange */
+    --chart-16: 50, 71%, 63%; /* Soft yellow */
+    --chart-17: 352, 65%, 60%; /* Warm pink */
+    --chart-18: 110, 47%, 50%; /* Forest green */
+    --chart-19: 305, 75%, 59%; /* Violet-red */
+    --chart-20: 15, 58%, 47%; /* Brick red */
+    --chart-21: 330, 80%, 54%; /* Fuchsia */
   }
 
   .dark {

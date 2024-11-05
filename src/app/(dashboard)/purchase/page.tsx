@@ -909,7 +909,7 @@ export default function Component() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-customColors-lightPastelGreen">
+    <div className="flex min-h-screen w-full">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="grid gap-6 grid-cols-1">

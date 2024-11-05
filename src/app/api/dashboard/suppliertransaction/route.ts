@@ -4,12 +4,57 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+
   try {
+    // Get filter values from searchParams matching your frontend
+    const startDate = searchParams.get("startDate"); // Changed from startdate to startDate
+    const endDate = searchParams.get("endDate"); // Changed from enddate to endDate
+    const period = searchParams.get("period"); // Added period parameter
+
+    // Build the where clause based on filters
+    const whereClause: any = {
+      transactiontype: "purchase",
+      status: "paid",
+    };
+
+    if (startDate && endDate) {
+      // Date range filter
+      whereClause.lastmodifiedat = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    } else if (period) {
+      // Period filter
+      const now = new Date();
+      let periodStartDate = new Date();
+
+      switch (period) {
+        case "7days":
+          periodStartDate.setDate(now.getDate() - 7);
+          break;
+        case "1month":
+          periodStartDate.setMonth(now.getMonth() - 1);
+          break;
+        case "6months":
+          periodStartDate.setMonth(now.getMonth() - 6);
+          break;
+        case "1year":
+          periodStartDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          // Default to last 7 days if period is invalid
+          periodStartDate.setDate(now.getDate() - 7);
+      }
+
+      whereClause.lastmodifiedat = {
+        gte: periodStartDate,
+        lte: now,
+      };
+    }
+
     const transaction = await prisma.transaction.findMany({
-      where: {
-        transactiontype: "purchase",
-        status: "paid",
-      },
+      where: whereClause,
       include: {
         createdbyuser: {
           select: {
