@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { use, useCallback, useEffect, useMemo, useState } from "react";
 import {
   TransactionItem,
   TransactionTable,
@@ -179,11 +179,16 @@ const useTransactionData = (
     try {
       const params = new URLSearchParams();
 
+      // Set default period if it's empty
+      const effectivePeriod = period || "7days"; // Use "7d" as the default period if period is empty
+
+      // If dateRange is complete, send start and end date
       if (dateRange.from && dateRange.to) {
         params.append("startDate", dateRange.from.toISOString());
         params.append("endDate", dateRange.to.toISOString());
       } else {
-        params.append("period", period);
+        // If dateRange is incomplete, use period as fallback
+        params.append("period", effectivePeriod);
       }
 
       const response = await fetch(`${endpoint}?${params}`);
@@ -204,8 +209,16 @@ const useTransactionData = (
   }, [endpoint, period, dateRange]);
 
   useEffect(() => {
-    fetchTransactionData();
-  }, [fetchTransactionData]);
+    if (dateRange.from && dateRange.to) {
+      fetchTransactionData();
+    }
+  }, [dateRange, fetchTransactionData]);
+
+  useEffect(() => {
+    if (!dateRange.from && !dateRange.to) {
+      fetchTransactionData();
+    }
+  }, [period, fetchTransactionData]);
 
   return {
     data,
@@ -251,22 +264,31 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={dateRange?.from}
-            selected={{
-              from: dateRange.from,
-              to: dateRange.to,
-            }}
-            onSelect={(selectedRange: DayPickerDateRange | undefined) => {
-              setDateRange({
-                from: selectedRange?.from ?? undefined,
-                to: selectedRange?.to ?? undefined,
-              });
-            }}
-            numberOfMonths={2}
-          />
+          <div className="p-4">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={dateRange?.from}
+              selected={{
+                from: dateRange.from,
+                to: dateRange.to,
+              }}
+              onSelect={(selectedRange: DayPickerDateRange | undefined) => {
+                setDateRange({
+                  from: selectedRange?.from ?? undefined,
+                  to: selectedRange?.to ?? undefined,
+                });
+              }}
+              numberOfMonths={2}
+            />
+            <Button
+              variant="ghost"
+              className="w-full mt-2 text-red-500"
+              onClick={() => setDateRange({ from: undefined, to: undefined })}
+            >
+              Clear
+            </Button>
+          </div>
         </PopoverContent>
       </Popover>
     </div>
@@ -372,11 +394,23 @@ const calculateVolumeOfBigasPalay = (transactions: TransactionTable[]) => {
 
 export default function Dashboard() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [period, setPeriod] = useState<string>("7days");
+  const [period, setPeriod] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined,
   });
+
+  useEffect(() => {
+    if (dateRange.from && dateRange.to) {
+      setPeriod("");
+    }
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (period) {
+      setDateRange({ from: undefined, to: undefined });
+    }
+  }, [period]);
 
   const { data: sales, loading: salesLoading } = useTransactionData(
     "/api/dashboard/customertransaction",

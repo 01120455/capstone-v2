@@ -1286,9 +1286,6 @@ export default function Component() {
                                         <SelectItem value="paid">
                                           Paid
                                         </SelectItem>
-                                        <SelectItem value="cancelled">
-                                          Cancelled
-                                        </SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </FormControl>
@@ -1643,9 +1640,6 @@ ${
                                         </SelectValue>
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="pending">
-                                          Pending
-                                        </SelectItem>
                                         <SelectItem value="paid">
                                           Paid
                                         </SelectItem>

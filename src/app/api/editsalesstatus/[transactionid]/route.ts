@@ -77,7 +77,7 @@ export const PUT = async (req: NextRequest) => {
               where: { itemid: originalStock.itemid },
               data: {
                 stock: {
-                  decrement: stockToUpdate,
+                  increment: stockToUpdate,
                 },
               },
             });
@@ -92,7 +92,7 @@ export const PUT = async (req: NextRequest) => {
             where: { itemid: originalStock.itemid },
             data: {
               stock: {
-                increment: stockToUpdate,
+                decrement: stockToUpdate,
               },
             },
           });

@@ -226,16 +226,17 @@ export const POST = async (req: NextRequest) => {
                 });
               }
             }
-          } else if (newPurchase.status === "paid") {
-            await tx.item.update({
-              where: { itemid: originalStock.itemid },
-              data: {
-                stock: {
-                  increment: stockToUpdate,
-                },
-              },
-            });
-          }
+          } 
+          // else if (newPurchase.status === "paid") {
+          //   await tx.item.update({
+          //     where: { itemid: originalStock.itemid },
+          //     data: {
+          //       stock: {
+          //         increment: stockToUpdate,
+          //       },
+          //     },
+          //   });
+          // }
         }
 
         return [newPurchase, newPurchaseOrderNo];

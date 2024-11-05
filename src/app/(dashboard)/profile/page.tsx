@@ -209,9 +209,9 @@ export default function Component() {
           </div>
         </header>
 
-        <div className="flex flex-col lg:flex-row xl:px-32">
-          <aside className="flex flex-col justify-items-start p-4 space-y-4 mb-2 lg:mb-0 lg:w-1/4 md:w-1/8  ">
-            <div className="p-6 grid gap-4">
+        <div className="flex flex-col justify-between items-center lg:flex-row">
+          <aside className="flex flex-col justify-items-start space-y-4 mb-2 lg:mb-0 lg:w-1/4 md:w-1/8  ">
+            <div className="grid gap-4">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Status:</span>
@@ -256,159 +256,151 @@ export default function Component() {
               </div>
             </div>
           </aside>
-          {/* {form.getValues("userid") ? "Edit User" : "Add User"} */}
-          <Form {...form}>
-            <form
-              className="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-2"
-              onSubmit={form.handleSubmit(handleSubmit)}
-            >
-              <div className="space-y-2 ml-10">
-                <FormField
-                  control={form.control}
-                  name="imagepath"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="file">Profile Picture</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...fileRef}
-                          id="file"
-                          type="file"
-                          onChange={handleImage}
-                          className="w-1/2 lg:w-full"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2 ml-10">
-                <FormField
-                  control={form.control}
-                  name="firstname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="firstName">First Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          id="firstName"
-                          placeholder="John"
-                          defaultValue={field.value}
-                          className="w-1/2 lg:w-full"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2 ml-10">
-                <FormField
-                  control={form.control}
-                  name="middlename"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="middleName">Middle Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          id="middleName"
-                          placeholder="Doe"
-                          defaultValue={field.value}
-                          className="w-1/2 lg:w-full"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2 ml-10">
-                <FormField
-                  control={form.control}
-                  name="lastname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="lastName">Last Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          id="lastName"
-                          placeholder="Smith"
-                          defaultValue={field.value}
-                          className="w-1/2 lg:w-full"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2 ml-10">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="email">Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          id="email"
-                          placeholder="johndoe"
-                          defaultValue={field.value}
-                          className="w-1/2 lg:w-full"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2 ml-10">
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="password">Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
+          <div className="ml-10">
+            <Form {...form}>
+              <form
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2"
+                onSubmit={form.handleSubmit(handleSubmit)}
+              >
+                <div className="space-y-2 ml-10">
+                  <FormField
+                    control={form.control}
+                    name="imagepath"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="file">Profile Picture</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...fileRef}
+                            id="file"
+                            type="file"
+                            onChange={handleImage}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2 ml-10">
+                  <FormField
+                    control={form.control}
+                    name="firstname"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="firstName">First Name</FormLabel>
+                        <FormControl>
                           <Input
                             {...field}
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            placeholder="********"
-                            required
+                            id="firstName"
+                            placeholder="John"
+                            defaultValue={field.value}
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-2 text-gray-400"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-5 w-5" />
-                            ) : (
-                              <Eye className="h-5 w-5" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <div className="flex flex-row-reverse items-end pr-4 lg:pr-1">
-                  <Button type="submit" className="mt-10">
-                    Save Changes
-                  </Button>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="p-10"></div>
-              </div>
-            </form>
-          </Form>
+                <div className="space-y-2 ml-10">
+                  <FormField
+                    control={form.control}
+                    name="middlename"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="middleName">Middle Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            id="middleName"
+                            placeholder="Doe"
+                            defaultValue={field.value}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2 ml-10">
+                  <FormField
+                    control={form.control}
+                    name="lastname"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="lastName">Last Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            id="lastName"
+                            placeholder="Smith"
+                            defaultValue={field.value}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2 ml-10">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="email">Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            id="email"
+                            placeholder="johndoe"
+                            defaultValue={field.value}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2 ml-10">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="password">Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              {...field}
+                              id="password"
+                              type={showPassword ? "text" : "password"}
+                              name="password"
+                              placeholder="********"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-2 text-gray-400"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-5 w-5" />
+                              ) : (
+                                <Eye className="h-5 w-5" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex flex-row-reverse items-end pr-4 lg:pr-1">
+                    <Button type="submit" className="mt-10">
+                      Save Changes
+                    </Button>
+                  </div>
+                  <div className="p-10"></div>
+                </div>
+              </form>
+            </Form>
+          </div>
         </div>
-
-        {/* <div className="flex justify-end mt-8">
-          <Button>Save Changes</Button>
-        </div> */}
       </div>
     </div>
   );

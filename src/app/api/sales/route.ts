@@ -196,25 +196,26 @@ export const POST = async (req: NextRequest) => {
 
         if (!currentItem) continue;
 
-        if (newPurchase.status === "paid") {
-          if (currentItem.stock > 0) {
-            const newStock = currentItem.stock - stockToUpdate;
+        // if (newPurchase.status === "paid") {
+        //   if (currentItem.stock > 0) {
+        //     const newStock = currentItem.stock - stockToUpdate;
 
-            if (newStock < 0) {
-              await tx.item.update({
-                where: { itemid: originalStock.itemid },
-                data: { stock: 0 },
-              });
-            } else {
-              await tx.item.update({
-                where: { itemid: originalStock.itemid },
-                data: {
-                  stock: newStock,
-                },
-              });
-            }
-          }
-        } else if (
+        //     if (newStock < 0) {
+        //       await tx.item.update({
+        //         where: { itemid: originalStock.itemid },
+        //         data: { stock: 0 },
+        //       });
+        //     } else {
+        //       await tx.item.update({
+        //         where: { itemid: originalStock.itemid },
+        //         data: {
+        //           stock: newStock,
+        //         },
+        //       });
+        //     }
+        //   }
+        // } else
+        if (
           newPurchase.status === "pending" ||
           newPurchase.status === "cancelled"
         ) {
