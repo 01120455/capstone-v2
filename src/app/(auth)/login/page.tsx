@@ -81,12 +81,12 @@ export default function Home() {
 
   return (
     <div className="grid lg:grid-cols-2 min-h-screen w-full">
-      <div className="bg-gray-100 dark:bg-gray-800 items-center justify-center hidden lg:flex">
+      <div className="bg-customColors-lightPastelGreen items-center justify-center hidden lg:flex">
         <Image
-          src="/login.jpg"
+          src="/login.png"
           alt="Login Image"
-          width={1000}
-          height={1000}
+          width={800}
+          height={800}
           className="w-full lg:w-1/2 xl:w-full object-contain"
         />
       </div>

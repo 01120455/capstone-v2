@@ -45,7 +45,7 @@ export default function Component() {
                 </div>
               </div>
               <Image
-                src="/next.svg"
+                src="/login.png"
                 alt="Hero"
                 width={600}
                 height={400}
@@ -159,7 +159,7 @@ export default function Component() {
             </div>
             <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
               <Image
-                src="/next.svg"
+                src="/landingpageimage/dashboard.png"
                 alt=""
                 width={600}
                 height={400}
@@ -197,10 +197,10 @@ export default function Component() {
                   About 3R Shane Rice Mill
                 </h2>
                 <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  3R Shane Rice Mill is a family-owned business that has been
-                  producing high-quality rice for over 16 years. Our commitment
-                  to delivering the best rice products to our customers has made
-                  us a trusted name in the industry.
+                  3R Shane Rice Mill is a business that has been producing
+                  high-quality rice for over 16 years. Our commitment to
+                  delivering the best rice products to our customers has made us
+                  a trusted name in the industry.
                 </p>
                 <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
                   We take pride in our diverse selection of rice varieties, each
@@ -210,7 +210,7 @@ export default function Component() {
                 </p>
               </div>
               <Image
-                src="/next.svg"
+                src="/landingpageimage/3rshaneofficebuilding.jpg"
                 width={550}
                 height={310}
                 alt="Shane Rice Mill"
@@ -222,18 +222,18 @@ export default function Component() {
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          &copy; 2024 3R Shane Rice Mill. All rights reserved.
+          &copy; 2024 Bain Hansly Cruz. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link
-            href="#"
+            href="/termsofservice"
             className="text-xs hover:underline underline-offset-4"
             prefetch={false}
           >
             Terms of Service
           </Link>
           <Link
-            href="#"
+            href="/privacypolicy"
             className="text-xs hover:underline underline-offset-4"
             prefetch={false}
           >

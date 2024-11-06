@@ -43,7 +43,6 @@ export async function GET(req: NextRequest) {
           periodStartDate.setFullYear(now.getFullYear() - 1);
           break;
         default:
-          // Default to last 7 days if period is invalid
           periodStartDate.setDate(now.getDate() - 7);
       }
 
