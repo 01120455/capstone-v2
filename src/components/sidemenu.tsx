@@ -103,17 +103,19 @@ export default function SideMenu({
         <>
           <SidebarGroup>
             <SidebarGroupLabel>Overview</SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Analytics">
-                  <MenuItem
-                    href="/dashboard"
-                    icon={LayoutDashboardIcon}
-                    label="Dashboard"
-                  />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <Link href="/dashboard">
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton tooltip="Analytics">
+                    <MenuItem
+                      href="/dashboard"
+                      icon={LayoutDashboardIcon}
+                      label="Dashboard"
+                    />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </Link>
           </SidebarGroup>
 
           <SidebarGroup>
@@ -122,7 +124,7 @@ export default function SideMenu({
               <Collapsible
                 key="Product"
                 asChild
-                defaultOpen={true}
+                defaultOpen={false}
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
@@ -133,7 +135,7 @@ export default function SideMenu({
                         icon={BoxIcon}
                         label="Product"
                       />
-                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      <ChevronRightIcon className="ml-auto mr-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -158,7 +160,7 @@ export default function SideMenu({
               <Collapsible
                 key="Sales"
                 asChild
-                defaultOpen={true}
+                defaultOpen={false}
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
@@ -169,7 +171,7 @@ export default function SideMenu({
                         icon={DollarSignIcon}
                         label="Sales"
                       />
-                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      <ChevronRightIcon className="ml-auto mr-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -207,7 +209,7 @@ export default function SideMenu({
               <Collapsible
                 key="Purchase"
                 asChild
-                defaultOpen={true}
+                defaultOpen={false}
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
@@ -218,7 +220,7 @@ export default function SideMenu({
                         icon={PurchaseIcon}
                         label="Purchase"
                       />
-                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      <ChevronRightIcon className="ml-auto mr-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -244,6 +246,13 @@ export default function SideMenu({
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                      <SidebarMenuSubItem key="PurchasedItemsnonmilling">
+                        <SidebarMenuSubButton asChild>
+                          <Link href="/purchaseditemsnonmilling">
+                            <span>Non-Milling Purchased Items</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>
@@ -254,27 +263,29 @@ export default function SideMenu({
           {user.role === ROLES.ADMIN && (
             <>
               <SidebarGroup>
-                <SidebarGroupLabel>User Management</SidebarGroupLabel>
-                <SidebarMenu>
-                  <Collapsible
-                    key="User"
-                    asChild
-                    defaultOpen={true}
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip="User">
-                          <MenuItem
-                            href="/user"
-                            icon={UsersIcon}
-                            label="Users"
-                          />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                </SidebarMenu>
+                <Link href="/user">
+                  <SidebarGroupLabel>User Management</SidebarGroupLabel>
+                  <SidebarMenu>
+                    <Collapsible
+                      key="User"
+                      asChild
+                      defaultOpen={false}
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton tooltip="User">
+                            <MenuItem
+                              href="/user"
+                              icon={UsersIcon}
+                              label="Users"
+                            />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  </SidebarMenu>
+                </Link>
               </SidebarGroup>
             </>
           )}

@@ -20,6 +20,7 @@ import {
   ArrowRightIcon,
   FilterIcon,
   FilePenIcon,
+  ViewIcon,
 } from "@/components/icons/Icons";
 import {
   Pagination,
@@ -522,7 +523,9 @@ export default function Component() {
               {selectedTransaction ? (
                 <div className="bg-customColors-offWhite rounded-lg shadow-lg p-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold">Sales Details</h2>
+                    <h2 className="text-lg font-bold text-customColors-eveningSeaGreen">
+                      Sales Details
+                    </h2>
                     <Button
                       variant="outline"
                       size="icon"
@@ -621,7 +624,7 @@ export default function Component() {
                       </div>
                     </div>
                     <div className="grid grid-cols-1">
-                      <div className="text-lg font-medium">
+                      <div className="text-lg font-medium text-customColors-eveningSeaGreen">
                         Total Items:{" "}
                         {selectedTransaction.TransactionItem.length}
                       </div>
@@ -629,7 +632,7 @@ export default function Component() {
                         ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                       ) && (
                         <>
-                          <div className="text-lg font-medium">
+                          <div className="text-lg font-medium text-customColors-eveningSeaGreen">
                             Total:{" "}
                             {formatPrice(selectedTransaction.totalamount ?? 0)}
                           </div>
@@ -641,7 +644,7 @@ export default function Component() {
                         <>
                           <Button
                             onClick={downloadInvoice}
-                            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+                            className="mt-4 text-white py-2 px-4 rounded"
                           >
                             Download Document
                           </Button>
@@ -699,14 +702,23 @@ export default function Component() {
                                   </TableCell>
                                   <TableCell>
                                     <Badge
+                                      variant={
+                                        transaction.status === "paid"
+                                          ? "default"
+                                          : transaction.status === "pending"
+                                          ? "secondary"
+                                          : transaction.status === "cancelled"
+                                          ? "destructive"
+                                          : "outline"
+                                      }
                                       className={`px-2 py-1 rounded-full ${
                                         transaction.status === "paid"
-                                          ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                          ? "bg-green-100 text-green-800"
                                           : transaction.status === "pending"
-                                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                          ? "bg-yellow-100 text-yellow-800"
                                           : transaction.status === "cancelled"
-                                          ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-gray-100 text-gray-800"
                                       }`}
                                     >
                                       {transaction.status}
@@ -738,6 +750,18 @@ export default function Component() {
                                   </TableCell>
                                   <TableCell>
                                     <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          setSelectedTransaction(transaction)
+                                        }
+                                      >
+                                        <ViewIcon className="w-4 h-4" />
+                                        <span className="sr-only">
+                                          View details
+                                        </span>
+                                      </Button>
                                       {canAccessButton(
                                         ROLES.ADMIN || ROLES.MANAGER
                                       ) && (
@@ -756,18 +780,6 @@ export default function Component() {
                                           </Button>
                                         </>
                                       )}
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          setSelectedTransaction(transaction)
-                                        }
-                                      >
-                                        <ArrowRightIcon className="h-6 w-6" />
-                                        <span className="sr-only">
-                                          View details
-                                        </span>
-                                      </Button>
                                     </div>
                                   </TableCell>
                                 </TableRow>

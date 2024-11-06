@@ -34,6 +34,11 @@ enum UnitOfMeasurement {
   weight = "weight",
 }
 
+enum Status {
+  active = "active",
+  inactive = "inactive",
+}
+
 export const POST = async (req: NextRequest) => {
   try {
     const session = await getIronSession(
@@ -272,6 +277,7 @@ export const PUT = async (req: NextRequest) => {
     const name = formData.get("itemname") as string;
     const typeString = formData.get("itemtype") as string;
     const sackweightString = formData.get("sackweight") as string;
+    const statusString = formData.get("status") as string;
     const unitofmeasurementString = formData.get("unitofmeasurement") as string;
     const stock = parseFloat(formData.get("stock") as string);
     const unitprice = parseFloat(formData.get("unitprice") as string);
@@ -285,6 +291,8 @@ export const PUT = async (req: NextRequest) => {
     }
 
     const sackweight = sackweightString as SackWeight;
+
+    const status = statusString as Status;
 
     if (
       !Object.values(UnitOfMeasurement).includes(
@@ -389,7 +397,7 @@ export const PUT = async (req: NextRequest) => {
             itemname: name,
             itemtype: type,
             sackweight,
-            status: "active",
+            status: status,
             unitofmeasurement,
             stock,
             unitprice,

@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useContext } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+  useContext,
+} from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,10 +19,13 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import {
+  TransactionItem,
+  TransactionTable,
+} from "@/schemas/transaction.schema";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { TransactionItem } from "@/schemas/transaction.schema";
 import { Badge } from "@/components/ui/badge";
-import { FilterIcon } from "@/components/icons/Icons";
+import { XIcon, ArrowRightIcon, FilterIcon } from "@/components/icons/Icons";
 import {
   Pagination,
   PaginationContent,
@@ -25,8 +35,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Select } from "@radix-ui/react-select";
 import {
+  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -37,6 +47,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { User } from "@/interfaces/user";
 import { userSessionContext } from "@/components/sessionContext-provider";
 
 const ROLES = {
@@ -79,18 +90,18 @@ const ROWS_PER_PAGE = 10;
 
 const useFilters = () => {
   const [filters, setFilters] = useState({
-    invoiceno: "",
+    purordno: "",
     name: "",
-    walkin: "",
+    frommilling: "",
     status: "",
     dateRange: { start: "", end: "" },
   });
 
   const clear = () => {
     setFilters({
-      invoiceno: "",
+      purordno: "",
       name: "",
-      walkin: "",
+      frommilling: "",
       status: "",
       dateRange: { start: "", end: "" },
     });
@@ -123,14 +134,14 @@ const useTransactionItems = () => {
           page: page.toString(),
         });
 
-        if (filters.invoiceno) {
-          params.append("documentnumber", filters.invoiceno);
+        if (filters.purordno) {
+          params.append("documentnumber", filters.purordno);
         }
         if (filters.name) {
           params.append("name", filters.name);
         }
-        if (filters.walkin) {
-          params.append("walkin", filters.walkin);
+        if (filters.frommilling) {
+          params.append("frommilling", filters.frommilling);
         }
         if (filters.status) {
           params.append("status", filters.status);
@@ -143,7 +154,7 @@ const useTransactionItems = () => {
         }
 
         const transactionsResponse = await fetch(
-          `/api/customertransaction/customertransactionpagination?${params}`
+          `/api/transaction/transactionpagination?${params}`
         );
         if (!transactionsResponse.ok) {
           throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
@@ -163,7 +174,6 @@ const useTransactionItems = () => {
         transactions.forEach((transaction) => {
           transactionMap.set(transaction.transactionid, {
             documentNumber: transaction.DocumentNumber?.documentnumber,
-            frommilling: transaction.frommilling,
             transactiontype: transaction.transactiontype,
             status: transaction.status,
           });
@@ -176,7 +186,6 @@ const useTransactionItems = () => {
             return {
               ...item,
               documentNumber: transactionInfo.documentNumber,
-              frommilling: transactionInfo.frommilling || false,
               transactiontype: transactionInfo.transactiontype || "otherType",
               status: transactionInfo.status || "otherStatus",
             };
@@ -185,7 +194,7 @@ const useTransactionItems = () => {
 
         setTransactionItem(combinedData);
 
-        const totalResponse = await fetch(`/api/customertransaction`);
+        const totalResponse = await fetch(`/api/suppliertransaction`);
         const totalData = await totalResponse.json();
         setTotalTransactionItemsPages(
           Math.ceil(totalData.length / ROWS_PER_PAGE)
@@ -220,16 +229,11 @@ const useTransactionItems = () => {
     setCurrentTransactionItemsPage(page);
   };
 
-  const refreshTransactionItems = async () => {
-    await fetchTransactionData(currentTransactionItemsPage);
-  };
-
   return {
     transactionItem,
     currentTransactionItemsPage,
     totalTransactionItemsPages,
     handleTransactionItemsPageChange,
-    refreshTransactionItems,
     filters,
     setFilters,
     clearFilters,
@@ -243,15 +247,18 @@ export default function Component() {
     currentTransactionItemsPage,
     totalTransactionItemsPages,
     handleTransactionItemsPageChange,
-    refreshTransactionItems,
     filters,
     setFilters,
     clearFilters,
   } = useTransactionItems();
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionTable | null>(null);
 
-  const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePurchaseOrderChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
-    setFilters((prev) => ({ ...prev, invoiceno: value }));
+    setFilters((prev) => ({ ...prev, purordno: value }));
   };
 
   const handleItemNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -276,13 +283,13 @@ export default function Component() {
             <Button onClick={clearAllFilters}>Clear Filters</Button>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="document-number">Invoice No.</Label>
+            <Label htmlFor="document-number">Purchase Order No.</Label>
             <Input
               id="document-number"
               type="text"
               placeholder="Enter Purchase Order No."
-              value={filters.invoiceno}
-              onChange={handleInvoiceChange}
+              value={filters.purordno}
+              onChange={handlePurchaseOrderChange}
             />
           </div>
           <div className="grid gap-2">
@@ -296,8 +303,11 @@ export default function Component() {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="walkin">Walk-in</Label>
-            <Select value={filters.walkin} onValueChange={handleWalkinChange}>
+            <Label htmlFor="frommilling">From Milling</Label>
+            <Select
+              value={filters.frommilling}
+              onValueChange={handleFromMillingChange}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
                 <SelectContent>
@@ -370,10 +380,10 @@ export default function Component() {
     }));
   };
 
-  const handleWalkinChange = (value: string) => {
+  const handleFromMillingChange = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      walkin: value,
+      frommilling: value,
     }));
   };
 
@@ -389,14 +399,47 @@ export default function Component() {
     return false;
   };
 
+  const downloadPurchaseOrder = async () => {
+    const response = await fetch("/api/generatepurchaseorder", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        transactionId: selectedTransaction?.transactionid,
+      }),
+    });
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } else {
+      console.error("Failed to generate purchase order");
+    }
+  };
+
+  const formatStock = (stock: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(stock);
+  };
+
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-customColors-lightPastelGreen">
       <div className="flex-1 overflow-y-auto pl-6 pr-6 w-full">
         <div className="container mx-auto px-4 md:px-6 py-4">
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-6">
             <div className="flex  items-center justify-between mb-6 -mr-6">
               <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
-                List of Sales Items
+                List of Purchased Items - Non-Milling Only
               </h1>
             </div>
             <div className="flex items-center justify-between"></div>
@@ -415,7 +458,7 @@ export default function Component() {
                   >
                     <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                       <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
-                        <TableHead>Invoice No.</TableHead>
+                        <TableHead>Purchase Order No.</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Item Name</TableHead>
                         <TableHead>Item Type</TableHead>
@@ -469,7 +512,9 @@ export default function Component() {
                           <TableCell>
                             {purchaseItem.unitofmeasurement}
                           </TableCell>
-                          <TableCell>{purchaseItem.stock}</TableCell>
+                          <TableCell>
+                            {formatStock(purchaseItem.stock)}
+                          </TableCell>
                           {canAccessButton(
                             ROLES.ADMIN || ROLES.MANAGER || ROLES.SALES
                           ) && (
@@ -502,81 +547,23 @@ export default function Component() {
                           }
                         />
                       </PaginationItem>
-                      {currentTransactionItemsPage > 3 && (
-                        <>
-                          <PaginationItem>
+                      {[...Array(totalTransactionItemsPages)].map(
+                        (_, index) => (
+                          <PaginationItem key={index}>
                             <PaginationLink
                               className="hover:bg-customColors-beigePaper"
                               onClick={() =>
-                                handleTransactionItemsPageChange(1)
-                              }
-                              isActive={currentTransactionItemsPage === 1}
-                            >
-                              1
-                            </PaginationLink>
-                          </PaginationItem>
-                          {currentTransactionItemsPage > 3 && (
-                            <PaginationEllipsis />
-                          )}
-                        </>
-                      )}
-
-                      {Array.from(
-                        { length: Math.min(3, totalTransactionItemsPages) },
-                        (_, index) => {
-                          const pageIndex =
-                            Math.max(1, currentTransactionItemsPage - 1) +
-                            index;
-                          if (
-                            pageIndex < 1 ||
-                            pageIndex > totalTransactionItemsPages
-                          )
-                            return null;
-
-                          return (
-                            <PaginationItem key={pageIndex}>
-                              <PaginationLink
-                                className="hover:bg-customColors-beigePaper"
-                                onClick={() =>
-                                  handleTransactionItemsPageChange(pageIndex)
-                                }
-                                isActive={
-                                  currentTransactionItemsPage === pageIndex
-                                }
-                              >
-                                {pageIndex}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        }
-                      )}
-
-                      {currentTransactionItemsPage <
-                        totalTransactionItemsPages - 2 && (
-                        <>
-                          {currentTransactionItemsPage <
-                            totalTransactionItemsPages - 3 && (
-                            <PaginationEllipsis />
-                          )}
-                          <PaginationItem>
-                            <PaginationLink
-                              className="hover:bg-customColors-beigePaper"
-                              onClick={() =>
-                                handleTransactionItemsPageChange(
-                                  totalTransactionItemsPages
-                                )
+                                handleTransactionItemsPageChange(index + 1)
                               }
                               isActive={
-                                currentTransactionItemsPage ===
-                                totalTransactionItemsPages
+                                currentTransactionItemsPage === index + 1
                               }
                             >
-                              {totalTransactionItemsPages}
+                              {index + 1}
                             </PaginationLink>
                           </PaginationItem>
-                        </>
+                        )
                       )}
-
                       <PaginationItem>
                         <PaginationNext
                           className="hover:bg-customColors-beigePaper"

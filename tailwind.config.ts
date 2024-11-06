@@ -65,6 +65,8 @@ const config = {
           beigePaper: "#f1f6f1",
           screenLightGreen: "#e6efe5",
           teal: "#f0fdfa",
+          crimsonRed: "#C72C2C",
+          warmHoneyYellow: "#E4C45B",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

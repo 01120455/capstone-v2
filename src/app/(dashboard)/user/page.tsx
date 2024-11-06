@@ -307,6 +307,7 @@ export default function Component() {
 
   const handleCancel = () => {
     setShowModal(false);
+    setShowPassword(false);
     form.reset();
   };
 
@@ -376,6 +377,7 @@ export default function Component() {
 
         setShowModal(false);
         refreshUsers();
+        setShowPassword(false);
         form.reset();
       } else {
         console.error("Error uploading image:", uploadRes.status);
@@ -652,7 +654,10 @@ export default function Component() {
                       <TableBody>
                         {filteredUsers &&
                           filteredUsers.map((user: AddUser, index: number) => (
-                            <TableRow key={index}>
+                            <TableRow
+                              key={index}
+                              className="hover:bg-customColors-screenLightGreen"
+                            >
                               <TableCell>
                                 {/* <Image
                           src={user.imagepath ?? ""}
@@ -676,10 +681,15 @@ export default function Component() {
                               <TableCell>{user.role}</TableCell>
                               <TableCell>
                                 <Badge
+                                  variant={
+                                    user.status === "active"
+                                      ? "default"
+                                      : "destructive"
+                                  }
                                   className={`px-2 py-1 rounded-full ${
                                     user.status === "active"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                      : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-red-100 text-red-800"
                                   }`}
                                 >
                                   {user.status}
@@ -792,7 +802,7 @@ export default function Component() {
                     <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-customColors-offWhite rounded">
                       <div className="flex flex-col">
                         <DialogHeader className="mb-2 flex items-start">
-                          <DialogTitle className="text-left flex-grow">
+                          <DialogTitle className="text-left flex-grow text-customColors-eveningSeaGreen">
                             User Image
                           </DialogTitle>
                         </DialogHeader>
@@ -841,87 +851,98 @@ export default function Component() {
                         onSubmit={form.handleSubmit(handleSubmit)}
                       >
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="imagepath"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="file">
-                                    Upload Image
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...fileRef}
-                                      id="file"
-                                      type="file"
-                                      onChange={handleImage}
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="firstname"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="firstname">
-                                    First Name
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="firstname"
-                                      placeholder="John"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="middlename"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="middlename">
-                                    Middle Name
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="middlename"
-                                      placeholder="Alcarra"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <FormField
-                              control={form.control}
-                              name="lastname"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel htmlFor="lastname">
-                                    Last Name
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      id="lastname"
-                                      placeholder="Doe"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
+                          {action === "add" ? (
+                            <div className="space-y-2">
+                              <FormField
+                                control={form.control}
+                                name="imagepath"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel htmlFor="file">
+                                      Upload Image
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...fileRef}
+                                        id="file"
+                                        type="file"
+                                        onChange={handleImage}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ) : null}
+
+                          {action === "add" ? (
+                            <div className="space-y-2">
+                              <FormField
+                                control={form.control}
+                                name="firstname"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel htmlFor="firstname">
+                                      First Name
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        id="firstname"
+                                        placeholder="John"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ) : null}
+
+                          {action === "add" ? (
+                            <div className="space-y-2">
+                              <FormField
+                                control={form.control}
+                                name="middlename"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel htmlFor="middlename">
+                                      Middle Name
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        id="middlename"
+                                        placeholder="Alcarra"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ) : null}
+
+                          {action === "add" ? (
+                            <div className="space-y-2">
+                              <FormField
+                                control={form.control}
+                                name="lastname"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel htmlFor="lastname">
+                                      Last Name
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        id="lastname"
+                                        placeholder="Doe"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          ) : null}
 
                           <div className="space-y-2">
                             <FormField

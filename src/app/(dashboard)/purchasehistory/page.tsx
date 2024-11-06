@@ -25,7 +25,12 @@ import {
 } from "@/schemas/transaction.schema";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { XIcon, ArrowRightIcon, FilterIcon } from "@/components/icons/Icons";
+import {
+  XIcon,
+  ArrowRightIcon,
+  FilterIcon,
+  ViewIcon,
+} from "@/components/icons/Icons";
 import {
   Pagination,
   PaginationContent,
@@ -589,7 +594,7 @@ export default function Component() {
                               </>
                             )}
                             <TableHead>Date</TableHead>
-                            <TableHead />
+                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -614,14 +619,23 @@ export default function Component() {
                                   </TableCell>
                                   <TableCell>
                                     <Badge
+                                      variant={
+                                        transaction.status === "paid"
+                                          ? "default"
+                                          : transaction.status === "pending"
+                                          ? "secondary"
+                                          : transaction.status === "cancelled"
+                                          ? "destructive"
+                                          : "outline"
+                                      }
                                       className={`px-2 py-1 rounded-full ${
                                         transaction.status === "paid"
-                                          ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                          ? "bg-green-100 text-green-800"
                                           : transaction.status === "pending"
-                                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                          ? "bg-yellow-100 text-yellow-800"
                                           : transaction.status === "cancelled"
-                                          ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-gray-100 text-gray-800"
                                       }`}
                                     >
                                       {transaction.status}
@@ -652,8 +666,8 @@ export default function Component() {
                                       : "N/A"}
                                   </TableCell>
                                   <TableCell>
-                                    <Button variant="ghost" size="icon">
-                                      <ArrowRightIcon className="h-6 w-6" />
+                                    <Button variant="outline" size="sm">
+                                      <ViewIcon className="w-4 h-4" />
                                       <span className="sr-only">
                                         View details
                                       </span>

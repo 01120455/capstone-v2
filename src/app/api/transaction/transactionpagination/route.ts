@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
       };
     }
     // if (frommillingFilter) {
-    //   whereClause.frommilling = frommillingFilter === "true"; // Assuming it's a boolean
+    //   whereClause.frommilling = frommillingFilter === "true";
     // }
     if (statusFilter) {
       whereClause.status = statusFilter;
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
     const purchases = await prisma.transaction.findMany({
       where: {
         ...whereClause,
-        frommilling: true,
+        frommilling: false,
       },
       include: {
         createdbyuser: {

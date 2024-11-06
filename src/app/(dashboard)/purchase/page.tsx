@@ -269,7 +269,6 @@ export default function Component() {
     usePurchaseItems();
   const [showModal, setShowModal] = useState(false);
   const [showModalEditPurchase, setShowModalEditPurchase] = useState(false);
-  const [showModalPurchaseItem, setShowModalPurchaseItem] = useState(false);
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
 
   console.log("user session:", user);
@@ -382,44 +381,6 @@ export default function Component() {
     });
   };
 
-  const handleEditPurchaseItem = (purchaseItem: TransactionItemOnly) => {
-    setShowModalPurchaseItem(true);
-    console.log("Editing purchase item:", purchaseItem);
-
-    formPurchaseItemOnly.reset({
-      transactionitemid: purchaseItem?.transactionitemid,
-      transactionid: purchaseItem.transactionid,
-      Item: {
-        itemid: purchaseItem.Item?.itemid,
-        itemname: purchaseItem.Item?.itemname,
-        itemtype: purchaseItem.Item?.itemtype,
-        sackweight: purchaseItem.Item?.sackweight,
-      },
-      unitofmeasurement: purchaseItem?.unitofmeasurement,
-      stock: purchaseItem?.stock,
-      unitprice: purchaseItem?.unitprice,
-    });
-  };
-
-  const handleAddPurchaseItem = (transactionid: number) => {
-    setShowModalPurchaseItem(true);
-    console.log("Adding purchase item:", transactionid);
-
-    formPurchaseItemOnly.reset({
-      transactionitemid: 0,
-      transactionid: transactionid,
-      Item: {
-        itemid: 0,
-        itemname: "",
-        itemtype: "palay",
-        sackweight: "bag25kg",
-      },
-      unitofmeasurement: "",
-      stock: 0,
-      unitprice: 0,
-    });
-  };
-
   const handleEdit = (purchase: TransactionOnly) => {
     console.log("Editing purchase:", purchase);
     setShowModalEditPurchase(true);
@@ -439,7 +400,6 @@ export default function Component() {
 
   const handleCancel = () => {
     setShowModal(false);
-    setShowModalPurchaseItem(false);
     setShowModalEditPurchase(false);
 
     form.reset({
@@ -650,7 +610,6 @@ export default function Component() {
           console.log("Purchase item updated successfully");
         }
         console.log("Purchase Item processed successfully");
-        setShowModalPurchaseItem(false);
         refreshPurchases();
         formPurchaseItemOnly.reset();
       } else {
@@ -971,20 +930,32 @@ export default function Component() {
                       <TableBody>
                         <>
                           {filteredPurchases.map((purchase) => (
-                            <TableRow key={purchase.transactionid}>
+                            <TableRow
+                              key={purchase.transactionid}
+                              className="hover:bg-customColors-screenLightGreen"
+                            >
                               <TableCell>
                                 {purchase.DocumentNumber.documentnumber}
                               </TableCell>
                               <TableCell>
                                 <Badge
+                                  variant={
+                                    purchase.status === "paid"
+                                      ? "default"
+                                      : purchase.status === "pending"
+                                      ? "secondary"
+                                      : purchase.status === "cancelled"
+                                      ? "destructive"
+                                      : "outline"
+                                  }
                                   className={`px-2 py-1 rounded-full ${
                                     purchase.status === "paid"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                      ? "bg-green-100 text-green-800"
                                       : purchase.status === "pending"
-                                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                      ? "bg-yellow-100 text-yellow-800"
                                       : purchase.status === "cancelled"
-                                      ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                                      ? "bg-red-100 text-red-800 "
+                                      : "bg-gray-100 text-gray-800"
                                   }`}
                                 >
                                   {purchase.status}
@@ -1135,23 +1106,6 @@ export default function Component() {
                           List of items purchased
                         </DialogDescription>
                         <DialogClose onClick={closeViewPurchaseItem} />
-                        {canAccessButton(ROLES.ADMIN) && (
-                          <>
-                            <Button
-                              onClick={() => {
-                                const transactionid =
-                                  purchaseItems[0]?.transactionid;
-                                handleAddPurchaseItem(transactionid);
-                              }}
-                            >
-                              {isSmallScreen ? (
-                                <PlusIcon className="w-6 h-6" />
-                              ) : (
-                                "Add Purchased Item"
-                              )}
-                            </Button>
-                          </>
-                        )}
                       </div>
                     </DialogHeader>
                     <div className="overflow-y-auto">

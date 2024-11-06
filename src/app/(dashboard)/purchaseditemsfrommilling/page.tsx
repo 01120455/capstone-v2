@@ -280,11 +280,7 @@ export default function Component() {
         <h2 className="text-lg font-bold mb-4">Filters</h2>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Button
-              onClick={clearAllFilters}
-            >
-              Clear Filters
-            </Button>
+            <Button onClick={clearAllFilters}>Clear Filters</Button>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="document-number">Purchase Order No.</Label>
@@ -443,7 +439,7 @@ export default function Component() {
           <div className="flex flex-col gap-6">
             <div className="flex  items-center justify-between mb-6 -mr-6">
               <h1 className="text-2xl font-bold text-customColors-eveningSeaGreen">
-                List of Purchase Items from Milling
+                List of Purchase Items - Milling Only
               </h1>
             </div>
             <div className="flex items-center justify-between"></div>
@@ -488,14 +484,23 @@ export default function Component() {
                           <TableCell>{purchaseItem.documentNumber}</TableCell>
                           <TableCell>
                             <Badge
+                              variant={
+                                purchaseItem.status === "paid"
+                                  ? "default"
+                                  : purchaseItem.status === "pending"
+                                  ? "secondary"
+                                  : purchaseItem.status === "cancelled"
+                                  ? "destructive"
+                                  : "outline"
+                              }
                               className={`px-2 py-1 rounded-full ${
                                 purchaseItem.status === "paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                  ? "bg-green-100 text-green-800"
                                   : purchaseItem.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                  ? "bg-yellow-100 text-yellow-800 "
                                   : purchaseItem.status === "cancelled"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100" // Default case
+                                  ? "bg-red-100 text-red-800 "
+                                  : "bg-gray-100 text-gray-800 "
                               }`}
                             >
                               {purchaseItem.status}
