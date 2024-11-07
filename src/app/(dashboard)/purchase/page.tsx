@@ -474,13 +474,13 @@ export default function Component() {
       if (response.ok) {
         const data = await response.json();
         if (data.exists) {
-          return { exists: true }; 
+          return { exists: true };
         } else {
-          return { exists: false }; 
+          return { exists: false };
         }
       } else {
         console.error("Error checking invoice number:", response.status);
-        return { exists: false }; 
+        return { exists: false };
       }
     } catch (error) {
       console.error("Error checking invoice number:", error);
@@ -489,14 +489,17 @@ export default function Component() {
   };
 
   const handleSubmit = async (values: Transaction) => {
-    const { exists } = await checkTransactionPurchaseOrderNumber(
-      values.DocumentNumber.documentnumber || ""
-    );
-    if (exists) {
-      toast.error("Purchase Order number already exists", {
-        description: "Please enter a different purchase order number.",
-      });
-      return;
+    if (!values.transactionid && values.DocumentNumber.documentnumber) {
+      const { exists } = await checkTransactionPurchaseOrderNumber(
+        values.DocumentNumber.documentnumber || ""
+      );
+
+      if (exists) {
+        toast.error("Purchase Order number already exists", {
+          description: "Please enter a different purchase order number.",
+        });
+        return;
+      }
     }
 
     console.log("Form Values:", values);
@@ -1568,31 +1571,6 @@ ${
     : "default-class"
 }`}
                         >
-                          {(action === "add" ||
-                            (action === "edit" &&
-                              user?.role === ROLES.ADMIN)) && (
-                            <div className="space-y-2">
-                              <FormField
-                                control={formPurchaseOnly.control}
-                                name="DocumentNumber.documentnumber"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="documentnumber">
-                                      Purchase Order Number
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        id="documentnumber"
-                                        type="text"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          )}
                           <div className="space-y-2">
                             <FormField
                               control={formPurchaseOnly.control}
@@ -1627,45 +1605,6 @@ ${
                               )}
                             />
                           </div>
-                          {(action === "add" ||
-                            (action === "edit" &&
-                              user?.role === ROLES.ADMIN)) && (
-                            <div className="space-y-2">
-                              <FormField
-                                control={formPurchaseOnly.control}
-                                name="frommilling"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel htmlFor="frommilling">
-                                      From Milling
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Select
-                                        value={field.value ? "true" : "false"}
-                                        onValueChange={(value) => {
-                                          field.onChange(value === "true");
-                                        }}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select Value">
-                                            {field.value ? "Yes" : "No"}
-                                          </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="true">
-                                            Yes
-                                          </SelectItem>
-                                          <SelectItem value="false">
-                                            No
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          )}
                         </div>
                         <DialogFooter className="pt-2 lg:pt-1">
                           <div className="flex justify-end space-x-2">

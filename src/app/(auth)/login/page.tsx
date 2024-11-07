@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
-import { Eye, EyeOff, Lock, Mail } from "@/components/icons/Icons";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail } from "@/components/icons/Icons";
 
 export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
@@ -109,7 +109,7 @@ export default function Home() {
               </CardHeader>
               <Form {...form}>
                 <form
-                  className="w-full max-w-4xl mx-auto p-6"
+                  className="w-full max-w-4xl mx-auto pb-6 pl-6 pr-6"
                   onSubmit={form.handleSubmit(handleSubmit)}
                 >
                   <CardContent className="space-y-4">
@@ -172,15 +172,6 @@ export default function Home() {
                         )}
                       />
                     </div>
-                    {/* <div className="flex items-center mt-2">
-                      <Checkbox
-                        id="showpassword"
-                        onCheckedChange={() => setShowPassword((prev) => !prev)}
-                      />
-                      <Label htmlFor="showpassword" className="ml-2">
-                        Show Password
-                      </Label>
-                    </div> */}
                   </CardContent>
                   <CardFooter className="flex flex-col space-y-4">
                     <Button
@@ -195,6 +186,14 @@ export default function Home() {
                         className="text-primary hover:underline"
                       >
                         Forgot your password?
+                      </Link>
+                    </div>
+                    <div className="text-sm text-center">
+                      <Link href="/" passHref>
+                        <Button variant="outline" size="sm">
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Back to Home
+                        </Button>
                       </Link>
                     </div>
                   </CardFooter>

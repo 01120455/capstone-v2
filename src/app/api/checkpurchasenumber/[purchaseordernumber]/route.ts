@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { purchaseordernumber: string } }
+  { params }: { params: Promise<{ purchaseordernumber: string }> }
 ) {
   try {
-    const { purchaseordernumber } = params; // Get the invoicenumber from the dynamic route
+    const resolvedParams = await params;
+    const { purchaseordernumber } = resolvedParams;
 
-    // If 'invoicenumber' is not provided, return a 400 error
     if (!purchaseordernumber) {
       return NextResponse.json(
         { error: "purchase order number (documentnumber) is required." },
@@ -18,22 +18,19 @@ export async function GET(
       );
     }
 
-    // Check if a transaction with this invoicenumber exists in the "sales" type transactions
     const transaction = await prisma.transaction.findFirst({
       where: {
-        transactiontype: "purchase", // Ensure this is a "sales" transaction
+        transactiontype: "purchase",
         DocumentNumber: {
-          documentnumber: purchaseordernumber, // Filter by the provided invoicenumber
+          documentnumber: purchaseordernumber,
         },
       },
     });
 
-    // If no matching transaction is found, return 'exists: false'
     if (!transaction) {
       return NextResponse.json({ exists: false }, { status: 200 });
     }
 
-    // If a matching transaction is found, return 'exists: true'
     return NextResponse.json({ exists: true }, { status: 200 });
   } catch (error) {
     console.error(

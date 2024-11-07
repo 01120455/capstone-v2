@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, Lock } from "lucide-react";
@@ -17,9 +16,18 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { Router } from "next/router";
 
 export default function Component() {
   const router = useRouter();
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
+  );
+}
+
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -78,9 +86,13 @@ export default function Component() {
         <CardContent>
           {success ? (
             <div className="space-y-4">
-              <Button className="w-full" onClick={() => router.push("/login")}>
-                Go to Login
-              </Button>
+              <Link
+                href="/login"
+                className="text-sm text-primary hover:underline inline-flex items-center"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Login
+              </Link>
             </div>
           ) : (
             <form onSubmit={handleResetPassword}>

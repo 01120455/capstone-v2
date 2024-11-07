@@ -9,7 +9,7 @@ const defaultUser: User = {
   firstname: "",
   middlename: "",
   lastname: "",
-  username: "",
+  email: "",
   role: "",
   status: "",
 };

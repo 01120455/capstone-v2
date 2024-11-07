@@ -3,21 +3,22 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-interface Params {
-  documentnumber: string;
-}
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ documentnumber: string }> }
+) {
+  const resolvedParams = await params;
 
-export async function GET(req: NextRequest, { params }: { params: Params }) {
-  const { documentnumber } = params;
-
-  if (!documentnumber) {
-    return NextResponse.json(
-      { message: "Document number is required." },
-      { status: 400 }
-    );
-  }
+  const { documentnumber } = resolvedParams;
 
   try {
+    if (!documentnumber) {
+      return NextResponse.json(
+        { message: "Document number is required." },
+        { status: 400 }
+      );
+    }
+
     const document = await prisma.documentNumber.findUnique({
       where: {
         documentnumber,
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
     if (document) {
       return NextResponse.json({
         exists: true,
-        documentnumberid: document.documentnumberid, 
+        documentnumberid: document.documentnumberid,
       });
     } else {
       return NextResponse.json({ exists: false });

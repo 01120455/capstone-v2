@@ -5,14 +5,16 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { itemid: string } }
+  { params }: { params: Promise<{ itemid: string }> }
 ) {
-  const { itemid } = params;
+  const resolvedParams = await params;
+
+  const { itemid } = resolvedParams;
 
   try {
     const item = await prisma.item.findUnique({
       where: {
-        itemid: Number(itemid), 
+        itemid: Number(itemid),
       },
       select: {
         itemid: true,
