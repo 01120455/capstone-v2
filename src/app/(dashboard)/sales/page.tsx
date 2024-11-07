@@ -32,6 +32,7 @@ import Table, {
 import salesTransactionSchema, { AddSales } from "@/schemas/sales.schema";
 import { TrashIcon } from "@/components/icons/Icons";
 import { toast } from "sonner";
+import { set } from "lodash";
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat("en-PH", {
@@ -186,42 +187,36 @@ export default function Sales() {
 
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  // const checkInvoiceExists = async (invoicenumber: string) => {
-  //   try {
-  //     const response = await fetch(`/api/documentnumber/${invoicenumber}`);
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       return data.exists;
-  //     } else {
-  //       console.error("Error checking invoice number:", response.status);
-  //       return false;
-  //     }
-  //   } catch (error) {
-  //     console.error("Error checking invoice number:", error);
-  //     return false;
-  //   }
-  // };
+  const checkTransactionInvoice = async (invoicenumber: string) => {
+    try {
+      const response = await fetch(`/api/checkinvoice/${invoicenumber}`);
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.exists) {
+          return { exists: true };
+        } else {
+          return { exists: false };
+        }
+      } else {
+        console.error("Error checking invoice number:", response.status);
+        return { exists: false };
+      }
+    } catch (error) {
+      console.error("Error checking invoice number:", error);
+      return { exists: false };
+    }
+  };
 
   const handleSubmit = async (values: AddSales) => {
     if (cart.length === 0) {
-      // setEmptyCart(true);
       toast.error("Cart is empty", {
         description: "Please add items to the cart before checkout.",
       });
       return;
     }
 
-    // const invoiceExists = await checkInvoiceExists(
-    //   values.DocumentNumber.documentnumber
-    // );
-    // if (invoiceExists) {
-    //   // setInvoiceExists(true);
-    //   // setInvoiceNumber(values.InvoiceNumber.invoicenumber);
-    //   // return;
-    //   toast.error("Invoice number already exists", {
-    //     description: "Please enter a different invoice number.",
-    //   });
-    // }
     const checkItemStock = async (itemid: number, quantity: number) => {
       try {
         const response = await fetch(`/api/item/${itemid}`);
@@ -243,22 +238,11 @@ export default function Sales() {
     );
     const stockCheckResults = await Promise.all(stockCheckPromises);
     const insufficientStock = stockCheckResults.some((result) => !result);
-    // if (insufficientStock) {
-    //   // setInsufficientStock(true);
-    //   // setTimeout(() => {
-    //   //   setInsufficientStock(false);
-    //   // }, 5000);
-    //   // console.error("Insufficient stock for one or more items");
-    //   // return;
-    //   toast.error("Insufficient stock for one or more items", {
-    //     description: "Check your item stock and try again.",
-    //   });
-    // }
 
-    if (
-      // invoiceExists &&
-      insufficientStock
-    ) {
+    const { exists } = await checkTransactionInvoice(
+      values.DocumentNumber.documentnumber
+    );
+    if (exists && insufficientStock) {
       toast.error(
         "Invoice number already exists and item stock is insufficient",
         {
@@ -266,22 +250,17 @@ export default function Sales() {
             "Please enter a different invoice number and check your item stock.",
         }
       );
-    } else if (insufficientStock) {
-      toast.error("Item stock is insufficient", {
-        description: "Check your item stock and try again.",
+      return;
+    } else if (exists) {
+      toast.error("Invoice number already exists", {
+        description: "Please enter a different invoice number.",
       });
-      // } else if (invoiceExists) {
-      //   toast.error("Invoice number already exists", {
-      //     description: "Please enter a different invoice number.",
-      //   });
-      // } else if (insufficientStock) {
-      //   toast.error("Item stock is insufficient", {
-      //     description: "Check your item stock and try again.",
-      //   });
-      // } else if (invoiceExists) {
-      //   toast.error("Invoice number already exists", {
-      //     description: "Please enter a different invoice number.",
-      //   });
+      return;
+    } else if (insufficientStock) {
+      toast.error("item stock is insufficient", {
+        description:
+          "Please enter a different invoice number and check your item stock.",
+      });
     } else {
       null;
     }

@@ -27,18 +27,14 @@ const convertBigIntToString = (value: any): any => {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
-  // Use a fallback value in the parseInt
   const limit = parseInt(searchParams.get("limit") || "10");
   const page = parseInt(searchParams.get("page") || "1");
   const skip = (page - 1) * limit;
 
-  // Get filter values
   const documentNumberFilter = searchParams.get("documentnumber") || "";
   const itemNameFilter = searchParams.get("name") || "";
-  // const frommillingFilter = searchParams.get("frommilling") || "";
   const statusFilter = searchParams.get("status") || "";
 
-  // Parse date filters
   const startDateFilter = searchParams.get("startdate");
   const endDateFilter = searchParams.get("enddate");
 
@@ -46,7 +42,6 @@ export async function GET(req: NextRequest) {
   const endDate = endDateFilter ? new Date(endDateFilter) : null;
 
   try {
-    // Build the where clause
     const whereClause: any = {
       transactiontype: "purchase",
     };
@@ -65,9 +60,6 @@ export async function GET(req: NextRequest) {
         },
       };
     }
-    // if (frommillingFilter) {
-    //   whereClause.frommilling = frommillingFilter === "true";
-    // }
     if (statusFilter) {
       whereClause.status = statusFilter;
     }

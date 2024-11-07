@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { stat } from "fs";
 
 const prisma = new PrismaClient();
 
@@ -56,6 +57,10 @@ export async function GET(req: NextRequest) {
     const transactionItemData = await prisma.transactionItem.findMany({
       where: {
         ...whereClause,
+        Transaction: {
+          transactiontype: "sales",
+          status: "paid",
+        },
         itemid: { in: itemsData.map((item) => item.itemid) },
       },
       select: {

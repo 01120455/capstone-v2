@@ -10,8 +10,8 @@ async function main() {
       email: email,
     },
   });
-  console.log("Creating user");
-  const hashedPassword = await bcrypt.hash("IamBatman", 10); // Change to a secure password
+  // console.log("Creating user");
+  const hashedPassword = await bcrypt.hash("IamBatman", 10);
 
   await prisma.user.create({
     data: {

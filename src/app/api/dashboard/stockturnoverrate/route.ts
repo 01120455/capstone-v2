@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
     // console.log("Average Inventory:", avgInventory._avg.stock);
 
     if (!cogs._sum.totalamount || !avgInventory._avg.stock) {
-      console.error("No data found for the given period or active items.");
+      // console.error("No data found for the given period or active items.");
       return NextResponse.json(
         { error: "No data found for the given period" },
         { status: 400 }
@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ stockTurnoverRate }, { status: 200 });
   } catch (error) {
-    console.error("Error calculating Stock Turnover Rate:", error);
+    // console.error("Error calculating Stock Turnover Rate:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

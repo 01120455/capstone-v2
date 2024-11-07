@@ -354,27 +354,6 @@ export default function ProductManagement() {
               value={filters.name}
               onChange={handleItemNameChange}
             />
-            {/* {isItemDropdownVisible && itemNameSuggestions.length > 0 && (
-              <div
-                ref={dropdownRefItem}
-                className="absolute z-10 bg-white border border-gray-300 mt-14 w-44 max-h-60 overflow-y-auto"
-              >
-                {itemNameSuggestions.map((item) => (
-                  <div
-                    key={item}
-                    className="p-2 cursor-pointer hover:bg-gray-200"
-                    onClick={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        name: item,
-                      }))
-                    }
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            )} */}
           </div>
           <div className="grid gap-2">
             <span className="text-sm">Item Type</span>
@@ -601,7 +580,6 @@ export default function ProductManagement() {
                     <Table
                       style={{ width: "100%" }}
                       className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
-                      // divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] overflow-y-auto bg-customColors-offWhite rounded-md"
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                         <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
@@ -698,16 +676,6 @@ export default function ProductManagement() {
                                     <FilePenIcon className="w-4 h-4" />
                                     <span className="sr-only">Edit</span>
                                   </Button>
-                                  {/* {canAccessButton(ROLES.ADMIN) && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteItem(item)}
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          )} */}
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -834,34 +802,6 @@ export default function ProductManagement() {
                   </Dialog>
                 )}
               </>
-              {/* {itemToDelete && (
-            <AlertDialog open={showAlert}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    the item name {itemToDelete?.itemname} {""} which consists
-                    of
-                    {itemToDelete?.unitofmeasurement}
-                    {""}
-                    {itemToDelete?.stock} stocks and remove their data from our
-                    database.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={handleDeleteCancel}>
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => handleDeleteWithToast(itemToDelete.itemid)}
-                  >
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )} */}
               {showModal && (
                 <Dialog open={showModal} onOpenChange={handleCancel}>
                   <DialogContent className="sm:max-w-[600px]">
@@ -1030,38 +970,6 @@ export default function ProductManagement() {
                               />
                             </div>
                           ) : null}
-                          {/* <div className="space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel htmlFor="status">Status</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  {...field}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select Status">
-                                      {field.value}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="active">
-                                      Active
-                                    </SelectItem>
-                                    <SelectItem value="inactive">
-                                      Inactive
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div> */}
                           <div className="space-y-2">
                             <FormField
                               control={form.control}

@@ -226,17 +226,7 @@ export const POST = async (req: NextRequest) => {
                 });
               }
             }
-          } 
-          // else if (newPurchase.status === "paid") {
-          //   await tx.item.update({
-          //     where: { itemid: originalStock.itemid },
-          //     data: {
-          //       stock: {
-          //         increment: stockToUpdate,
-          //       },
-          //     },
-          //   });
-          // }
+          }
         }
 
         return [newPurchase, newPurchaseOrderNo];
@@ -244,7 +234,11 @@ export const POST = async (req: NextRequest) => {
     );
 
     return NextResponse.json(
-      { message: "Purchase and items created successfully" },
+      {
+        message: "Purchase and items created successfully",
+        newPurchase,
+        newPurchaseOrderNo,
+      },
       { status: 201 }
     );
   } catch (error) {

@@ -18,13 +18,20 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
   }
 
   try {
-    const exists = await prisma.documentNumber.findUnique({
+    const document = await prisma.documentNumber.findUnique({
       where: {
         documentnumber,
       },
     });
 
-    return NextResponse.json({ exists: !!exists });
+    if (document) {
+      return NextResponse.json({
+        exists: true,
+        documentnumberid: document.documentnumberid, 
+      });
+    } else {
+      return NextResponse.json({ exists: false });
+    }
   } catch (error) {
     console.error("Error checking document number:", error);
     return NextResponse.json(

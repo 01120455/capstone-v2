@@ -10,7 +10,7 @@ import { sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
-const MAX_FILE_SIZE = 5000000; // 5MB
+const MAX_FILE_SIZE = 5000000; 
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/jpg",
@@ -330,7 +330,6 @@ export const PUT = async (req: NextRequest) => {
       );
     }
 
-    // Start transaction
     const [existingItem, updatedItem] = await prisma.$transaction(
       async (tx) => {
         const existingItem = await tx.item.findUnique({
@@ -413,38 +412,6 @@ export const PUT = async (req: NextRequest) => {
     return NextResponse.json(updatedItem, { status: 200 });
   } catch (error) {
     console.error("Error updating item:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-};
-
-export const DELETE = async (req: NextRequest) => {
-  try {
-    const body = await req.json();
-    const { itemid } = await z
-      .object({
-        itemid: z.number(),
-      })
-      .parseAsync(body);
-
-    const itemFound = await prisma.item.findUnique({
-      where: {
-        itemid,
-      },
-    });
-
-    if (!itemFound) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
-    }
-    const deleteItem = await prisma.item.delete({
-      where: { itemid },
-    });
-
-    return NextResponse.json(deleteItem, { status: 200 });
-  } catch (error) {
-    console.error("Error deleting Item:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -84,25 +84,21 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
   try {
-    // Get filter values from searchParams matching your frontend
-    const startDate = searchParams.get("startDate"); // Changed from startdate to startDate
-    const endDate = searchParams.get("endDate"); // Changed from enddate to endDate
-    const period = searchParams.get("period"); // Added period parameter
+    const startDate = searchParams.get("startDate"); 
+    const endDate = searchParams.get("endDate"); 
+    const period = searchParams.get("period"); 
 
-    // Build the where clause based on filters
     const whereClause: any = {
       transactiontype: "sales",
       status: "paid",
     };
 
     if (startDate && endDate) {
-      // Date range filter
       whereClause.lastmodifiedat = {
         gte: new Date(startDate),
         lte: new Date(endDate),
       };
     } else if (period) {
-      // Period filter
       const now = new Date();
       let periodStartDate = new Date();
 
@@ -120,7 +116,6 @@ export async function GET(req: NextRequest) {
           periodStartDate.setFullYear(now.getFullYear() - 1);
           break;
         default:
-          // Default to last 7 days if period is invalid
           periodStartDate.setDate(now.getDate() - 7);
       }
 
@@ -184,7 +179,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(convertedTransaction, { status: 200 });
   } catch (error) {
-    console.error("Error getting sales:", error);
+    // console.error("Error getting sales:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

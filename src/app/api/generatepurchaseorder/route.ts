@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
-  const { transactionId } = await req.json(); // Parse the request body
+  const { transactionId } = await req.json(); 
 
   if (isNaN(transactionId)) {
     return NextResponse.json(
@@ -47,14 +47,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([600, 800]);
     const { height } = page.getSize();
     const fontSize = 12;
     const margin = 30;
 
-    // Add transaction details
     page.drawText(
       `Purchase Order No.: ${transaction.DocumentNumber?.documentnumber}`,
       {
@@ -91,10 +89,8 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Add a space before the table
     let tableY = height - margin - 100;
 
-    // Draw table header
     const headers = [
       "Item Name",
       "Item Type",
@@ -106,15 +102,14 @@ export async function POST(req: NextRequest) {
     ];
     const headerY = tableY;
 
-    // Adjusted header positions
     headers.forEach((header, index) => {
       let xPosition = margin + index * 80;
-      if (header === "Item Type") xPosition -= 10; // Move left 10 units
-      if (header === "Sack Weight") xPosition -= 25; // Move left 10 units
-      if (header === "Unit of Measurement") xPosition -= 25; // Move right 10 units
-      if (header === "Stock") xPosition += 20; // Move right 10 units
-      if (header === "Unit Price") xPosition -= 20; // Move right 10 units
-      if (header === "Total Amount") xPosition -= 30; // Move right 10 units
+      if (header === "Item Type") xPosition -= 10; 
+      if (header === "Sack Weight") xPosition -= 25; 
+      if (header === "Unit of Measurement") xPosition -= 25; 
+      if (header === "Stock") xPosition += 20; 
+      if (header === "Unit Price") xPosition -= 20; 
+      if (header === "Total Amount") xPosition -= 30; 
 
       page.drawText(header, {
         x: xPosition,
@@ -124,11 +119,9 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    // Draw table rows
     transaction.TransactionItem.forEach((item, index) => {
       const itemY = headerY - (index + 1) * 20;
 
-      // Adjusted data positions
       page.drawText(item.Item?.itemname || "N/A", {
         x: margin,
         y: itemY,
@@ -136,13 +129,13 @@ export async function POST(req: NextRequest) {
         color: rgb(0, 0, 0),
       });
       page.drawText(item.Item?.itemtype || "N/A", {
-        x: margin + 70, // Move left 10 units from original
+        x: margin + 70, 
         y: itemY,
         size: fontSize,
         color: rgb(0, 0, 0),
       });
       page.drawText(item.sackweight.toString() || "0", {
-        x: margin + 135, // Move left 10 units from original
+        x: margin + 135, 
         y: itemY,
         size: fontSize,
         color: rgb(0, 0, 0),
@@ -154,7 +147,7 @@ export async function POST(req: NextRequest) {
         color: rgb(0, 0, 0),
       });
       page.drawText(item.stock.toString() || "0", {
-        x: margin + 320 + 30, // Move right 10 units from original
+        x: margin + 320 + 30, 
         y: itemY,
         size: fontSize,
         color: rgb(0, 0, 0),
@@ -175,7 +168,6 @@ export async function POST(req: NextRequest) {
 
     const pdfBytes = await pdfDoc.save();
 
-    // Return the PDF as a response
     return new NextResponse(pdfBytes, {
       headers: {
         "Content-Type": "application/pdf",

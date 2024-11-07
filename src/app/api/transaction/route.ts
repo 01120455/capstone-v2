@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: [
         {
-          createdat: "desc", // First sort by createdat in descending order
+          createdat: "desc", 
         },
       ],
     });

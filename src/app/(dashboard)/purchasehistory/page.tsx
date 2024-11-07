@@ -555,16 +555,6 @@ export default function Component() {
                         </>
                       )}
                     </div>
-                    {/* <div className="flex justify-end space-x-2">
-                      <Button variant={"secondary"}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        <span className="sr-only">Edit Transaction</span>
-                      </Button>
-                      <Button variant={"destructive"}>
-                        <Bin className="h-4 w-4 mr-2" />
-                        <span className="sr-only">Delete Transaction</span>
-                      </Button>
-                    </div> */}
                   </div>
                 </div>
               ) : (
@@ -579,7 +569,6 @@ export default function Component() {
                       <Table
                         style={{ width: "100%" }}
                         className="min-w-[600px]  rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
-                        // divClassname="min-h-[300px] overflow-y-scroll max-h-[400px] lg:max-h-[600px] xl:max-h-[800px] overflow-y-auto rounded-md"
                       >
                         <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                           <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">

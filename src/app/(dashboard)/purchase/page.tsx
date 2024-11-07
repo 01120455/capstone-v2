@@ -463,7 +463,42 @@ export default function Component() {
     setShowTablePurchaseItem(false);
   };
 
+  const checkTransactionPurchaseOrderNumber = async (
+    purchaseordernumber: string
+  ) => {
+    try {
+      const response = await fetch(
+        `/api/checkpurchasenumber/${purchaseordernumber}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.exists) {
+          return { exists: true }; 
+        } else {
+          return { exists: false }; 
+        }
+      } else {
+        console.error("Error checking invoice number:", response.status);
+        return { exists: false }; 
+      }
+    } catch (error) {
+      console.error("Error checking invoice number:", error);
+      return { exists: false };
+    }
+  };
+
   const handleSubmit = async (values: Transaction) => {
+    const { exists } = await checkTransactionPurchaseOrderNumber(
+      values.DocumentNumber.documentnumber || ""
+    );
+    if (exists) {
+      toast.error("Purchase Order number already exists", {
+        description: "Please enter a different purchase order number.",
+      });
+      return;
+    }
+
     console.log("Form Values:", values);
     const formData = new FormData();
 
@@ -904,7 +939,6 @@ export default function Component() {
                     <Table
                       style={{ width: "100%" }}
                       className="min-w-[1000px]  rounded-md border-border w-full h-10 overflow-clip relative bg-customColors-beigePaper"
-                      // divClassname="min-h-[200px] overflow-y-scroll max-h-[400px] overflow-y-auto bg-customColors-offWhite rounded-md"
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                         <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
@@ -1031,20 +1065,6 @@ export default function Component() {
                                     <FilePenIcon className="w-4 h-4" />
                                     <span className="sr-only">Edit</span>
                                   </Button>
-                                  {/* {canAccessButton(ROLES.ADMIN) && (
-                                    <>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          handleDeletePurchase(purchase)
-                                        }
-                                      >
-                                        <TrashIcon className="w-4 h-4" />
-                                        <span className="sr-only">Delete</span>
-                                      </Button>
-                                    </>
-                                  )} */}
                                 </div>
                               </TableCell>
                             </TableRow>

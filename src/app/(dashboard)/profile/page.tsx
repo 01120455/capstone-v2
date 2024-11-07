@@ -41,40 +41,6 @@ export default function Component() {
     },
   });
 
-  // const handleEditUser = async (user: AddUser) => {
-  //   console.log("Editing user:", user);
-  //   form.reset({
-  //     imagepath: user.imagepath,
-  //     firstname: user.firstname,
-  //     middlename: user.middlename,
-  //     lastname: user.lastname,
-  //     role: user.role,
-  //     status: user.status,
-  //     email: user.email,
-  //     password: "",
-  //     userid: user.userid,
-  //   });
-  // };
-
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     try {
-  //       const response = await fetch("/api/auth/session", {
-  //         method: "GET",
-  //       });
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-  //       const session = await response.json();
-  //       setUserSession(session || null);
-  //       console.log("User session:", session);
-  //     } catch (error) {
-  //       console.error("Failed to fetch session", error);
-  //     }
-  //   };
-  //   fetchUser();
-  // }, []);
-
   useEffect(() => {
     const fetchUser = async () => {
       try {

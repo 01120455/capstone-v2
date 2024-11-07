@@ -639,7 +639,6 @@ export default function Component() {
                     <Table
                       style={{ width: "100%" }}
                       className="min-w-[1000px] rounded-md border border-border h-10 overflow-hidden bg-customColors-beigePaper"
-                      // divClassname="overflow-y-auto min-h-[310px] max-h-[500px] overflow-x-auto bg-customColors-offWhite rounded-md "
                     >
                       <TableHeader className="sticky w-full top-0 h-10 border-b-2 border-border rounded-t-md">
                         <TableRow className="bg-customColors-screenLightGreen hover:bg-customColors-screenLightGreen">
