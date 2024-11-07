@@ -798,36 +798,34 @@ export default function Component() {
               <>
                 {showImageModal && showImage && (
                   <Dialog open={showImageModal} onOpenChange={closeImage}>
-                    <DialogContent className="fixed  transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-customColors-offWhite rounded">
-                      <div className="flex flex-col">
-                        <DialogHeader className="mb-2 flex items-start">
-                          <DialogTitle className="text-left flex-grow text-customColors-eveningSeaGreen">
-                            User Image
-                          </DialogTitle>
-                        </DialogHeader>
-                        <DialogDescription className="mb-4 text-left">
-                          <p>You can click outside to close</p>
-                        </DialogDescription>
-                        <div className="flex-grow flex items-center justify-center overflow-hidden">
-                          <div className="relative w-full h-[400px]">
-                            {showImage?.imagepath ? (
-                              <Image
-                                src={showImage.imagepath}
-                                alt="Product Image"
-                                fill
-                                sizes="(max-width: 600px) 100vw, 50vw"
-                                style={{ objectFit: "contain" }}
-                                className="absolute"
-                              />
-                            ) : (
-                              <p className="text-center">No image available</p>
-                            )}
-                          </div>
+                    <DialogContent className="fixed flex flex-col transform  max-w-[90%] max-h-[90%] sm:max-w-[800px] sm:max-h-[600px] p-4 bg-customColors-offWhite rounded">
+                      <DialogHeader className="mb-2 flex items-start">
+                        <DialogTitle className="text-left flex-grow text-customColors-eveningSeaGreen">
+                          User Image
+                        </DialogTitle>
+                      </DialogHeader>
+                      <DialogDescription className="mb-4 text-left">
+                        <p>You can click outside to close</p>
+                      </DialogDescription>
+                      <div className="flex-grow flex items-center justify-center overflow-hidden">
+                        <div className="relative w-full h-[400px]">
+                          {showImage?.imagepath ? (
+                            <Image
+                              src={showImage.imagepath}
+                              alt="Product Image"
+                              fill
+                              sizes="(max-width: 600px) 100vw, 50vw"
+                              style={{ objectFit: "contain" }}
+                              className="absolute"
+                            />
+                          ) : (
+                            <p className="text-center">No image available</p>
+                          )}
                         </div>
-                        <DialogFooter className="mt-4">
-                          <Button onClick={closeImage}>Close</Button>
-                        </DialogFooter>
                       </div>
+                      <DialogFooter className="mt-4">
+                        <Button onClick={closeImage}>Close</Button>
+                      </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 )}

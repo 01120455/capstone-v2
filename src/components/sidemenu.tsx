@@ -27,6 +27,7 @@ import {
   ArchiveIcon,
   ChevronsUpDown,
   ChevronRightIcon,
+  GalleryVerticalEnd,
 } from "@/components/icons/Icons";
 import { userSessionContext } from "@/components/sessionContext-provider";
 import {
@@ -456,10 +457,27 @@ export default function SideMenu({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="border-b p-4">
-        <div className="flex items-center justify-between">
+      <SidebarHeader className="border-b">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <a href="#">
+                <div className="flex  aspect-square size-8 items-center justify-center rounded-lg bg-customColors-eveningSeaGreen text-customColors-offWhite">
+                  <GalleryVerticalEnd className="size-6" />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-semibold text-customColors-eveningSeaGreen">
+                    3R Shane Rice Mill IMS
+                  </span>
+                  <span className="">v1.0.0</span>
+                </div>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        {/* <div className="flex items-center justify-between">
           <span className="text-lg font-semibold block">3R Shane IMS</span>
-        </div>
+        </div> */}
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-[calc(100vh-8rem)]">{menuItems}</ScrollArea>

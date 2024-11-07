@@ -244,7 +244,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal",
+              " w-[200px] lg:w-[300px] justify-start text-left font-normal",
               !dateRange.from && "text-muted-foreground"
             )}
           >
@@ -822,7 +822,7 @@ export default function Dashboard() {
         </div>
 
         <Card className="mb-8">
-          <CardHeader>
+          <CardHeader className="space-y-0 p-4">
             <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
               Inventory Levels
             </CardTitle>
@@ -830,7 +830,7 @@ export default function Dashboard() {
               Stock Levels of each item in inventory
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <ChartContainer
               config={stocksChartConfig}
               className="w-full h-[300px] md:h-[400px]"
@@ -860,15 +860,15 @@ export default function Dashboard() {
           </CardFooter>
         </Card>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 p-4">
               <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
                 Sales Performance
               </CardTitle>
               <CardDescription>Sales data graph for each item</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2">
               <ChartContainer
                 config={salesChartConfig}
                 className="w-full h-[300px] md:h-[400px]"
@@ -908,13 +908,13 @@ export default function Dashboard() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 p-4">
               <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
                 Transaction Trend Values
               </CardTitle>
               <CardDescription>Purchase Value vs. Sales Value</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2">
               <ChartContainer
                 config={transactionChartConfig}
                 className="w-full h-[300px] md:h-[400px]"
@@ -947,15 +947,15 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 p-4">
               <CardTitle>Inventory Turnover</CardTitle>
               <CardDescription>
                 Visualizing the inventory turnover rates
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2">
               <ChartContainer
                 config={chartConfig}
                 className="w-full h-[300px] md:h-[400px]"
@@ -988,7 +988,7 @@ export default function Dashboard() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 p-4">
               <CardTitle className="text-lg font-bold text-customColors-eveningSeaGreen">
                 Stock to Sales Ratio Trend
               </CardTitle>
@@ -996,7 +996,7 @@ export default function Dashboard() {
                 Stock-to-Sales Ratio for the selected items
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2">
               <ChartContainer
                 config={stockToSalechartConfig}
                 className="w-full h-[300px] md:h-[400px]"
