@@ -5,8 +5,11 @@ export const sessionOptions: SessionOptions = {
   cookieName: "session",
   ttl: 24 * 60 * 60, // 24 hours
   cookieOptions: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    httpOnly: false,
+    secure: false,
+    sameSite: "lax",
+    path: "/",
+    domain: "192.168.1.103",
   },
 };
 

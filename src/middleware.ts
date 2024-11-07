@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
     sessionOptions
   );
 
-  // console.log("Session:", session);
+  console.log("Session in middleware:", session);
 
   const accessRules: Record<string, string[]> = {
     admin: [
@@ -52,8 +52,11 @@ export async function middleware(req: NextRequest) {
     ],
   };
 
-  const userSession = session as UserSession;
-  const userRole = userSession.user?.role;
+
+  const userSession = session;
+  const userRole = (userSession as UserSession).user?.role;
+
+  console.log("User Role:", userRole);
 
   const protectedPaths = [
     "/dashboard",

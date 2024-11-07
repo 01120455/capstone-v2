@@ -39,6 +39,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
+    "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "iron-session": "^8.0.3",
     "lodash": "^4.17.21",
@@ -60,6 +61,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
     "@types/lodash": "^4.17.13",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
