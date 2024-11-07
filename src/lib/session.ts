@@ -5,7 +5,7 @@ export const sessionOptions: SessionOptions = {
   cookieName: "session",
   ttl: 24 * 60 * 60, // 24 hours
   cookieOptions: {
-    httpOnly: true,
+    httpOnly: false,
     secure: false,
     sameSite: "lax",
     path: "/",
