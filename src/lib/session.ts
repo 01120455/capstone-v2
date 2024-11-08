@@ -9,7 +9,9 @@ export const sessionOptions: SessionOptions = {
     secure: false,
     sameSite: "lax",
     path: "/",
-    domain: process.env.NODE_ENV === "production" ? "192.168.1.103" : undefined,
+    domain: "localhost",
+
+    // process.env.NODE_ENV === "production" ? "192.168.1.103" : undefined,
   },
 };
 
