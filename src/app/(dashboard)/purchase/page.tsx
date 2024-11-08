@@ -271,7 +271,7 @@ export default function Component() {
   const [showModalEditPurchase, setShowModalEditPurchase] = useState(false);
   const [showTablePurchaseItem, setShowTablePurchaseItem] = useState(false);
 
-  console.log("user session:", user);
+  // console.log("user session:", user);
 
   const form = useForm<Transaction>({
     resolver: zodResolver(transactionSchema),
@@ -339,17 +339,17 @@ export default function Component() {
     name: "TransactionItem",
   });
 
-  useEffect(() => {
-    console.log(form.formState.errors);
-  }, [form.formState.errors]);
+  // useEffect(() => {
+  //   console.log(form.formState.errors);
+  // }, [form.formState.errors]);
 
-  useEffect(() => {
-    console.log(formPurchaseOnly.formState.errors);
-  }, [formPurchaseOnly.formState.errors]);
+  // useEffect(() => {
+  //   console.log(formPurchaseOnly.formState.errors);
+  // }, [formPurchaseOnly.formState.errors]);
 
-  useEffect(() => {
-    console.log(formPurchaseItemOnly.formState.errors);
-  }, [formPurchaseItemOnly.formState.errors]);
+  // useEffect(() => {
+  //   console.log(formPurchaseItemOnly.formState.errors);
+  // }, [formPurchaseItemOnly.formState.errors]);
 
   const handleAddPurchase = () => {
     setShowModal(true);
@@ -382,7 +382,7 @@ export default function Component() {
   };
 
   const handleEdit = (purchase: TransactionOnly) => {
-    console.log("Editing purchase:", purchase);
+    // console.log("Editing purchase:", purchase);
     setShowModalEditPurchase(true);
 
     formPurchaseOnly.reset({
@@ -502,7 +502,7 @@ export default function Component() {
       }
     }
 
-    console.log("Form Values:", values);
+    // console.log("Form Values:", values);
     const formData = new FormData();
 
     formData.append("transactiontype", values.transactiontype);
@@ -569,7 +569,7 @@ export default function Component() {
               description: "You have successfully edited the purchase.",
             }
           );
-          console.log("Purchase updated successfully");
+          // console.log("Purchase updated successfully");
         } else {
           toast.success(
             `Purchase Order No. ${""} ${form.getValues(
@@ -579,10 +579,10 @@ export default function Component() {
               description: "You have successfully added the purchase.",
             }
           );
-          console.log("Purchase added successfully");
+          // console.log("Purchase added successfully");
         }
 
-        console.log("Upload Result:", uploadResult);
+        // console.log("Upload Result:", uploadResult);
         setShowModal(false);
         setShowModalEditPurchase(false);
         refreshPurchases();
@@ -632,7 +632,7 @@ export default function Component() {
                 "You have successfully added an item to the purchase.",
             }
           );
-          console.log("Purchase Item added successfully");
+          // console.log("Purchase Item added successfully");
         }
 
         if (values.transactionitemid) {
@@ -645,9 +645,9 @@ export default function Component() {
                 "You have successfully updated an item to the purchase.",
             }
           );
-          console.log("Purchase item updated successfully");
+          // console.log("Purchase item updated successfully");
         }
-        console.log("Purchase Item processed successfully");
+        // console.log("Purchase Item processed successfully");
         refreshPurchases();
         formPurchaseItemOnly.reset();
       } else {
@@ -681,7 +681,7 @@ export default function Component() {
     return false;
   };
 
-  console.log("User role:", user?.role);
+  // console.log("User role:", user?.role);
 
   const transactionData = {
     transactionid: formPurchaseOnly.getValues("transactionid") || 0,
@@ -726,7 +726,7 @@ export default function Component() {
 
     const parsedData = transactionSchema.safeParse(transactionData);
 
-    console.log("Parsed Data:", parsedData);
+    // console.log("Parsed Data:", parsedData);
 
     if (parsedData.success) {
       const data = parsedData.data;
@@ -746,7 +746,7 @@ export default function Component() {
     user?.role || "",
     transactionData
   );
-  console.log(action);
+  // console.log(action);
 
   const handlePurchaseOrderChange = (
     e: React.ChangeEvent<HTMLInputElement>

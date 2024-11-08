@@ -11,14 +11,14 @@ export async function GET(req: NextRequest) {
     const endDate = searchParams.get("endDate");
     const period = searchParams.get("period");
 
-    console.log(
-      "startDate:",
-      startDate,
-      "endDate:",
-      endDate,
-      "period:",
-      period
-    );
+    // console.log(
+    //   "startDate:",
+    //   startDate,
+    //   "endDate:",
+    //   endDate,
+    //   "period:",
+    //   period
+    // );
 
     const whereClause: any = {
       Transaction: {},
@@ -29,14 +29,14 @@ export async function GET(req: NextRequest) {
       whereClause.Transaction = {
         transactiontype: "sales",
         lastmodifiedat: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
+          gte: new Date(startDate).toISOString(),
+          lte: new Date(endDate).toISOString(),
         },
       };
       whereClause.Item = {
         lastmodifiedat: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
+          gte: new Date(startDate).toISOString(),
+          lte: new Date(endDate).toISOString(),
         },
       };
     } else if (period) {
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    console.log("Where Clause:", whereClause);
+    // console.log("Where Clause:", whereClause);
 
     const cogs = await prisma.transactionItem.aggregate({
       _sum: {
@@ -104,24 +104,25 @@ export async function GET(req: NextRequest) {
       where: whereClause.Item,
     });
 
-    // console.log("COGS:", cogs._sum.totalamount);
-    // console.log("Average Inventory:", avgInventory._avg.stock);
-
+    // If no data is found, return 0 for stockTurnoverRate
     if (!cogs._sum.totalamount || !avgInventory._avg.stock) {
-      // console.error("No data found for the given period or active items.");
+      // console.log("No data found for the given period or active items.");
       return NextResponse.json(
-        { error: "No data found for the given period" },
-        { status: 400 }
+        { stockTurnoverRate: 0 }, // Return stockTurnoverRate as 0
+        { status: 200 } // Status 200 indicating success
       );
     }
 
     const stockTurnoverRate = cogs._sum.totalamount / avgInventory._avg.stock;
 
+    // console.log("COGS:", cogs._sum.totalamount);
+    // console.log("Average Inventory:", avgInventory._avg.stock);
+
     // console.log("Stock Turnover Rate:", stockTurnoverRate);
 
     return NextResponse.json({ stockTurnoverRate }, { status: 200 });
   } catch (error) {
-    // console.error("Error calculating Stock Turnover Rate:", error);
+    console.error("Error calculating Stock Turnover Rate:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

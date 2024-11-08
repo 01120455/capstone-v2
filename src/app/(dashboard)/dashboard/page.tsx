@@ -454,7 +454,7 @@ export default function Dashboard() {
   const { data: stocktosaleratio, loading: stocktosaleratioLoading } =
     useTransactionData("/api/dashboard/stockstosaleratio", period, dateRange);
 
-  console.log("stocktosaleratio", stocktosaleratio);
+  // console.log("stocktosaleratio", stocktosaleratio);
 
   const totals = useMemo(() => {
     if (!sales?.length) return null;

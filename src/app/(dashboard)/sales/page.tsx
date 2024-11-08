@@ -135,9 +135,9 @@ export default function Sales() {
     );
   }, [cart, form]);
 
-  useEffect(() => {
-    console.log(form.formState.errors);
-  }, [form.formState.errors]);
+  // useEffect(() => {
+  //   console.log(form.formState.errors);
+  // }, [form.formState.errors]);
 
   const addToCart = useCallback((item: ViewItem, quantity: number = 1) => {
     setCart((prevCart) => {
@@ -265,7 +265,7 @@ export default function Sales() {
       null;
     }
 
-    console.log("Form Values:", values);
+    // console.log("Form Values:", values);
     const formData = new FormData();
 
     formData.append("type", values.transactiontype);
@@ -318,7 +318,7 @@ export default function Sales() {
           { description: "You have successfully added a sale." }
         );
 
-        console.log("Sales added successfully");
+        // console.log("Sales added successfully");
         form.reset();
         setCart([]);
         refreshItems();

@@ -240,17 +240,10 @@ export default function SideMenu({
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                      <SidebarMenuSubItem key="PurchasedItemsFromMilling">
+                      <SidebarMenuSubItem key="PurchasedItems">
                         <SidebarMenuSubButton asChild>
-                          <Link href="/purchaseditemsfrommilling">
-                            <span>Milling Purchased Items</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem key="PurchasedItemsnonmilling">
-                        <SidebarMenuSubButton asChild>
-                          <Link href="/purchaseditemsnonmilling">
-                            <span>Non-Milling Purchased Items</span>
+                          <Link href="/purchaseditems">
+                            <span>Purchased Items</span>
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -303,7 +296,7 @@ export default function SideMenu({
               <Collapsible
                 key="Sales"
                 asChild
-                defaultOpen={true}
+                defaultOpen={false}
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
@@ -336,7 +329,7 @@ export default function SideMenu({
                       <SidebarMenuSubItem key="SalesItems">
                         <SidebarMenuSubButton asChild>
                           <Link href="/salesitem">
-                            <span>Sales Items</span>
+                            <span>Sold Items</span>
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -389,7 +382,7 @@ export default function SideMenu({
             </SidebarMenu>
           </SidebarGroup>
           <SidebarGroup>
-            <SidebarGroupLabel>Transaction History</SidebarGroupLabel>
+            <SidebarGroupLabel>Sales history</SidebarGroupLabel>
             <SidebarMenu>
               <Collapsible
                 key="Transactions"
@@ -399,11 +392,11 @@ export default function SideMenu({
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Transactions">
+                    <SidebarMenuButton tooltip="Sales">
                       <MenuItem
                         href="/saleshistory"
                         icon={DollarSignIcon}
-                        label="Transactions"
+                        label="Sales"
                       />
                       <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
@@ -420,10 +413,38 @@ export default function SideMenu({
                       <SidebarMenuSubItem key="SalesItems">
                         <SidebarMenuSubButton asChild>
                           <Link href="/salesitem">
-                            <span>Sales Items</span>
+                            <span>Sold Items</span>
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Purchases</SidebarGroupLabel>
+            <SidebarMenu>
+              <Collapsible
+                key="Purchases"
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Purchases">
+                      <MenuItem
+                        href="/purchasehistory"
+                        icon={DollarSignIcon}
+                        label="Purchases"
+                      />
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
                       <SidebarMenuSubItem key="PurchaseOrderHistory">
                         <SidebarMenuSubButton asChild>
                           <Link href="/purchasehistory">
@@ -431,10 +452,10 @@ export default function SideMenu({
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                      <SidebarMenuSubItem key="PurchasedItemsFromMilling">
+                      <SidebarMenuSubItem key="PurchasedItems">
                         <SidebarMenuSubButton asChild>
-                          <Link href="/purchaseditemsfrommilling">
-                            <span>Purchased Items from Milling</span>
+                          <Link href="/purchaseditems">
+                            <span>Purchased Items</span>
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>

@@ -269,9 +269,9 @@ export default function Component() {
     },
   });
 
-  useEffect(() => {
-    console.log(form.formState.errors);
-  }, [form.formState.errors]);
+  // useEffect(() => {
+  //   console.log(form.formState.errors);
+  // }, [form.formState.errors]);
 
   const handleAddUser = () => {
     setShowModal(true);
@@ -314,7 +314,7 @@ export default function Component() {
   const fileRef = form.register("image");
 
   const handleSubmit = async (values: AddUser) => {
-    console.log("Form Values:", values);
+    // console.log("Form Values:", values);
     const formData = new FormData();
 
     formData.append("firstname", values.firstname);
@@ -350,7 +350,7 @@ export default function Component() {
       if (uploadRes.ok) {
         const uploadResult = await uploadRes.json();
         if (values.userid) {
-          console.log("User updated successfully:", uploadResult);
+          // console.log("User updated successfully:", uploadResult);
           toast.success(
             `User ${form.getValues("firstname")} ${form.getValues(
               "lastname"
@@ -360,7 +360,7 @@ export default function Component() {
             }
           );
         } else {
-          console.log("User added successfully:", uploadResult);
+          // console.log("User added successfully:", uploadResult);
           toast.success(
             `User ${form.getValues("firstname")} ${form.getValues(
               "lastname"
@@ -372,7 +372,7 @@ export default function Component() {
         }
 
         if (uploadResult.imagepath) {
-          console.log("Image uploaded successfully:", uploadResult.imagepath);
+          // console.log("Image uploaded successfully:", uploadResult.imagepath);
         }
 
         setShowModal(false);
@@ -541,7 +541,7 @@ export default function Component() {
     </Popover>
   );
 
-  console.log("User Role: ", user?.role);
+  // console.log("User Role: ", user?.role);
 
   const userData = {
     userid: form.getValues("userid"),
@@ -555,7 +555,7 @@ export default function Component() {
     password: form.getValues("password"),
   };
 
-  console.log("Item Data: ", userData);
+  // console.log("Item Data: ", userData);
 
   const userActionWithAccess = (id: number, role: string, userData: any) => {
     if (!role) {
@@ -580,7 +580,7 @@ export default function Component() {
 
     const parsedData = UserSchema.safeParse(userData);
 
-    console.log("Parsed Data: ", parsedData);
+    // console.log("Parsed Data: ", parsedData);
 
     if (parsedData.success) {
       const data = parsedData.data;
@@ -597,7 +597,7 @@ export default function Component() {
 
   const action = userActionWithAccess(userId ?? 0, user?.role, userData);
 
-  console.log("User Action: ", action);
+  // console.log("User Action: ", action);
 
   return (
     <div className="flex min-h-screen w-full">

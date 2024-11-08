@@ -262,11 +262,11 @@ export default function ProductManagement() {
     return items;
   }, [items]);
 
-  useEffect(() => {
-    console.log(form.formState.errors);
-  }, [form.formState.errors]);
+  // useEffect(() => {
+  //   console.log(form.formState.errors);
+  // }, [form.formState.errors]);
 
-  console.log("Filtered Items: ", filteredItems);
+  // console.log("Filtered Items: ", filteredItems);
 
   const handleSubmit = async (values: AddItem) => {
     const formData = new FormData();
@@ -461,7 +461,7 @@ export default function ProductManagement() {
   const handleEdit = (item: ViewItem) => {
     setShowModal(true);
 
-    console.log(item);
+    // console.log(item);
 
     form.reset({
       itemid: item.itemid,
@@ -486,7 +486,7 @@ export default function ProductManagement() {
     );
   };
 
-  console.log("User Role: ", user?.role);
+  // console.log("User Role: ", user?.role);
 
   const itemData = {
     itemid: form.getValues("itemid") || 0,
@@ -500,7 +500,7 @@ export default function ProductManagement() {
     imagepath: form.getValues("imagepath"),
   };
 
-  console.log("Item Data: ", itemData);
+  // console.log("Item Data: ", itemData);
 
   const userActionWithAccess = (id: number, role: string, itemData: any) => {
     if (!role) {
@@ -525,7 +525,7 @@ export default function ProductManagement() {
 
     const parsedData = item.safeParse(itemData);
 
-    console.log("Parsed Data: ", parsedData);
+    // console.log("Parsed Data: ", parsedData);
 
     if (parsedData.success) {
       const data = parsedData.data;
@@ -542,7 +542,7 @@ export default function ProductManagement() {
 
   const action = userActionWithAccess(itemId ?? 0, user?.role, itemData);
 
-  console.log("User Action: ", action);
+  // console.log("User Action: ", action);
 
   return (
     <div className="flex min-h-screen w-full">

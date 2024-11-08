@@ -1091,10 +1091,9 @@ export const GalleryVerticalEnd = (props) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="lucide lucide-gallery-vertical-end"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
       <path d="M7 2h10" />
       <path d="M5 6h14" />

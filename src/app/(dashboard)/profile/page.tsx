@@ -67,7 +67,7 @@ export default function Component() {
           });
         }
 
-        console.log("User session:", session);
+        // console.log("User session:", session);
       } catch (error) {
         console.error("Failed to fetch session", error);
       }
@@ -78,7 +78,7 @@ export default function Component() {
   const fileRef = form.register("image");
 
   const handleSubmit = async (values: AddUser) => {
-    console.log("Form Values:", values);
+    // console.log("Form Values:", values);
     const formData = new FormData();
 
     formData.append("firstname", values.firstname);
@@ -109,10 +109,10 @@ export default function Component() {
 
         if (uploadRes.ok) {
           const uploadResult = await uploadRes.json();
-          console.log("User updated successfully:", uploadResult);
+          // console.log("User updated successfully:", uploadResult);
 
           if (uploadResult.imagepath) {
-            console.log("Image uploaded successfully:", uploadResult.imagepath);
+            // console.log("Image uploaded successfully:", uploadResult.imagepath);
           }
           toast.success(
             `User ${""} ${form.getValues(

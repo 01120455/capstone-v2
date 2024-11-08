@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
       skip,
     });
 
-    console.log("Where Clause:", whereClause);
+    // console.log("Where Clause:", whereClause);
 
     const convertedItems = convertBigIntToString(items);
     return NextResponse.json(convertedItems, { status: 200 });

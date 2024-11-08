@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
 
   const documentNumberFilter = searchParams.get("documentnumber") || "";
   const itemNameFilter = searchParams.get("name") || "";
+  const typeFilter = searchParams.get("type") || "";
   const statusFilter = searchParams.get("status") || "";
 
   const startDateFilter = searchParams.get("startdate");
@@ -60,6 +61,15 @@ export async function GET(req: NextRequest) {
         },
       };
     }
+    if (typeFilter) {
+      whereClause.TransactionItem = {
+        some: {
+          Item: {
+            itemtype: typeFilter,
+          },
+        },
+      };
+    }
     if (statusFilter) {
       whereClause.status = statusFilter;
     }
@@ -81,7 +91,6 @@ export async function GET(req: NextRequest) {
     const purchases = await prisma.transaction.findMany({
       where: {
         ...whereClause,
-        frommilling: true,
       },
       include: {
         createdbyuser: {

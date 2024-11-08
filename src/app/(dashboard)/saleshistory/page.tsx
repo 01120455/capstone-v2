@@ -182,7 +182,7 @@ const usePurchases = () => {
         console.error("Error fetching sales:", error);
       }
 
-      console.log("totalPages", totalPages);
+      // console.log("totalPages", totalPages);
     },
     [filters]
   );
@@ -268,12 +268,12 @@ export default function Component() {
     },
   });
 
-  useEffect(() => {
-    console.log(formSalesOnly.formState.errors);
-  }, [formSalesOnly.formState.errors]);
+  // useEffect(() => {
+  //   console.log(formSalesOnly.formState.errors);
+  // }, [formSalesOnly.formState.errors]);
 
   const handleEdit = (sales: EditSales) => {
-    console.log("Editing sales:", sales);
+    // console.log("Editing sales:", sales);
     setShowModalEditSales(true);
 
     formSalesOnly.reset({
@@ -300,7 +300,7 @@ export default function Component() {
   };
 
   const handleSubmit = async (values: EditSales) => {
-    console.log("Form Values:", values);
+    // console.log("Form Values:", values);
     const formData = new FormData();
 
     formData.append("status", values.status);
@@ -324,9 +324,9 @@ export default function Component() {
             description: "You have successfully edited the purchase.",
           }
         );
-        console.log("Purchase updated successfully");
-        console.log("Upload Result:", uploadResult);
-        console.log("Closing modal...");
+        // console.log("Purchase updated successfully");
+        // console.log("Upload Result:", uploadResult);
+        // console.log("Closing modal...");
         setShowModalEditSales(false);
         refreshSales();
       } else {

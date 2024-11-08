@@ -38,9 +38,7 @@ export async function GET(req: NextRequest) {
   const roleFilter = searchParams.get("role") || "";
   const statusFilter = searchParams.get("status") || "";
 
-  const whereClause: any = {
-    
-  };
+  const whereClause: any = {};
 
   if (emailFilter) {
     whereClause.email = emailFilter;
@@ -87,7 +85,7 @@ export async function GET(req: NextRequest) {
       skip,
     });
 
-    console.log("where:", whereClause);
+    // console.log("where:", whereClause);
 
     const convertedUsers = convertBigIntToString(users);
     return NextResponse.json(convertedUsers, { status: 200 });
